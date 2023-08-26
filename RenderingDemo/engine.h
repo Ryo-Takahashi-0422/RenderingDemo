@@ -41,7 +41,22 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #pragma comment(lib, "libfbxsdk.lib")
 
 //#include <AppD3DX12.h>
+
+// Rebuild
 #include <FBXInfoManager.h>
+#include <ResourceManager.h>
+
+
+
+
+
+
+
+
+
+
+
+
 #include <InputLayoutBase.h>
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>

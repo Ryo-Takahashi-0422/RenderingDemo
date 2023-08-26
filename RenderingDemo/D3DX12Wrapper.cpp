@@ -129,6 +129,11 @@ bool D3DX12Wrapper::PrepareRendering() {
 	// FBXInfoManager Instance
 	fbxInfoManager = new FBXInfoManager;
 	fbxInfoManager->Init();
+
+	// FBX resource creation
+	resourceManager = new ResourceManager(_dev, fbxInfoManager);
+	resourceManager->Init();
+
 	
 	//// PMDファイルの読み込み
 	//pmdMaterialInfo.resize(strModelNum);
@@ -155,8 +160,8 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//	pmdActor[i] = new PMDActor(pmdMaterialInfo[i], vmdMotionInfo[i]);
 	//}
 
-	//// GraphicsPipelineSettingクラスのインスタンス化
-	//gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
+	// GraphicsPipelineSettingクラスのインスタンス化
+	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
 
 	//// アニメーション用の回転・並行移動行列の参照準備
 	//for (int i = 0; i < strModelNum; ++i)
@@ -165,17 +170,12 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//	bNodeTable[i] = pmdMaterialInfo[i]->GetBoneNode();
 	//}
 	//
-	//// レンダリングウィンドウ設定
-	//prepareRenderingWindow = new PrepareRenderingWindow;
-	//prepareRenderingWindow->CreateAppWindow();
+	// レンダリングウィンドウ設定
+	prepareRenderingWindow = new PrepareRenderingWindow;
+	prepareRenderingWindow->CreateAppWindow();
 
-	//// TextureLoaderクラスのインスタンス化
-	//textureLoader = new TextureLoader;
-
-	//bufferHeapCreator.resize(strModelNum);
-	//textureTransporter.resize(strModelNum);
-	//mappingExecuter.resize(strModelNum);
-	//viewCreator.resize(strModelNum);
+	// TextureLoaderクラスのインスタンス化
+	textureLoader = new TextureLoader;
 
 	//// アニメーション用の回転・並行移動行列の参照準備
 	//for (int i = 0; i < strModelNum; ++i)
@@ -192,11 +192,12 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//	// ViewCreatorクラスのインスタンス化
 	//	viewCreator[i] = new ViewCreator(pmdMaterialInfo[i], bufferHeapCreator[i]);
 	//}
-	//// レンダリングウィンドウ表示
-	//ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
 
-	//// ビューポートとシザー領域の設定
-	//prepareRenderingWindow->SetViewportAndRect();
+	// レンダリングウィンドウ表示
+	ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
+
+	// ビューポートとシザー領域の設定
+	prepareRenderingWindow->SetViewportAndRect();
 
 	//// ﾏﾙﾁﾊﾟｽ関連ｸﾗｽ群
 	//peraLayout = new PeraLayout;
@@ -233,7 +234,7 @@ bool D3DX12Wrapper::PipelineInit(){
 	Utility::EnableDebugLayer();
 #endif
 //初期化処理２：各種デバイスの初期設定
-	D3DX12DeviceInit();
+	//D3DX12DeviceInit();
 
 	// カラークリアに関するWarningをフィルタリング(メッセージが埋もれてしまう...)
 	_dev.As(&infoQueue);

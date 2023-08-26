@@ -85,8 +85,10 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
             FbxVector4* vertices = fbxMesh->GetControlPoints();
             // インデックスバッファの取得
             int* indices = fbxMesh->GetPolygonVertices();
+          
             // 頂点座標の数の取得
             int polygon_vertex_count = fbxMesh->GetPolygonVertexCount();
+            vertNum += fbxMesh->GetControlPointsCount();
 
             // GetPolygonVertexCount => 頂点数
             for (int i = 0; i < polygon_vertex_count; i++)
@@ -94,6 +96,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
                 VertexInfo vertexInfo = {};
                 // インデックスバッファから頂点番号を取得
                 int index = indices[i];
+                indiceVec.emplace_back(index);
 
                 // 頂点座標リストから座標を取得する
                 vertexInfo.pos[0] = -vertices[index][0];
@@ -147,7 +150,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
                             m_VertexInfo[name][i].uv[0] = (float)elem->GetDirectArray().GetAt(i)[0];
                             m_VertexInfo[name][i].uv[1] = (float)elem->GetDirectArray().GetAt(i)[1];
 
-                            m_VertexInfo[name][i].uvname = elem->GetName();
+                            //m_VertexInfo[name][i].uvname = elem->GetName();
                         }
                     }
                     else
@@ -160,7 +163,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
                                 m_VertexInfo[name][i].uv[0] = (float)elem->GetDirectArray().GetAt(index)[0];
                                 m_VertexInfo[name][i].uv[1] = (float)elem->GetDirectArray().GetAt(index)[1];
 
-                                m_VertexInfo[name][i].uvname = elem->GetName();
+                                //m_VertexInfo[name][i].uvname = elem->GetName();
                             }
                         }
                 }

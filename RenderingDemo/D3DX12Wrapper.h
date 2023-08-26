@@ -49,12 +49,6 @@ private:
 	// 代入演算子
 	D3DX12Wrapper& operator=(const D3DX12Wrapper&) { return *this; };
 
-	/// <summary>
-	/// 各種デバイスの作成 
-	/// </summary>
-	/// <returns></returns>
-	HRESULT D3DX12DeviceInit();
-
 	SetRootSignature* setRootSignature = nullptr;
 	SettingShaderCompile* settingShaderCompile = nullptr;
 	VertexInputLayout* vertexInputLayout = nullptr;
@@ -154,12 +148,19 @@ private:
 	// Matrix
 	XMMATRIX projMat;
 
-	// FBX
+	// Rebuild
 	FBXInfoManager* fbxInfoManager = nullptr;
+	ResourceManager* resourceManager = nullptr;
 
 public:
 	///Applicationのシングルトンインスタンスを得る
 	static D3DX12Wrapper& Instance();
+
+	/// <summary>
+	/// 各種デバイスの作成 
+	/// </summary>
+	/// <returns></returns>
+	HRESULT D3DX12DeviceInit();
 
 	// 描画領域などの初期化
 	bool PrepareRendering();

@@ -12,6 +12,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	auto& wrapper = D3DX12Wrapper::Instance();
 
+	auto result =wrapper.D3DX12DeviceInit();
+	if (result == E_FAIL) return 0;
+
 	if (!wrapper.PrepareRendering()) {
 		return -1;
 	}

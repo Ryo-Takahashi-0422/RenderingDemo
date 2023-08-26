@@ -239,6 +239,7 @@
     <ClCompile Include="PMDActor.cpp" />
     <ClCompile Include="PMDMaterialInfo.cpp" />
     <ClCompile Include="PrepareRenderingWindow.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SetRootSignature.cpp" />
     <ClCompile Include="SetRootSignatureBase.cpp" />
     <ClCompile Include="SettingImgui.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="PMDMaterialInfo.h" />
     <ClInclude Include="PrepareRenderingWindow.h" />
     <ClInclude Include="ReadData.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SetRootSignature.h" />
     <ClInclude Include="SetRootSignatureBase.h" />
     <ClInclude Include="SettingImgui.h" />

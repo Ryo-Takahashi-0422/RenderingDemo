@@ -19,11 +19,17 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{1ca80649-7895-4dd2-b7d4-41d474c9935c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\FBX">
+    <Filter Include="ヘッダー ファイル\Origin">
+      <UniqueIdentifier>{9596a58b-2f68-46f2-8aad-c46a079efb7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Origin">
+      <UniqueIdentifier>{ee66a65e-ede0-4f19-ad7b-fb07063afb57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Rebuild">
       <UniqueIdentifier>{b4820979-3f22-4eca-b4f5-b5dd6a9ac32e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\FBX">
-      <UniqueIdentifier>{1b898cae-1316-4e5a-b28a-e6accbd10a11}</UniqueIdentifier>
+    <Filter Include="ヘッダー ファイル\Rebuild">
+      <UniqueIdentifier>{146232bb-177f-4d34-b4a4-0baf2d4f9e71}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -73,105 +79,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AOGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="AOShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="D3DX12Wrapper.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BloomShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BufferHeapCreator.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BufferShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="CreateD3DX12ResourceBuffer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="GraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="IGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="InputLayoutBase.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="LightMapGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="LightMapShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MappingExecuter.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PeraGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PeraLayout.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PeraPolygon.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PeraSetRootSignature.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PeraShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PMDActor.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PMDMaterialInfo.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PrepareRenderingWindow.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SetRootSignature.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SetRootSignatureBase.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SettingImgui.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SettingShaderCompile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureLoader.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureTransporter.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="VertexInputLayout.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ViewCreator.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="VMDMotionInfo.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="..\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -194,112 +101,112 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="FBXInfoManager.cpp">
-      <Filter>ソース ファイル\FBX</Filter>
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="AOGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="AOShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="BloomShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferHeapCreator.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateD3DX12ResourceBuffer.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DX12Wrapper.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="IGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="InputLayoutBase.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMapGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMapShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="MappingExecuter.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PeraGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PeraLayout.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PeraPolygon.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PeraSetRootSignature.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PeraShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PMDActor.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PMDMaterialInfo.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="PrepareRenderingWindow.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="SetRootSignature.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="SetRootSignatureBase.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingImgui.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingShaderCompile.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureLoader.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureTransporter.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexInputLayout.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewCreator.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="VMDMotionInfo.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AOGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="AOShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="D3DX12Wrapper.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BloomShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BufferHeapCreator.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BufferShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="CreateD3DX12ResourceBuffer.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="GraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="IGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="InputLayoutBase.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="LightMapGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="LightMapShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MappingExecuter.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PeraGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PeraLayout.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PeraPolygon.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PeraSetRootSignature.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PeraShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PMDActor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PMDMaterialInfo.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PrepareRenderingWindow.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ReadData.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SetRootSignature.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SetRootSignatureBase.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SettingImgui.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SettingShaderCompile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureLoader.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureTransporter.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexInputLayout.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ViewCreator.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="VMDMotionInfo.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -324,8 +231,113 @@
     <ClInclude Include="..\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="AOGraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="AOShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="BloomShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferHeapCreator.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateD3DX12ResourceBuffer.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DX12Wrapper.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="engine.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="IGraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="InputLayoutBase.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMapGraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMapShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="MappingExecuter.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PeraGraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PeraLayout.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PeraPolygon.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PeraSetRootSignature.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PeraShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PMDActor.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PMDMaterialInfo.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="PrepareRenderingWindow.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadData.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="SetRootSignature.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="SetRootSignatureBase.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingImgui.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingShaderCompile.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureLoader.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureTransporter.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexInputLayout.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewCreator.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
+    <ClInclude Include="VMDMotionInfo.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
+    </ClInclude>
     <ClInclude Include="FBXInfoManager.h">
-      <Filter>ヘッダー ファイル\FBX</Filter>
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
