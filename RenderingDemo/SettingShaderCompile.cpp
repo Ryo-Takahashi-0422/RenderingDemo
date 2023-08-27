@@ -6,11 +6,10 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShade
 {
 	result = D3DCompileFromFile
 	(
-		//L"BasicVertexShader.hlsl",
-		L"C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\DirectX12_Play\\BasicVertexShader.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\FBXVertexShader.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"BasicVS",
+		"FBXVS",
 		"vs_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
@@ -20,11 +19,10 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShade
 	
 	result = D3DCompileFromFile
 	(
-		//L"BasicPixelShader.hlsl",
-		L"C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\DirectX12_Play\\BasicPixelShader.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\FBXPixelShader.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"BasicPS",
+		"FBXPS",
 		"ps_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,

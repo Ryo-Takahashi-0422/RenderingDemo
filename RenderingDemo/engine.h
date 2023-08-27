@@ -42,9 +42,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 
 //#include <AppD3DX12.h>
 
-// Rebuild
-#include <FBXInfoManager.h>
-#include <ResourceManager.h>
+
 
 
 
@@ -94,3 +92,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <AOShaderCompile.h>
 
 #include <SettingImgui.h>
+
+// Rebuild
+#include <FBXInfoManager.h>
+#include <ResourceManager.h>

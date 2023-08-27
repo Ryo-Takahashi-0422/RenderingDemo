@@ -31,6 +31,9 @@
     <Filter Include="ヘッダー ファイル\Rebuild">
       <UniqueIdentifier>{146232bb-177f-4d34-b4a4-0baf2d4f9e71}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader\Rebuild">
+      <UniqueIdentifier>{a015630c-d72f-4c02-aea4-2b836c3a9e1c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli">
@@ -44,6 +47,9 @@
     </None>
     <None Include="PeraHeader.hlsli">
       <Filter>Shader</Filter>
+    </None>
+    <None Include="FBXHeaderShader.hlsli">
+      <Filter>Shader\Rebuild</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +82,12 @@
     </FxCompile>
     <FxCompile Include="PeraVertex.hlsl">
       <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="FBXVertexShader.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="FBXPixelShader.hlsl">
+      <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

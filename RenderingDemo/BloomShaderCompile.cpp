@@ -7,7 +7,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> BloomShaderCompile::SetPeraSha
 	result = D3DCompileFromFile
 	(
 		//L"BufferVertex.hlsl",
-		L"C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\DirectX12_Play\\BufferVertex.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\BufferVertex.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"vsBuffer",
@@ -21,7 +21,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> BloomShaderCompile::SetPeraSha
 	result = D3DCompileFromFile
 	(
 		//L"BufferPixel.hlsl",
-		L"C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\DirectX12_Play\\BloomPixelShader.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\BloomPixelShader.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"BloomPS",

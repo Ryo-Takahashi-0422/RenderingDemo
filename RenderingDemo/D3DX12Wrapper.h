@@ -6,7 +6,7 @@ private:
 
 	std::array<std::string, 3> strModelPath;
 	int strModelNum = 0;
-	std::string strMotionPath = "C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\model\\Motion\\squat2.vmd";
+	std::string strMotionPath = "C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuildmodel\\Motion\\squat2.vmd";
 	ComPtr<ID3D12Device> _dev = nullptr;
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
@@ -151,6 +151,11 @@ private:
 	// Rebuild
 	FBXInfoManager* fbxInfoManager = nullptr;
 	ResourceManager* resourceManager = nullptr;
+
+	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
+	ComPtr<ID3D12Resource> backBufferResource = nullptr;
+
+	void DrawFBX(UINT buffSize);
 
 public:
 	///Applicationのシングルトンインスタンスを得る

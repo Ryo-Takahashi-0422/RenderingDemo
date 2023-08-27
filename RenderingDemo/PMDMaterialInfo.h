@@ -139,7 +139,7 @@ public:
 	SceneMatrix* mapMatrix = nullptr;
 	SceneMatrix* mapMatrix4Lightmap = nullptr;
 
-	//std::string strModelPath = "C:\\Users\\takataka\\source\\repos\\DirectX12_Play\\model\\初音ミク.pmd";
+	//std::string strModelPath = "C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuildmodel\\初音ミク.pmd";
 	char signature[3] = {}; // シグネチャ
 	PMDHeader pmdHeader = {};
 	unsigned int vertNum; // 頂点数

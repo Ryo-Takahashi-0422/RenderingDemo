@@ -72,4 +72,6 @@ public:
 	int Init();
 	int GetVertNum() { return vertNum; };
 	int GetIndexNum() { return indiceVec.size(); };
+	std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
+	std::vector<int> GetIndiceContainer() { return indiceVec; };
 };

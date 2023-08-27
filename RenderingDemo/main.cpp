@@ -12,24 +12,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	auto& wrapper = D3DX12Wrapper::Instance();
 
-	auto result =wrapper.D3DX12DeviceInit();
-	if (result == E_FAIL) return 0;
+	//auto result =wrapper.D3DX12DeviceInit();
+	//if (result == E_FAIL) return 0;
 
 	if (!wrapper.PrepareRendering()) {
 		return -1;
 	}
 	
-	//if (!app.PipelineInit()) {
-	//	return -1;
-	//}
+	if (!wrapper.PipelineInit()) {
+		return -1;
+	}
 
-	//if (!app.ResourceInit()) {
-	//	return -1;
-	//}
+	if (!wrapper.ResourceInit()) {
+		return -1;
+	}
 
-	//app.EffekseerInit();
+	//wrapper.EffekseerInit();
 	
-	//app.Run();
+	wrapper.Run();
 	//app.Terminate();
 	return 0;
 }

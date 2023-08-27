@@ -1,7 +1,7 @@
 #include <stdafx.h>
 #include <ResourceManager.h>
 
-ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager) : _dev(dev), _fbxInfoManager(fbxInfoManager){}
+ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRenderingWindow) : _dev(dev), _fbxInfoManager(fbxInfoManager), _prepareRenderingWindow(prepareRenderingWindow){}
 
 HRESULT ResourceManager::Init()
 {
@@ -21,6 +21,32 @@ HRESULT ResourceManager::Init()
 		IID_PPV_ARGS(vertBuff.ReleaseAndGetAddressOf())
 	);
 	if (result == E_FAIL) return result;
+		
+	result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos); // mapping
+	auto vertMap = _fbxInfoManager->GetVertexMap();
+	auto itFirst = vertMap.begin();
+	// create pos container
+	for (int i = 0; i < vertMap.size(); ++i)
+	{		
+		auto itSecond = itFirst->second.begin();
+		for (int j = 0; j < itFirst->second.size(); ++j)
+		{
+			verticesPosContainer.push_back(itSecond->pos[0]);
+			verticesPosContainer.push_back(itSecond->pos[1]);
+			verticesPosContainer.push_back(itSecond->pos[2]);
+			++itSecond;
+		}
+		++itFirst;
+	}
+
+	std::copy(std::begin(verticesPosContainer), std::end(verticesPosContainer), mappedVertPos);
+	vertBuff->Unmap(0, nullptr);
+
+	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();//バッファの仮想アドレス
+	vbView.SizeInBytes = _fbxInfoManager->GetVertNum() * 12;//全バイト数
+	vbView.StrideInBytes = 12;//1頂点あたりのバイト数
+
+
 
 	// index Resource
 	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(_fbxInfoManager->GetIndexNum());
@@ -34,6 +60,15 @@ HRESULT ResourceManager::Init()
 		IID_PPV_ARGS(idxBuff.ReleaseAndGetAddressOf())
 	);
 	if (result == E_FAIL) return result;
+
+	result = idxBuff->Map(0, nullptr, (void**)&mappedIdx); // mapping
+	auto idxMap = _fbxInfoManager->GetIndiceContainer();
+	std::copy(std::begin(idxMap), std::end(idxMap), mappedIdx);
+	idxBuff->Unmap(0, nullptr);
+
+	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
+	ibView.SizeInBytes = sizeof(_fbxInfoManager->GetIndiceContainer()[0]) * idxMap.size();
+	ibView.Format = DXGI_FORMAT_R32_UINT;
 
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -49,8 +84,8 @@ HRESULT ResourceManager::Init()
 	auto depthHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	D3D12_RESOURCE_DESC depthResDesc = {};
 	depthResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthResDesc.Width = 720;// prepareRenderingWindow->GetWindowWidth();
-	depthResDesc.Height = 720;// prepareRenderingWindow->GetWindowHeight();
+	depthResDesc.Width = _prepareRenderingWindow->GetWindowWidth();
+	depthResDesc.Height = _prepareRenderingWindow->GetWindowHeight();
 	depthResDesc.DepthOrArraySize = 1;
 	depthResDesc.Format = DXGI_FORMAT_R32_TYPELESS; // 深度値書き込み用
 	depthResDesc.SampleDesc.Count = 1; // 1pixce/1つのサンプル
@@ -71,7 +106,58 @@ HRESULT ResourceManager::Init()
 	);
 	if (result == E_FAIL) return result;
 
-	// モデル描画用RTV
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	// 深度マップ用
+	_dev->CreateDepthStencilView
+	(
+		depthBuff.Get(),
+		&dsvDesc,
+		dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart()
+	);
+
+	// create rendering buffer and create RTV
+	CreateRTV();
+
+	// create matrix buffer and mapping matrix, create CBV
+	CreateAndMapMatrix(); // mapping
+
+	ClearReference();
+}
+
+HRESULT ResourceManager::CreateRTV()
+{
+	// create buffer
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
+	D3D12_RESOURCE_DESC resDesc = {};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resDesc.Width = _prepareRenderingWindow->GetWindowWidth();
+	resDesc.Height = _prepareRenderingWindow->GetWindowHeight();
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.SampleDesc.Quality = 0;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	auto result = _dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&depthClearValue,
+		IID_PPV_ARGS(renderingBuff.ReleaseAndGetAddressOf())
+	);
+	if (result == E_FAIL) return result;
+
+	// create RTV
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.NumDescriptors = 1;
@@ -81,16 +167,111 @@ HRESULT ResourceManager::Init()
 	result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
 	if (result == E_FAIL) return result;
 
-	// モデル描画用SRV
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
+	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
+	(
+		renderingBuff.Get(),//レンダーターゲットを表す ID3D12Resource オブジェクトへのポインター
+		&rtvDesc,//レンダー ターゲット ビューを記述する D3D12_RENDER_TARGET_VIEW_DESC 構造体へのポインター。
+		rtvHeap->GetCPUDescriptorHandleForHeapStart()//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+	);
+
+	return S_OK;
+}
+
+HRESULT ResourceManager::CreateAndMapMatrix()
+{
+	auto wvpHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto wvpResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(FBXSceneMatrix) + 0xff) & ~0xff);
+
+	auto result = _dev->CreateCommittedResource
+	(
+		&wvpHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&wvpResdesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
+	);
+	if (result == E_FAIL) return result;
+
+	//行列用定数バッファーの生成
+	auto worldMat = XMMatrixIdentity();
+
+	//auto worldMat = XMMatrixRotationY(15.0f);
+	auto angle = 0.0f;
+
+	//ビュー行列の生成・乗算
+	XMFLOAT3 eye(0, 15, -15);
+	XMFLOAT3 target(0, 10, 0);
+	XMFLOAT3 up(0, 1, 0);
+	auto viewMat = XMMatrixLookAtLH
+	(
+		XMLoadFloat3(&eye),
+		XMLoadFloat3(&target),
+		XMLoadFloat3(&up)
+	);
+
+	//プロジェクション(射影)行列の生成・乗算
+	auto projMat = XMMatrixPerspectiveFovLH
+	(
+		XM_PIDIV2, // 画角90°
+		static_cast<float>(_prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(_prepareRenderingWindow->GetWindowWidth()),
+		1.0, // ニア―クリップ
+		100.0 // ファークリップ
+	);
+
+	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
+	mappedMatrix->world = worldMat;
+	mappedMatrix->view = viewMat;
+	mappedMatrix->proj = projMat;
+
+	// create view
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 1;
+	srvHeapDesc.NumDescriptors = 2; // 1:Matrix(world, view, proj)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	if (result == E_FAIL) return result;
 
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = matrixBuff->GetDesc().Width;
 
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	//  1:Matrix(world, view, proj)
+	
+	_dev->CreateConstantBufferView
+	(
+		&cbvDesc,
+		handle
+	);
 
+	// 2:model rendering result
+	handle.ptr += inc;
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	_dev->CreateShaderResourceView
+	(
+		renderingBuff.Get(),
+		&srvDesc,
+		handle
+	);
+
+	return S_OK;
+}
+
+void ResourceManager::ClearReference()
+{
+	_dev->Release();
+	delete _prepareRenderingWindow;
 }
