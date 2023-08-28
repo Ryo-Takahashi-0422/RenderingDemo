@@ -39,8 +39,10 @@ private:
 
 	std::vector<float> verticesPosContainer;
 	std::vector<int> indexContainer;
-	/*float*/unsigned char* mappedVertPos = nullptr;
+	float*/*unsigned char**/ mappedVertPos = nullptr;
 	unsigned char* mappedIdx = nullptr;
+	int vertexTotalNum; // vertex total num
+	int indexNum; // index total num
 
 	FBXSceneMatrix* mappedMatrix = nullptr;
 
@@ -60,5 +62,7 @@ public:
 	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; };
 	D3D12_VERTEX_BUFFER_VIEW* GetVbView() { return &vbView; };
 	D3D12_INDEX_BUFFER_VIEW* GetIbView() { return &ibView; };
+	int GetVertexTotalNum() { return vertexTotalNum; };
+	int GetIndexTotalNum() { return indexNum; };
 };
 

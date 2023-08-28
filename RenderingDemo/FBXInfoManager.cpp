@@ -21,6 +21,10 @@ int FBXInfoManager::Init()
     importer->Import(scene);
     importer->Destroy(); // シーンを流し込んだらImporterは解放してOK
 
+    FbxGeometryConverter converter(manager);
+    // ポリゴンを三角形にする
+    converter.Triangulate(scene, true);
+
     // Scene解析
     // ルートノードを取得
     FbxNode* root = scene->GetRootNode();
@@ -70,8 +74,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
         }
         else {
             printf(", ");
-        }
-        
+        }        
         
         if (typeNames[type] == "eMesh")
         {            
@@ -99,12 +102,22 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
                 indiceVec.emplace_back(index);
 
                 // 頂点座標リストから座標を取得する
-                vertexInfo.pos[0] = -vertices[index][0];
+                vertexInfo.pos[0] = vertices[index][0];
                 vertexInfo.pos[1] = vertices[index][1];
                 vertexInfo.pos[2] = vertices[index][2];
 
                 // 追加
                 m_VertexInfo[name].push_back(vertexInfo);
+            }
+
+            // 左手系インデクスに修正
+            for (int i = indiceCnt; i < /*fbxMesh->GetPolygonCount()*/indiceVec.size() / 3; ++i)
+            {
+                // 2 => 1 => 0にしてるのは左手系対策
+                fixedIndiceVec[name].push_back(indiceVec[indiceCnt * 3 + 2]);
+                fixedIndiceVec[name].push_back(indiceVec[indiceCnt * 3 + 1]);
+                fixedIndiceVec[name].push_back(indiceVec[indiceCnt * 3]);
+                ++indiceCnt;
             }
                        
             // 法線リストの取得
@@ -113,7 +126,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
             // 法線設定
             for (int i = 0; i < normals.Size(); i++)
             {
-                m_VertexInfo[name][i].normal_vec[0] = -normals[i][0];
+                m_VertexInfo[name][i].normal_vec[0] = normals[i][0];
                 m_VertexInfo[name][i].normal_vec[1] = normals[i][1];
                 m_VertexInfo[name][i].normal_vec[2] = normals[i][2];
             }
@@ -262,7 +275,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
             //}
         }
     }
-
+    
     int childCount = node->GetChildCount();
     for (int i = 0; i < childCount; ++i) {
         enumNodeNamesAndAttributes(node->GetChild(i), indent + 1);

@@ -48,6 +48,8 @@ struct VertexInfo
 class FBXInfoManager
 {
 private:
+	int indiceCnt = 0;
+
 	FbxManager* manager = nullptr;
 	void printSpace(int count);
 	void enumNodeNamesAndAttributes(FbxNode* node, int indent);
@@ -66,12 +68,15 @@ private:
 	std::vector<unsigned char> vertices{}; // VertexInfoを1頂点ごとに1byteで順番に並べたデータ
 
 	int vertNum = 0;
-	std::vector<int> indiceVec;
+	std::vector<int> indiceVec; // 右手系インデクス
+	std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
 
 public:
 	int Init();
 	int GetVertNum() { return vertNum; };
 	int GetIndexNum() { return indiceVec.size(); };
 	std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
-	std::vector<int> GetIndiceContainer() { return indiceVec; };
+	std::map<std::string, std::vector<int>> GetIndiceContainer() { return fixedIndiceVec; };
+
+	//std::vector<int> GetTestIndiceVec() { return indiceVec; };
 };

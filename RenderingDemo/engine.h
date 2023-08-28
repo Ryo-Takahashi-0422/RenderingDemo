@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <array>
 #include <ReadData.h>
+#include <stdlib.h>
 
 // Effekseer
 #include <Effekseer.h>
@@ -41,20 +42,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #pragma comment(lib, "libfbxsdk.lib")
 
 //#include <AppD3DX12.h>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include <InputLayoutBase.h>
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>
