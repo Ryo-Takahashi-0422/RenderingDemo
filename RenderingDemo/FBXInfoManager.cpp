@@ -106,11 +106,11 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
                 vertexInfo.pos[1] = vertices[index][1];
                 vertexInfo.pos[2] = vertices[index][2];
 
-                if (indexAndVertexPos.find(index) == indexAndVertexPos.end())
+                if (indexAndVertexPosByMeshName[name].find(index) == indexAndVertexPosByMeshName[name].end())
                 {
-                    indexAndVertexPos[index][0] = vertices[index][0];
-                    indexAndVertexPos[index][1] = vertices[index][1];
-                    indexAndVertexPos[index][2] = vertices[index][2];
+                    indexAndVertexPosByMeshName[name][index][0] = vertices[index][0];
+                    indexAndVertexPosByMeshName[name][index][1] = vertices[index][1];
+                    indexAndVertexPosByMeshName[name][index][2] = vertices[index][2];
                 }
 
                 // ’Ç‰Á

@@ -15,16 +15,13 @@ HRESULT ResourceManager::Init()
 	{		
 		auto itSecond = itFirst->second.begin();
 
-		//verticesPosContainer[i].pos[0] = itSecond[0];
-		//verticesPosContainer[i].pos[1] = itSecond[1];
-		//verticesPosContainer[i].pos[2] = itSecond[2];
-		//for (int j = 0; j < itFirst->second.size(); ++j)
-		//{
-		verticesPosContainer.push_back(itSecond/*->pos*/[0]);
-		verticesPosContainer.push_back(itSecond/*->pos*/[1]);
-		verticesPosContainer.push_back(itSecond/*->pos*/[2]);
-		//	++itSecond;
-		//}
+		for (int j = 0; j < itFirst->second.size(); ++j)
+		{
+			verticesPosContainer.push_back(itSecond->second[0]);
+			verticesPosContainer.push_back(itSecond->second[1]);
+			verticesPosContainer.push_back(itSecond->second[2]);
+			++itSecond;
+		}
 		++itFirst;
 	}
 
