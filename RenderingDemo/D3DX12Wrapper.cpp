@@ -918,10 +918,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 	//_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
 	
-	//auto indiceMap = fbxInfoManager->GetIndiceContainer();
-	//auto itIndiceFirst = indiceMap.begin();
+	//auto indiceContainer = fbxInfoManager->GetIndiceContainer();
+	//auto itIndiceFirst = indiceContainer.begin();
 	//int ofst = 0;
-	//for (int i = 0; i < indiceMap.size(); ++i)
+	//for (int i = 0; i < indiceContainer.size(); ++i)
 	//{		
 	//	_cmdList->DrawIndexedInstanced(itIndiceFirst->second.size(), 1, ofst, 0, 0);
 	//	ofst += itIndiceFirst->second.size();

@@ -80,6 +80,6 @@ public:
 	std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
 	std::map<std::string, std::vector<int>> GetIndiceContainer() { return fixedIndiceVec; };
 
-	std::map<std::string, std::map<int, std::array<float, 3>>> GetIndexAndVertexPos() { return indexAndVertexPosByMeshName; };
+	std::map<std::string, std::map<int, std::array<float, 3>>> GetIndexAndVertexPosByMeshName() { return indexAndVertexPosByMeshName; };
 	//std::vector<int> GetTestIndiceVec() { return indiceVec; };
 };

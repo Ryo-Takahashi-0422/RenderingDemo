@@ -8,7 +8,7 @@ HRESULT ResourceManager::Init()
 	HRESULT result = E_FAIL;
 
 	// vertex Resource		
-	auto vertMap = _fbxInfoManager->/*GetVertexMap*/GetIndexAndVertexPos();
+	auto vertMap = _fbxInfoManager->/*GetVertexMap*/GetIndexAndVertexPosByMeshName();
 	auto itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
