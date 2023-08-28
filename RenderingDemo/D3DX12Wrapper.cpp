@@ -896,7 +896,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+	_cmdList->IASetPrimitiveTopology(/*D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST*/D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 
 	//頂点バッファーのCPU記述子ハンドルを設定
@@ -915,10 +915,9 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 
-	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
-	_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
-
-
+	_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
+	//_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
+	
 	//auto indiceMap = fbxInfoManager->GetIndiceContainer();
 	//auto itIndiceFirst = indiceMap.begin();
 	//int ofst = 0;

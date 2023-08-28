@@ -8,19 +8,23 @@ HRESULT ResourceManager::Init()
 	HRESULT result = E_FAIL;
 
 	// vertex Resource		
-	auto vertMap = _fbxInfoManager->GetVertexMap();
+	auto vertMap = _fbxInfoManager->/*GetVertexMap*/GetIndexAndVertexPos();
 	auto itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
 	{		
 		auto itSecond = itFirst->second.begin();
-		for (int j = 0; j < itFirst->second.size(); ++j)
-		{
-			verticesPosContainer.push_back(itSecond->pos[0]);
-			verticesPosContainer.push_back(itSecond->pos[1]);
-			verticesPosContainer.push_back(itSecond->pos[2]);
-			++itSecond;
-		}
+
+		//verticesPosContainer[i].pos[0] = itSecond[0];
+		//verticesPosContainer[i].pos[1] = itSecond[1];
+		//verticesPosContainer[i].pos[2] = itSecond[2];
+		//for (int j = 0; j < itFirst->second.size(); ++j)
+		//{
+		verticesPosContainer.push_back(itSecond/*->pos*/[0]);
+		verticesPosContainer.push_back(itSecond/*->pos*/[1]);
+		verticesPosContainer.push_back(itSecond/*->pos*/[2]);
+		//	++itSecond;
+		//}
 		++itFirst;
 	}
 
@@ -38,7 +42,7 @@ HRESULT ResourceManager::Init()
 	);
 	if (result != S_OK) return result;
 
-	vertexTotalNum = verticesPosContainer.size();
+	vertexTotalNum = verticesPosContainer.size() / 3;
 	result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos); // mapping
 	std::copy(std::begin(verticesPosContainer), std::end(verticesPosContainer), mappedVertPos);
 	vertBuff->Unmap(0, nullptr);

@@ -71,6 +71,8 @@ private:
 	std::vector<int> indiceVec; // 右手系インデクス
 	std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
 
+	std::map<int, std::array<float, 3>> indexAndVertexPos; // index化された頂点情報　これに基づき描画すべし
+
 public:
 	int Init();
 	int GetVertNum() { return vertNum; };
@@ -78,5 +80,6 @@ public:
 	std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
 	std::map<std::string, std::vector<int>> GetIndiceContainer() { return fixedIndiceVec; };
 
+	std::map<int, std::array<float, 3>> GetIndexAndVertexPos() { return indexAndVertexPos; };
 	//std::vector<int> GetTestIndiceVec() { return indiceVec; };
 };
