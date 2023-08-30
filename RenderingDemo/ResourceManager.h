@@ -64,5 +64,7 @@ public:
 	D3D12_INDEX_BUFFER_VIEW* GetIbView() { return &ibView; };
 	int GetVertexTotalNum() { return vertexTotalNum; };
 	int GetIndexTotalNum() { return indexNum; };
+
+	FBXSceneMatrix* GetMappedMatrix() { return mappedMatrix; };
 };
 

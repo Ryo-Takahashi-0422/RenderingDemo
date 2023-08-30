@@ -815,6 +815,8 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
+		resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.003f);
+
 		//フリップしてレンダリングされたイメージをユーザーに表示
 		_swapChain->Present(1, 0);	
 
@@ -916,17 +918,18 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	);
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
-	_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
-	//
-	//auto indiceContainer = fbxInfoManager->GetIndiceAndVertexInfo();
-	//auto itIndiceFirst = indiceContainer.begin();
-	//int ofst = 0;
-	//for (int i = 0; i < indiceContainer.size(); ++i)
-	//{		
-	//	_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
-	//	ofst += itIndiceFirst->second.indices.size();
-	//	++itIndiceFirst;
-	//}
+	//_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
+	
+	auto indiceContainer = fbxInfoManager->GetIndiceAndVertexInfo();
+	auto itIndiceFirst = indiceContainer.begin();
+	int ofst = 0;
+	for (int i = 0; i < indiceContainer.size(); ++i)
+	{	
+		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
+
+		ofst += itIndiceFirst->second.indices.size();
+		++itIndiceFirst;
+	}
 
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく

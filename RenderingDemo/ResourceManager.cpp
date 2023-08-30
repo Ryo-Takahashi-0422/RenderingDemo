@@ -21,7 +21,8 @@ HRESULT ResourceManager::Init()
 	}
 
 	auto vertexHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(verticesPosContainer.size() * sizeof(FBXVertex));
+	auto vertexBuffSize = verticesPosContainer.size() * sizeof(FBXVertex);
+	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBuffSize);
 
 	result = _dev->CreateCommittedResource
 	(
@@ -40,7 +41,7 @@ HRESULT ResourceManager::Init()
 	vertBuff->Unmap(0, nullptr);
 
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();//バッファの仮想アドレス
-	vbView.SizeInBytes = vertresDesc.Width;//全バイト数
+	vbView.SizeInBytes = vertexBuffSize;//全バイト数
 	vbView.StrideInBytes = sizeof(FBXVertex);//1頂点あたりのバイト数
 
 	// index Resource
@@ -58,7 +59,8 @@ HRESULT ResourceManager::Init()
 	}
 
 	indexNum = indexContainer.size();
-	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indexNum * sizeof(unsigned short));
+	auto indiceBuffSize = indexNum * sizeof(unsigned short);
+	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
 	result = _dev->CreateCommittedResource
 	(
 		&vertexHeapProp,
@@ -75,7 +77,7 @@ HRESULT ResourceManager::Init()
 	idxBuff->Unmap(0, nullptr);
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
-	ibView.SizeInBytes = indicesDesc.Width;
+	ibView.SizeInBytes = indiceBuffSize;
 	ibView.Format = DXGI_FORMAT_R16_UINT;
 
 	// depth DHeap, Resource
@@ -207,9 +209,8 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 
 	//行列用定数バッファーの生成
 	auto worldMat = XMMatrixIdentity();
-
-	//auto worldMat = XMMatrixRotationY(15.0f);
-	auto angle = 0.0f;
+	auto angle = XMMatrixRotationY(3.14f);;
+	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
 	XMFLOAT3 eye(0, 15, -15);

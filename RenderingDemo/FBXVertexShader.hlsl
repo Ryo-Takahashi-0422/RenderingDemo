@@ -2,7 +2,7 @@
 
 Output FBXVS
 (float4 pos : POSITION,
-    float3 norm : NORMAL,
+    float4 norm : NORMAL,
     float2 uv : TEXCOORD
     //min16uint2 boneno : BONE_NO,
     //min16uint weight : WEIGHT,
