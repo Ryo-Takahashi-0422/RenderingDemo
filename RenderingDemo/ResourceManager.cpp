@@ -8,25 +8,20 @@ HRESULT ResourceManager::Init()
 	HRESULT result = E_FAIL;
 
 	// vertex Resource		
-	auto vertMap = _fbxInfoManager->/*GetVertexMap*/GetIndexAndVertexPosByMeshName();
+	auto vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
 	auto itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
 	{		
-		auto itSecond = itFirst->second.begin();
-
-		for (int j = 0; j < itFirst->second.size(); ++j)
+		for (int j = 0; j < itFirst->second.vertices.size(); ++j)
 		{
-			verticesPosContainer.push_back(itSecond->second[0]);
-			verticesPosContainer.push_back(itSecond->second[1]);
-			verticesPosContainer.push_back(itSecond->second[2]);
-			++itSecond;
+			verticesPosContainer.push_back(itFirst->second.vertices[j]);
 		}
 		++itFirst;
 	}
 
 	auto vertexHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(verticesPosContainer.size() * sizeof(/*VertexInfo*/float));
+	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(verticesPosContainer.size() * sizeof(FBXVertex));
 
 	result = _dev->CreateCommittedResource
 	(
@@ -39,32 +34,31 @@ HRESULT ResourceManager::Init()
 	);
 	if (result != S_OK) return result;
 
-	vertexTotalNum = verticesPosContainer.size() / 3;
+	vertexTotalNum = verticesPosContainer.size();
 	result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos); // mapping
 	std::copy(std::begin(verticesPosContainer), std::end(verticesPosContainer), mappedVertPos);
 	vertBuff->Unmap(0, nullptr);
 
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();//バッファの仮想アドレス
 	vbView.SizeInBytes = vertresDesc.Width;//全バイト数
-	vbView.StrideInBytes = 12;//1頂点あたりのバイト数 x,y,z
+	vbView.StrideInBytes = sizeof(FBXVertex);//1頂点あたりのバイト数
 
 	// index Resource
-	auto indiceMap = _fbxInfoManager->GetIndiceContainer();
-	auto itIndiceFirst = indiceMap.begin();
+	//auto indiceMap = _fbxInfoManager->GetIndiceContainer();
+	//auto itIndiceFirst = indiceMap.begin();
+	itFirst = vertMap.begin();
 	// create pos container
-	for (int i = 0; i < indiceMap.size(); ++i)
+	for (int i = 0; i < vertMap.size(); ++i)
 	{
-		auto itSecond = itIndiceFirst->second.begin();
-		for (int j = 0; j < itIndiceFirst->second.size(); ++j)
+		for (int j = 0; j < itFirst->second.indices.size(); ++j)
 		{
-			indexContainer.push_back(itSecond[0]);
-			++itSecond;
+			indexContainer.push_back(itFirst->second.indices[j]);
 		}
-		++itIndiceFirst;
+		++itFirst;
 	}
 
 	indexNum = indexContainer.size();
-	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(_fbxInfoManager->GetIndexNum() * sizeof(int));
+	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indexNum * sizeof(unsigned short));
 	result = _dev->CreateCommittedResource
 	(
 		&vertexHeapProp,
@@ -82,7 +76,7 @@ HRESULT ResourceManager::Init()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.SizeInBytes = indicesDesc.Width;
-	ibView.Format = DXGI_FORMAT_R32_UINT;
+	ibView.Format = DXGI_FORMAT_R16_UINT;
 
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};

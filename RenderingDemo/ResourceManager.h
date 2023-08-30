@@ -37,10 +37,10 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vbView = {}; // Vertexビュー
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)Indexビュー
 
-	std::vector<float> verticesPosContainer;
-	std::vector<int> indexContainer;
-	float*/*unsigned char**/ mappedVertPos = nullptr;
-	unsigned char* mappedIdx = nullptr;
+	/*std::vector<float>*/std::vector<FBXVertex> verticesPosContainer;
+	/*std::vector<int>*/std::vector<unsigned short> indexContainer;
+	FBXVertex*/*unsigned char**/ mappedVertPos = nullptr;
+	unsigned short* mappedIdx = nullptr;
 	int vertexTotalNum; // vertex total num
 	int indexNum; // index total num
 

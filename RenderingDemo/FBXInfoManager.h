@@ -31,28 +31,45 @@ struct PhongInfo
 	float shineness;
 };
 
-//頂点構造体(PMDと同様) これをFBXファイルから読み取っていく
-struct VertexInfo
-{   //32byte(temporary)
-	float pos[3]; // x, y, z // 座標 12byte
-	float normal_vec[3]; // nx, ny, nz // 法線ベクトル 12byte
-	float uv[2]; // u, v // UV座標 // MMDは頂点UV 8byte
-	//std::string uvname; // uvセット名
-	//LambertInfo lamberInfo;
-	//PhongInfo phongInfo;
-	//unsigned short bone_num[2]; // ボーン番号1、番号2 // モデル変形(頂点移動)時に影響 4byte
-	//unsigned char bone_weight; // ボーン1に与える影響度 // min:0 max:100 // ボーン2への影響度は、(100 - bone_weight) 1byte
-	//unsigned char edge_flag; // 0:通常、1:エッジ無効 // エッジ(輪郭)が有効の場合 1byte
+struct FBXVertex
+{
+	float pos[3];
+	float normal[3];
+	float uv[2];
 };
+
+struct VertexInfo
+{
+	std::vector<FBXVertex> vertices;
+	std::vector<unsigned short> indices;
+};
+
+////頂点構造体(PMDと同様) これをFBXファイルから読み取っていく
+//struct VertexInfo
+//{   //32byte(temporary)
+//	float pos[3]; // x, y, z // 座標 12byte
+//	float normal_vec[3]; // nx, ny, nz // 法線ベクトル 12byte
+//	float uv[2]; // u, v // UV座標 // MMDは頂点UV 8byte
+//	//std::string uvname; // uvセット名
+//	//LambertInfo lamberInfo;
+//	//PhongInfo phongInfo;
+//	//unsigned short bone_num[2]; // ボーン番号1、番号2 // モデル変形(頂点移動)時に影響 4byte
+//	//unsigned char bone_weight; // ボーン1に与える影響度 // min:0 max:100 // ボーン2への影響度は、(100 - bone_weight) 1byte
+//	//unsigned char edge_flag; // 0:通常、1:エッジ無効 // エッジ(輪郭)が有効の場合 1byte
+//};
 
 class FBXInfoManager
 {
+
+
 private:
 	int indiceCnt = 0;
 
 	FbxManager* manager = nullptr;
+	FbxScene* scene = nullptr;
 	void printSpace(int count);
-	void enumNodeNamesAndAttributes(FbxNode* node, int indent);
+
+	void enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath, VertexInfo* vertexInfo);
 
 	std::map<std::string, std::map<std::string, FBXPolygonInfo>> fbxModelInfo; // model name & Mesh name, FBXPolygonInfo
 	std::map<std::string, FBXPolygonInfo> fbxPolygonMap; // Mesh name & FBXMesh
@@ -64,22 +81,41 @@ private:
 	std::vector<FbxDouble> vertexControlPointsXYZ; // 全頂点の座標
 	std::vector<FbxDouble> vertexNormalXYZ; // 全頂点の法線座標
 
-	std::map<std::string, std::vector<VertexInfo>> m_VertexInfo;
-	std::vector<unsigned char> vertices{}; // VertexInfoを1頂点ごとに1byteで順番に並べたデータ
+	//std::map<std::string, std::vector<VertexInfo>> m_VertexInfo;
+	//std::vector<unsigned char> vertices{}; // VertexInfoを1頂点ごとに1byteで順番に並べたデータ
 
 	int vertNum = 0;
 	std::vector<int> indiceVec; // 右手系インデクス
 	std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
+	std::vector<int> indiceVecOfVec; // ★UVのインデクス　indiceVecと比較してみる
 
 	std::map<std::string, std::map<int, std::array<float, 3>>> indexAndVertexPosByMeshName; // index化された頂点情報　これに基づき描画すべし
+	std::map<std::string, std::map<int, std::array<float, 2>>> indexAndUVByMeshName; // index化されたUV情報　これに基づき描画すべし
+
+
+
+	VertexInfo fbxVertexInfo = {};
+	std::map<std::string, VertexInfo> finalInfo;
+	static bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
+	static std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
+	static int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
+		std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList);
+	static bool IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 
 public:
 	int Init();
 	int GetVertNum() { return vertNum; };
 	int GetIndexNum() { return indiceVec.size(); };
-	std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
+	//std::map<std::string, std::vector<VertexInfo>> GetVertexMap() { return m_VertexInfo; };
 	std::map<std::string, std::vector<int>> GetIndiceContainer() { return fixedIndiceVec; };
 
-	std::map<std::string, std::map<int, std::array<float, 3>>> GetIndexAndVertexPosByMeshName() { return indexAndVertexPosByMeshName; };
+	/*std::map<std::string, std::map<int, std::array<float, 3>>> GetIndexAndVertexPosByMeshName() { return indexAndVertexPosByMeshName; };*/
 	//std::vector<int> GetTestIndiceVec() { return indiceVec; };
+	std::map<std::string, VertexInfo> GetIndiceAndVertexInfo() { return finalInfo; };
+
+
+
+
+
+	static bool Load(const std::string& filePath, VertexInfo* vertexInfo);
 };
