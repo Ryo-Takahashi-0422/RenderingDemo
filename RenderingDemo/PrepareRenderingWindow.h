@@ -16,8 +16,8 @@ private:
 
 	
 	WNDCLASSEX w;
-	const unsigned int window_width = 720;
-	const unsigned int window_height = 720;
+	const unsigned int window_width = 1080;
+	const unsigned int window_height = 1080;
 	
 	HWND hwnd;
 	D3D12_VIEWPORT viewport;

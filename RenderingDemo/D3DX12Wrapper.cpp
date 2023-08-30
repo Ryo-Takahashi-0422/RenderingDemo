@@ -267,7 +267,7 @@ bool D3DX12Wrapper::PipelineInit(){
 
 	//コマンドキュー生成
 	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(_cmdQueue.ReleaseAndGetAddressOf()));
-	if (result == E_FAIL) return false;
+	if (result != S_OK) return false;
 
 //初期化処理４：スワップチェーンの生成
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -290,7 +290,7 @@ bool D3DX12Wrapper::PipelineInit(){
 		nullptr,
 		nullptr,
 		(IDXGISwapChain1**)_swapChain.ReleaseAndGetAddressOf());
-	if (result == E_FAIL) return false;
+	if (result != S_OK) return false;
 
 //初期化処理５：レンダーターゲットビュー(RTV)の記述子ヒープを作成
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -299,7 +299,7 @@ bool D3DX12Wrapper::PipelineInit(){
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 	result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
-	if (result == E_FAIL) return false;
+	if (result != S_OK) return false;
 
 	//for (int i = 0; i < strModelNum; ++i)
 	//{
@@ -320,7 +320,7 @@ bool D3DX12Wrapper::PipelineInit(){
 	for (int idx = 0; idx < swapChainDesc.BufferCount; idx++)
 	{   //swapEffect DXGI_SWAP_EFFECT_FLIP_DISCARD の場合は最初のバッファーのみアクセス可能
 		result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(_backBuffers[idx].ReleaseAndGetAddressOf()));//SWCにバッファーのIIDとそのIIDポインタを教える(SWCがレンダリング時にアクセスする)
-		if (result == E_FAIL) return false;
+		if (result != S_OK) return false;
 
 		_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
 		(
@@ -336,9 +336,7 @@ bool D3DX12Wrapper::PipelineInit(){
 //初期化処理７：コマンドアロケーターを作成
 			//コマンドアロケーター生成>>コマンドリスト作成
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator.ReleaseAndGetAddressOf()));
-	if (result == E_FAIL) return false;
-	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator4Imgui.ReleaseAndGetAddressOf()));
-	if (result == E_FAIL) return false;
+	if (result != S_OK) return false;
 
 	return true;
 }
@@ -492,7 +490,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
-	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator4Imgui.Get(), nullptr, IID_PPV_ARGS(_cmdList4Imgui.ReleaseAndGetAddressOf()));
+	//result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator4Imgui.Get(), nullptr, IID_PPV_ARGS(_cmdList4Imgui.ReleaseAndGetAddressOf()));
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 	//cmdList->Close();
 
@@ -817,6 +815,8 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
+		resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.003f);
+
 		//フリップしてレンダリングされたイメージをユーザーに表示
 		_swapChain->Present(1, 0);	
 
@@ -892,32 +892,46 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 	//画面クリア
-	float clearColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
+	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
 
 
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-	_cmdList->IASetPrimitiveTopology(/*D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST*/D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
 
 	//頂点バッファーのCPU記述子ハンドルを設定
 	_cmdList->IASetVertexBuffers(0, 1, resourceManager->GetVbView());
 
 	//★インデックスバッファーのビューを設定
-	//_cmdList->IASetIndexBuffer(resourceManager->GetIbView());
+	_cmdList->IASetIndexBuffer(resourceManager->GetIbView());
 
 	//ディスクリプタヒープ設定および
 	//ディスクリプタヒープとルートパラメータの関連付け
 	//ここでルートシグネチャのテーブルとディスクリプタが関連付く
-	//_cmdList->SetDescriptorHeaps(1, resourceManager->GetSRVHeap().GetAddressOf());
-	//_cmdList->SetGraphicsRootDescriptorTable
-	//(
-	//	0, // バインドのスロット番号
-	//	resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
-	//);
+	_cmdList->SetDescriptorHeaps(1, resourceManager->GetSRVHeap().GetAddressOf());
+	_cmdList->SetGraphicsRootDescriptorTable
+	(
+		0, // バインドのスロット番号
+		resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
+	);
 
-	_cmdList->DrawInstanced(fbxInfoManager->GetVertNum(), 1, 0, 0);
+	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
+	//_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
+	
+	auto indiceContainer = fbxInfoManager->GetIndiceAndVertexInfo();
+	auto itIndiceFirst = indiceContainer.begin();
+	int ofst = 0;
+	for (int i = 0; i < indiceContainer.size(); ++i)
+	{	
+		//if(i==2)
+		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
+
+		ofst += itIndiceFirst->second.indices.size();
+		++itIndiceFirst;
+	}
+
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
 	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
@@ -1417,7 +1431,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
 	//_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
-	float clsClr[4] = { 0.9,0.5,0.5,1.0 };
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 	_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理

@@ -3,49 +3,61 @@
 
 int FBXInfoManager::Init()
 {
-	// create manager
-	manager = FbxManager::Create();
+    // create manager
+    manager = FbxManager::Create();
 
-	// create IOSetting
-	FbxIOSettings* ioSettings = FbxIOSettings::Create(manager, IOSROOT);
+    // create IOSetting
+    FbxIOSettings* ioSettings = FbxIOSettings::Create(manager, IOSROOT);
 
     // create Importer
     FbxImporter* importer = FbxImporter::Create(manager, "");
-    if (importer->Initialize("C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking.fbx", -1, manager->GetIOSettings()) == false) {
-        
+    if (importer->Initialize("C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx", -1, manager->GetIOSettings()) == false) {
+
         return -1; // failed
     }
 
     // SceneオブジェクトにFBXファイル内の情報を流し込む
-    FbxScene* scene = FbxScene::Create(manager, "scene");
+    scene = FbxScene::Create(manager, "scene");
     importer->Import(scene);
     importer->Destroy(); // シーンを流し込んだらImporterは解放してOK
+
+    //FbxGeometryConverter converter(manager);
+    //// ポリゴンを三角形にする
+    //converter.Triangulate(scene, true);
+
+    FbxGeometryConverter converter(manager);
+    // 全Mesh分割
+    converter.SplitMeshesPerMaterial(scene, true);
 
     // Scene解析
     // ルートノードを取得
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        enumNodeNamesAndAttributes(root, 0);
+        enumNodeNamesAndAttributes(root, 0, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
     }
 
     // マネージャ解放
     // 関連するすべてのオブジェクトが解放される
+    scene->Destroy();
     manager->Destroy();
 
     return 0;
 }
 
 
-void FBXInfoManager::printSpace(int count) 
+void FBXInfoManager::printSpace(int count)
 {
     for (int i = 0; i < count; ++i)
         printf(" ");
 }
 
-void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ★複数メッシュは読み込めるが描画出来ない。FBX SDKの仕様...?　現状解決策分からず、読み込みモデルをメッシュ結合することで回避する。
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath)
 {
-    printSpace(indent);
+    //printSpace(indent);
     const char* typeNames[] = {
         "eUnknown", "eNull", "eMarker", "eSkeleton", "eMesh", "eNurbs",
         "ePatch", "eCamera", "eCameraStereo", "eCameraSwitcher", "eLight",
@@ -55,218 +67,289 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent)
     };
     const char* name = node->GetName();
     int attrCount = node->GetNodeAttributeCount();
-    if (attrCount == 0) {
-        printf("%s\n", name);
-    }
-    else {
-        printf("%s (", name);
-    }
+    //if (attrCount == 0) {
+    //    printf("%s\n", name);
+    //}
+    //else {
+    //    printf("%s (", name);
+    //}
     for (int i = 0; i < attrCount; ++i) {
         FbxNodeAttribute* attr = node->GetNodeAttributeByIndex(i);
         FbxNodeAttribute::EType type = attr->GetAttributeType();
-        printf("%s", typeNames[type]);
-        if (i + 1 == attrCount) {
-            printf(")\n");
-        }
-        else {
-            printf(", ");
-        }
-        
-        
+        //printf("%s", typeNames[type]);
+        //if (i + 1 == attrCount) {
+        //    printf(")\n");
+        //}
+        //else {
+        //    printf(", ");
+        //}
+
+        //printf("%s\n", typeNames[type]);
         if (typeNames[type] == "eMesh")
-        {            
+        {
             // 頂点x,y,z座標の抽出及びverticesへの格納
             fbxMeshes.resize(meshCnt);
             fbxMesh = (FbxMesh*)attr;
             fbxMeshes.emplace_back(fbxMesh);
             ++meshCnt;
-            
-            // 頂点バッファの取得
-            FbxVector4* vertices = fbxMesh->GetControlPoints();
-            // インデックスバッファの取得
-            int* indices = fbxMesh->GetPolygonVertices();
-          
-            // 頂点座標の数の取得
-            int polygon_vertex_count = fbxMesh->GetPolygonVertexCount();
-            vertNum += fbxMesh->GetControlPointsCount();
 
-            // GetPolygonVertexCount => 頂点数
-            for (int i = 0; i < polygon_vertex_count; i++)
+            // UVセット名の取得
+            // * 現在の実装だとは1つのUVセット名にしか対応していない...
+            FbxStringList uvSetNameList;
+            fbxMesh->GetUVSetNames(uvSetNameList);
+            const char* uvSetName = uvSetNameList.GetStringAt(0);
+            // 頂点座標情報のリストを生成
+            std::vector<std::vector<float>> vertexInfoList;
+            for (int i = 0; i < fbxMesh->GetControlPointsCount(); i++)
             {
-                VertexInfo vertexInfo = {};
-                // インデックスバッファから頂点番号を取得
-                int index = indices[i];
-                indiceVec.emplace_back(index);
-
-                // 頂点座標リストから座標を取得する
-                vertexInfo.pos[0] = -vertices[index][0];
-                vertexInfo.pos[1] = vertices[index][1];
-                vertexInfo.pos[2] = vertices[index][2];
-
-                // 追加
-                m_VertexInfo[name].push_back(vertexInfo);
+                // 頂点座標を読み込んで設定
+                auto point = fbxMesh->GetControlPointAt(i);
+                std::vector<float> vertex;
+                vertex.push_back(point[0]);
+                vertex.push_back(point[1]);
+                vertex.push_back(point[2]);
+                vertexInfoList.push_back(vertex);
             }
-                       
-            // 法線リストの取得
-            FbxArray<FbxVector4> normals;
-            fbxMesh->GetPolygonVertexNormals(normals);
-            // 法線設定
-            for (int i = 0; i < normals.Size(); i++)
+            // 頂点毎の情報を取得する
+            std::vector<unsigned short> indices;
+            std::vector<unsigned short> indicesFiexed4DirectX;
+            std::vector<std::array<int, 2>> oldNewIndexPairList;
+            for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
             {
-                m_VertexInfo[name][i].normal_vec[0] = -normals[i][0];
-                m_VertexInfo[name][i].normal_vec[1] = normals[i][1];
-                m_VertexInfo[name][i].normal_vec[2] = normals[i][2];
-            }
-
-            // uv取得
-            int layerCount = fbxMesh->GetLayerCount();   // meshはKFbxMesh
-            for (int i = 0; i < layerCount; ++i) 
-            {
-                FbxLayer* layer = fbxMesh->GetLayer(i);
-                FbxLayerElementUV* elem = layer->GetUVs();
-                if (elem == 0) 
+                for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
                 {
-                    continue;
-                }
-
-                // UV情報を取得
-                // UVの数・インデックス
-                int UVNum = elem->GetDirectArray().GetCount();
-                int indexNum = elem->GetIndexArray().GetCount();
-                int size = UVNum > indexNum ? UVNum : indexNum;
-                XMFLOAT2* buffer = new XMFLOAT2[size];
-
-                // マッピングモード・リファレンスモード別にUV取得
-                FbxLayerElement::EMappingMode mappingMode = elem->GetMappingMode();
-                FbxLayerElement::EReferenceMode refMode = elem->GetReferenceMode();
-
-                if (mappingMode == FbxLayerElement::eByPolygonVertex)
-                {
-                    if (refMode == FbxLayerElement::eDirect) 
+                    // インデックス座標
+                    auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
+                    // 頂点座標
+                    std::vector<float> vertexInfo = vertexInfoList[vertexIndex];
+                    // 法線座標
+                    FbxVector4 normalVec4;
+                    fbxMesh->GetPolygonVertexNormal(polIndex, polVertexIndex, normalVec4);
+                    // UV座標
+                    FbxVector2 uvVec2;
+                    bool isUnMapped;
+                    fbxMesh->GetPolygonVertexUV(polIndex, polVertexIndex, uvSetName, uvVec2, isUnMapped);
+                    // インデックス座標のチェックと再採番
+                    if (!IsExistNormalUVInfo(vertexInfo))
                     {
-                        // 直接取得
-                        for (int i = 0; i < size; ++i) 
-                        {
-                            m_VertexInfo[name][i].uv[0] = (float)elem->GetDirectArray().GetAt(i)[0];
-                            m_VertexInfo[name][i].uv[1] = (float)elem->GetDirectArray().GetAt(i)[1];
-
-                            //m_VertexInfo[name][i].uvname = elem->GetName();
-                        }
+                        // 法線座標とUV座標が未設定の場合、頂点情報に付与して再設定
+                        vertexInfoList[vertexIndex] = CreateVertexInfo(vertexInfo, normalVec4, uvVec2);
                     }
-                    else
-                        if (refMode == FbxLayerElement::eIndexToDirect) 
-                        {
-                            // インデックスから取得
-                            for (int i = 0; i < size; ++i) 
-                            {
-                                int index = elem->GetIndexArray().GetAt(i);
-                                m_VertexInfo[name][i].uv[0] = (float)elem->GetDirectArray().GetAt(index)[0];
-                                m_VertexInfo[name][i].uv[1] = (float)elem->GetDirectArray().GetAt(index)[1];
+                    else if (!IsSetNormalUV(vertexInfo, normalVec4, uvVec2))
+                    {
+                        // ＊同一頂点インデックスの中で法線座標かUV座標が異なる場合、
+                        // 新たな頂点インデックスとして作成する
+                        vertexIndex = CreateNewVertexIndex(vertexInfo, normalVec4, uvVec2, vertexInfoList, vertexIndex, oldNewIndexPairList);
+                    }
+                    // インデックス座標を設定
 
-                                //m_VertexInfo[name][i].uvname = elem->GetName();
-                            }
-                        }
+                    vertexIndex += meshVertIndexStart; // 分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
+                                                       // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
+                    indices.push_back(vertexIndex);
+                    
                 }
+                
             }
 
-            //// マテリアル情報取得
-            //FbxNode* node = fbxMesh->GetNode();
-            //if (node == 0) 
+            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            auto iter = std::max_element(indices.begin(), indices.end());
+            size_t index = std::distance(indices.begin(), iter);
+            meshVertIndexStart = indices[index] + 1;
+
+            // 頂点情報を生成
+            std::vector<FBXVertex> vertices;
+            for (int i = 0; i < vertexInfoList.size(); i++)
+            {
+                std::vector<float> vertexInfo = vertexInfoList[i];
+                vertices.push_back(FBXVertex{
+                    {
+                        -vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
+                    },
+                    {
+                        vertexInfo[3], vertexInfo[4], vertexInfo[5] // ↑の影響に注意
+                    },
+                    {
+                        vertexInfo[6], /*1.0f - */vertexInfo[7] // Blenderで作成した場合、V値は反転させる
+                    }
+                    });
+            }
+
+            //// 左手系インデクスに修正
+            //for (int i = 0; i < /*fbxMesh->GetPolygonCount()*/indices.size() / 3; ++i)
             //{
-            //    return;
+            //    // 2 => 1 => 0にしてるのは左手系対策
+            //    indicesFiexed4DirectX.push_back(indices[i * 3 + 2]);
+            //    indicesFiexed4DirectX.push_back(indices[i * 3 + 1]);
+            //    indicesFiexed4DirectX.push_back(indices[i * 3]);
             //}
 
-            //// マテリアルの数
-            //int materialNum = node->GetMaterialCount();
-            //if (materialNum == 0) 
-            //{
-            //    return;
-            //}
+            char newName[32];
+            
+            // マテリアル毎に分割されるのに合わせてリネーム
+            sprintf(newName, "%s%d", name, nameCnt);
+            name = newName;
+            nameCnt += 1;
+            finalInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
+            name = node->GetName();
 
-            //// マテリアル情報を取得
-            //for (int i = 0; i < materialNum ; ++i) 
-            //{
-            //    FbxSurfaceMaterial* material = node->GetMaterial(i);
-            //    if (material != 0) 
-            //    {
-            //        std::string type;
-            //        type = material->GetClassId().GetName();
+            // マテリアル情報取得
+            FbxNode* node = fbxMesh->GetNode();
+            if (node == 0) 
+            {
+                //return;
+                continue;
+            }
 
-            //        // マテリアル解析
-            //        // LambertかPhongか
+            // マテリアルの数
+            int materialNum = node->GetMaterialCount();
+            if (materialNum == 0) 
+            {
+                //return;
+                continue;
+            }
 
-            //        if (type == "FbxSurfaceLambert") {
-            //            
-            //            // Lambertにダウンキャスト
-            //            FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)material;
+            // マテリアル情報を取得
+            for (int i = 0; i < materialNum ; ++i) 
+            {
+                FbxSurfaceMaterial* material = node->GetMaterial(i);
+                if (material != 0) 
+                {
+                    std::string type;
+                    type = material->GetClassId().GetName();
 
-            //            // Diffuse
-            //            m_VertexInfo[name][i].lamberInfo.diffuse[0] = (float)lambert->Diffuse.Get().mData[0];
-            //            m_VertexInfo[name][i].lamberInfo.diffuse[1] = (float)lambert->Diffuse.Get().mData[1];
-            //            m_VertexInfo[name][i].lamberInfo.diffuse[2] = (float)lambert->Diffuse.Get().mData[2];
+                    // マテリアル解析
+                    // LambertかPhongか
 
-            //            // Ambient
-            //            m_VertexInfo[name][i].lamberInfo.ambient[0] = (float)lambert->Ambient.Get().mData[0];
-            //            m_VertexInfo[name][i].lamberInfo.ambient[1] = (float)lambert->Ambient.Get().mData[1];
-            //            m_VertexInfo[name][i].lamberInfo.ambient[2] = (float)lambert->Ambient.Get().mData[2];
+                    if (type == "FbxSurfaceLambert") {
+                        
+                        // Lambertにダウンキャスト
+                        FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)material;
 
-            //            // emissive
-            //            m_VertexInfo[name][i].lamberInfo.emissive[0] = (float)lambert->Emissive.Get().mData[0];
-            //            m_VertexInfo[name][i].lamberInfo.emissive[1] = (float)lambert->Emissive.Get().mData[1];
-            //            m_VertexInfo[name][i].lamberInfo.emissive[2] = (float)lambert->Emissive.Get().mData[2];
+                        // Diffuse
+                        m_LambertInfo[name][i].diffuse[0] = (float)lambert->Diffuse.Get().mData[0];
+                        m_LambertInfo[name][i].diffuse[1] = (float)lambert->Diffuse.Get().mData[1];
+                        m_LambertInfo[name][i].diffuse[2] = (float)lambert->Diffuse.Get().mData[2];
 
-            //            // bump
-            //            m_VertexInfo[name][i].lamberInfo.bump[0] = (float)lambert->Bump.Get().mData[0];
-            //            m_VertexInfo[name][i].lamberInfo.bump[1] = (float)lambert->Bump.Get().mData[1];
-            //            m_VertexInfo[name][i].lamberInfo.bump[2] = (float)lambert->Bump.Get().mData[2];
-            //        }
-            //        else if (type == "FbxSurfacePhong") {
+                        // Ambient
+                        m_LambertInfo[name][i].ambient[0] = (float)lambert->Ambient.Get().mData[0];
+                        m_LambertInfo[name][i].ambient[1] = (float)lambert->Ambient.Get().mData[1];
+                        m_LambertInfo[name][i].ambient[2] = (float)lambert->Ambient.Get().mData[2];
 
-            //            // Phongにダウンキャスト
-            //            FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
+                        // emissive
+                        m_LambertInfo[name][i].emissive[0] = (float)lambert->Emissive.Get().mData[0];
+                        m_LambertInfo[name][i].emissive[1] = (float)lambert->Emissive.Get().mData[1];
+                        m_LambertInfo[name][i].emissive[2] = (float)lambert->Emissive.Get().mData[2];
 
-            //            // Diffuse
-            //            m_VertexInfo[name][i].phongInfo.diffuse[0] = (float)phong->Diffuse.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.diffuse[1] = (float)phong->Diffuse.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.diffuse[2] = (float)phong->Diffuse.Get().mData[2];
+                        // bump
+                        m_LambertInfo[name][i].bump[0] = (float)lambert->Bump.Get().mData[0];
+                        m_LambertInfo[name][i].bump[1] = (float)lambert->Bump.Get().mData[1];
+                        m_LambertInfo[name][i].bump[2] = (float)lambert->Bump.Get().mData[2];
+                    }
+                    else if (type == "FbxSurfacePhong") {
 
-            //            // Ambient
-            //            m_VertexInfo[name][i].phongInfo.ambient[0] = (float)phong->Ambient.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.ambient[1] = (float)phong->Ambient.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.ambient[2] = (float)phong->Ambient.Get().mData[2];
+                        // Phongにダウンキャスト
+                        FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
+                        m_PhongInfo[name].resize(materialNum);
+                        printf("%s\n", material->GetName());
+                        // Diffuse
+                        m_PhongInfo[name][i].diffuse[0] = (float)phong->Diffuse.Get().mData[0];
+                        m_PhongInfo[name][i].diffuse[1] = (float)phong->Diffuse.Get().mData[1];
+                        m_PhongInfo[name][i].diffuse[2] = (float)phong->Diffuse.Get().mData[2];
 
-            //            // emissive
-            //            m_VertexInfo[name][i].phongInfo.emissive[0] = (float)phong->Emissive.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.emissive[1] = (float)phong->Emissive.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.emissive[2] = (float)phong->Emissive.Get().mData[2];
+                        // Ambient
+                        m_PhongInfo[name][i].ambient[0] = (float)phong->Ambient.Get().mData[0];
+                        m_PhongInfo[name][i].ambient[1] = (float)phong->Ambient.Get().mData[1];
+                        m_PhongInfo[name][i].ambient[2] = (float)phong->Ambient.Get().mData[2];
 
-            //            // bump
-            //            m_VertexInfo[name][i].phongInfo.bump[0] = (float)phong->Bump.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.bump[1] = (float)phong->Bump.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.bump[2] = (float)phong->Bump.Get().mData[2];
+                        // emissive
+                        m_PhongInfo[name][i].emissive[0] = (float)phong->Emissive.Get().mData[0];
+                        m_PhongInfo[name][i].emissive[1] = (float)phong->Emissive.Get().mData[1];
+                        m_PhongInfo[name][i].emissive[2] = (float)phong->Emissive.Get().mData[2];
 
-            //            // specular
-            //            m_VertexInfo[name][i].phongInfo.specular[0] = (float)phong->Specular.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.specular[1] = (float)phong->Specular.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.specular[2] = (float)phong->Specular.Get().mData[2];
+                        // bump
+                        m_PhongInfo[name][i].bump[0] = (float)phong->Bump.Get().mData[0];
+                        m_PhongInfo[name][i].bump[1] = (float)phong->Bump.Get().mData[1];
+                        m_PhongInfo[name][i].bump[2] = (float)phong->Bump.Get().mData[2];
 
-            //            // reflectivity
-            //            m_VertexInfo[name][i].phongInfo.reflection[0] = (float)phong->Reflection.Get().mData[0];
-            //            m_VertexInfo[name][i].phongInfo.reflection[1] = (float)phong->Reflection.Get().mData[1];
-            //            m_VertexInfo[name][i].phongInfo.reflection[2] = (float)phong->Reflection.Get().mData[2];
+                        // specular
+                        m_PhongInfo[name][i].specular[0] = (float)phong->Specular.Get().mData[0];
+                        m_PhongInfo[name][i].specular[1] = (float)phong->Specular.Get().mData[1];
+                        m_PhongInfo[name][i].specular[2] = (float)phong->Specular.Get().mData[2];
 
-            //            // shiness
-            //            m_VertexInfo[name][i].phongInfo.shineness = (float)phong->Shininess.Get();
-            //        }
-            //    }
-            //}
+                        // reflectivity
+                        m_PhongInfo[name][i].reflection[0] = (float)phong->Reflection.Get().mData[0];
+                        m_PhongInfo[name][i].reflection[1] = (float)phong->Reflection.Get().mData[1];
+                        m_PhongInfo[name][i].reflection[2] = (float)phong->Reflection.Get().mData[2];
+
+                        // shiness
+                        m_PhongInfo[name][i].shineness = (float)phong->Shininess.Get();
+                    }
+                }
+            }
         }
+
     }
 
     int childCount = node->GetChildCount();
-    for (int i = 0; i < childCount; ++i) {
-        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1);
-    }
 
-    fbxModelInfo["C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking.fbx"] = fbxPolygonMap;
+    for (int i = 0; i < childCount; ++i) {
+        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
+    }
+}
+
+// 法線、UV情報が存在しているか？
+bool FBXInfoManager::IsExistNormalUVInfo(const std::vector<float>& vertexInfo)
+{
+    return vertexInfo.size() == 8; // 頂点3 + 法線3 + UV2
+}
+// 頂点情報を生成
+std::vector<float> FBXInfoManager::CreateVertexInfo(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2)
+{
+    std::vector<float> newVertexInfo;
+    // 位置座標
+    newVertexInfo.push_back(vertexInfo[0]);
+    newVertexInfo.push_back(vertexInfo[1]);
+    newVertexInfo.push_back(vertexInfo[2]);
+    // 法線座標
+    newVertexInfo.push_back(normalVec4[0]);
+    newVertexInfo.push_back(normalVec4[1]);
+    newVertexInfo.push_back(normalVec4[2]);
+    // UV座標
+    newVertexInfo.push_back(uvVec2[0]);
+    newVertexInfo.push_back(uvVec2[1]);
+    return newVertexInfo;
+}
+
+// 新たな頂点インデックスを生成する
+int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
+    std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList)
+{
+    // 作成済の場合、該当のインデックスを返す
+    for (int i = 0; i < oldNewIndexPairList.size(); i++)
+    {
+        int newIndex = oldNewIndexPairList[i][1];
+        if (oldIndex == oldNewIndexPairList[i][0]
+            && IsSetNormalUV(vertexInfoList[newIndex], normalVec4, uvVec2))
+        {
+            return newIndex;
+        }
+    }
+    // 作成済でない場合、新たな頂点インデックスとして作成
+    std::vector<float> newVertexInfo = CreateVertexInfo(vertexInfo, normalVec4, uvVec2);
+    vertexInfoList.push_back(newVertexInfo);
+    // 作成したインデックス情報を設定
+    int newIndex = vertexInfoList.size() - 1;
+    std::array<int, 2> oldNewIndexPair{ oldIndex , newIndex };
+    oldNewIndexPairList.push_back(oldNewIndexPair);
+    return newIndex;
+}
+// vertexInfoに法線、UV座標が設定済かどうか？
+bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2)
+{
+    // 法線、UV座標が同値なら設定済とみなす
+    return fabs(vertexInfo[3] - normalVec4[0]) < FLT_EPSILON
+        && fabs(vertexInfo[4] - normalVec4[1]) < FLT_EPSILON
+        && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
+        && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
+        && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
 }

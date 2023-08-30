@@ -7,9 +7,22 @@ HRESULT ResourceManager::Init()
 {
 	HRESULT result = E_FAIL;
 
-	// vertex Resource
+	// vertex Resource		
+	auto vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
+	auto itFirst = vertMap.begin();
+	// create pos container
+	for (int i = 0; i < vertMap.size(); ++i)
+	{		
+		for (int j = 0; j < itFirst->second.vertices.size(); ++j)
+		{
+			verticesPosContainer.push_back(itFirst->second.vertices[j]);
+		}
+		++itFirst;
+	}
+
 	auto vertexHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(_fbxInfoManager->GetVertNum() * sizeof(VertexInfo));
+	auto vertexBuffSize = verticesPosContainer.size() * sizeof(FBXVertex);
+	auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBuffSize);
 
 	result = _dev->CreateCommittedResource
 	(
@@ -20,36 +33,32 @@ HRESULT ResourceManager::Init()
 		nullptr,
 		IID_PPV_ARGS(vertBuff.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
-		
-	result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos); // mapping
-	auto vertMap = _fbxInfoManager->GetVertexMap();
-	auto itFirst = vertMap.begin();
-	// create pos container
-	for (int i = 0; i < vertMap.size(); ++i)
-	{		
-		auto itSecond = itFirst->second.begin();
-		for (int j = 0; j < itFirst->second.size(); ++j)
-		{
-			verticesPosContainer.push_back(itSecond->pos[0]);
-			verticesPosContainer.push_back(itSecond->pos[1]);
-			verticesPosContainer.push_back(itSecond->pos[2]);
-			++itSecond;
-		}
-		++itFirst;
-	}
+	if (result != S_OK) return result;
 
+	vertexTotalNum = verticesPosContainer.size();
+	result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos); // mapping
 	std::copy(std::begin(verticesPosContainer), std::end(verticesPosContainer), mappedVertPos);
 	vertBuff->Unmap(0, nullptr);
 
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();//バッファの仮想アドレス
-	vbView.SizeInBytes = _fbxInfoManager->GetVertNum() * 12;//全バイト数
-	vbView.StrideInBytes = 12;//1頂点あたりのバイト数
-
-
+	vbView.SizeInBytes = vertexBuffSize;//全バイト数
+	vbView.StrideInBytes = sizeof(FBXVertex);//1頂点あたりのバイト数
 
 	// index Resource
-	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(_fbxInfoManager->GetIndexNum());
+	itFirst = vertMap.begin();
+	// create pos container
+	for (int i = 0; i < vertMap.size(); ++i)
+	{
+		for (int j = 0; j < itFirst->second.indices.size(); ++j)
+		{
+			indexContainer.push_back(itFirst->second.indices[j]);
+		}
+		++itFirst;
+	}
+
+	indexNum = indexContainer.size();
+	auto indiceBuffSize = indexNum * sizeof(unsigned short);
+	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
 	result = _dev->CreateCommittedResource
 	(
 		&vertexHeapProp,
@@ -59,16 +68,15 @@ HRESULT ResourceManager::Init()
 		nullptr,
 		IID_PPV_ARGS(idxBuff.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	result = idxBuff->Map(0, nullptr, (void**)&mappedIdx); // mapping
-	auto idxMap = _fbxInfoManager->GetIndiceContainer();
-	std::copy(std::begin(idxMap), std::end(idxMap), mappedIdx);
+	std::copy(std::begin(indexContainer), std::end(indexContainer), mappedIdx);
 	idxBuff->Unmap(0, nullptr);
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
-	ibView.SizeInBytes = sizeof(_fbxInfoManager->GetIndiceContainer()[0]) * idxMap.size();
-	ibView.Format = DXGI_FORMAT_R32_UINT;
+	ibView.SizeInBytes = indiceBuffSize;
+	ibView.Format = DXGI_FORMAT_R16_UINT;
 
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -79,7 +87,7 @@ HRESULT ResourceManager::Init()
 		&dsvHeapDesc,
 		IID_PPV_ARGS(dsvHeap.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	auto depthHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	D3D12_RESOURCE_DESC depthResDesc = {};
@@ -104,7 +112,7 @@ HRESULT ResourceManager::Init()
 		&depthClearValue,
 		IID_PPV_ARGS(depthBuff.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -125,7 +133,7 @@ HRESULT ResourceManager::Init()
 	// create matrix buffer and mapping matrix, create CBV
 	CreateAndMapMatrix(); // mapping
 
-	ClearReference();
+	// ClearReference();
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -155,7 +163,7 @@ HRESULT ResourceManager::CreateRTV()
 		&depthClearValue,
 		IID_PPV_ARGS(renderingBuff.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	// create RTV
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
@@ -165,7 +173,7 @@ HRESULT ResourceManager::CreateRTV()
 	rtvHeapDesc.NodeMask = 0;
 
 	result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -195,16 +203,15 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		nullptr,
 		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
 	);
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
 	//行列用定数バッファーの生成
 	auto worldMat = XMMatrixIdentity();
-
-	//auto worldMat = XMMatrixRotationY(15.0f);
-	auto angle = 0.0f;
+	auto angle = XMMatrixRotationY(3.14f);;
+	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 15, -15);
+	XMFLOAT3 eye(0, 15, -20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -228,6 +235,10 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
 
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = matrixBuff->GetDesc().Width;
+
 	// create view
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -236,14 +247,12 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	srvHeapDesc.NodeMask = 0;
 
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
-	if (result == E_FAIL) return result;
+	if (result != S_OK) return result;
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-	cbvDesc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
-	cbvDesc.SizeInBytes = matrixBuff->GetDesc().Width;
+	
 
 	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
-	auto inc = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//  1:Matrix(world, view, proj)
 	
 	_dev->CreateConstantBufferView
