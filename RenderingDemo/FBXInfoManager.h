@@ -51,8 +51,11 @@ private:
 	FbxMesh* fbxMesh = nullptr;
 
 	int vertNum = 0;
+	int nameCnt = 0;
 	std::vector<int> indiceVec; // 右手系インデクス
 	std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
+	std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
+	std::map<std::string, std::vector<PhongInfo>> m_PhongInfo;
 
 	std::map<std::string, VertexInfo> finalInfo;
 	static bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
@@ -60,6 +63,11 @@ private:
 	static int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
 		std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList);
 	static bool IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
+
+
+	int currentVertIndex = 0;
+	int meshVertIndexStart = 0;
+
 
 public:
 	int Init();

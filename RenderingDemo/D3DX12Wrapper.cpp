@@ -169,7 +169,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	prepareRenderingWindow->CreateAppWindow();
 
 	// TextureLoaderクラスのインスタンス化
-	//textureLoader = new TextureLoader;
+	textureLoader = new TextureLoader;
 
 	//// アニメーション用の回転・並行移動行列の参照準備
 	//for (int i = 0; i < strModelNum; ++i)
@@ -925,6 +925,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	int ofst = 0;
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
+		//if(i==2)
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
 		ofst += itIndiceFirst->second.indices.size();

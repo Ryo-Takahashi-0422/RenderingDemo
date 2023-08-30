@@ -45,8 +45,6 @@ HRESULT ResourceManager::Init()
 	vbView.StrideInBytes = sizeof(FBXVertex);//1頂点あたりのバイト数
 
 	// index Resource
-	//auto indiceMap = _fbxInfoManager->GetIndiceContainer();
-	//auto itIndiceFirst = indiceMap.begin();
 	itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
@@ -135,7 +133,7 @@ HRESULT ResourceManager::Init()
 	// create matrix buffer and mapping matrix, create CBV
 	CreateAndMapMatrix(); // mapping
 
-	//ClearReference();
+	// ClearReference();
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -213,7 +211,7 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 15, -15);
+	XMFLOAT3 eye(0, 15, -20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH

@@ -25,6 +25,10 @@ int FBXInfoManager::Init()
     //// ポリゴンを三角形にする
     //converter.Triangulate(scene, true);
 
+    FbxGeometryConverter converter(manager);
+    // 全Mesh分割
+    converter.SplitMeshesPerMaterial(scene, true);
+
     // Scene解析
     // ルートノードを取得
     FbxNode* root = scene->GetRootNode();
@@ -114,8 +118,6 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             {
                 for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
                 {
-                    printf("%d\n", fbxMesh->GetPolygonCount());
-                    printf("%d\n", fbxMesh->GetPolygonSize(polIndex));
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
                     // 頂点座標
@@ -141,9 +143,19 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                     }
                     // インデックス座標を設定
 
+                    vertexIndex += meshVertIndexStart; // 分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
+                                                       // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
                     indices.push_back(vertexIndex);
+                    
                 }
+                
             }
+
+            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            auto iter = std::max_element(indices.begin(), indices.end());
+            size_t index = std::distance(indices.begin(), iter);
+            meshVertIndexStart = indices[index] + 1;
+
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
             for (int i = 0; i < vertexInfoList.size(); i++)
@@ -171,7 +183,109 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             //    indicesFiexed4DirectX.push_back(indices[i * 3]);
             //}
 
+            char newName[32];
+            
+            // マテリアル毎に分割されるのに合わせてリネーム
+            sprintf(newName, "%s%d", name, nameCnt);
+            name = newName;
+            nameCnt += 1;
             finalInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
+            name = node->GetName();
+
+            // マテリアル情報取得
+            FbxNode* node = fbxMesh->GetNode();
+            if (node == 0) 
+            {
+                //return;
+                continue;
+            }
+
+            // マテリアルの数
+            int materialNum = node->GetMaterialCount();
+            if (materialNum == 0) 
+            {
+                //return;
+                continue;
+            }
+
+            // マテリアル情報を取得
+            for (int i = 0; i < materialNum ; ++i) 
+            {
+                FbxSurfaceMaterial* material = node->GetMaterial(i);
+                if (material != 0) 
+                {
+                    std::string type;
+                    type = material->GetClassId().GetName();
+
+                    // マテリアル解析
+                    // LambertかPhongか
+
+                    if (type == "FbxSurfaceLambert") {
+                        
+                        // Lambertにダウンキャスト
+                        FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)material;
+
+                        // Diffuse
+                        m_LambertInfo[name][i].diffuse[0] = (float)lambert->Diffuse.Get().mData[0];
+                        m_LambertInfo[name][i].diffuse[1] = (float)lambert->Diffuse.Get().mData[1];
+                        m_LambertInfo[name][i].diffuse[2] = (float)lambert->Diffuse.Get().mData[2];
+
+                        // Ambient
+                        m_LambertInfo[name][i].ambient[0] = (float)lambert->Ambient.Get().mData[0];
+                        m_LambertInfo[name][i].ambient[1] = (float)lambert->Ambient.Get().mData[1];
+                        m_LambertInfo[name][i].ambient[2] = (float)lambert->Ambient.Get().mData[2];
+
+                        // emissive
+                        m_LambertInfo[name][i].emissive[0] = (float)lambert->Emissive.Get().mData[0];
+                        m_LambertInfo[name][i].emissive[1] = (float)lambert->Emissive.Get().mData[1];
+                        m_LambertInfo[name][i].emissive[2] = (float)lambert->Emissive.Get().mData[2];
+
+                        // bump
+                        m_LambertInfo[name][i].bump[0] = (float)lambert->Bump.Get().mData[0];
+                        m_LambertInfo[name][i].bump[1] = (float)lambert->Bump.Get().mData[1];
+                        m_LambertInfo[name][i].bump[2] = (float)lambert->Bump.Get().mData[2];
+                    }
+                    else if (type == "FbxSurfacePhong") {
+
+                        // Phongにダウンキャスト
+                        FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
+                        m_PhongInfo[name].resize(materialNum);
+                        printf("%s\n", material->GetName());
+                        // Diffuse
+                        m_PhongInfo[name][i].diffuse[0] = (float)phong->Diffuse.Get().mData[0];
+                        m_PhongInfo[name][i].diffuse[1] = (float)phong->Diffuse.Get().mData[1];
+                        m_PhongInfo[name][i].diffuse[2] = (float)phong->Diffuse.Get().mData[2];
+
+                        // Ambient
+                        m_PhongInfo[name][i].ambient[0] = (float)phong->Ambient.Get().mData[0];
+                        m_PhongInfo[name][i].ambient[1] = (float)phong->Ambient.Get().mData[1];
+                        m_PhongInfo[name][i].ambient[2] = (float)phong->Ambient.Get().mData[2];
+
+                        // emissive
+                        m_PhongInfo[name][i].emissive[0] = (float)phong->Emissive.Get().mData[0];
+                        m_PhongInfo[name][i].emissive[1] = (float)phong->Emissive.Get().mData[1];
+                        m_PhongInfo[name][i].emissive[2] = (float)phong->Emissive.Get().mData[2];
+
+                        // bump
+                        m_PhongInfo[name][i].bump[0] = (float)phong->Bump.Get().mData[0];
+                        m_PhongInfo[name][i].bump[1] = (float)phong->Bump.Get().mData[1];
+                        m_PhongInfo[name][i].bump[2] = (float)phong->Bump.Get().mData[2];
+
+                        // specular
+                        m_PhongInfo[name][i].specular[0] = (float)phong->Specular.Get().mData[0];
+                        m_PhongInfo[name][i].specular[1] = (float)phong->Specular.Get().mData[1];
+                        m_PhongInfo[name][i].specular[2] = (float)phong->Specular.Get().mData[2];
+
+                        // reflectivity
+                        m_PhongInfo[name][i].reflection[0] = (float)phong->Reflection.Get().mData[0];
+                        m_PhongInfo[name][i].reflection[1] = (float)phong->Reflection.Get().mData[1];
+                        m_PhongInfo[name][i].reflection[2] = (float)phong->Reflection.Get().mData[2];
+
+                        // shiness
+                        m_PhongInfo[name][i].shineness = (float)phong->Shininess.Get();
+                    }
+                }
+            }
         }
 
     }
