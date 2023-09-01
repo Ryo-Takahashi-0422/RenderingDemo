@@ -38,9 +38,9 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)IndexÉrÉÖÅ[
 
 	/*std::vector<float>*/std::vector<FBXVertex> verticesPosContainer;
-	/*std::vector<int>*/std::vector<unsigned short> indexContainer;
+	/*std::vector<int>*/std::vector<unsigned int> indexContainer;
 	FBXVertex*/*unsigned char**/ mappedVertPos = nullptr;
-	unsigned short* mappedIdx = nullptr;
+	unsigned int* mappedIdx = nullptr;
 	int vertexTotalNum; // vertex total num
 	int indexNum; // index total num
 

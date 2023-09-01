@@ -57,7 +57,7 @@ HRESULT ResourceManager::Init()
 	}
 
 	indexNum = indexContainer.size();
-	auto indiceBuffSize = indexNum * sizeof(unsigned short);
+	auto indiceBuffSize = indexNum * sizeof(unsigned int);
 	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
 	result = _dev->CreateCommittedResource
 	(
@@ -76,7 +76,7 @@ HRESULT ResourceManager::Init()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.SizeInBytes = indiceBuffSize;
-	ibView.Format = DXGI_FORMAT_R16_UINT;
+	ibView.Format = DXGI_FORMAT_R32_UINT;
 
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -208,10 +208,10 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	//行列用定数バッファーの生成
 	auto worldMat = XMMatrixIdentity();
 	auto angle = XMMatrixRotationY(3.14f);;
-	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 15, -20);
+	XMFLOAT3 eye(0, 5, 20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -227,7 +227,7 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		XM_PIDIV2, // 画角90°
 		static_cast<float>(_prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(_prepareRenderingWindow->GetWindowWidth()),
 		1.0, // ニア―クリップ
-		100.0 // ファークリップ
+		300.0 // ファークリップ
 	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping

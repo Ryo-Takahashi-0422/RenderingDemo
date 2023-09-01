@@ -32,13 +32,15 @@ struct FBXVertex
 struct VertexInfo
 {
 	std::vector<FBXVertex> vertices;
-	std::vector<unsigned short> indices;
+	std::vector<unsigned int> indices;
 };
 
 class FBXInfoManager
 {
 private:
 	int indiceCnt = 0;
+
+	std::string modelPath;
 
 	FbxManager* manager = nullptr;
 	FbxScene* scene = nullptr;
@@ -52,12 +54,14 @@ private:
 
 	int vertNum = 0;
 	int nameCnt = 0;
+	int materialNameCnt = 0;
 	std::vector<int> indiceVec; // 右手系インデクス
 	std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
 	std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
 	std::map<std::string, std::vector<PhongInfo>> m_PhongInfo;
 
-	std::map<std::string, VertexInfo> finalInfo;
+	std::unordered_map<std::string, VertexInfo> finalInfo;
+	std::vector<std::pair<std::string, VertexInfo>> finalOrder;
 	static bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
 	static std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 	static int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
@@ -67,6 +71,7 @@ private:
 
 	int currentVertIndex = 0;
 	int meshVertIndexStart = 0;
+	std::string lastMaterialName;
 
 
 public:
@@ -74,5 +79,5 @@ public:
 	int GetVertNum() { return vertNum; };
 	int GetIndexNum() { return indiceVec.size(); };
 	std::map<std::string, std::vector<int>> GetIndiceContainer() { return fixedIndiceVec; };
-	std::map<std::string, VertexInfo> GetIndiceAndVertexInfo() { return finalInfo; };
+	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalOrder; };
 };

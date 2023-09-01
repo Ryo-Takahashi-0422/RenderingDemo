@@ -3,6 +3,12 @@
 
 int FBXInfoManager::Init()
 {
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\twocharTest.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\BattleTank.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
+    
+    
     // create manager
     manager = FbxManager::Create();
 
@@ -11,7 +17,7 @@ int FBXInfoManager::Init()
 
     // create Importer
     FbxImporter* importer = FbxImporter::Create(manager, "");
-    if (importer->Initialize("C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx", -1, manager->GetIOSettings()) == false) {
+    if (importer->Initialize(modelPath.c_str(), -1, manager->GetIOSettings()) == false) {
 
         return -1; // failed
     }
@@ -21,11 +27,11 @@ int FBXInfoManager::Init()
     importer->Import(scene);
     importer->Destroy(); // シーンを流し込んだらImporterは解放してOK
 
-    //FbxGeometryConverter converter(manager);
-    //// ポリゴンを三角形にする
+    FbxGeometryConverter converter(manager);
+    // ポリゴンを三角形にする
     //converter.Triangulate(scene, true);
 
-    FbxGeometryConverter converter(manager);
+    // FbxGeometryConverter converter(manager);
     // 全Mesh分割
     converter.SplitMeshesPerMaterial(scene, true);
 
@@ -34,7 +40,7 @@ int FBXInfoManager::Init()
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        enumNodeNamesAndAttributes(root, 0, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
+        enumNodeNamesAndAttributes(root, 0, modelPath);
     }
 
     // マネージャ解放
@@ -111,13 +117,16 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                 vertexInfoList.push_back(vertex);
             }
             // 頂点毎の情報を取得する
-            std::vector<unsigned short> indices;
-            std::vector<unsigned short> indicesFiexed4DirectX;
+            std::vector<unsigned int> indices;
+            std::vector<unsigned int> indicesFiexed4DirectX;
             std::vector<std::array<int, 2>> oldNewIndexPairList;
             for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
             {
                 for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
                 {
+                    //printf("%d\n", fbxMesh->GetPolygonCount());
+                    //printf("%d\n", fbxMesh->GetPolygonSize(polIndex));
+
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
                     // 頂点座標
@@ -154,7 +163,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
             auto iter = std::max_element(indices.begin(), indices.end());
             size_t index = std::distance(indices.begin(), iter);
-            meshVertIndexStart = indices[index] + 1;
+            meshVertIndexStart = indices[index] + 1;                       
 
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
@@ -188,9 +197,27 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             // マテリアル毎に分割されるのに合わせてリネーム
             sprintf(newName, "%s%d", name, nameCnt);
             name = newName;
-            nameCnt += 1;
+            
             finalInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
-            name = node->GetName();
+            auto itFI = finalInfo.begin();
+            for (int i = 0; i <= nameCnt; i++)
+            {
+                ++itFI;
+            }
+            
+            // メッシュを読み込んだ順番に整列する。
+            // 分割したメッシュの頂点を描画するとき、別のメッシュのインデックスが割り込むと描画が失敗する。
+            // また、ステージなどメッシュが複数存在する場合は統一しておく。統一しないとそれぞれのメッシュのローカル座標で描画されるため、メッシュがラップした状態での描画になってしまう。
+            // Align meshes in the order in which they are read.
+            // When drawing the vertices of a divided mesh, if the index of another mesh interrupts the drawing, the drawing will fail.
+            // Also, if there are multiple meshes, such as stages, they should be unified.Otherwise, the local coordinates of each mesh will be used for drawing, resulting in wrapped meshes.
+            finalOrder.resize(nameCnt + 1);
+            finalOrder.at(nameCnt).first = name;
+            finalOrder.at(nameCnt).second.vertices = vertices;
+            finalOrder.at(nameCnt).second.indices = indices;
+
+            nameCnt += 1;
+            //name = node->GetName();
 
             // マテリアル情報取得
             FbxNode* node = fbxMesh->GetNode();
@@ -209,13 +236,21 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             }
 
             // マテリアル情報を取得
-            for (int i = 0; i < materialNum ; ++i) 
-            {
+            //for (int i = 0; i < materialNum ; ++i) 
+            //{
                 FbxSurfaceMaterial* material = node->GetMaterial(i);
+                
                 if (material != 0) 
                 {
                     std::string type;
                     type = material->GetClassId().GetName();
+
+                    char newMaterialName[32];
+
+                    //// マテリアル毎に分割されるのに合わせてリネーム
+                    //sprintf(newMaterialName, "%s%d", name, materialNameCnt);
+                    //name = newMaterialName;
+                    //++materialNameCnt;
 
                     // マテリアル解析
                     // LambertかPhongか
@@ -285,15 +320,18 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                         m_PhongInfo[name][i].shineness = (float)phong->Shininess.Get();
                     }
                 }
-            }
+                name = node->GetName();
+            //}
         }
 
     }
 
+
+
     int childCount = node->GetChildCount();
 
     for (int i = 0; i < childCount; ++i) {
-        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
+        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, modelPath);
     }
 }
 
