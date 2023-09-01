@@ -191,6 +191,7 @@ HRESULT ResourceManager::CreateRTV()
 
 HRESULT ResourceManager::CreateAndMapMatrix()
 {
+	//Mapping WVP Matrix
 	auto wvpHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto wvpResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(FBXSceneMatrix) + 0xff) & ~0xff);
 
@@ -204,10 +205,9 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
 	);
 	if (result != S_OK) return result;
-
-	//行列用定数バッファーの生成
+		
 	auto worldMat = XMMatrixIdentity();
-	auto angle = XMMatrixRotationY(3.14f);;
+	auto angle = XMMatrixRotationY(3.14f);
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
@@ -235,21 +235,67 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
 
+	// Mapping Phong Material Parameters
+	auto phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
+	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+
+	result = _dev->CreateCommittedResource
+	(
+		&phongHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&phongResdesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(materialParamBuff.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
+	materialParamBuff->Map(0, nullptr, (void**)&mappedPhong);
+	//for (auto& info : phongInfos)
+	//{
+	//	mappedPhong->diffuse[0] = info.second.diffuse[0];
+	//	mappedPhong->diffuse[1] = info.second.diffuse[1];
+	//	mappedPhong->diffuse[2] = info.second.diffuse[2];
+
+	//	mappedPhong->ambient[0] = info.second.ambient[0];
+	//	mappedPhong->ambient[1] = info.second.ambient[1];
+	//	mappedPhong->ambient[2] = info.second.ambient[2];
+
+	//	mappedPhong->emissive[0] = info.second.emissive[0];
+	//	mappedPhong->emissive[1] = info.second.emissive[1];
+	//	mappedPhong->emissive[2] = info.second.emissive[2];
+
+	//	mappedPhong->bump[0] = info.second.bump[0];
+	//	mappedPhong->bump[1] = info.second.bump[1];
+	//	mappedPhong->bump[2] = info.second.bump[2];
+
+	//	mappedPhong->specular[0] = info.second.specular[0];
+	//	mappedPhong->specular[1] = info.second.specular[1];
+	//	mappedPhong->specular[2] = info.second.specular[2];
+
+	//	mappedPhong->reflection[0] = info.second.reflection[0];
+	//	mappedPhong->reflection[1] = info.second.reflection[1];
+	//	mappedPhong->reflection[2] = info.second.reflection[2];
+
+	//	mappedPhong->shineness = info.second.shineness;
+
+	//	++mappedPhong;
+	//}
+
+	// create view
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 	cbvDesc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = matrixBuff->GetDesc().Width;
 
-	// create view
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 2; // 1:Matrix(world, view, proj)
+	srvHeapDesc.NumDescriptors = 31; // 1:Matrix(world, view, proj), 2:rendering result, 3:material paramerers * 29, 
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	if (result != S_OK) return result;
-
-	
 
 	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -275,6 +321,21 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		&srvDesc,
 		handle
 	);
+
+	// 3:Phong Material Parameters
+
+	for (int i = 0; i < phongInfos.size(); ++i)
+	{
+		handle.ptr += inc * (1 + i);
+		D3D12_CONSTANT_BUFFER_VIEW_DESC phongCBVDesc = {};
+		phongCBVDesc.BufferLocation = materialParamBuff->GetGPUVirtualAddress();
+		phongCBVDesc.SizeInBytes = materialParamBuff->GetDesc().Width;
+		_dev->CreateConstantBufferView
+		(
+			&phongCBVDesc,
+			handle
+		);
+	}
 
 	return S_OK;
 }

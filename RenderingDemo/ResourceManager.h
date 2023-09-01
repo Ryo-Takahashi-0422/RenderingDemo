@@ -33,18 +33,21 @@ private:
 	ComPtr<ID3D12Resource> depthBuff = nullptr; // depth buffer
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
+	ComPtr<ID3D12Resource> materialParamBuff = nullptr; // Lambert or Phong Material Parameters
 
 	D3D12_VERTEX_BUFFER_VIEW vbView = {}; // Vertexビュー
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)Indexビュー
 
-	/*std::vector<float>*/std::vector<FBXVertex> verticesPosContainer;
-	/*std::vector<int>*/std::vector<unsigned int> indexContainer;
-	FBXVertex*/*unsigned char**/ mappedVertPos = nullptr;
+	std::vector<FBXVertex> verticesPosContainer;
+	std::vector<unsigned int> indexContainer;
+	FBXVertex* mappedVertPos = nullptr;
 	unsigned int* mappedIdx = nullptr;
+
 	int vertexTotalNum; // vertex total num
 	int indexNum; // index total num
 
 	FBXSceneMatrix* mappedMatrix = nullptr;
+	PhongInfo* mappedPhong = nullptr;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle;
 
@@ -66,5 +69,6 @@ public:
 	int GetIndexTotalNum() { return indexNum; };
 
 	FBXSceneMatrix* GetMappedMatrix() { return mappedMatrix; };
+	PhongInfo* GetMappedPhong() { return mappedPhong; };
 };
 
