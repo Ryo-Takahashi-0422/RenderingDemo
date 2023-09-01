@@ -901,7 +901,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
-
 	//頂点バッファーのCPU記述子ハンドルを設定
 	_cmdList->IASetVertexBuffers(0, 1, resourceManager->GetVbView());
 
@@ -914,7 +913,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	auto dHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 	dHandle.ptr += buffSize*2;
-	_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 	
@@ -927,35 +926,33 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	auto mappedPhong = resourceManager->GetMappedPhong();
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
-		mappedPhong->diffuse[0] = itPhonsInfos->second.diffuse[0];
-		mappedPhong->diffuse[1] = itPhonsInfos->second.diffuse[1];
-		mappedPhong->diffuse[2] = itPhonsInfos->second.diffuse[2];
-		mappedPhong->ambient[0] = itPhonsInfos->second.ambient[0];
-		mappedPhong->ambient[1] = itPhonsInfos->second.ambient[1];
-		mappedPhong->ambient[2] = itPhonsInfos->second.ambient[2];
-		mappedPhong->emissive[0] = itPhonsInfos->second.emissive[0];
-		mappedPhong->emissive[1] = itPhonsInfos->second.emissive[1];
-		mappedPhong->emissive[2] = itPhonsInfos->second.emissive[2];
-		mappedPhong->bump[0] = itPhonsInfos->second.bump[0];
-		mappedPhong->bump[1] = itPhonsInfos->second.bump[1];
-		mappedPhong->bump[2] = itPhonsInfos->second.bump[2];
-		mappedPhong->specular[0] = itPhonsInfos->second.specular[0];
-		mappedPhong->specular[1] = itPhonsInfos->second.specular[1];
-		mappedPhong->specular[2] = itPhonsInfos->second.specular[2];
-		mappedPhong->reflection[0] = itPhonsInfos->second.reflection[0];
-		mappedPhong->reflection[1] = itPhonsInfos->second.reflection[1];
-		mappedPhong->reflection[2] = itPhonsInfos->second.reflection[2];
-
-		mappedPhong->shineness = itPhonsInfos->second.shineness;
+		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+		mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
+		mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
+		mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
+		mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
+		mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
+		mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
+		mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
+		mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
+		mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
+		mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
+		mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
+		mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
+		mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
+		mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
+		mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
+		mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
+		mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
+		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
+		mappedPhong[i]->shineness = itPhonsInfos->second.shineness;
 
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
+		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
-
-		++itPhonsInfos;
-		
-		//mappedPhong++;
+		++itPhonsInfos;		
 	}
 
 

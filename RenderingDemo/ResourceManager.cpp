@@ -240,48 +240,25 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
-	result = _dev->CreateCommittedResource
-	(
-		&phongHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&phongResdesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
-		nullptr,
-		IID_PPV_ARGS(materialParamBuff.ReleaseAndGetAddressOf())
-	);
-	if (result != S_OK) return result;
+	for (int i = 0; i < phongInfos.size(); ++i)
+	{
+		auto& resource = materialParamBuffContainer[i];
+		//Test(resource);
+		auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
-	materialParamBuff->Map(0, nullptr, (void**)&mappedPhong);
-	//for (auto& info : phongInfos)
-	//{
-	//	mappedPhong->diffuse[0] = info.second.diffuse[0];
-	//	mappedPhong->diffuse[1] = info.second.diffuse[1];
-	//	mappedPhong->diffuse[2] = info.second.diffuse[2];
-
-	//	mappedPhong->ambient[0] = info.second.ambient[0];
-	//	mappedPhong->ambient[1] = info.second.ambient[1];
-	//	mappedPhong->ambient[2] = info.second.ambient[2];
-
-	//	mappedPhong->emissive[0] = info.second.emissive[0];
-	//	mappedPhong->emissive[1] = info.second.emissive[1];
-	//	mappedPhong->emissive[2] = info.second.emissive[2];
-
-	//	mappedPhong->bump[0] = info.second.bump[0];
-	//	mappedPhong->bump[1] = info.second.bump[1];
-	//	mappedPhong->bump[2] = info.second.bump[2];
-
-	//	mappedPhong->specular[0] = info.second.specular[0];
-	//	mappedPhong->specular[1] = info.second.specular[1];
-	//	mappedPhong->specular[2] = info.second.specular[2];
-
-	//	mappedPhong->reflection[0] = info.second.reflection[0];
-	//	mappedPhong->reflection[1] = info.second.reflection[1];
-	//	mappedPhong->reflection[2] = info.second.reflection[2];
-
-	//	mappedPhong->shineness = info.second.shineness;
-
-	//	++mappedPhong;
-	//}
+		result = _dev->CreateCommittedResource
+		(
+			&phongHeapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&phongResdesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+			nullptr,
+			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+		);
+		if (result != S_OK) return result;
+		resource->Map(0, nullptr, (void**)&mappedPhoneContainer[i]);	
+	}
 
 	// create view
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
@@ -326,18 +303,39 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
-		handle.ptr += inc * (1 + i);
+
+		auto& resource = materialParamBuffContainer[i];
+		handle.ptr += inc;
+
 		D3D12_CONSTANT_BUFFER_VIEW_DESC phongCBVDesc = {};
-		phongCBVDesc.BufferLocation = materialParamBuff->GetGPUVirtualAddress();
-		phongCBVDesc.SizeInBytes = materialParamBuff->GetDesc().Width;
+		phongCBVDesc.BufferLocation = resource->GetGPUVirtualAddress();
+		phongCBVDesc.SizeInBytes = resource->GetDesc().Width;
 		_dev->CreateConstantBufferView
 		(
 			&phongCBVDesc,
 			handle
 		);
+		
 	}
 
 	return S_OK;
+}
+
+HRESULT ResourceManager::Test(ComPtr<ID3D12Resource> materialResource)
+{
+	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+
+	auto result = _dev->CreateCommittedResource
+	(
+		&phongHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&phongResdesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(materialResource.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
 }
 
 void ResourceManager::ClearReference()

@@ -8,6 +8,7 @@ float4 FBXPS(Output input) : SV_TARGET
     // ディフューズ計算
     float diffuseB = saturate(dot(light, input.norm.xyz));
     
+    
     return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
     return input.norm;
     return float4(input.uv, 1, 1);
