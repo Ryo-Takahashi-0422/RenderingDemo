@@ -33,12 +33,16 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     //bool isSelfShadow;
 };
 
-//cbuffer Material : register(b1)
-//{
-//    float4 diffuse; // r,g,b:diffuse , a:alpha
-//    float4 specular; // r,g,b:specular , a:specularity
-//    float3 ambient;
-//}
+cbuffer Material : register(b1)
+{
+    float3 diffuse;
+    float3 ambient;
+    float3 emissive;
+    float3 bump;
+    float3 specular;
+    float3 reflection;
+    float shinenes;
+}
 
 //SamplerState smp : register(s0); // No.0 sampler
 //SamplerState smpToon : register(s1); // No.1 sampler(toon)

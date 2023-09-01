@@ -57,7 +57,7 @@ HRESULT ResourceManager::Init()
 	}
 
 	indexNum = indexContainer.size();
-	auto indiceBuffSize = indexNum * sizeof(unsigned short);
+	auto indiceBuffSize = indexNum * sizeof(unsigned int);
 	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
 	result = _dev->CreateCommittedResource
 	(
@@ -76,7 +76,7 @@ HRESULT ResourceManager::Init()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.SizeInBytes = indiceBuffSize;
-	ibView.Format = DXGI_FORMAT_R16_UINT;
+	ibView.Format = DXGI_FORMAT_R32_UINT;
 
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -191,6 +191,7 @@ HRESULT ResourceManager::CreateRTV()
 
 HRESULT ResourceManager::CreateAndMapMatrix()
 {
+	//Mapping WVP Matrix
 	auto wvpHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto wvpResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(FBXSceneMatrix) + 0xff) & ~0xff);
 
@@ -204,14 +205,13 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
 	);
 	if (result != S_OK) return result;
-
-	//行列用定数バッファーの生成
+		
 	auto worldMat = XMMatrixIdentity();
-	auto angle = XMMatrixRotationY(3.14f);;
-	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	auto angle = XMMatrixRotationY(3.14f);
+	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 15, -20);
+	XMFLOAT3 eye(0, 5, 20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -227,7 +227,7 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		XM_PIDIV2, // 画角90°
 		static_cast<float>(_prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(_prepareRenderingWindow->GetWindowWidth()),
 		1.0, // ニア―クリップ
-		100.0 // ファークリップ
+		300.0 // ファークリップ
 	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
@@ -235,21 +235,44 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
 
+	// Mapping Phong Material Parameters
+	auto phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
+	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+
+	for (int i = 0; i < phongInfos.size(); ++i)
+	{
+		auto& resource = materialParamBuffContainer[i];
+		//Test(resource);
+		auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+
+		result = _dev->CreateCommittedResource
+		(
+			&phongHeapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&phongResdesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+			nullptr,
+			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+		);
+		if (result != S_OK) return result;
+		resource->Map(0, nullptr, (void**)&mappedPhoneContainer[i]);	
+	}
+
+	// create view
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 	cbvDesc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = matrixBuff->GetDesc().Width;
 
-	// create view
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 2; // 1:Matrix(world, view, proj)
+	srvHeapDesc.NumDescriptors = 31; // 1:Matrix(world, view, proj), 2:rendering result, 3:material paramerers * 29, 
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	if (result != S_OK) return result;
-
-	
 
 	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -276,7 +299,43 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		handle
 	);
 
+	// 3:Phong Material Parameters
+
+	for (int i = 0; i < phongInfos.size(); ++i)
+	{
+
+		auto& resource = materialParamBuffContainer[i];
+		handle.ptr += inc;
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC phongCBVDesc = {};
+		phongCBVDesc.BufferLocation = resource->GetGPUVirtualAddress();
+		phongCBVDesc.SizeInBytes = resource->GetDesc().Width;
+		_dev->CreateConstantBufferView
+		(
+			&phongCBVDesc,
+			handle
+		);
+		
+	}
+
 	return S_OK;
+}
+
+HRESULT ResourceManager::Test(ComPtr<ID3D12Resource> materialResource)
+{
+	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+
+	auto result = _dev->CreateCommittedResource
+	(
+		&phongHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&phongResdesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(materialResource.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
 }
 
 void ResourceManager::ClearReference()

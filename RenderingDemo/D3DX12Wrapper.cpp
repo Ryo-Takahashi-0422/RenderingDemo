@@ -816,6 +816,7 @@ void D3DX12Wrapper::Run() {
 		//SetFov();
 
 		resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.003f);
+		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
 
 		//フリップしてレンダリングされたイメージをユーザーに表示
 		_swapChain->Present(1, 0);	
@@ -900,36 +901,58 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
-
 	//頂点バッファーのCPU記述子ハンドルを設定
 	_cmdList->IASetVertexBuffers(0, 1, resourceManager->GetVbView());
 
 	//★インデックスバッファーのビューを設定
 	_cmdList->IASetIndexBuffer(resourceManager->GetIbView());
 
-	//ディスクリプタヒープ設定および
-	//ディスクリプタヒープとルートパラメータの関連付け
-	//ここでルートシグネチャのテーブルとディスクリプタが関連付く
+	//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
 	_cmdList->SetDescriptorHeaps(1, resourceManager->GetSRVHeap().GetAddressOf());
-	_cmdList->SetGraphicsRootDescriptorTable
-	(
-		0, // バインドのスロット番号
-		resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
-	);
+
+	auto dHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
+	dHandle.ptr += buffSize*2;
+	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
-	//_cmdList->DrawIndexedInstanced(resourceManager->GetIndexTotalNum(), 1, 0, 0, 0);
 	
 	auto indiceContainer = fbxInfoManager->GetIndiceAndVertexInfo();
 	auto itIndiceFirst = indiceContainer.begin();
 	int ofst = 0;
+
+	auto phongInfos = fbxInfoManager->GetPhongMaterialParamertInfo();
+	auto itPhonsInfos = phongInfos.begin();
+	auto mappedPhong = resourceManager->GetMappedPhong();
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
-		//if(i==2)
+		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+		mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
+		mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
+		mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
+		mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
+		mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
+		mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
+		mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
+		mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
+		mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
+		mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
+		mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
+		mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
+		mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
+		mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
+		mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
+		mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
+		mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
+		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
+		mappedPhong[i]->shineness = itPhonsInfos->second.shineness;
+
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
+		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
+		++itPhonsInfos;		
 	}
 
 

@@ -3,6 +3,12 @@
 
 int FBXInfoManager::Init()
 {
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\twocharTest.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\BattleTank.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
+    
+    
     // create manager
     manager = FbxManager::Create();
 
@@ -11,7 +17,7 @@ int FBXInfoManager::Init()
 
     // create Importer
     FbxImporter* importer = FbxImporter::Create(manager, "");
-    if (importer->Initialize("C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx", -1, manager->GetIOSettings()) == false) {
+    if (importer->Initialize(modelPath.c_str(), -1, manager->GetIOSettings()) == false) {
 
         return -1; // failed
     }
@@ -21,11 +27,11 @@ int FBXInfoManager::Init()
     importer->Import(scene);
     importer->Destroy(); // シーンを流し込んだらImporterは解放してOK
 
-    //FbxGeometryConverter converter(manager);
-    //// ポリゴンを三角形にする
+    FbxGeometryConverter converter(manager);
+    // ポリゴンを三角形にする
     //converter.Triangulate(scene, true);
 
-    FbxGeometryConverter converter(manager);
+    // FbxGeometryConverter converter(manager);
     // 全Mesh分割
     converter.SplitMeshesPerMaterial(scene, true);
 
@@ -34,7 +40,7 @@ int FBXInfoManager::Init()
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        enumNodeNamesAndAttributes(root, 0, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
+        enumNodeNamesAndAttributes(root, 0, modelPath);
     }
 
     // マネージャ解放
@@ -45,19 +51,16 @@ int FBXInfoManager::Init()
     return 0;
 }
 
-
-void FBXInfoManager::printSpace(int count)
-{
-    for (int i = 0; i < count; ++i)
-        printf(" ");
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ★複数メッシュは読み込めるが描画出来ない。FBX SDKの仕様...?　現状解決策分からず、読み込みモデルをメッシュ結合することで回避する。
+// ★複数メッシュは読み込めるがローカル座標で描画するため重複する。読み込みモデルをメッシュ結合することで回避する。
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath)
 {
-    //printSpace(indent);
+    std::vector<int> indiceVec; // 右手系インデクス
+    std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
+    std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
+    std::map<std::string, PhongInfo> m_PhongInfo;
+
     const char* typeNames[] = {
         "eUnknown", "eNull", "eMarker", "eSkeleton", "eMesh", "eNurbs",
         "ePatch", "eCamera", "eCameraStereo", "eCameraSwitcher", "eLight",
@@ -67,24 +70,11 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
     };
     const char* name = node->GetName();
     int attrCount = node->GetNodeAttributeCount();
-    //if (attrCount == 0) {
-    //    printf("%s\n", name);
-    //}
-    //else {
-    //    printf("%s (", name);
-    //}
+
     for (int i = 0; i < attrCount; ++i) {
         FbxNodeAttribute* attr = node->GetNodeAttributeByIndex(i);
         FbxNodeAttribute::EType type = attr->GetAttributeType();
-        //printf("%s", typeNames[type]);
-        //if (i + 1 == attrCount) {
-        //    printf(")\n");
-        //}
-        //else {
-        //    printf(", ");
-        //}
 
-        //printf("%s\n", typeNames[type]);
         if (typeNames[type] == "eMesh")
         {
             // 頂点x,y,z座標の抽出及びverticesへの格納
@@ -111,13 +101,16 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                 vertexInfoList.push_back(vertex);
             }
             // 頂点毎の情報を取得する
-            std::vector<unsigned short> indices;
-            std::vector<unsigned short> indicesFiexed4DirectX;
+            std::vector<unsigned int> indices;
+            std::vector<unsigned int> indicesFiexed4DirectX;
             std::vector<std::array<int, 2>> oldNewIndexPairList;
             for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
             {
                 for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
                 {
+                    //printf("%d\n", fbxMesh->GetPolygonCount());
+                    //printf("%d\n", fbxMesh->GetPolygonSize(polIndex));
+
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
                     // 頂点座標
@@ -154,7 +147,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
             auto iter = std::max_element(indices.begin(), indices.end());
             size_t index = std::distance(indices.begin(), iter);
-            meshVertIndexStart = indices[index] + 1;
+            meshVertIndexStart = indices[index] + 1;                       
 
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
@@ -188,9 +181,27 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             // マテリアル毎に分割されるのに合わせてリネーム
             sprintf(newName, "%s%d", name, nameCnt);
             name = newName;
-            nameCnt += 1;
+            
             finalInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
-            name = node->GetName();
+            auto itFI = finalInfo.begin();
+            for (int i = 0; i <= nameCnt; i++)
+            {
+                ++itFI;
+            }
+            
+            // メッシュを読み込んだ順番に整列する。
+            // 分割したメッシュの頂点を描画するとき、別のメッシュのインデックスが割り込むと描画が失敗する。
+            // また、ステージなどメッシュが複数存在する場合は統一しておく。統一しないとそれぞれのメッシュのローカル座標で描画されるため、メッシュがラップした状態での描画になってしまう。
+            // Align meshes in the order in which they are read.
+            // When drawing the vertices of a divided mesh, if the index of another mesh interrupts the drawing, the drawing will fail.
+            // Also, if there are multiple meshes, such as stages, they should be unified.Otherwise, the local coordinates of each mesh will be used for drawing, resulting in wrapped meshes.
+            finalVertexDrawOrder.resize(nameCnt + 1);
+            finalVertexDrawOrder.at(nameCnt).first = name;
+            finalVertexDrawOrder.at(nameCnt).second.vertices = vertices;
+            finalVertexDrawOrder.at(nameCnt).second.indices = indices;
+
+            
+            //name = node->GetName();
 
             // マテリアル情報取得
             FbxNode* node = fbxMesh->GetNode();
@@ -209,83 +220,107 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             }
 
             // マテリアル情報を取得
-            for (int i = 0; i < materialNum ; ++i) 
+            FbxSurfaceMaterial* material = node->GetMaterial(i);
+                
+            if (material != 0) 
             {
-                FbxSurfaceMaterial* material = node->GetMaterial(i);
-                if (material != 0) 
-                {
-                    std::string type;
-                    type = material->GetClassId().GetName();
+                std::string type;
+                type = material->GetClassId().GetName();
 
-                    // マテリアル解析
-                    // LambertかPhongか
-
-                    if (type == "FbxSurfaceLambert") {
+                // マテリアル解析:LambertかPhongか
+                if (type == "FbxSurfaceLambert") {
                         
-                        // Lambertにダウンキャスト
-                        FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)material;
+                    // Lambertにダウンキャスト
+                    FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)material;
 
-                        // Diffuse
-                        m_LambertInfo[name][i].diffuse[0] = (float)lambert->Diffuse.Get().mData[0];
-                        m_LambertInfo[name][i].diffuse[1] = (float)lambert->Diffuse.Get().mData[1];
-                        m_LambertInfo[name][i].diffuse[2] = (float)lambert->Diffuse.Get().mData[2];
+                    // Diffuse
+                    m_LambertInfo[name][i].diffuse[0] = (float)lambert->Diffuse.Get().mData[0];
+                    m_LambertInfo[name][i].diffuse[1] = (float)lambert->Diffuse.Get().mData[1];
+                    m_LambertInfo[name][i].diffuse[2] = (float)lambert->Diffuse.Get().mData[2];
 
-                        // Ambient
-                        m_LambertInfo[name][i].ambient[0] = (float)lambert->Ambient.Get().mData[0];
-                        m_LambertInfo[name][i].ambient[1] = (float)lambert->Ambient.Get().mData[1];
-                        m_LambertInfo[name][i].ambient[2] = (float)lambert->Ambient.Get().mData[2];
+                    // Ambient
+                    m_LambertInfo[name][i].ambient[0] = (float)lambert->Ambient.Get().mData[0];
+                    m_LambertInfo[name][i].ambient[1] = (float)lambert->Ambient.Get().mData[1];
+                    m_LambertInfo[name][i].ambient[2] = (float)lambert->Ambient.Get().mData[2];
 
-                        // emissive
-                        m_LambertInfo[name][i].emissive[0] = (float)lambert->Emissive.Get().mData[0];
-                        m_LambertInfo[name][i].emissive[1] = (float)lambert->Emissive.Get().mData[1];
-                        m_LambertInfo[name][i].emissive[2] = (float)lambert->Emissive.Get().mData[2];
+                    // emissive
+                    m_LambertInfo[name][i].emissive[0] = (float)lambert->Emissive.Get().mData[0];
+                    m_LambertInfo[name][i].emissive[1] = (float)lambert->Emissive.Get().mData[1];
+                    m_LambertInfo[name][i].emissive[2] = (float)lambert->Emissive.Get().mData[2];
 
-                        // bump
-                        m_LambertInfo[name][i].bump[0] = (float)lambert->Bump.Get().mData[0];
-                        m_LambertInfo[name][i].bump[1] = (float)lambert->Bump.Get().mData[1];
-                        m_LambertInfo[name][i].bump[2] = (float)lambert->Bump.Get().mData[2];
-                    }
-                    else if (type == "FbxSurfacePhong") {
+                    // bump
+                    m_LambertInfo[name][i].bump[0] = (float)lambert->Bump.Get().mData[0];
+                    m_LambertInfo[name][i].bump[1] = (float)lambert->Bump.Get().mData[1];
+                    m_LambertInfo[name][i].bump[2] = (float)lambert->Bump.Get().mData[2];
+                }
+                else if (type == "FbxSurfacePhong") {
 
-                        // Phongにダウンキャスト
-                        FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
-                        m_PhongInfo[name].resize(materialNum);
-                        printf("%s\n", material->GetName());
-                        // Diffuse
-                        m_PhongInfo[name][i].diffuse[0] = (float)phong->Diffuse.Get().mData[0];
-                        m_PhongInfo[name][i].diffuse[1] = (float)phong->Diffuse.Get().mData[1];
-                        m_PhongInfo[name][i].diffuse[2] = (float)phong->Diffuse.Get().mData[2];
+                    // Phongにダウンキャスト
+                    FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
 
-                        // Ambient
-                        m_PhongInfo[name][i].ambient[0] = (float)phong->Ambient.Get().mData[0];
-                        m_PhongInfo[name][i].ambient[1] = (float)phong->Ambient.Get().mData[1];
-                        m_PhongInfo[name][i].ambient[2] = (float)phong->Ambient.Get().mData[2];
+                    // Diffuse
+                    m_PhongInfo[name].diffuse[0] = (float)phong->Diffuse.Get().mData[0];
+                    m_PhongInfo[name].diffuse[1] = (float)phong->Diffuse.Get().mData[1];
+                    m_PhongInfo[name].diffuse[2] = (float)phong->Diffuse.Get().mData[2];
 
-                        // emissive
-                        m_PhongInfo[name][i].emissive[0] = (float)phong->Emissive.Get().mData[0];
-                        m_PhongInfo[name][i].emissive[1] = (float)phong->Emissive.Get().mData[1];
-                        m_PhongInfo[name][i].emissive[2] = (float)phong->Emissive.Get().mData[2];
+                    // Ambient
+                    m_PhongInfo[name].ambient[0] = (float)phong->Ambient.Get().mData[0];
+                    m_PhongInfo[name].ambient[1] = (float)phong->Ambient.Get().mData[1];
+                    m_PhongInfo[name].ambient[2] = (float)phong->Ambient.Get().mData[2];
 
-                        // bump
-                        m_PhongInfo[name][i].bump[0] = (float)phong->Bump.Get().mData[0];
-                        m_PhongInfo[name][i].bump[1] = (float)phong->Bump.Get().mData[1];
-                        m_PhongInfo[name][i].bump[2] = (float)phong->Bump.Get().mData[2];
+                    // emissive
+                    m_PhongInfo[name].emissive[0] = (float)phong->Emissive.Get().mData[0];
+                    m_PhongInfo[name].emissive[1] = (float)phong->Emissive.Get().mData[1];
+                    m_PhongInfo[name].emissive[2] = (float)phong->Emissive.Get().mData[2];
 
-                        // specular
-                        m_PhongInfo[name][i].specular[0] = (float)phong->Specular.Get().mData[0];
-                        m_PhongInfo[name][i].specular[1] = (float)phong->Specular.Get().mData[1];
-                        m_PhongInfo[name][i].specular[2] = (float)phong->Specular.Get().mData[2];
+                    // bump
+                    m_PhongInfo[name].bump[0] = (float)phong->Bump.Get().mData[0];
+                    m_PhongInfo[name].bump[1] = (float)phong->Bump.Get().mData[1];
+                    m_PhongInfo[name].bump[2] = (float)phong->Bump.Get().mData[2];
 
-                        // reflectivity
-                        m_PhongInfo[name][i].reflection[0] = (float)phong->Reflection.Get().mData[0];
-                        m_PhongInfo[name][i].reflection[1] = (float)phong->Reflection.Get().mData[1];
-                        m_PhongInfo[name][i].reflection[2] = (float)phong->Reflection.Get().mData[2];
+                    // specular
+                    m_PhongInfo[name].specular[0] = (float)phong->Specular.Get().mData[0];
+                    m_PhongInfo[name].specular[1] = (float)phong->Specular.Get().mData[1];
+                    m_PhongInfo[name].specular[2] = (float)phong->Specular.Get().mData[2];
 
-                        // shiness
-                        m_PhongInfo[name][i].shineness = (float)phong->Shininess.Get();
-                    }
+                    // reflectivity
+                    m_PhongInfo[name].reflection[0] = (float)phong->Reflection.Get().mData[0];
+                    m_PhongInfo[name].reflection[1] = (float)phong->Reflection.Get().mData[1];
+                    m_PhongInfo[name].reflection[2] = (float)phong->Reflection.Get().mData[2];
+
+                    // shiness
+                    m_PhongInfo[name].shineness = (float)phong->Shininess.Get();
+
+                    // copy and order material data
+                    finalPhongMaterialOrder.resize(nameCnt + 1);
+                    finalPhongMaterialOrder.at(nameCnt).first = name;
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[0] = m_PhongInfo[name].diffuse[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[1] = m_PhongInfo[name].diffuse[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[2] = m_PhongInfo[name].diffuse[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[0] = m_PhongInfo[name].ambient[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[1] = m_PhongInfo[name].ambient[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[2] = m_PhongInfo[name].ambient[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[0] = m_PhongInfo[name].emissive[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[1] = m_PhongInfo[name].emissive[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[2] = m_PhongInfo[name].emissive[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[0] = m_PhongInfo[name].bump[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[1] = m_PhongInfo[name].bump[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[2] = m_PhongInfo[name].bump[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[0] = m_PhongInfo[name].specular[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[1] = m_PhongInfo[name].specular[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[2] = m_PhongInfo[name].specular[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = m_PhongInfo[name].reflection[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = m_PhongInfo[name].reflection[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = m_PhongInfo[name].reflection[2];
                 }
             }
+            name = node->GetName();
+            nameCnt += 1;
         }
 
     }
@@ -293,7 +328,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
     int childCount = node->GetChildCount();
 
     for (int i = 0; i < childCount; ++i) {
-        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx");
+        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, modelPath);
     }
 }
 
