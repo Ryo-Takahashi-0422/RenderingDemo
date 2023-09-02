@@ -131,7 +131,7 @@ private:
 	HRESULT CreateRTV();
 	HRESULT CreateAndMapMatrix();
 
-	void CreateUploadAndReadBuff4Texture(std::string strModelPath, std::string fileType);
+	void CreateUploadAndReadBuff4Texture(std::string texturePath, int iterationNum);
 	std::vector<ComPtr<ID3D12Resource>> textureUploadBuff; // ノーマルマップ用アップロードバッファー
 	std::vector<ComPtr<ID3D12Resource>> textureReadBuff; // ノーマルマップ用リードバッファー
 	std::vector<DirectX::TexMetadata*> textureMetaData;

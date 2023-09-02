@@ -924,6 +924,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	auto phongInfos = fbxInfoManager->GetPhongMaterialParamertInfo();
 	auto itPhonsInfos = phongInfos.begin();
 	auto mappedPhong = resourceManager->GetMappedPhong();
+	auto materialAndTexturenameInfo = fbxInfoManager->GetMaterialAndTexturePath();
+	auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
+	int itMATCnt = 0;
+	int matTexSize = materialAndTexturenameInfo.size();
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
 		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
@@ -947,12 +951,23 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
 		mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
+		
+		while (itMaterialAndTextureName->first == itPhonsInfos->first)
+		{
+			printf("%s\n", itMaterialAndTextureName->first.c_str());
+			// マテリアルのセットルートテーブルとインクリメントを記述
+			++itMATCnt;
+			if (itMATCnt == matTexSize) break;
+			++itMaterialAndTextureName;
+			
+		}
+
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
-		++itPhonsInfos;
+		++itPhonsInfos;		
 	}
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
