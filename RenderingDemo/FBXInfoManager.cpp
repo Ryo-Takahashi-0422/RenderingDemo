@@ -3,10 +3,13 @@
 
 int FBXInfoManager::Init()
 {
+    FbxManager* manager = nullptr;
+    FbxScene* scene = nullptr;
+
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\twocharTest.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\BattleTank.fbx";
-    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
     
     
     // create manager
@@ -56,10 +59,14 @@ int FBXInfoManager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath)
 {
+    FbxMesh* fbxMesh = nullptr;
     std::vector<int> indiceVec; // 右手系インデクス
     std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
     std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
     std::map<std::string, PhongInfo> m_PhongInfo;
+    int nameCnt = 0;
+    int materialNameCnt = 0;
+    int textureNumCnt = 0;
 
     const char* typeNames[] = {
         "eUnknown", "eNull", "eMarker", "eSkeleton", "eMesh", "eNurbs",
@@ -78,10 +85,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
         if (typeNames[type] == "eMesh")
         {
             // 頂点x,y,z座標の抽出及びverticesへの格納
-            fbxMeshes.resize(meshCnt);
             fbxMesh = (FbxMesh*)attr;
-            fbxMeshes.emplace_back(fbxMesh);
-            ++meshCnt;
 
             // UVセット名の取得
             // * 現在の実装だとは1つのUVセット名にしか対応していない...
@@ -182,8 +186,8 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             sprintf(newName, "%s%d", name, nameCnt);
             name = newName;
             
-            finalInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
-            auto itFI = finalInfo.begin();
+            materialNameAndVertexInfo[name] = { vertices, indices/*indicesFiexed4DirectX*/ };
+            auto itFI = materialNameAndVertexInfo.begin();
             for (int i = 0; i <= nameCnt; i++)
             {
                 ++itFI;
@@ -289,7 +293,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                     m_PhongInfo[name].reflection[2] = (float)phong->Reflection.Get().mData[2];
 
                     // shiness
-                    m_PhongInfo[name].shineness = (float)phong->Shininess.Get();
+                    m_PhongInfo[name].transparency = (float)phong->TransparencyFactor.Get();
 
                     // copy and order material data
                     finalPhongMaterialOrder.resize(nameCnt + 1);
@@ -317,6 +321,40 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                     finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = m_PhongInfo[name].reflection[0];
                     finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = m_PhongInfo[name].reflection[1];
                     finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = m_PhongInfo[name].reflection[2];
+
+                    finalPhongMaterialOrder.at(nameCnt).second.transparency = m_PhongInfo[name].transparency;
+                }
+            }
+
+            // get texture infomation
+
+            for (auto type : textureType)
+            {
+                // ディフューズプロパティを検索
+                FbxProperty property = material->FindProperty(/*FbxSurfaceMaterial::sDiffuse*/type);
+
+                // プロパティが持っているレイヤードテクスチャの枚数をチェック
+                int layerNum = property.GetSrcObjectCount<FbxLayeredTexture>();
+
+                // レイヤードテクスチャが無ければ通常テクスチャ
+                if (layerNum == 0) {
+                    // 通常テクスチャの枚数をチェック
+                    int numGeneralTexture = property.GetSrcObjectCount<FbxFileTexture>();
+
+                    // 各テクスチャについてテクスチャ情報をゲット
+                    for (int i = 0; i < numGeneralTexture; ++i) {
+                        // i番目のテクスチャオブジェクト取得
+                        FbxFileTexture* texture = /*FbxCast<FbxFileTexture>*/property.GetSrcObject<FbxFileTexture>(i);
+
+                        // テクスチャファイルパスを取得（フルパス）
+                        const char* filePath = texture->GetFileName();
+
+                        materialAndTexturenameInfo.resize(textureNumCnt);
+                        std::pair<std::string, std::string> pair = { name, filePath };
+                        materialAndTexturenameInfo.push_back(pair);
+                        ++textureNumCnt;
+
+                    }
                 }
             }
             name = node->GetName();

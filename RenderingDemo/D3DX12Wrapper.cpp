@@ -490,7 +490,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
-	//result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator4Imgui.Get(), nullptr, IID_PPV_ARGS(_cmdList4Imgui.ReleaseAndGetAddressOf()));
+
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 	//cmdList->Close();
 
@@ -508,8 +508,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	//result = bufferHeapCreator[i]->CreateBufferOfDepthAndLightMap(_dev);
 
 	
-	////ファイル形式毎のテクスチャロード処理
-	//textureLoader->LoadTexture();
+	//ファイル形式毎のテクスチャロード処理
+	textureLoader->LoadTexture();
 
 	//// テクスチャ用のCPU_Upload用、GPU_Read用バッファの作成
 	//metaData.resize(pmdMaterialInfo[i]->materialNum);
@@ -945,16 +945,15 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
 		mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
 		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
-		mappedPhong[i]->shineness = itPhonsInfos->second.shineness;
+		mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
-		++itPhonsInfos;		
+		++itPhonsInfos;
 	}
-
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
 	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。

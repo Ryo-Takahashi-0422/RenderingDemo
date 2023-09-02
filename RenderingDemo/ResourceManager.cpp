@@ -1,7 +1,12 @@
 #include <stdafx.h>
 #include <ResourceManager.h>
 
-ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRenderingWindow) : _dev(dev), _fbxInfoManager(fbxInfoManager), _prepareRenderingWindow(prepareRenderingWindow){}
+ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRenderingWindow) : _dev(dev), _fbxInfoManager(fbxInfoManager), _prepareRenderingWindow(prepareRenderingWindow)
+{
+	textureLoader = new TextureLoader;
+	//ファイル形式毎のテクスチャロード処理
+	textureLoader->LoadTexture();
+}
 
 HRESULT ResourceManager::Init()
 {
@@ -243,7 +248,6 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];
-		//Test(resource);
 		auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
@@ -257,7 +261,7 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
 		);
 		if (result != S_OK) return result;
-		resource->Map(0, nullptr, (void**)&mappedPhoneContainer[i]);	
+		resource->Map(0, nullptr, (void**)&mappedPhoneContainer[i]);
 	}
 
 	// create view
@@ -300,10 +304,8 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 	);
 
 	// 3:Phong Material Parameters
-
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
-
 		auto& resource = materialParamBuffContainer[i];
 		handle.ptr += inc;
 
@@ -314,28 +316,68 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		(
 			&phongCBVDesc,
 			handle
-		);
-		
+		);		
 	}
 
 	return S_OK;
 }
 
-HRESULT ResourceManager::Test(ComPtr<ID3D12Resource> materialResource)
+void ResourceManager::CreateUploadAndReadBuff4Texture(std::string strModelPath, std::string fileType)
 {
-	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
+	// TODO:汎用性持たせる。モデルパスと以下データのmapを作成してモデル毎に管理したい
+	// このようにバッファーなど一括でリサイズする方法が好ましい
+	int texNum = mappedPhoneContainer.size();
+	textureUploadBuff.resize(texNum);
+	textureReadBuff.resize(texNum);
+	textureMetaData.resize(texNum);
+	textureImg.resize(texNum);
 
-	auto result = _dev->CreateCommittedResource
-	(
-		&phongHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&phongResdesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
-		nullptr,
-		IID_PPV_ARGS(materialResource.ReleaseAndGetAddressOf())
-	);
-	if (result != S_OK) return result;
+	ScratchImage normalMapScratchImg = {};
+	struct _stat s = {};
+
+	for (int i = 0; i < texNum; i++)
+	{
+		std::string filePath = "";
+
+		//トゥーンリソースの読み込み
+		char fileName[32];
+		sprintf(fileName, "texture\\normal%d.%s", i + 1, fileType.c_str());
+		filePath += fileName;
+		filePath = Utility::GetTexPathFromModeAndTexlPath(strModelPath, filePath.c_str());
+
+		auto wTexPath = Utility::GetWideStringFromSring(filePath);
+		auto extention = Utility::GetExtension(filePath);
+
+		if (!textureLoader->GetTable().count(extention))
+		{
+			std::cout << "読み込めないテクスチャが存在します" << std::endl;
+			//return 0;
+			break;
+		}
+
+		textureMetaData[i] = new TexMetadata;
+		auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[i], normalMapScratchImg);
+
+		if (normalMapScratchImg.GetImage(0, 0, 0) == nullptr) continue;
+
+		// std::vector の型にconst適用するとコンパイラにより挙動が変化するため禁止
+		textureImg[i] = new Image;
+		textureImg[i]->pixels = normalMapScratchImg.GetImage(0, 0, 0)->pixels;
+		textureImg[i]->rowPitch = normalMapScratchImg.GetImage(0, 0, 0)->rowPitch;
+		textureImg[i]->format = normalMapScratchImg.GetImage(0, 0, 0)->format;
+		textureImg[i]->width = normalMapScratchImg.GetImage(0, 0, 0)->width;
+		textureImg[i]->height = normalMapScratchImg.GetImage(0, 0, 0)->height;
+		textureImg[i]->slicePitch = normalMapScratchImg.GetImage(0, 0, 0)->slicePitch;
+
+		// テクスチャが存在する場合
+		if (_stat(filePath.c_str(), &s) == 0)
+		{
+			std::tie(textureUploadBuff[i], textureReadBuff[i]) = CreateD3DX12ResourceBuffer::LoadTextureFromFile(_dev, textureMetaData[i], textureImg[i], filePath);
+		}
+
+		else
+			std::tie(textureUploadBuff[i], textureReadBuff[i]) = std::forward_as_tuple(nullptr, nullptr);
+	}
 }
 
 void ResourceManager::ClearReference()

@@ -23,6 +23,7 @@ private:
 	ComPtr<ID3D12Device> _dev = nullptr;
 	FBXInfoManager* _fbxInfoManager = nullptr;
 	PrepareRenderingWindow* _prepareRenderingWindow = nullptr;
+	TextureLoader* textureLoader = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap = nullptr; // 深度ステンシルビュー用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
@@ -129,7 +130,13 @@ private:
 
 	HRESULT CreateRTV();
 	HRESULT CreateAndMapMatrix();
-	HRESULT Test(ComPtr<ID3D12Resource> materialResource);
+
+	void CreateUploadAndReadBuff4Texture(std::string strModelPath, std::string fileType);
+	std::vector<ComPtr<ID3D12Resource>> textureUploadBuff; // ノーマルマップ用アップロードバッファー
+	std::vector<ComPtr<ID3D12Resource>> textureReadBuff; // ノーマルマップ用リードバッファー
+	std::vector<DirectX::TexMetadata*> textureMetaData;
+	std::vector<DirectX::Image*> textureImg;
+
 	void ClearReference();
 
 public:

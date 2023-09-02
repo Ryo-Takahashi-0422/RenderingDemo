@@ -19,7 +19,7 @@ struct PhongInfo
 	float bump[3];
 	float specular[3];
 	float reflection[3];
-	float shineness;
+	float transparency; // blenderÇ©ÇÁèoóÕÇ∑ÇÈÇ∆ÅA1 - ê›íËílÇ™ì«Ç›çûÇ‹ÇÍÇÈ
 };
 
 struct FBXVertex
@@ -42,37 +42,29 @@ private:
 
 	std::string modelPath;
 
-	FbxManager* manager = nullptr;
-	FbxScene* scene = nullptr;
+	//FbxManager* manager = nullptr;
+	//FbxScene* scene = nullptr;
 
 	void enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath/*, VertexInfo* vertexInfo*/);
 
-	std::vector<FbxMesh*> fbxMeshes;
-	int meshCnt = 0;
-	FbxMesh* fbxMesh = nullptr;
-
-	int vertNum = 0;
-	int nameCnt = 0;
-	int materialNameCnt = 0;
-
-	std::unordered_map<std::string, VertexInfo> finalInfo;
+	std::unordered_map<std::string, VertexInfo> materialNameAndVertexInfo;
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder;
 	std::vector<std::pair<std::string, PhongInfo>> finalPhongMaterialOrder;
-	static bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
-	static std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
-	static int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
-	std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList);
-	static bool IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
-
+	std::vector<std::pair<std::string, std::string>> materialAndTexturenameInfo;
+	bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
+	std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
+	int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
+		std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList);
+	bool IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 
 	int currentVertIndex = 0;
 	int meshVertIndexStart = 0;
 	std::string lastMaterialName;
 
+	std::vector<const char*> textureType = { "DiffuseColor", "NormalMap", "SpecularFactor", "ReflectionFactor", "TransparencyFactor"};
 
 public:
 	int Init();
-	int GetVertNum() { return vertNum; };
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 };
