@@ -129,13 +129,96 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE handle;
 
 	HRESULT CreateRTV();
-	HRESULT CreateAndMapMatrix();
+	HRESULT CreateAndMapResources(size_t textureNum);
 
 	void CreateUploadAndReadBuff4Texture(std::string texturePath, int iterationNum);
+	void MappingTextureToUploadBuff();
+
+	uint8_t* mappedImg0 = nullptr;
+	uint8_t* mappedImg1 = nullptr;
+	uint8_t* mappedImg2 = nullptr;
+	uint8_t* mappedImg3 = nullptr;
+	uint8_t* mappedImg4 = nullptr;
+	uint8_t* mappedImg5 = nullptr;
+	uint8_t* mappedImg6 = nullptr;
+	uint8_t* mappedImg7 = nullptr;
+	uint8_t* mappedImg8 = nullptr;
+	uint8_t* mappedImg9 = nullptr;
+	uint8_t* mappedImg10 = nullptr;
+	uint8_t* mappedImg11 = nullptr;
+	uint8_t* mappedImg12 = nullptr;
+	uint8_t* mappedImg13 = nullptr;
+	uint8_t* mappedImg14 = nullptr;
+	uint8_t* mappedImg15 = nullptr;
+	uint8_t* mappedImg16 = nullptr;
+	uint8_t* mappedImg17 = nullptr;
+	uint8_t* mappedImg18 = nullptr;
+	uint8_t* mappedImg19 = nullptr;
+	uint8_t* mappedImg20 = nullptr;
+	uint8_t* mappedImg21 = nullptr;
+	uint8_t* mappedImg22 = nullptr;
+	uint8_t* mappedImg23 = nullptr;
+	uint8_t* mappedImg24 = nullptr;
+	uint8_t* mappedImg25 = nullptr;
+	uint8_t* mappedImg26 = nullptr;
+	uint8_t* mappedImg27 = nullptr;
+	uint8_t* mappedImg28 = nullptr;
+	uint8_t* mappedImg29 = nullptr;
+	uint8_t* mappedImg30 = nullptr;
+	uint8_t* mappedImg31 = nullptr;
+	std::vector<uint8_t*> mappedImgContainer =
+	{
+		mappedImg0, mappedImg1, mappedImg2, mappedImg3, mappedImg4, mappedImg5, mappedImg6, mappedImg7, mappedImg8, mappedImg9,
+		mappedImg10, mappedImg11, mappedImg12, mappedImg13, mappedImg14, mappedImg15, mappedImg16, mappedImg17, mappedImg18, mappedImg19,
+		mappedImg20, mappedImg21, mappedImg22, mappedImg23, mappedImg24, mappedImg25, mappedImg26, mappedImg27, mappedImg28, mappedImg29, mappedImg30, mappedImg31
+	};
+
 	std::vector<ComPtr<ID3D12Resource>> textureUploadBuff; // ノーマルマップ用アップロードバッファー
 	std::vector<ComPtr<ID3D12Resource>> textureReadBuff; // ノーマルマップ用リードバッファー
 	std::vector<DirectX::TexMetadata*> textureMetaData;
 	std::vector<DirectX::Image*> textureImg;
+	std::vector<unsigned int> textureImgPixelValue;
+	ScratchImage scratchImg = {};
+
+	std::vector<std::string> hexContainer;
+	uint8_t* pixelPointer0 = nullptr;
+	uint8_t* pixelPointer1 = nullptr;
+	uint8_t* pixelPointer2 = nullptr;
+	uint8_t* pixelPointer3 = nullptr;
+	uint8_t* pixelPointer4 = nullptr;
+	uint8_t* pixelPointer5 = nullptr;
+	uint8_t* pixelPointer6 = nullptr;
+	uint8_t* pixelPointer7 = nullptr;
+	uint8_t* pixelPointer8 = nullptr;
+	uint8_t* pixelPointer9 = nullptr;
+	uint8_t* pixelPointer10 = nullptr;
+	uint8_t* pixelPointer11 = nullptr;
+	uint8_t* pixelPointer12 = nullptr;
+	uint8_t* pixelPointer13 = nullptr;
+	uint8_t* pixelPointer14 = nullptr;
+	uint8_t* pixelPointer15 = nullptr;
+	uint8_t* pixelPointer16 = nullptr;
+	uint8_t* pixelPointer17 = nullptr;
+	uint8_t* pixelPointer18 = nullptr;
+	uint8_t* pixelPointer19 = nullptr;
+	uint8_t* pixelPointer20 = nullptr;
+	uint8_t* pixelPointer21 = nullptr;
+	uint8_t* pixelPointer22 = nullptr;
+	uint8_t* pixelPointer23 = nullptr;
+	uint8_t* pixelPointer24 = nullptr;
+	uint8_t* pixelPointer25 = nullptr;
+	uint8_t* pixelPointer26 = nullptr;
+	uint8_t* pixelPointer27 = nullptr;
+	uint8_t* pixelPointer28 = nullptr;
+	uint8_t* pixelPointer29 = nullptr;
+	uint8_t* pixelPointer30 = nullptr;
+	uint8_t* pixelPointer31 = nullptr;
+	std::vector<uint8_t*> pixelPointerContainer =
+	{
+		pixelPointer0, pixelPointer1, pixelPointer2, pixelPointer3, pixelPointer4, pixelPointer5, pixelPointer6, pixelPointer7, pixelPointer8, pixelPointer9,
+		pixelPointer10, pixelPointer11, pixelPointer12, pixelPointer13, pixelPointer14, pixelPointer15, pixelPointer16, pixelPointer17, pixelPointer18, pixelPointer19,
+		pixelPointer20, pixelPointer21, pixelPointer22, pixelPointer23, pixelPointer24, pixelPointer25, pixelPointer26, pixelPointer27, pixelPointer28, pixelPointer29, pixelPointer30, pixelPointer31
+	};
 
 	void ClearReference();
 
@@ -146,6 +229,12 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap() { return dsvHeap; };
 	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; };
+	std::vector<ComPtr<ID3D12Resource>> GetTextureUploadBuff() { return textureUploadBuff; };
+	std::vector<ComPtr<ID3D12Resource>> GetTextureReadBuff() { return textureReadBuff; };
+	std::vector<DirectX::TexMetadata*> GetTextureMetaData() { return textureMetaData; };
+	std::vector<DirectX::Image*> GetTextureImg() { return textureImg; };
+
+
 	D3D12_VERTEX_BUFFER_VIEW* GetVbView() { return &vbView; };
 	D3D12_INDEX_BUFFER_VIEW* GetIbView() { return &ibView; };
 	int GetVertexTotalNum() { return vertexTotalNum; };

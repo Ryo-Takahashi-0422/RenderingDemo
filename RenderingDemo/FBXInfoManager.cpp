@@ -6,9 +6,9 @@ int FBXInfoManager::Init()
     FbxManager* manager = nullptr;
     FbxScene* scene = nullptr;
 
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\twocharTest.fbx";
-    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBX\\BattleTank.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\OneTextureConnan.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
     
     

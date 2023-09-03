@@ -44,11 +44,11 @@ cbuffer Material : register(b1)
     float shinenes;
 }
 
-//SamplerState smp : register(s0); // No.0 sampler
+SamplerState smp : register(s0); // No.0 sampler
 //SamplerState smpToon : register(s1); // No.1 sampler(toon)
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
-//Texture2D<float> depthmap : register(t0); // No.0 depthmap
+Texture2D<float4> colormap : register(t0); // No.0 Diffuse Color Map
 //Texture2D<float> lightmap : register(t1); // No.1 lightmap(depth from light-view)
 //Texture2D<float4> tex : register(t2); // No.2 eye texture
 //Texture2D<float4> sph : register(t3); // No.3 .sph texture

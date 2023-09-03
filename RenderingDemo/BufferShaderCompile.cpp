@@ -8,7 +8,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> BufferShaderCompile::SetPeraSh
 	result = D3DCompileFromFile
 	(
 		//L"BufferVertex.hlsl",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\BufferVertex.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\BufferVertex.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"vsBuffer",
@@ -22,7 +22,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> BufferShaderCompile::SetPeraSh
 	result = D3DCompileFromFile
 	(
 		//L"BufferPixel.hlsl",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\BufferPixel.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\BufferPixel.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"psBuffer",

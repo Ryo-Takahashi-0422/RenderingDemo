@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include<tchar.h>
 //#ifdef _DEBUG
-#include <pix3.h>
+//#include <pix3.h>
 #include <iostream>
 //#endif // _DEBUG
 #include <vector>
@@ -60,7 +60,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <GraphicsPipelineSetting.h>
 #include <TextureLoader.h>
 #include <BufferHeapCreator.h>
-#include <TextureTransporter.h>
+
 #include <MappingExecuter.h>
 #include <ViewCreator.h>
 #include <sstream>
@@ -86,3 +86,4 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 // Rebuild
 #include <FBXInfoManager.h>
 #include <ResourceManager.h>
+#include <TextureTransporter.h>

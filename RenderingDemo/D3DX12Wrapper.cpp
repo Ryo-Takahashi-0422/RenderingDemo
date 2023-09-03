@@ -37,7 +37,7 @@ D3DX12Wrapper::~D3DX12Wrapper()
 
 HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 {
-	result = CoInitializeEx(0, COINIT_MULTITHREADED);
+	//result = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	//ファクトリーの生成
 	result = S_OK;
@@ -112,7 +112,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	strModelPath =
 	{
-		"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBXConnan_Walking.fbx"
+		"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBXConnan_Walking.fbx"
 	};
 
 	strModelNum = strModelPath.size();
@@ -177,8 +177,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//	// BufferHeapCreatorクラスのインスタンス化
 	//	bufferHeapCreator[i] = new BufferHeapCreator(pmdMaterialInfo[i], prepareRenderingWindow, textureLoader);
 
-	//	// TextureTransporterクラスのインスタンス化
-	//	textureTransporter[i] = new TextureTransporter(pmdMaterialInfo[i], bufferHeapCreator[i]);
+
 
 	//	// MappingExecuterクラスのインスタンス化
 	//	mappingExecuter[i] = new MappingExecuter(pmdMaterialInfo[i], bufferHeapCreator[i]);
@@ -374,9 +373,9 @@ void D3DX12Wrapper::EffekseerInit()
 	_effect = Effekseer::Effect::Create
 	(
 		_efkManager,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
+		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
 		1.0f,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuild\\EffekseerTexture\\10"
+		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10"
 	);
 
 
@@ -395,6 +394,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	// FBX resource creation
 	resourceManager = new ResourceManager(_dev, fbxInfoManager, prepareRenderingWindow);
 	resourceManager->Init();
+
+	// TextureTransporterクラスのインスタンス化
+	textureTransporter = new TextureTransporter(fbxInfoManager);
 
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
@@ -623,6 +625,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	//bufferHeapCreator[i]->CreateUploadAndReadBuff4Normalmap(_dev, strModelPath[i], "jpg", 1);
 	////}
 
+	textureTransporter->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
+		resourceManager->GetTextureMetaData(), resourceManager->GetTextureImg(),
+		_fence, _fenceVal, resourceManager->GetTextureUploadBuff(), resourceManager->GetTextureReadBuff());
+
 	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetNormalMapUploadBuff(), bufferHeapCreator[i]->GetNormalMapImg(), 1);
 	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
 	//	bufferHeapCreator[i]->GetNormalMapMetadata(), bufferHeapCreator[i]->GetNormalMapImg(),
@@ -835,7 +841,7 @@ void D3DX12Wrapper::Run() {
 		delete viewCreator[i];
 		delete mappingExecuter[i];
 		delete bufferHeapCreator[i];
-		delete textureTransporter[i];
+		delete textureTransporter;
 		delete pmdActor[i];
 		delete vmdMotionInfo[i];
 		delete pmdMaterialInfo[i];
@@ -912,7 +918,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 	auto dHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-	dHandle.ptr += buffSize*2;
+	dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
@@ -928,6 +934,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
 	int itMATCnt = 0;
 	int matTexSize = materialAndTexturenameInfo.size();
+	D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
+	tHandle.ptr += buffSize * indiceContainer.size();
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
 		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
@@ -951,16 +959,19 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
 		mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
-		
-		while (itMaterialAndTextureName->first == itPhonsInfos->first)
-		{
-			printf("%s\n", itMaterialAndTextureName->first.c_str());
-			// マテリアルのセットルートテーブルとインクリメントを記述
-			++itMATCnt;
-			if (itMATCnt == matTexSize) break;
-			++itMaterialAndTextureName;
-			
-		}
+		//dHandle.ptr += buffSize;
+		if (matTexSize > 0) {
+			while (itMaterialAndTextureName->first == itPhonsInfos->first)
+			{
+				printf("%s\n", itMaterialAndTextureName->first.c_str());
+				_cmdList->SetGraphicsRootDescriptorTable(2, tHandle); // index of texture
+				tHandle.ptr += buffSize;
+				++itMATCnt;
+				if (itMATCnt == matTexSize) break;
+				++itMaterialAndTextureName;
+
+			}
+		}	
 
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 
@@ -1778,7 +1789,7 @@ void D3DX12Wrapper::DirectXTKInit()
 	(
 		_dev.Get(),
 		resUploadBatch,
-		L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuildfont\\kanji.spritefont",
+		L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\font\\kanji.spritefont",
 		_heapSpriteFont->GetCPUDescriptorHandleForHeapStart(),
 		_heapSpriteFont->GetGPUDescriptorHandleForHeapStart()
 	);

@@ -1,12 +1,10 @@
 #include <stdafx.h>
 #include <TextureTransporter.h>
 
-TextureTransporter::TextureTransporter(PMDMaterialInfo* _pmdMaterialInfo, BufferHeapCreator* _bufferHeapCreator)
+TextureTransporter::TextureTransporter(FBXInfoManager* _fbxInfoManager)
 {
-	pmdMaterialInfo = new PMDMaterialInfo;
-	pmdMaterialInfo = _pmdMaterialInfo;
-
-	bufferHeapCreator = _bufferHeapCreator;
+	fbxInfoManager = new FBXInfoManager;
+	fbxInfoManager = _fbxInfoManager;
 }
 
 void TextureTransporter::TransportPMDMaterialTexture(
@@ -18,35 +16,36 @@ void TextureTransporter::TransportPMDMaterialTexture(
 	ComPtr<ID3D12Fence> _fence,
 	UINT64& _fenceVal,
 	std::vector<ComPtr<ID3D12Resource>> uploadBuff,
-	std::vector<ComPtr<ID3D12Resource>> readBuff,
-	unsigned int itCount)
+	std::vector<ComPtr<ID3D12Resource>> readBuff
+	)
 {
 	// テクスチャ用転送オブジェクトのリサイズ
-	pmdSource.resize(pmdMaterialInfo->materialNum);
-	pmdDestination.resize(pmdMaterialInfo->materialNum);
-	texBarriierDesc.resize(pmdMaterialInfo->materialNum);
+	auto size = fbxInfoManager->GetMaterialAndTexturePath().size();
+	source.resize(size);
+	dest.resize(size);
+	texBarriierDesc.resize(size);
 
-	for (int count = 0; count < itCount; count++)
+	for (int count = 0; count < size; count++)
 	{
 		if (uploadBuff[count] == nullptr || readBuff[count] == nullptr) continue;
 
-		pmdSource[count].pResource = uploadBuff[count].Get();
-		pmdSource[count].Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-		pmdSource[count].PlacedFootprint.Offset = 0;
-		pmdSource[count].PlacedFootprint.Footprint.Width = metaData[count]->width;
-		pmdSource[count].PlacedFootprint.Footprint.Height = metaData[count]->height;
-		pmdSource[count].PlacedFootprint.Footprint.Depth = metaData[count]->depth;
-		pmdSource[count].PlacedFootprint.Footprint.RowPitch =
+		source[count].pResource = uploadBuff[count].Get();
+		source[count].Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		source[count].PlacedFootprint.Offset = 0;
+		source[count].PlacedFootprint.Footprint.Width = metaData[count]->width;
+		source[count].PlacedFootprint.Footprint.Height = metaData[count]->height;
+		source[count].PlacedFootprint.Footprint.Depth = metaData[count]->depth;
+		source[count].PlacedFootprint.Footprint.RowPitch =
 			Utility::AlignmentSize(img[count]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT); // R8G8B8A8:4bit * widthの値は256の倍数であること
-		pmdSource[count].PlacedFootprint.Footprint.Format = img[count]->format;//metaData.format;
+		source[count].PlacedFootprint.Footprint.Format = img[count]->format;//metaData.format;
 
 		//コピー先設定
-		pmdDestination[count].pResource = readBuff[count].Get();
-		pmdDestination[count].Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-		pmdDestination[count].SubresourceIndex = 0;
+		dest[count].pResource = readBuff[count].Get();
+		dest[count].Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		dest[count].SubresourceIndex = 0;
 
 		{
-			_cmdList->CopyTextureRegion(&pmdDestination[count], 0, 0, 0, &pmdSource[count], nullptr);
+			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[count], nullptr);
 
 			//バリア設定...せずとも、StateAfterを...Generic_Readなどにしても実行可能。公式記載見当たらず詳細不明。
 			texBarriierDesc[count].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

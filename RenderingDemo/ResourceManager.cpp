@@ -8,6 +8,7 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 	textureLoader->LoadTexture();
 }
 
+
 HRESULT ResourceManager::Init()
 {
 	HRESULT result = E_FAIL;
@@ -135,23 +136,28 @@ HRESULT ResourceManager::Init()
 	// create rendering buffer and create RTV
 	CreateRTV();
 
-	// create matrix buffer and mapping matrix, create CBV
-	CreateAndMapMatrix(); // mapping
-
 	auto msterialAndTexturePath = _fbxInfoManager->GetMaterialAndTexturePath();
+	auto textureNum = msterialAndTexturePath.size();
 	auto iter = msterialAndTexturePath.begin();
 	int  texNum = msterialAndTexturePath.size();
 	textureUploadBuff.resize(texNum);
 	textureReadBuff.resize(texNum);
 	textureMetaData.resize(texNum);
 	textureImg.resize(texNum);
-	for (int i = 0; i < msterialAndTexturePath.size(); ++i) 
+	textureImgPixelValue.resize(texNum);
+	hexContainer.resize(texNum);
+	CoInitializeEx(0, COINIT_MULTITHREADED);
+	for (int i = 0; i < msterialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
 		++iter;
 	}
 
-	// ClearReference();
+	// Mapping Texture and Upload them to GPU
+	MappingTextureToUploadBuff();
+
+	// create matrix buffer and mapping matrix, create CBV
+	CreateAndMapResources(textureNum); // mapping
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -207,7 +213,7 @@ HRESULT ResourceManager::CreateRTV()
 	return S_OK;
 }
 
-HRESULT ResourceManager::CreateAndMapMatrix()
+HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 {
 	//Mapping WVP Matrix
 	auto wvpHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -332,6 +338,25 @@ HRESULT ResourceManager::CreateAndMapMatrix()
 		);		
 	}
 
+	// 4:Texture Read Buffers(n=textureNum)
+	for (int i = 0; i < textureNum; ++i)
+	{
+		auto& resource = textureReadBuff[i];
+		handle.ptr += inc;
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
+		textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		textureSRVDesc.Texture2D.MipLevels = 1;
+		_dev->CreateShaderResourceView
+		(	
+			resource.Get(),
+			&textureSRVDesc,
+			handle
+		);
+	}
+
 	return S_OK;
 }
 
@@ -341,7 +366,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	// このようにバッファーなど一括でリサイズする方法が好ましい
 
 
-	ScratchImage scratchImg = {};
+	//ScratchImage scratchImg = {};
 	struct _stat s = {};
 
 	std::string filePath = "";
@@ -360,13 +385,22 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	}
 
 	textureMetaData[iterationNum] = new TexMetadata;
-	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg);
+	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
+
+	int p = (int)scratchImg.GetImage(0, 0, 0)->pixels;
+
+	std::ostringstream ss;
+	ss << std::hex << p;
+	hexContainer[iterationNum]/*std::string lasthex*/ = ss.str();
+	
+	pixelPointerContainer[iterationNum] = reinterpret_cast</*const */uint8_t*>(&hexContainer[iterationNum][0]/*lasthex[0]*/);
 
 	if (scratchImg.GetImage(0, 0, 0) == nullptr) return;
-
-	// std::vector の型にconst適用するとコンパイラにより挙動が変化するため禁止
+	
+	//textureImgPixelValue[iterationNum] = scratchImg.GetImage(0, 0, 0)->pixels;
+	textureImg[iterationNum] = nullptr;
 	textureImg[iterationNum] = new Image;
-	textureImg[iterationNum]->pixels = scratchImg.GetImage(0, 0, 0)->pixels;
+	textureImg[iterationNum]->pixels = /*pixelPointerContainer[iterationNum]*/scratchImg.GetImage(0, 0, 0)->pixels;
 	textureImg[iterationNum]->rowPitch = scratchImg.GetImage(0, 0, 0)->rowPitch;
 	textureImg[iterationNum]->format = scratchImg.GetImage(0, 0, 0)->format;
 	textureImg[iterationNum]->width = scratchImg.GetImage(0, 0, 0)->width;
@@ -382,8 +416,31 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	else
 	{
 		std::tie(textureUploadBuff[iterationNum], textureReadBuff[iterationNum]) = std::forward_as_tuple(nullptr, nullptr);
+	}	
+}
+
+void ResourceManager::MappingTextureToUploadBuff()
+{
+	int itCount = textureUploadBuff.size();
+	for (int count = 0; count < itCount; count++)
+	{
+		if (textureUploadBuff[count] == nullptr) continue;
+
+		auto srcAddress = textureImg[count]->pixels;
+		auto rowPitch = Utility::AlignmentSize(textureImg[count]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		auto result = textureUploadBuff[count]->Map(0, nullptr, (void**)&mappedImgContainer[count]);
+
+		// img:元データの初期アドレス(srcAddress)を元ピッチ分オフセットしながら、補正したピッチ個分(rowPitch)のアドレスを
+		// mappedImgContainer[i]にその数分(rowPitch)オフセットを繰り返しつつコピーしていく
+		for (int i = 0; i < textureImg[count]->height; ++i)
+		{
+			std::copy_n(srcAddress, rowPitch, mappedImgContainer[count]);
+			srcAddress += textureImg[count]->rowPitch;
+			mappedImgContainer[count] += rowPitch;
+		}
+
+		textureUploadBuff[count]->Unmap(0, nullptr);
 	}
-	
 }
 
 void ResourceManager::ClearReference()

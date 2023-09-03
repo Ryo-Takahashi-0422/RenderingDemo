@@ -20,10 +20,10 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 
 	//ディスクリプタテーブルのスロット設定
 	descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // martix
-	descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 29, 1); // material
-	descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 2); // colortex, graytex, spa, sph
-	descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // デプスマップ用
-	descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // ライトマップ用
+	descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 32, 1); // material b1-b33
+	descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 32, 0); // 描画する際に参照するsレジスタ番号群
+	//descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 32, 0); // メッシュテクスチャ用 s0-s31
+	//descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // ライトマップ用
 
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParam[0].DescriptorTable.NumDescriptorRanges = 1; // WVP用
@@ -45,17 +45,17 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2]; 
 	rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[3].DescriptorTable.NumDescriptorRanges = 1; // デプスマップ用
-	rootParam[3].DescriptorTable.pDescriptorRanges = &descTableRange[3];
-	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	//rootParam[3].DescriptorTable.NumDescriptorRanges = 1;
+	//rootParam[3].DescriptorTable.pDescriptorRanges = &descTableRange[3];
+	//rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[4].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
-	rootParam[4].DescriptorTable.pDescriptorRanges = &descTableRange[4];
-	rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	//rootParam[4].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	//rootParam[4].DescriptorTable.pDescriptorRanges = &descTableRange[4];
+	//rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootSignatureDesc.NumParameters = 4;
+	rootSignatureDesc.NumParameters = 3;
 	rootSignatureDesc.pParameters = rootParam;
 	rootSignatureDesc.NumStaticSamplers = 3;
 	rootSignatureDesc.pStaticSamplers = stSamplerDesc;

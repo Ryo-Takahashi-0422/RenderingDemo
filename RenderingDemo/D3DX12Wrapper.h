@@ -6,7 +6,7 @@ private:
 
 	std::array<std::string, 3> strModelPath;
 	int strModelNum = 0;
-	std::string strMotionPath = "C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuildmodel\\Motion\\squat2.vmd";
+	std::string strMotionPath = "";//"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\model\\Motion\\squat2.vmd";
 	ComPtr<ID3D12Device> _dev = nullptr;
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
@@ -30,7 +30,7 @@ private:
 	ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
 	GraphicsPipelineSetting* gPLSetting = nullptr;
 	std::vector<BufferHeapCreator*> bufferHeapCreator;
-	std::vector<TextureTransporter*> textureTransporter;
+	TextureTransporter* textureTransporter;
 	std::vector<MappingExecuter*> mappingExecuter;
 	std::vector<ViewCreator*> viewCreator;
 

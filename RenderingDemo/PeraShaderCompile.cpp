@@ -7,7 +7,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> PeraShaderCompile::SetPeraShad
 	result = D3DCompileFromFile
 	(
 		//L"PeraVertex.hlsl",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\PeraVertex.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraVertex.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"vs",
@@ -21,7 +21,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> PeraShaderCompile::SetPeraShad
 	result = D3DCompileFromFile
 	(
 		//L"PeraPixel.hlsl",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\RenderingDemo\\PeraPixel.hlsl",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraPixel.hlsl",
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"ps",
