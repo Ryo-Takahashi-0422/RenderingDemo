@@ -400,7 +400,6 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	}	
 
 	// mapping
-	int itCount = textureUploadBuff.size();
 	if (textureUploadBuff[iterationNum] == nullptr) return;
 
 	auto srcAddress = textureImg[iterationNum]->pixels;
