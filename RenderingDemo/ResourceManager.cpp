@@ -136,6 +136,7 @@ HRESULT ResourceManager::Init()
 	// create rendering buffer and create RTV
 	CreateRTV();
 
+	// create upload/read texture buffer and mapping Texture and Upload them to GPU
 	auto msterialAndTexturePath = _fbxInfoManager->GetMaterialAndTexturePath();
 	auto textureNum = msterialAndTexturePath.size();
 	auto iter = msterialAndTexturePath.begin();
@@ -145,16 +146,12 @@ HRESULT ResourceManager::Init()
 	textureMetaData.resize(texNum);
 	textureImg.resize(texNum);
 	textureImgPixelValue.resize(texNum);
-	hexContainer.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	for (int i = 0; i < msterialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
 		++iter;
 	}
-
-	// Mapping Texture and Upload them to GPU
-	MappingTextureToUploadBuff();
 
 	// create matrix buffer and mapping matrix, create CBV
 	CreateAndMapResources(textureNum); // mapping
@@ -339,16 +336,16 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	}
 
 	// 4:Texture Read Buffers(n=textureNum)
+	D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
+	textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	textureSRVDesc.Texture2D.MipLevels = 1;
 	for (int i = 0; i < textureNum; ++i)
 	{
 		auto& resource = textureReadBuff[i];
 		handle.ptr += inc;
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
-		textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		textureSRVDesc.Texture2D.MipLevels = 1;
+		textureSRVDesc.Format = textureReadBuff[i]->GetDesc().Format;
 		_dev->CreateShaderResourceView
 		(	
 			resource.Get(),
@@ -362,16 +359,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, int iterationNum)
 {
-	// TODO:汎用性持たせる。モデルパスと以下データのmapを作成してモデル毎に管理したい
-	// このようにバッファーなど一括でリサイズする方法が好ましい
-
-
-	//ScratchImage scratchImg = {};
+	// create resource
 	struct _stat s = {};
 
 	std::string filePath = "";
-
-	//テクスチャの読み込み
 	filePath = texturePath;
 
 	auto wTexPath = Utility::GetWideStringFromSring(filePath);
@@ -380,34 +371,24 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	if (!textureLoader->GetTable().count(extention))
 	{
 		std::cout << "読み込めないテクスチャが存在します" << std::endl;
-		//return 0;
 		return;
 	}
 
 	textureMetaData[iterationNum] = new TexMetadata;
 	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
 
-	int p = (int)scratchImg.GetImage(0, 0, 0)->pixels;
-
-	std::ostringstream ss;
-	ss << std::hex << p;
-	hexContainer[iterationNum]/*std::string lasthex*/ = ss.str();
-	
-	pixelPointerContainer[iterationNum] = reinterpret_cast</*const */uint8_t*>(&hexContainer[iterationNum][0]/*lasthex[0]*/);
-
 	if (scratchImg.GetImage(0, 0, 0) == nullptr) return;
 	
-	//textureImgPixelValue[iterationNum] = scratchImg.GetImage(0, 0, 0)->pixels;
 	textureImg[iterationNum] = nullptr;
 	textureImg[iterationNum] = new Image;
-	textureImg[iterationNum]->pixels = /*pixelPointerContainer[iterationNum]*/scratchImg.GetImage(0, 0, 0)->pixels;
+	textureImg[iterationNum]->pixels = scratchImg.GetImage(0, 0, 0)->pixels;
 	textureImg[iterationNum]->rowPitch = scratchImg.GetImage(0, 0, 0)->rowPitch;
 	textureImg[iterationNum]->format = scratchImg.GetImage(0, 0, 0)->format;
 	textureImg[iterationNum]->width = scratchImg.GetImage(0, 0, 0)->width;
 	textureImg[iterationNum]->height = scratchImg.GetImage(0, 0, 0)->height;
 	textureImg[iterationNum]->slicePitch = scratchImg.GetImage(0, 0, 0)->slicePitch;
 
-	// テクスチャが存在する場合
+	// if exist texture
 	if (_stat(filePath.c_str(), &s) == 0)
 	{
 		std::tie(textureUploadBuff[iterationNum], textureReadBuff[iterationNum]) = CreateD3DX12ResourceBuffer::LoadTextureFromFile(_dev, textureMetaData[iterationNum], textureImg[iterationNum], filePath);
@@ -417,30 +398,25 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	{
 		std::tie(textureUploadBuff[iterationNum], textureReadBuff[iterationNum]) = std::forward_as_tuple(nullptr, nullptr);
 	}	
-}
 
-void ResourceManager::MappingTextureToUploadBuff()
-{
+	// mapping
 	int itCount = textureUploadBuff.size();
-	for (int count = 0; count < itCount; count++)
+	if (textureUploadBuff[iterationNum] == nullptr) return;
+
+	auto srcAddress = textureImg[iterationNum]->pixels;
+	auto rowPitch = Utility::AlignmentSize(textureImg[iterationNum]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	result = textureUploadBuff[iterationNum]->Map(0, nullptr, (void**)&mappedImgContainer[iterationNum]);
+
+	// img:元データの初期アドレス(srcAddress)を元ピッチ分オフセットしながら、補正したピッチ個分(rowPitch)のアドレスを
+	// mappedImgContainer[i]にその数分(rowPitch)オフセットを繰り返しつつコピーしていく
+	for (int i = 0; i < textureImg[iterationNum]->height; ++i)
 	{
-		if (textureUploadBuff[count] == nullptr) continue;
-
-		auto srcAddress = textureImg[count]->pixels;
-		auto rowPitch = Utility::AlignmentSize(textureImg[count]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-		auto result = textureUploadBuff[count]->Map(0, nullptr, (void**)&mappedImgContainer[count]);
-
-		// img:元データの初期アドレス(srcAddress)を元ピッチ分オフセットしながら、補正したピッチ個分(rowPitch)のアドレスを
-		// mappedImgContainer[i]にその数分(rowPitch)オフセットを繰り返しつつコピーしていく
-		for (int i = 0; i < textureImg[count]->height; ++i)
-		{
-			std::copy_n(srcAddress, rowPitch, mappedImgContainer[count]);
-			srcAddress += textureImg[count]->rowPitch;
-			mappedImgContainer[count] += rowPitch;
-		}
-
-		textureUploadBuff[count]->Unmap(0, nullptr);
+		std::copy_n(srcAddress, rowPitch, mappedImgContainer[iterationNum]);
+		srcAddress += textureImg[iterationNum]->rowPitch;
+		mappedImgContainer[iterationNum] += rowPitch;
 	}
+
+	textureUploadBuff[iterationNum]->Unmap(0, nullptr);
 }
 
 void ResourceManager::ClearReference()

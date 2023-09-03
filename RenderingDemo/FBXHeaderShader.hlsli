@@ -48,9 +48,9 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerState smpToon : register(s1); // No.1 sampler(toon)
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
-Texture2D<float4> colormap : register(t0); // No.0 Diffuse Color Map
-//Texture2D<float> lightmap : register(t1); // No.1 lightmap(depth from light-view)
-//Texture2D<float4> tex : register(t2); // No.2 eye texture
-//Texture2D<float4> sph : register(t3); // No.3 .sph texture
-//Texture2D<float4> spa : register(t4); // No.4 .spa texture
+Texture2D<float4> colormap : register(t0);
+Texture2D<float4> normalmap : register(t1);
+Texture2D<float4> specularmap : register(t2);
+Texture2D<float4> metalmap : register(t3);
+Texture2D<float> transparentmap : register(t4);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture
