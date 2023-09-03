@@ -974,7 +974,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		}	
 
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
-
+		_cmdList->SetGraphicsRootDescriptorTable(2, tHandle); // index of texture
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;

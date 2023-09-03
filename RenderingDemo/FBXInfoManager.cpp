@@ -166,7 +166,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                         vertexInfo[3], vertexInfo[4], vertexInfo[5] // ↑の影響に注意
                     },
                     {
-                        vertexInfo[6], /*1.0f - */vertexInfo[7] // Blenderで作成した場合、V値は反転させる
+                        vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
                     }
                     });
             }
