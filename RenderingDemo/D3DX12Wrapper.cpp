@@ -37,7 +37,7 @@ D3DX12Wrapper::~D3DX12Wrapper()
 
 HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 {
-	result = CoInitializeEx(0, COINIT_MULTITHREADED);
+	//result = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	//ファクトリーの生成
 	result = S_OK;
@@ -112,7 +112,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	strModelPath =
 	{
-		"C:\\Users\\RyoTaka\\Documents\\RenderingDemo-Rebuild\\FBXConnan_Walking.fbx"
+		"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBXConnan_Walking.fbx"
 	};
 
 	strModelNum = strModelPath.size();
@@ -177,8 +177,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//	// BufferHeapCreatorクラスのインスタンス化
 	//	bufferHeapCreator[i] = new BufferHeapCreator(pmdMaterialInfo[i], prepareRenderingWindow, textureLoader);
 
-	//	// TextureTransporterクラスのインスタンス化
-	//	textureTransporter[i] = new TextureTransporter(pmdMaterialInfo[i], bufferHeapCreator[i]);
+
 
 	//	// MappingExecuterクラスのインスタンス化
 	//	mappingExecuter[i] = new MappingExecuter(pmdMaterialInfo[i], bufferHeapCreator[i]);
@@ -374,9 +373,9 @@ void D3DX12Wrapper::EffekseerInit()
 	_effect = Effekseer::Effect::Create
 	(
 		_efkManager,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
+		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
 		1.0f,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuild\\EffekseerTexture\\10"
+		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10"
 	);
 
 
@@ -395,6 +394,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	// FBX resource creation
 	resourceManager = new ResourceManager(_dev, fbxInfoManager, prepareRenderingWindow);
 	resourceManager->Init();
+
+	// TextureTransporterクラスのインスタンス化
+	textureTransporter = new TextureTransporter(fbxInfoManager);
 
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
@@ -490,7 +492,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
-	//result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator4Imgui.Get(), nullptr, IID_PPV_ARGS(_cmdList4Imgui.ReleaseAndGetAddressOf()));
+
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 	//cmdList->Close();
 
@@ -508,8 +510,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	//result = bufferHeapCreator[i]->CreateBufferOfDepthAndLightMap(_dev);
 
 	
-	////ファイル形式毎のテクスチャロード処理
-	//textureLoader->LoadTexture();
+	//ファイル形式毎のテクスチャロード処理
+	textureLoader->LoadTexture();
 
 	//// テクスチャ用のCPU_Upload用、GPU_Read用バッファの作成
 	//metaData.resize(pmdMaterialInfo[i]->materialNum);
@@ -622,6 +624,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	////{
 	//bufferHeapCreator[i]->CreateUploadAndReadBuff4Normalmap(_dev, strModelPath[i], "jpg", 1);
 	////}
+
+	textureTransporter->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
+		resourceManager->GetTextureMetaData(), resourceManager->GetTextureImg(),
+		_fence, _fenceVal, resourceManager->GetTextureUploadBuff(), resourceManager->GetTextureReadBuff());
 
 	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetNormalMapUploadBuff(), bufferHeapCreator[i]->GetNormalMapImg(), 1);
 	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
@@ -835,7 +841,7 @@ void D3DX12Wrapper::Run() {
 		delete viewCreator[i];
 		delete mappingExecuter[i];
 		delete bufferHeapCreator[i];
-		delete textureTransporter[i];
+		delete textureTransporter;
 		delete pmdActor[i];
 		delete vmdMotionInfo[i];
 		delete pmdMaterialInfo[i];
@@ -912,7 +918,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 	auto dHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-	dHandle.ptr += buffSize*2;
+	dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
@@ -924,6 +930,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	auto phongInfos = fbxInfoManager->GetPhongMaterialParamertInfo();
 	auto itPhonsInfos = phongInfos.begin();
 	auto mappedPhong = resourceManager->GetMappedPhong();
+	auto materialAndTexturenameInfo = fbxInfoManager->GetMaterialAndTexturePath();
+	auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
+	int itMATCnt = 0;
+	int matTexSize = materialAndTexturenameInfo.size();
+	D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
+	tHandle.ptr += buffSize * indiceContainer.size();
+	int textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
 		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
@@ -945,16 +958,29 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
 		mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
 		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
-		mappedPhong[i]->shineness = itPhonsInfos->second.shineness;
+		mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
+		if (matTexSize > 0) {
+			while (itMaterialAndTextureName->first == itPhonsInfos->first)
+			{
+				//printf("%s\n", itMaterialAndTextureName->first.c_str());
+				_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
+				tHandle.ptr += buffSize;
+				++textureTableStartIndex;
+				++itMATCnt;
+				if (itMATCnt == matTexSize) break;
+				++itMaterialAndTextureName;
+
+			}
+		}	
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
-
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
-		++itPhonsInfos;		
-	}
+		++itPhonsInfos;
 
+		textureTableStartIndex = 2; // init
+	}
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
 	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
@@ -1764,7 +1790,7 @@ void D3DX12Wrapper::DirectXTKInit()
 	(
 		_dev.Get(),
 		resUploadBatch,
-		L"C:\\Users\\RyoTaka\Documents\\RenderingDemo-Rebuildfont\\kanji.spritefont",
+		L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\font\\kanji.spritefont",
 		_heapSpriteFont->GetCPUDescriptorHandleForHeapStart(),
 		_heapSpriteFont->GetGPUDescriptorHandleForHeapStart()
 	);

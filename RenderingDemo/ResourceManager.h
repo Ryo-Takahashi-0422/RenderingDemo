@@ -23,6 +23,7 @@ private:
 	ComPtr<ID3D12Device> _dev = nullptr;
 	FBXInfoManager* _fbxInfoManager = nullptr;
 	PrepareRenderingWindow* _prepareRenderingWindow = nullptr;
+	TextureLoader* textureLoader = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap = nullptr; // 深度ステンシルビュー用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
@@ -128,8 +129,57 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE handle;
 
 	HRESULT CreateRTV();
-	HRESULT CreateAndMapMatrix();
-	HRESULT Test(ComPtr<ID3D12Resource> materialResource);
+	HRESULT CreateAndMapResources(size_t textureNum);
+
+	void CreateUploadAndReadBuff4Texture(std::string texturePath, int iterationNum);
+	void MappingTextureToUploadBuff(int count);
+
+	uint8_t* mappedImg0 = nullptr;
+	uint8_t* mappedImg1 = nullptr;
+	uint8_t* mappedImg2 = nullptr;
+	uint8_t* mappedImg3 = nullptr;
+	uint8_t* mappedImg4 = nullptr;
+	uint8_t* mappedImg5 = nullptr;
+	uint8_t* mappedImg6 = nullptr;
+	uint8_t* mappedImg7 = nullptr;
+	uint8_t* mappedImg8 = nullptr;
+	uint8_t* mappedImg9 = nullptr;
+	uint8_t* mappedImg10 = nullptr;
+	uint8_t* mappedImg11 = nullptr;
+	uint8_t* mappedImg12 = nullptr;
+	uint8_t* mappedImg13 = nullptr;
+	uint8_t* mappedImg14 = nullptr;
+	uint8_t* mappedImg15 = nullptr;
+	uint8_t* mappedImg16 = nullptr;
+	uint8_t* mappedImg17 = nullptr;
+	uint8_t* mappedImg18 = nullptr;
+	uint8_t* mappedImg19 = nullptr;
+	uint8_t* mappedImg20 = nullptr;
+	uint8_t* mappedImg21 = nullptr;
+	uint8_t* mappedImg22 = nullptr;
+	uint8_t* mappedImg23 = nullptr;
+	uint8_t* mappedImg24 = nullptr;
+	uint8_t* mappedImg25 = nullptr;
+	uint8_t* mappedImg26 = nullptr;
+	uint8_t* mappedImg27 = nullptr;
+	uint8_t* mappedImg28 = nullptr;
+	uint8_t* mappedImg29 = nullptr;
+	uint8_t* mappedImg30 = nullptr;
+	uint8_t* mappedImg31 = nullptr;
+	std::vector<uint8_t*> mappedImgContainer =
+	{
+		mappedImg0, mappedImg1, mappedImg2, mappedImg3, mappedImg4, mappedImg5, mappedImg6, mappedImg7, mappedImg8, mappedImg9,
+		mappedImg10, mappedImg11, mappedImg12, mappedImg13, mappedImg14, mappedImg15, mappedImg16, mappedImg17, mappedImg18, mappedImg19,
+		mappedImg20, mappedImg21, mappedImg22, mappedImg23, mappedImg24, mappedImg25, mappedImg26, mappedImg27, mappedImg28, mappedImg29, mappedImg30, mappedImg31
+	};
+
+	std::vector<ComPtr<ID3D12Resource>> textureUploadBuff; // ノーマルマップ用アップロードバッファー
+	std::vector<ComPtr<ID3D12Resource>> textureReadBuff; // ノーマルマップ用リードバッファー
+	std::vector<DirectX::TexMetadata*> textureMetaData;
+	std::vector<DirectX::Image*> textureImg;
+	std::vector<unsigned int> textureImgPixelValue;
+	ScratchImage scratchImg = {};
+
 	void ClearReference();
 
 public:
@@ -139,6 +189,12 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap() { return dsvHeap; };
 	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; };
+	std::vector<ComPtr<ID3D12Resource>> GetTextureUploadBuff() { return textureUploadBuff; };
+	std::vector<ComPtr<ID3D12Resource>> GetTextureReadBuff() { return textureReadBuff; };
+	std::vector<DirectX::TexMetadata*> GetTextureMetaData() { return textureMetaData; };
+	std::vector<DirectX::Image*> GetTextureImg() { return textureImg; };
+
+
 	D3D12_VERTEX_BUFFER_VIEW* GetVbView() { return &vbView; };
 	D3D12_INDEX_BUFFER_VIEW* GetIbView() { return &ibView; };
 	int GetVertexTotalNum() { return vertexTotalNum; };
