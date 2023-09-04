@@ -936,7 +936,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	int matTexSize = materialAndTexturenameInfo.size();
 	D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
 	tHandle.ptr += buffSize * indiceContainer.size();
-	int textureTableStartIndex = 2;
+	int textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
 	for (int i = 0; i < indiceContainer.size(); ++i)
 	{	
 		_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
@@ -960,11 +960,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
 		mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
-		//dHandle.ptr += buffSize;
 		if (matTexSize > 0) {
 			while (itMaterialAndTextureName->first == itPhonsInfos->first)
 			{
-				printf("%s\n", itMaterialAndTextureName->first.c_str());
+				//printf("%s\n", itMaterialAndTextureName->first.c_str());
 				_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
 				tHandle.ptr += buffSize;
 				++textureTableStartIndex;
@@ -975,15 +974,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			}
 		}	
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
-		//_cmdList->SetGraphicsRootDescriptorTable(2, tHandle); // index of texture
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();
 		++itIndiceFirst;
 		++itPhonsInfos;
 
-		//tHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-		//tHandle.ptr += buffSize * (2 + indiceContainer.size());
-		textureTableStartIndex = 2;
+		textureTableStartIndex = 2; // init
 	}
 
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく

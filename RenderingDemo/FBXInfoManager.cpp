@@ -4,10 +4,10 @@
 int FBXInfoManager::Init()
 {
     FbxManager* manager = nullptr;
-    FbxScene* scene = nullptr;
+    //FbxScene* scene = nullptr;
 
-    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\OneTextureConnan.fbx";
-    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
     
@@ -45,6 +45,8 @@ int FBXInfoManager::Init()
         // ぶら下がっているノードの名前を列挙
         enumNodeNamesAndAttributes(root, 0, modelPath);
     }
+
+
 
     // マネージャ解放
     // 関連するすべてのオブジェクトが解放される
@@ -357,10 +359,134 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                     }
                 }
             }
+
+
+            // Get bone pos and animation matrix
+            // スキンの数を取得
+            int skinCount = fbxMesh->GetDeformerCount(FbxDeformer::eSkin);
+
+            printf("%s\n", name);
+            for (int skinNum = 0; skinNum < skinCount; ++skinNum) {
+                // skinNum番目のスキンを取得
+                FbxStatus* eStatus;
+                FbxSkin* skin = static_cast<FbxSkin*>(fbxMesh->GetDeformer(skinNum, FbxDeformer::eSkin));
+
+                int cluster_count = skin->GetClusterCount();
+                lastMeshIndexNumByCluster = indexWithBonesNumAndWeight.size();
+                for (int cluster_index = 0; cluster_index < cluster_count; ++cluster_index)
+                {
+                    FbxCluster* cluster = skin->GetCluster(cluster_index); // bone like "Head", "Neck", etc...
+                    int pointNum = cluster->GetControlPointIndicesCount();
+                    int* pointAry = cluster->GetControlPointIndices();
+                    double* weightAry = cluster->GetControlPointWeights();
+
+                        
+                    for (int i = 0; i < pointNum; ++i) {
+                        // 頂点インデックスとウェイトを取得
+                        int index = pointAry[i];
+                        index += lastMeshIndexNumByCluster;
+                        float weight = (float)weightAry[i];
+
+                        indexWithBonesNumAndWeight[index][cluster_index] = weight;
+                        //printf("%f\n", weight);
+                    }
+
+                    FbxNode* linked_node = cluster->GetLink();
+                    printf("%s:\n", linked_node->GetName());
+
+                    //// ジョイントのローカル SRT を表示
+                    //fbxsdk::FbxDouble3 local_translate = linked_node->LclTranslation.Get();
+                    //fbxsdk::FbxDouble3 local_rotate = linked_node->LclRotation.Get();
+                    //fbxsdk::FbxDouble3 local_scale = linked_node->LclScaling.Get();
+                    //printf("    t = (%8.3f, %8.3f, %8.3f)\n    r = (%8.3f, %8.3f, %8.3f)\n    s = (%8.3f, %8.3f, %8.3f)\n",
+                    //    local_translate[0],
+                    //    local_translate[1],
+                    //    local_translate[2],
+                    //    local_rotate[0],
+                    //    local_rotate[1],
+                    //    local_rotate[2],
+                    //    local_scale[0],
+                    //    local_scale[1],
+                    //    local_scale[2]);
+
+                    //// ジョイントの変換行列を表示
+                    //fbxsdk::FbxAMatrix init_matrix;
+                    //cluster->GetTransformLinkMatrix(init_matrix); // 初期姿勢
+                    //printf("    matrix =\n");
+                    //for (int row = 0; row < 4; ++row)
+                    //{
+                    //    printf("        ");
+                    //    for (int col = 0; col < 4; ++col)
+                    //    {
+                    //        printf("%8.3f, ", init_matrix.Get(row, col));
+                    //    }
+                    //    printf("\n");
+                    //}
+                }
+
+            }
+
+
+            // アニメーション情報取得
+            FbxGlobalSettings& globalSettings = scene->GetGlobalSettings();
+            FbxTime::EMode timeMode = globalSettings.GetTimeMode();
+            FbxTime period;
+            period.SetTime(0, 0, 0, 1, 0, timeMode);
+
+            FbxArray< FbxString* > takeNameAry;   // 文字列格納配列
+            scene->FillAnimStackNameArray/*FillTakeNameArray*/(takeNameAry);  // テイク名取得
+            int numTake = takeNameAry.GetCount();     // テイク数
+            FbxTime start;
+            FbxTime stop;
+            bool isTakeExist = false;
+
+            for (int i = 0; i < numTake; ++i) {
+                // テイク名からテイク情報を取得
+                FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
+                if (currentTakeInfo)
+                {
+                    start = currentTakeInfo->mLocalTimeSpan.GetStart();
+                    stop = currentTakeInfo->mLocalTimeSpan.GetStop();
+                    isTakeExist = true;
+                    //break;
+
+                    // 1フレーム時間（period）で割ればフレーム数になります
+                    int startFrame = (int)(start.Get() / period.Get());
+                    int stopFrame = (int)(stop.Get() / period.Get());
+                    for (int i = startFrame; i < stopFrame; ++i) {
+                        FbxMatrix mat;
+                        FbxTime time = start + period * i;
+                        mat = cluster->GetLink()->GetGlobalFromCurrentTake(time);
+                    }
+                }
+            }
+
+            //// 1フレーム時間（period）で割ればフレーム数になります
+            //int startFrame = (int)(start.Get() / period.Get());
+            //int stopFrame = (int)(stop.Get() / period.Get());
+
+            takeNameAry.Clear();
+
+           
+            // 前処理によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイトをコピーしていく。
+            auto itAddtionalIndex = addtionalVertexIndexByApplication.begin();
+            for (int i = 0; i < addtionalVertexIndexByApplication.size(); ++i)
+            {
+                for (int j = 0; j < itAddtionalIndex->second.size(); ++j)
+                {
+                    auto iter = indexWithBonesNumAndWeight.find(itAddtionalIndex->first);
+                    indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                }
+                ++itAddtionalIndex;
+            }
+
+                    
+
+
+
             name = node->GetName();
             nameCnt += 1;
         }
-
     }
 
     int childCount = node->GetChildCount();
@@ -414,6 +540,9 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
     int newIndex = vertexInfoList.size() - 1;
     std::array<int, 2> oldNewIndexPair{ oldIndex , newIndex };
     oldNewIndexPairList.push_back(oldNewIndexPair);
+
+    int reserveNewIndex = newIndex + meshVertIndexStart;
+    addtionalVertexIndexByApplication[oldIndex].push_back(reserveNewIndex);
     return newIndex;
 }
 // vertexInfoに法線、UV座標が設定済かどうか？

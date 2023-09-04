@@ -43,7 +43,7 @@ private:
 	std::string modelPath;
 
 	//FbxManager* manager = nullptr;
-	//FbxScene* scene = nullptr;
+	FbxScene* scene = nullptr;
 
 	void enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath/*, VertexInfo* vertexInfo*/);
 
@@ -51,6 +51,8 @@ private:
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder;
 	std::vector<std::pair<std::string, PhongInfo>> finalPhongMaterialOrder;
 	std::vector<std::pair<std::string, std::string>> materialAndTexturenameInfo;
+	std::map<int, std::vector<int>> addtionalVertexIndexByApplication; // CreateNewVertexIndex()によって追加された新規インデックス。Clusterには情報がないため、後々indexWithBonesNumAndWeight内にこれに基づきインデックスとボーン・ウェイトをコピー、追加する
+	std::map<int, std::map<int, float>> indexWithBonesNumAndWeight;
 	bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
 	std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 	int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
@@ -59,6 +61,8 @@ private:
 
 	int currentVertIndex = 0;
 	int meshVertIndexStart = 0;
+	int lastMeshIndexNumByCluster = 0; // 前回メッシュのクラスターから読み取ったインデックス数。次のメッシュのインデックスに足して、通し番号にする。
+
 	std::string lastMaterialName;
 
 	std::vector<const char*> textureType = { "DiffuseColor", "NormalMap", "SpecularFactor", "ReflectionFactor", "TransparencyFactor"};

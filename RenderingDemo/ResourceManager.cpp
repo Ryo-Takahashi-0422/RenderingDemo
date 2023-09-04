@@ -346,6 +346,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle.ptr += inc;
 
 		textureSRVDesc.Format = textureReadBuff[i]->GetDesc().Format;
+		//if (textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
+		//{
+		//	textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS;
+		//}
 		_dev->CreateShaderResourceView
 		(	
 			resource.Get(),
