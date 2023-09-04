@@ -38,7 +38,6 @@ struct VertexInfo
 class FBXInfoManager
 {
 private:
-	int indiceCnt = 0;
 
 	std::string modelPath;
 
@@ -51,19 +50,25 @@ private:
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder;
 	std::vector<std::pair<std::string, PhongInfo>> finalPhongMaterialOrder;
 	std::vector<std::pair<std::string, std::string>> materialAndTexturenameInfo;
+
 	std::map<int, std::vector<int>> addtionalVertexIndexByApplication; // CreateNewVertexIndex()によって追加された新規インデックス。Clusterには情報がないため、後々indexWithBonesNumAndWeight内にこれに基づきインデックスとボーン・ウェイトをコピー、追加する
+	// indexWithBonesNumAndWeightのmap int とAnimationNameAndBoneNameWithTranslationMatrixの始めのmap intはcluster_indexすなわちボーンインデックスに基づいている。
+	// indexWithBonesNumAndWeightは全頂点インデックスと、それらが影響を受けるボーンインデックスと各ウェイトを、
+	// AnimationNameAndBoneNameWithTranslationMatrixはベイクされた各アニメーション名毎に、ボーンインデックス毎にアニメーションのフレーム数と回転・平行移動行列(XMMATRIX)をmapの入れ子にして格納している。
+	// これらはセットで利用する。後者からアニメーション情報をフレーム毎に抜き出してどのボーンがそのフレームで初期姿勢逆行列に対してどの回転・平行移動行列を掛けるか判別するが、それによって影響を受ける頂点は前者とボーンインデックスを通じて判別して、
+	// ボーンウェイトとともに回転・平行移動行列をVertex Shaderに引き渡すように処理する。
 	std::map<int, std::map<int, float>> indexWithBonesNumAndWeight;
+	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> AnimationNameAndBoneNameWithTranslationMatrix;
+	std::map<int, XMMATRIX> bonesInitialPostureMatrix; // 各ボーンを初期姿勢に戻すための
+
 	bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
 	std::vector<float> CreateVertexInfo(const std::vector<float>& vertex, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 	int CreateNewVertexIndex(const std::vector<float>& vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2,
 		std::vector<std::vector<float>>& vertexInfoList, int oldIndex, std::vector<std::array<int, 2>>& oldNewIndexPairList);
 	bool IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2);
 
-	int currentVertIndex = 0;
 	int meshVertIndexStart = 0;
 	int lastMeshIndexNumByCluster = 0; // 前回メッシュのクラスターから読み取ったインデックス数。次のメッシュのインデックスに足して、通し番号にする。
-
-	std::string lastMaterialName;
 
 	std::vector<const char*> textureType = { "DiffuseColor", "NormalMap", "SpecularFactor", "ReflectionFactor", "TransparencyFactor"};
 
