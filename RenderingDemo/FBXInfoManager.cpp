@@ -1,6 +1,12 @@
 #include <stdafx.h>
 #include <FBXInfoManager.h>
 
+FBXInfoManager& FBXInfoManager::Instance()
+{
+    static FBXInfoManager instance;
+    return instance;
+};
+
 int FBXInfoManager::Init()
 {
     FbxManager* manager = nullptr;
@@ -61,8 +67,16 @@ int FBXInfoManager::Init()
         auto it = indexWithBonesNumAndWeight[i].begin();
         for (int j = 0; j < indexWithBonesNumAndWeight[i].size(); ++j)
         {
-            finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index[j] = it->first;
-            finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight[j] = indexWithBonesNumAndWeight[i][it->first];
+            if (j < 3)
+            {
+                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index1[j] = it->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight1[j] = indexWithBonesNumAndWeight[i][it->first];
+            }
+            else
+            {
+                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index2[j - 3] = it->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight2[j - 3] = indexWithBonesNumAndWeight[i][it->first];
+            }
             ++it;
         }
         ++vertexIndex;

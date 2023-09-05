@@ -1,5 +1,6 @@
 #include <stdafx.h>
 #include <ResourceManager.h>
+#pragma comment(lib, "winmm.lib")
 
 ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRenderingWindow) : _dev(dev), _fbxInfoManager(fbxInfoManager), _prepareRenderingWindow(prepareRenderingWindow)
 {
@@ -255,6 +256,13 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	mappedMatrix->world = worldMat;
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
+    
+	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
+	XMVECTOR det;
+	for (int i = 0; i < bonesInitialPostureMatrixMap.size(); ++i)
+	{
+		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, bonesInitialPostureMatrixMap[i]);
+	}
 
 	// Mapping Phong Material Parameters
 	auto phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
@@ -426,4 +434,21 @@ void ResourceManager::ClearReference()
 {
 	_dev->Release();
 	delete _prepareRenderingWindow;
+}
+
+void ResourceManager::PlayAnimation()
+{
+	_startTime = timeGetTime();
+}
+
+void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
+{
+	elapsedTime = timeGetTime() - _startTime; // Œo‰ßŽžŠÔ‚ð‘ª’è‚µ‚ÄŠi”[
+	frameNo = 30 * (elapsedTime / 1000.0f);
+
+	if (frameNo > maxFrameNum)
+	{
+		PlayAnimation();
+		frameNo = 0;
+	}
 }

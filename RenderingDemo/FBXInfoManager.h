@@ -27,9 +27,20 @@ struct FBXVertex
 	float pos[3];
 	float normal[3];
 	float uv[2];
-	unsigned short bone_index[6];
-	float bone_weight[6];
+	unsigned int bone_index1[3];
+	unsigned int bone_index2[3];
+	float bone_weight1[3];
+	float bone_weight2[3];
 };
+
+//struct FBXVertex
+//{
+//	float pos[3];
+//	float normal[3];
+//	float uv[2];
+//	unsigned short bone_index[6];
+//	float bone_weight[6];
+//};
 
 struct VertexInfo
 {
@@ -75,6 +86,8 @@ private:
 	std::vector<const char*> textureType = { "DiffuseColor", "NormalMap", "SpecularFactor", "ReflectionFactor", "TransparencyFactor"};
 
 public:
+	//Get Singleton Instance
+	static FBXInfoManager& Instance();
 	int Init();
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };

@@ -388,15 +388,15 @@ bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
 
 	// FBXInfoManager Instance
-	fbxInfoManager = new FBXInfoManager;
-	fbxInfoManager->Init();
+	fbxInfoManager = FBXInfoManager::Instance();
+	fbxInfoManager.Init();
 
 	// FBX resource creation
-	resourceManager = new ResourceManager(_dev, fbxInfoManager, prepareRenderingWindow);
+	resourceManager = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
 	resourceManager->Init();
 
 	// TextureTransporterクラスのインスタンス化
-	textureTransporter = new TextureTransporter(fbxInfoManager);
+	textureTransporter = new TextureTransporter(&fbxInfoManager);
 
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
@@ -727,6 +727,8 @@ void D3DX12Wrapper::Run() {
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
 
+
+
 	while (true)
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -923,14 +925,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 	
-	auto indiceContainer = fbxInfoManager->GetIndiceAndVertexInfo();
+	auto indiceContainer = fbxInfoManager.GetIndiceAndVertexInfo();
 	auto itIndiceFirst = indiceContainer.begin();
 	int ofst = 0;
 
-	auto phongInfos = fbxInfoManager->GetPhongMaterialParamertInfo();
+	auto phongInfos = fbxInfoManager.GetPhongMaterialParamertInfo();
 	auto itPhonsInfos = phongInfos.begin();
 	auto mappedPhong = resourceManager->GetMappedPhong();
-	auto materialAndTexturenameInfo = fbxInfoManager->GetMaterialAndTexturePath();
+	auto materialAndTexturenameInfo = fbxInfoManager.GetMaterialAndTexturePath();
 	auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
 	int itMATCnt = 0;
 	int matTexSize = materialAndTexturenameInfo.size();
