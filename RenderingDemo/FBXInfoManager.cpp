@@ -12,11 +12,11 @@ int FBXInfoManager::Init()
     FbxManager* manager = nullptr;
     //FbxScene* scene = nullptr;
 
-    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
-    
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight.fbx";
     
     // create manager
     manager = FbxManager::Create();
@@ -488,7 +488,10 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
                     for (int j = 0; j < itAddtionalIndex->second.size(); ++j)
                     {
                         auto iter = indexWithBonesNumAndWeight.find(itAddtionalIndex->first);
-                        indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                        if (iter != indexWithBonesNumAndWeight.end())
+                        {
+                            indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                        }
                     }
                     ++itAddtionalIndex;
                 }

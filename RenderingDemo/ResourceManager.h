@@ -210,5 +210,6 @@ public:
 
 	void PlayAnimation();
 	void MotionUpdate(unsigned int maxFrameNum);
+	unsigned int GetFrameNo() { return frameNo; };
 };
 

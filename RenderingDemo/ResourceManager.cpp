@@ -253,6 +253,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
+	
 	mappedMatrix->world = worldMat;
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
@@ -445,10 +446,27 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 {
 	elapsedTime = timeGetTime() - _startTime; // Œo‰ßŽžŠÔ‚ð‘ª’è‚µ‚ÄŠi”[
 	frameNo = 30 * (elapsedTime / 1000.0f);
-
+	printf("%d\n", frameNo);
 	if (frameNo > maxFrameNum)
 	{
 		PlayAnimation();
 		frameNo = 0;
 	}
+
+	auto animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
+	//XMVECTOR det;
+	//if (frameNo > 1)
+	//{
+	//	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|test"].size(); ++i)
+	//	{
+	//		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, animationNameAndBoneNameWithTranslationMatrix["Armature|test"][i][frameNo - 1]);
+	//	}
+	//}
+
+
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
+	{
+		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo];
+	}
+	
 }
