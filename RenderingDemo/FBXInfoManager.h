@@ -27,6 +27,8 @@ struct FBXVertex
 	float pos[3];
 	float normal[3];
 	float uv[2];
+	unsigned short bone_index[6];
+	float bone_weight[6];
 };
 
 struct VertexInfo
@@ -44,12 +46,12 @@ private:
 	//FbxManager* manager = nullptr;
 	FbxScene* scene = nullptr;
 
-	void enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath/*, VertexInfo* vertexInfo*/);
+	void ReadFBXFile(FbxNode* node, int indent, const std::string& filePath);
 
 	std::unordered_map<std::string, VertexInfo> materialNameAndVertexInfo;
-	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder;
-	std::vector<std::pair<std::string, PhongInfo>> finalPhongMaterialOrder;
-	std::vector<std::pair<std::string, std::string>> materialAndTexturenameInfo;
+	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder; // material name and VectorInfo(vertex number, index number) pair
+	std::vector<std::pair<std::string, PhongInfo>> finalPhongMaterialOrder; // material name and PhongInfo(diffuse, ambient, emssive, bump, specular, reflection) pair
+	std::vector<std::pair<std::string, std::string>> materialAndTexturenameInfo; // material name and used texture file path pair
 
 	std::map<int, std::vector<int>> addtionalVertexIndexByApplication; // CreateNewVertexIndex()によって追加された新規インデックス。Clusterには情報がないため、後々indexWithBonesNumAndWeight内にこれに基づきインデックスとボーン・ウェイトをコピー、追加する
 	// indexWithBonesNumAndWeightのmap int とAnimationNameAndBoneNameWithTranslationMatrixの始めのmap intはcluster_indexすなわちボーンインデックスに基づいている。
@@ -58,7 +60,7 @@ private:
 	// これらはセットで利用する。後者からアニメーション情報をフレーム毎に抜き出してどのボーンがそのフレームで初期姿勢逆行列に対してどの回転・平行移動行列を掛けるか判別するが、それによって影響を受ける頂点は前者とボーンインデックスを通じて判別して、
 	// ボーンウェイトとともに回転・平行移動行列をVertex Shaderに引き渡すように処理する。
 	std::map<int, std::map<int, float>> indexWithBonesNumAndWeight;
-	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> AnimationNameAndBoneNameWithTranslationMatrix;
+	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> animationNameAndBoneNameWithTranslationMatrix;
 	std::map<int, XMMATRIX> bonesInitialPostureMatrix; // 各ボーンを初期姿勢に戻すための
 
 	bool IsExistNormalUVInfo(const std::vector<float>& vertexInfo);
@@ -77,4 +79,7 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturenameInfo; };
+	std::map<int, std::map<int, float>> GetIndexWithBonesNumAndWeight() { return indexWithBonesNumAndWeight; };
+	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
+	std::map<int, XMMATRIX> GetBonesInitialPostureMatrix() { return bonesInitialPostureMatrix; };
 };

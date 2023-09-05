@@ -43,7 +43,29 @@ int FBXInfoManager::Init()
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        enumNodeNamesAndAttributes(root, 0, modelPath);
+        ReadFBXFile(root, 0, modelPath);
+    }
+
+    int meshIndex = 0;
+    int vertexIndex = 0;
+    int VertexTotalNum = finalVertexDrawOrder[0].second.vertices.size(); // ループ処理内iとの値比較に用いる。この値にiが到達したらmeshIndexをインクリメントして、次のメッシュを読む。その際にそのメッシュのvertex数を加算しておく。
+    for (int i = 0; i < indexWithBonesNumAndWeight.size(); ++i)
+    {
+        if (i == VertexTotalNum)
+        {
+            ++meshIndex;
+            VertexTotalNum += finalVertexDrawOrder[meshIndex].second.vertices.size();
+            vertexIndex = 0;
+        }
+
+        auto it = indexWithBonesNumAndWeight[i].begin();
+        for (int j = 0; j < indexWithBonesNumAndWeight[i].size(); ++j)
+        {
+            finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index[j] = it->first;
+            finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight[j] = indexWithBonesNumAndWeight[i][it->first];
+            ++it;
+        }
+        ++vertexIndex;
     }
 
     // マネージャ解放
@@ -57,7 +79,7 @@ int FBXInfoManager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ★複数メッシュは読み込めるがローカル座標で描画するため重複する。読み込みモデルをメッシュ結合することで回避する。
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath)
+void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& filePath)
 {
     FbxMesh* fbxMesh = nullptr;
     std::vector<int> indiceVec; // 右手系インデクス
@@ -435,10 +457,10 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                                     XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
                                     XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
 
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[0] = v0;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[1] = v1;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[2] = v2;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[3] = v3;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[0] = v0;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[1] = v1;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[2] = v2;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[3] = v3;
                                 }
                             }
                         }
@@ -467,7 +489,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
     int childCount = node->GetChildCount();
 
     for (int i = 0; i < childCount; ++i) {
-        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, modelPath);
+        ReadFBXFile(node->GetChild(i), indent + 1, modelPath);
     }
 }
 
