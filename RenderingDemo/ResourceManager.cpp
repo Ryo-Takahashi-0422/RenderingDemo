@@ -454,19 +454,19 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 	}
 
 	auto animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
-	//XMVECTOR det;
-	//if (frameNo > 1)
+	XMVECTOR det;
+	//if (frameNo > 0)
 	//{
-	//	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|test"].size(); ++i)
+	//	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
 	//	{
-	//		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, animationNameAndBoneNameWithTranslationMatrix["Armature|test"][i][frameNo - 1]);
+	//		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo - 1]);
 	//	}
 	//}
 
 
-	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|test"].size(); ++i)
 	{
-		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo];
+		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|test"][i][frameNo];
 	}
 	
 }

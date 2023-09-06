@@ -14,9 +14,13 @@ int FBXInfoManager::Init()
 
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
     modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight.fbx";
+    
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight50.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight100.fbx";
     
     // create manager
     manager = FbxManager::Create();
@@ -65,7 +69,7 @@ int FBXInfoManager::Init()
         }
 
         auto it = indexWithBonesNumAndWeight[i].begin();
-        for (int j = 0; j < indexWithBonesNumAndWeight[i].size(); ++j)
+        for (int j = 0; j < indexWithBonesNumAndWeight[i].size(); ++j) // 処理後に要素数が増えている...!!!!!!!!!!!!!!!!!!!!!
         {
             if (j < 3)
             {
@@ -80,7 +84,7 @@ int FBXInfoManager::Init()
             ++it;
         }
         ++vertexIndex;
-    }
+     }
 
     // マネージャ解放
     // 関連するすべてのオブジェクトが解放される
@@ -193,6 +197,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
                 vertices.push_back(FBXVertex{
                     {
                         -vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
+                        //vertexInfo[2], vertexInfo[1], vertexInfo[0]
                     },
                     {
                         vertexInfo[3], vertexInfo[4], vertexInfo[5] // ↑の影響に注意

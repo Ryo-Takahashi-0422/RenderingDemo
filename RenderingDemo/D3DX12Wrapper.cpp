@@ -727,7 +727,7 @@ void D3DX12Wrapper::Run() {
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
 	resourceManager->PlayAnimation();
-	resourceManager->MotionUpdate(30);
+	resourceManager->MotionUpdate(19);
 
 
 	while (true)
@@ -771,7 +771,7 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-		resourceManager->MotionUpdate(30);
+		resourceManager->MotionUpdate(19);
 		DrawFBX(cbv_srv_Size);
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
