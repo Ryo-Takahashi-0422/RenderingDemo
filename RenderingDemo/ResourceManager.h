@@ -187,6 +187,8 @@ private:
 	DWORD elapsedTime; // 経過ミリ秒
 	unsigned int frameNo; // 現在のフレームNo
 
+	XMMATRIX invIdentify = XMMatrixIdentity();
+
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
 	HRESULT Init();

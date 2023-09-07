@@ -8,7 +8,7 @@ float4 FBXPS(Output input) : SV_TARGET
     // ディフューズ計算
     float diffuseB = saturate(dot(light, input.norm.xyz));
     
-    //return colormap.Sample(smp, input.uv);
+    return colormap.Sample(smp, input.uv);
     //return normalmap.Sample(smp, input.uv);
     //return specularmap.Sample(smp, input.uv);
     //return metalmap.Sample(smp, input.uv);

@@ -57,7 +57,7 @@ private:
 	//FbxManager* manager = nullptr;
 	FbxScene* scene = nullptr;
 
-	void ReadFBXFile(FbxNode* node, int indent, const std::string& filePath);
+	void ReadFBXFile(FbxNode* node, const std::string& filePath);
 
 	std::unordered_map<std::string, VertexInfo> materialNameAndVertexInfo;
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder; // material name and VectorInfo(vertex number, index number) pair
@@ -84,6 +84,9 @@ private:
 	int lastMeshIndexNumByCluster = 0; // 前回メッシュのクラスターから読み取ったインデックス数。次のメッシュのインデックスに足して、通し番号にする。
 
 	std::vector<const char*> textureType = { "DiffuseColor", "NormalMap", "SpecularFactor", "ReflectionFactor", "TransparencyFactor"};
+
+	std::vector<std::vector<float>> vertexInfoList;
+	//std::vector<FBXVertex> vertices;
 
 public:
 	//Get Singleton Instance

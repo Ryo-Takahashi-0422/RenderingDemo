@@ -727,7 +727,7 @@ void D3DX12Wrapper::Run() {
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
 	resourceManager->PlayAnimation();
-	resourceManager->MotionUpdate(19);
+	resourceManager->MotionUpdate(30);
 
 
 	while (true)
@@ -771,7 +771,7 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-		resourceManager->MotionUpdate(19);
+		resourceManager->MotionUpdate(30);
 		DrawFBX(cbv_srv_Size);
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
@@ -824,7 +824,7 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
-		resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.003f);
+		//resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.003f);
 		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
 
 		//フリップしてレンダリングされたイメージをユーザーに表示
@@ -976,6 +976,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 			}
 		}	
+		//if(i==1)
 		_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 		dHandle.ptr += buffSize;
 		ofst += itIndiceFirst->second.indices.size();

@@ -7,6 +7,8 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 	textureLoader = new TextureLoader;
 	//ファイル形式毎のテクスチャロード処理
 	textureLoader->LoadTexture();
+
+	invIdentify.r[0].m128_f32[0] *= -1;
 }
 
 
@@ -233,7 +235,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 5, 20);
+	XMFLOAT3 eye(0, 15, 30);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -464,9 +466,9 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 	//}
 
 
-	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|test"].size(); ++i)
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"].size(); ++i)
 	{
-		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|test"][i][frameNo];
+		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"][i][frameNo] * invIdentify; //!!!!!!!!test1をフレーム30などで再生すると、20-30まで頂点が原点?に移動した状態になる。ヒント...?
 	}
 	
 }

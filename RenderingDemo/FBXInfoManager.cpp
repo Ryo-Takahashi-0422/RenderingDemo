@@ -12,15 +12,15 @@ int FBXInfoManager::Init()
     FbxManager* manager = nullptr;
     //FbxScene* scene = nullptr;
 
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
-    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
     
-    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight50.fbx";
-    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight100.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight100.fbx";
     
     // create manager
     manager = FbxManager::Create();
@@ -53,36 +53,41 @@ int FBXInfoManager::Init()
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        ReadFBXFile(root, 0, modelPath);
+        ReadFBXFile(root, modelPath);
     }
 
+    auto it = indexWithBonesNumAndWeight.begin();
     int meshIndex = 0;
     int vertexIndex = 0;
     int VertexTotalNum = finalVertexDrawOrder[0].second.vertices.size(); // ループ処理内iとの値比較に用いる。この値にiが到達したらmeshIndexをインクリメントして、次のメッシュを読む。その際にそのメッシュのvertex数を加算しておく。
+    int lastVertexTotalNum = 0;
     for (int i = 0; i < indexWithBonesNumAndWeight.size(); ++i)
     {
         if (i == VertexTotalNum)
         {
             ++meshIndex;
+            lastVertexTotalNum = VertexTotalNum;
             VertexTotalNum += finalVertexDrawOrder[meshIndex].second.vertices.size();
             vertexIndex = 0;
         }
-
-        auto it = indexWithBonesNumAndWeight[i].begin();
-        for (int j = 0; j < indexWithBonesNumAndWeight[i].size(); ++j) // 処理後に要素数が増えている...!!!!!!!!!!!!!!!!!!!!!
+        
+        auto it2 = it->second.begin();
+        for (int j = 0; j < it->second.size(); ++j)
         {
             if (j < 3)
             {
-                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index1[j] = it->first;
-                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight1[j] = indexWithBonesNumAndWeight[i][it->first];
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_index1[j] = it2->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_weight1[j] = it2->second;
             }
             else
             {
-                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_index2[j - 3] = it->first;
-                finalVertexDrawOrder[meshIndex].second.vertices[vertexIndex].bone_weight2[j - 3] = indexWithBonesNumAndWeight[i][it->first];
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_index2[j - 3] = it2->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_weight2[j - 3] = it2->second;
             }
-            ++it;
+            ++it2;
+
         }
+        ++it;
         ++vertexIndex;
      }
 
@@ -97,7 +102,7 @@ int FBXInfoManager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ★複数メッシュは読み込めるがローカル座標で描画するため重複する。読み込みモデルをメッシュ結合することで回避する。
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& filePath)
+void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
 {
     FbxMesh* fbxMesh = nullptr;
     std::vector<int> indiceVec; // 右手系インデクス
@@ -134,7 +139,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
             fbxMesh->GetUVSetNames(uvSetNameList);
             const char* uvSetName = uvSetNameList.GetStringAt(0);
             // 頂点座標情報のリストを生成
-            std::vector<std::vector<float>> vertexInfoList;
+            //std::vector<std::vector<float>> vertexInfoList;
             for (int i = 0; i < fbxMesh->GetControlPointsCount(); i++)
             {
                 // 頂点座標を読み込んで設定
@@ -155,6 +160,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
                 {
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
+                    vertexIndex += meshVertIndexStart;
                     // 頂点座標
                     std::vector<float> vertexInfo = vertexInfoList[vertexIndex];
                     // 法線座標
@@ -179,7 +185,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
 
                     // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
                     // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
-                    vertexIndex += meshVertIndexStart;                                                       
+                    vertexIndex; /*+= meshVertIndexStart;   */
                     indices.push_back(vertexIndex);                    
                 }                
             }
@@ -191,12 +197,12 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
 
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
-            for (int i = 0; i < vertexInfoList.size(); i++)
+            for (int i = indexWithBonesNumAndWeight.size(); i < vertexInfoList.size(); i++)
             {
                 std::vector<float> vertexInfo = vertexInfoList[i];
                 vertices.push_back(FBXVertex{
                     {
-                        -vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
+                        vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
                         //vertexInfo[2], vertexInfo[1], vertexInfo[0]
                     },
                     {
@@ -405,8 +411,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
                 FbxTime::EMode timeMode = globalSettings.GetTimeMode();
                 FbxTime period;
                 period.SetTime(0, 0, 0, 1, 0, timeMode);
-
-                //printf("%s\n", name);
+                                
                 for (int skinNum = 0; skinNum < skinCount; ++skinNum) {
                     // skinNum番目のスキンを取得
                     FbxStatus* eStatus;
@@ -422,9 +427,10 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
                         int* pointAry = cluster->GetControlPointIndices();
                         double* weightAry = cluster->GetControlPointWeights();
 
+                        printf("%d : %s\n", cluster_index, cluster->GetName());
                         for (int i = 0; i < pointNum; ++i) {
                             // 頂点インデックスとウェイトを取得
-                            int index = pointAry[i];
+                            int index = pointAry[i]; //////////////////////////
                             index += lastMeshIndexNumByCluster;
                             float weight = (float)weightAry[i];
 
@@ -511,7 +517,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, int indent, const std::string& f
     int childCount = node->GetChildCount();
 
     for (int i = 0; i < childCount; ++i) {
-        ReadFBXFile(node->GetChild(i), indent + 1, modelPath);
+        ReadFBXFile(node->GetChild(i), modelPath);
     }
 }
 
@@ -560,7 +566,7 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
     std::array<int, 2> oldNewIndexPair{ oldIndex , newIndex };
     oldNewIndexPairList.push_back(oldNewIndexPair);
 
-    int reserveNewIndex = newIndex + meshVertIndexStart;
+    int reserveNewIndex = newIndex/* + meshVertIndexStart*/;
     addtionalVertexIndexByApplication[oldIndex].push_back(reserveNewIndex);
     return newIndex;
 }
