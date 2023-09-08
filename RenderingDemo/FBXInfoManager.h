@@ -91,10 +91,10 @@ private:
 	std::vector<std::vector<float>> vertexInfoList;
 	//std::vector<FBXVertex> vertices;
 
-	void ProcessTangent(FbxMesh* mesh, int vertexIndex, int vertexCounter);
-	void ProcessBinormal(FbxMesh* mesh, int vertexIndex, int vertexCounter);
-	void ProcessNormal(FbxMesh* mesh, int vertexIndex, int vertexCounter);
-	std::map<int, std::vector<float>> indexWithTangentBinormalNormal;
+	void ProcessTangent(FbxMesh* mesh, std::string materialName, int num, int index);
+	void ProcessBinormal(FbxMesh* mesh, std::string materialName, int num, int index);
+	void ProcessNormal(FbxMesh* mesh, std::string materialName, int num, int index);
+	std::map<std::string, std::map<int, std::vector<float>>> indexWithTangentBinormalNormalByMaterialName;
 
 
 public:

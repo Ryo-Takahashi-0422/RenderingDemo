@@ -38,7 +38,15 @@ Output FBXVS
     //    pos = mul(shadow, pos); // 影を計算
     //}
 
-    // pixelshaderへの出力を作っていく
+    float4x4 mat;
+    mat[0] = float4(tangent, 0.0f);
+    mat[1] = float4(binormal, 0.0f);
+    mat[2] = float4(vnormal, 0.0f);
+    mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
+    mat = transpose(mat);
+    float3 lightDirection = float3(0, 1, 0);
+    output.lightTangentDirection = mul(-lightDirection, mat);
+    
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
     output.norm = mul(world, norm);
