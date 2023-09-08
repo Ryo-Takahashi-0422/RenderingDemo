@@ -57,6 +57,7 @@ int FBXInfoManager::Init()
     }
 
     auto it = indexWithBonesNumAndWeight.begin();
+    auto itTan = indexWithTangentBinormalNormal.begin();
     int meshIndex = 0;
     int vertexIndex = 0;
     int VertexTotalNum = finalVertexDrawOrder[0].second.vertices.size(); // ループ処理内iとの値比較に用いる。この値にiが到達したらmeshIndexをインクリメントして、次のメッシュを読む。その際にそのメッシュのvertex数を加算しておく。
@@ -88,6 +89,19 @@ int FBXInfoManager::Init()
 
         }
         ++it;
+
+
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[0] = itTan->second[0];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[1] = itTan->second[1];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[2] = itTan->second[2];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[0] = itTan->second[3];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[1] = itTan->second[4];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[2] = itTan->second[5];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[0] = itTan->second[6];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[1] = itTan->second[7];
+        finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[2] = itTan->second[8];
+        ++itTan;
+        
         ++vertexIndex;
      }
 
@@ -161,11 +175,23 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
                     vertexIndex += meshVertIndexStart;
+
+                    // 接空間処理
+                    int iTangentCnt = fbxMesh->GetElementTangentCount();
+                    if (iTangentCnt != 0 && indexWithTangentBinormalNormal.find(vertexIndex) == indexWithTangentBinormalNormal.end())
+                    {
+                        ProcessTangent(fbxMesh, vertexIndex, 0);
+                        ProcessBinormal(fbxMesh, vertexIndex, 0);
+                        ProcessNormal(fbxMesh, vertexIndex, 0);
+                    }
+
                     // 頂点座標
                     std::vector<float> vertexInfo = vertexInfoList[vertexIndex];
+
                     // 法線座標
                     FbxVector4 normalVec4;
-                    fbxMesh->GetPolygonVertexNormal(polIndex, polVertexIndex, normalVec4);
+                    fbxMesh->GetPolygonVertexNormal(polIndex, polVertexIndex, normalVec4);  
+
                     // UV座標
                     FbxVector2 uvVec2;
                     bool isUnMapped;
@@ -185,22 +211,19 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
 
                     // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
                     // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
-                    vertexIndex; /*+= meshVertIndexStart;   */
-                    indices.push_back(vertexIndex);                    
+                    indices.push_back(vertexIndex);
                 }                
             }
 
-            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
-            auto iter = std::max_element(indices.begin(), indices.end());
-            size_t index = std::distance(indices.begin(), iter);
-            meshVertIndexStart = indices[index] + 1;                       
+             
 
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
-            for (int i = indexWithBonesNumAndWeight.size(); i < vertexInfoList.size(); i++)
+            for (int i = meshVertIndexStart; i < vertexInfoList.size(); i++)
             {
                 std::vector<float> vertexInfo = vertexInfoList[i];
-                vertices.push_back(FBXVertex{
+                vertices.push_back(FBXVertex
+                {
                     {
                         vertexInfo[0], vertexInfo[1], vertexInfo[2]
                     },
@@ -210,8 +233,13 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                     {
                         vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
                     }
-                    });
+                });
             }
+
+            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            auto iter = std::max_element(indices.begin(), indices.end());
+            size_t index = std::distance(indices.begin(), iter);
+            meshVertIndexStart = indices[index] + 1;
 
             //// 左手系インデクスに修正
             //for (int i = 0; i < /*fbxMesh->GetPolygonCount()*/indices.size() / 3; ++i)
@@ -492,7 +520,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                     }
                 }
 
-                // 前処理(頂点インデックスとウェイトを取得)によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイトをコピーしていく。
+                // 前処理(頂点インデックスとウェイトを取得)によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイト、接空間情報をコピーしていく。
                 auto itAddtionalIndex = addtionalVertexIndexByApplication.begin();
                 for (int i = 0; i < addtionalVertexIndexByApplication.size(); ++i)
                 {
@@ -502,6 +530,12 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                         if (iter != indexWithBonesNumAndWeight.end())
                         {
                             indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                        }
+
+                        auto iter2 = indexWithTangentBinormalNormal.find(itAddtionalIndex->first);
+                        if (iter2 != indexWithTangentBinormalNormal.end())
+                        {
+                            indexWithTangentBinormalNormal[itAddtionalIndex->second[j]] = iter2->second;
                         }
                     }
                     ++itAddtionalIndex;
@@ -579,4 +613,236 @@ bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const Fb
         && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
         && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
         && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
+}
+
+void FBXInfoManager::ProcessTangent(FbxMesh* mesh, int vertexIndex, int vertexCounter)
+{
+    if (mesh->GetElementTangentCount() == 0)
+    {
+        return;
+    }
+
+    FbxGeometryElementTangent* tangent = mesh->GetElementTangent(0);
+
+    //outTangent.w = 1;
+
+    switch (tangent->GetMappingMode())
+    {
+    case FbxGeometryElement::eByControlPoint:
+        switch (tangent->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            const auto vt = tangent->GetDirectArray().GetAt(vertexIndex);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            const int index = tangent->GetIndexArray().GetAt(vertexIndex);
+            const auto vt = tangent->GetDirectArray().GetAt(index);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        default:
+            assert(!"invalid reference.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eByPolygonVertex:
+        switch (tangent->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(vertexCounter).mData[0]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(vertexCounter).mData[1]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(vertexCounter).mData[2]));
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(tangent->GetDirectArray().GetAt( vertexCounter ).mData[ 3 ]);
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            int index = tangent->GetIndexArray().GetAt(vertexCounter);
+            //outTangent.x = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[0]);
+            //outTangent.y = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[1]);
+            //outTangent.z = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(tangent->GetDirectArray().GetAt( index ).mData[ 3 ]);
+        }
+        break;
+
+        default:
+            assert(!"Invalid reference for tangent.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eNone:
+    case FbxGeometryElement::eByPolygon:
+    case FbxGeometryElement::eByEdge:
+    case FbxGeometryElement::eAllSame:
+        std::cerr << "Unhandled mapping mode for tangent.";
+        exit(1);
+        break;
+    }
+}
+
+void FBXInfoManager::ProcessBinormal(FbxMesh* mesh, int vertexIndex, int vertexCounter)
+{
+    if (mesh->GetElementTangentCount() == 0)
+    {
+        return;
+    }
+
+    FbxGeometryElementBinormal* biNormal = mesh->GetElementBinormal(0);
+
+    //outTangent.w = 1;
+
+    switch (biNormal->GetMappingMode())
+    {
+    case FbxGeometryElement::eByControlPoint:
+        switch (biNormal->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            const auto vt = biNormal->GetDirectArray().GetAt(vertexIndex);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            const int index = biNormal->GetIndexArray().GetAt(vertexIndex);
+            const auto vt = biNormal->GetDirectArray().GetAt(index);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        default:
+            assert(!"invalid reference.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eByPolygonVertex:
+        switch (biNormal->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(vertexCounter).mData[0]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(vertexCounter).mData[1]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(vertexCounter).mData[2]));
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(biNormal->GetDirectArray().GetAt( vertexCounter ).mData[ 3 ]);
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            int index = biNormal->GetIndexArray().GetAt(vertexCounter);
+            //outTangent.x = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[0]);
+            //outTangent.y = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[1]);
+            //outTangent.z = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(biNormal->GetDirectArray().GetAt( index ).mData[ 3 ]);
+        }
+        break;
+
+        default:
+            assert(!"Invalid reference for biNormal.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eNone:
+    case FbxGeometryElement::eByPolygon:
+    case FbxGeometryElement::eByEdge:
+    case FbxGeometryElement::eAllSame:
+        std::cerr << "Unhandled mapping mode for biNormal.";
+        exit(1);
+        break;
+    }
+}
+
+void FBXInfoManager::ProcessNormal(FbxMesh* mesh, int vertexIndex, int vertexCounter)
+{
+    FbxGeometryElementNormal* vertexNormal = mesh->GetElementNormal(0);
+
+    switch (vertexNormal->GetMappingMode())
+    {
+    case FbxGeometryElement::eByControlPoint:
+        switch (vertexNormal->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            const auto vn = vertexNormal->GetDirectArray().GetAt(vertexIndex);
+            //outNormal.x = static_cast<float>(vn.mData[0]);
+            //outNormal.y = static_cast<float>(vn.mData[1]);
+            //outNormal.z = static_cast<float>(vn.mData[2]);
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            const int index = vertexNormal->GetIndexArray().GetAt(vertexIndex);
+            const auto vn = vertexNormal->GetDirectArray().GetAt(index);
+            //outNormal.x = static_cast<float>(vn.mData[0]);
+            //outNormal.y = static_cast<float>(vn.mData[1]);
+            //outNormal.z = static_cast<float>(vn.mData[2]);
+        }
+        break;
+
+        default:
+            assert(!"invalid reference.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eByPolygonVertex:
+        switch (vertexNormal->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[0]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[1]));
+            indexWithTangentBinormalNormal[vertexIndex].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[2]));
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            int index = vertexNormal->GetIndexArray().GetAt(vertexCounter);
+            //outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
+            //outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
+            //outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+        }
+        break;
+
+        default:
+            assert(!"Invalid reference.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eNone:
+    case FbxGeometryElement::eByPolygon:
+    case FbxGeometryElement::eByEdge:
+    case FbxGeometryElement::eAllSame:
+        std::cerr << "Unhandled mapping mode for vertex normal.";
+        exit(1);
+        break;
+    }
 }

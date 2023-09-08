@@ -3,7 +3,7 @@
 class GraphicsPipelineSetting : public IGraphicsPipelineSetting
 {
 private:
-	D3D12_INPUT_ELEMENT_DESC inputLayouts[7];
+	D3D12_INPUT_ELEMENT_DESC inputLayouts[10];
 
 public:
 	GraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout);

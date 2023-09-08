@@ -31,6 +31,9 @@ struct FBXVertex
 	unsigned int bone_index2[3];
 	float bone_weight1[3];
 	float bone_weight2[3];
+	float tangent[3];
+	float biNormal[3];
+	float vNormal[3];
 };
 
 //struct FBXVertex
@@ -87,6 +90,12 @@ private:
 
 	std::vector<std::vector<float>> vertexInfoList;
 	//std::vector<FBXVertex> vertices;
+
+	void ProcessTangent(FbxMesh* mesh, int vertexIndex, int vertexCounter);
+	void ProcessBinormal(FbxMesh* mesh, int vertexIndex, int vertexCounter);
+	void ProcessNormal(FbxMesh* mesh, int vertexIndex, int vertexCounter);
+	std::map<int, std::vector<float>> indexWithTangentBinormalNormal;
+
 
 public:
 	//Get Singleton Instance

@@ -7,7 +7,10 @@ Output FBXVS
     uint3 boneno1 : BONE_NO_ZeroToTwo,
     uint3 boneno2 : BONE_NO_ThreeToFive,
     float3 boneweight1 : WEIGHT_ZeroToTwo,
-    float3 boneweight2 : WEIGHT_ThreeToFive)
+    float3 boneweight2 : WEIGHT_ThreeToFive,
+    float3 tangent : Tangent,
+    float3 binormal : Binormal,
+    float3 vnormal : vNormal)
 {
     Output output; // ピクセルシェーダーに渡す値
     

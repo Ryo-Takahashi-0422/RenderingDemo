@@ -232,7 +232,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		
 	auto worldMat = XMMatrixIdentity();
 	auto angle = XMMatrixRotationY(3.14f);
-	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
 	XMFLOAT3 eye(0, 15, 30);
