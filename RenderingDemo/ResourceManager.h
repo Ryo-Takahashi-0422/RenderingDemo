@@ -11,7 +11,6 @@ struct FBXSceneMatrix
 	//XMFLOAT3 eye; // position of camera
 	//XMMATRIX invProj; // inverse projection matrix
 	//XMMATRIX invView; // inverted view matrix
-	XMMATRIX ReverceMattrixOfInitialPosture[256]; // index number is equal with bones index number
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
 	//float lightVec[3]; // vector of light from imgui
@@ -188,6 +187,7 @@ private:
 	unsigned int frameNo; // åªç›ÇÃÉtÉåÅ[ÉÄNo
 
 	XMMATRIX invIdentify = XMMatrixIdentity();
+	std::vector<XMMATRIX> invBonesInitialPostureMatrixMap;
 
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);

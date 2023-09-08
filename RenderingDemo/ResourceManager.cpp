@@ -262,9 +262,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
     
 	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
 	XMVECTOR det;
+	invBonesInitialPostureMatrixMap.resize(bonesInitialPostureMatrixMap.size());
 	for (int i = 0; i < bonesInitialPostureMatrixMap.size(); ++i)
 	{
-		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, bonesInitialPostureMatrixMap[i]);
+		invBonesInitialPostureMatrixMap[i] = XMMatrixInverse(&det, bonesInitialPostureMatrixMap[i]);
 	}
 
 	// Mapping Phong Material Parameters
@@ -448,7 +449,7 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 {
 	elapsedTime = timeGetTime() - _startTime; // 経過時間を測定して格納
 	frameNo = 30 * (elapsedTime / 1000.0f);
-	printf("%d\n", frameNo);
+
 	if (frameNo > maxFrameNum)
 	{
 		PlayAnimation();
@@ -457,18 +458,11 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 
 	auto animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
 	XMVECTOR det;
-	//if (frameNo > 0)
-	//{
-	//	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
-	//	{
-	//		mappedMatrix->ReverceMattrixOfInitialPosture[i] = XMMatrixInverse(&det, animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo - 1]);
-	//	}
-	//}
 
-
+	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
 	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"].size(); ++i)
 	{
-		mappedMatrix->bones[i] = animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"][i][frameNo] * invIdentify; //!!!!!!!!test1をフレーム30などで再生すると、20-30まで頂点が原点?に移動した状態になる。ヒント...?
+		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"][i][frameNo] * invIdentify);
 	}
 	
 }

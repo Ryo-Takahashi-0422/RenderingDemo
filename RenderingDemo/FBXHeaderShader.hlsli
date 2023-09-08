@@ -28,7 +28,7 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     //matrix invProj; // inverse matrix of projection matrix
     //matrix invView; // inverted view matrix 
     //matrix bones[256]; // bone matrix
-    matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
+    //matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
     //float3 lightVec;
     //bool isSelfShadow;

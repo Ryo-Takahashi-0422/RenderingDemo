@@ -202,11 +202,10 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                 std::vector<float> vertexInfo = vertexInfoList[i];
                 vertices.push_back(FBXVertex{
                     {
-                        vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
-                        //vertexInfo[2], vertexInfo[1], vertexInfo[0]
+                        vertexInfo[0], vertexInfo[1], vertexInfo[2]
                     },
                     {
-                        vertexInfo[3], vertexInfo[4], vertexInfo[5] // ↑の影響に注意
+                        vertexInfo[3], vertexInfo[4], vertexInfo[5]
                     },
                     {
                         vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
@@ -427,7 +426,6 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                         int* pointAry = cluster->GetControlPointIndices();
                         double* weightAry = cluster->GetControlPointWeights();
 
-                        printf("%d : %s\n", cluster_index, cluster->GetName());
                         for (int i = 0; i < pointNum; ++i) {
                             // 頂点インデックスとウェイトを取得
                             int index = pointAry[i]; //////////////////////////
@@ -478,7 +476,6 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                                     FbxMatrix mat;
                                     FbxTime time = start + period * j;
                                     mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
-                                    //mat = linked_node->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
 
                                     XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
                                     XMVECTOR v1 = { mat[1].mData[0] ,mat[1].mData[1] ,mat[1].mData[2] ,mat[1].mData[3] };
@@ -569,7 +566,7 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
     std::array<int, 2> oldNewIndexPair{ oldIndex , newIndex };
     oldNewIndexPairList.push_back(oldNewIndexPair);
 
-    int reserveNewIndex = newIndex/* + meshVertIndexStart*/;
+    int reserveNewIndex = newIndex;
     addtionalVertexIndexByApplication[oldIndex].push_back(reserveNewIndex);
     return newIndex;
 }
