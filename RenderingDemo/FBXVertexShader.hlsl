@@ -40,17 +40,25 @@ Output FBXVS
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
     mat[1] = float4(binormal, 0.0f);
-    mat[2] = float4(vnormal, 0.0f);
+    mat[2] = float4(norm);
     mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
     mat = transpose(mat);
 
-    float3 lightDirection = float3(0, 1, 0);
-    output.lightTangentDirection = mul(-lightDirection, mat);
-    //output.lightTangentDirection = float4(normalize(lightDirection), 1);
+    float3 lightDirection = float3(0, 1, 1);
+    //output.lightTangentDirection = mul(-lightDirection, mat);
+    output.lightTangentDirection = float4(normalize(lightDirection), 1);
     
-    output.tangent = normalize(mul(world, tangent));
-    output.biNormal = normalize(mul(world, binormal));
-    output.normal = normalize(mul(world, vnormal));
+    //output.tangent = normalize(mul(world, tangent));
+    //output.biNormal = normalize(mul(world, binormal));
+    //output.normal = normalize(mul(world, norm));
+    
+    float3x3 bmTan;
+    bmTan[0] = bm[0];
+    bmTan[1] = bm[1];
+    bmTan[2] = bm[2];
+    output.tangent = normalize(mul(world, mul(bmTan, tangent)));
+    output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
+    output.normal = normalize(mul(world, mul(bmTan, norm)));
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)

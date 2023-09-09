@@ -9,6 +9,7 @@ struct Output
     float3 tangent : TANGENT;
     float3 biNormal : BINORMAL;
     float3 normal : NORMAL2;
+
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;

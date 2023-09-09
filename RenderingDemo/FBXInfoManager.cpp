@@ -207,7 +207,7 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                         vertexInfo[3], vertexInfo[4], vertexInfo[5]
                     },
                     {
-                        vertexInfo[6], /*1.0f - */vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
+                        vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
                     }
                 });
             }
@@ -257,10 +257,10 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                 for (int i = 0; i < finalVertexDrawOrder.at(nameCnt).second.indices.size(); ++i)
                 {
                     ProcessTangent(fbxMesh, name, nameCnt, finalVertexDrawOrder.at(nameCnt).second.indices[i] - meshVertIndexStart);
-                    //ProcessBinormal(fbxMesh, name, i, finalVertexDrawOrder.at(nameCnt).second.indices[i]);
-                    //ProcessNormal(fbxMesh, name, i, finalVertexDrawOrder.at(nameCnt).second.indices[i]);
+                    ++testCnt;
                 }
             }
+            testCnt = 0;
 
             // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
             auto iter = std::max_element(indices.begin(), indices.end());
@@ -655,20 +655,19 @@ void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int
         {
         case FbxGeometryElement::eDirect:
         {
-            //if (indexWithTangentBinormalNormalByMaterialName[materialName].find(indexNum) == indexWithTangentBinormalNormalByMaterialName[materialName].end())
-            //{
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt].resize(9);
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][0] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][1] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][2] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[2]));
 
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][3] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][4] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][5] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[2]));
 
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]));
-            //}
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][6] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][7] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][8] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[2]));
+            
 
             if (std::find(indexOFTangentBinormalNormalByMaterialName[materialName].begin(), indexOFTangentBinormalNormalByMaterialName[materialName].end(), indexNum) == indexOFTangentBinormalNormalByMaterialName[materialName].end())
             {

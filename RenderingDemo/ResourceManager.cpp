@@ -235,7 +235,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 15, 30);
+	XMFLOAT3 eye(0, 15, 20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -464,9 +464,9 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 	XMVECTOR det;
 
 	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
-	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"].size(); ++i)
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
 	{
-		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"][i][frameNo] * invIdentify);
+		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo] * invIdentify);
 	}
 	
 }

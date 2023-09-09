@@ -96,6 +96,8 @@ private:
 	//void ProcessNormal(FbxMesh* mesh, std::string materialName, int num, int index);
 	std::map<std::string, std::vector<unsigned int>> indexOFTangentBinormalNormalByMaterialName;
 
+	std::map<std::string, std::map<int, std::vector<float>>> indexWithTangentBinormalNormalByMaterialName;
+	int testCnt = 0;
 
 public:
 	//Get Singleton Instance
