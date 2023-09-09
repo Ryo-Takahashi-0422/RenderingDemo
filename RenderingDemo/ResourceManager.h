@@ -11,7 +11,7 @@ struct FBXSceneMatrix
 	//XMFLOAT3 eye; // position of camera
 	//XMMATRIX invProj; // inverse projection matrix
 	//XMMATRIX invView; // inverted view matrix
-	//XMMATRIX bones[256]; // pmd bone matrix
+	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off
@@ -182,6 +182,13 @@ private:
 
 	void ClearReference();
 
+	DWORD _startTime; // アニメーション開始時のミリ秒
+	DWORD elapsedTime; // 経過ミリ秒
+	unsigned int frameNo; // 現在のフレームNo
+
+	XMMATRIX invIdentify = XMMatrixIdentity();
+	std::vector<XMMATRIX> invBonesInitialPostureMatrixMap;
+
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
 	HRESULT Init();
@@ -202,5 +209,9 @@ public:
 
 	FBXSceneMatrix* GetMappedMatrix() { return mappedMatrix; };
 	std::vector<PhongInfo*> GetMappedPhong() { return mappedPhoneContainer; };
+
+	void PlayAnimation();
+	void MotionUpdate(unsigned int maxFrameNum);
+	unsigned int GetFrameNo() { return frameNo; };
 };
 

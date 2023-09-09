@@ -5,6 +5,11 @@ struct Output
     float4 norm : NORMAL0; // 法線ベクトル
     //float4 vnormal : NORMAL1; // ビュー変換後の法線ベクトル
     float2 uv : TEXCOORD; // uv値
+    float4 lightTangentDirection : LightTangentDirection;
+    float3 tangent : TANGENT;
+    float3 biNormal : BINORMAL;
+    float3 normal : NORMAL2;
+
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
@@ -28,7 +33,8 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     //matrix invProj; // inverse matrix of projection matrix
     //matrix invView; // inverted view matrix 
     //matrix bones[256]; // bone matrix
-
+    //matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
+    matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
     //float3 lightVec;
     //bool isSelfShadow;
 };

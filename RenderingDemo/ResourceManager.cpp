@@ -1,11 +1,14 @@
 #include <stdafx.h>
 #include <ResourceManager.h>
+#pragma comment(lib, "winmm.lib")
 
 ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRenderingWindow) : _dev(dev), _fbxInfoManager(fbxInfoManager), _prepareRenderingWindow(prepareRenderingWindow)
 {
 	textureLoader = new TextureLoader;
 	//ファイル形式毎のテクスチャロード処理
 	textureLoader->LoadTexture();
+
+	invIdentify.r[0].m128_f32[0] *= -1;
 }
 
 
@@ -229,10 +232,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		
 	auto worldMat = XMMatrixIdentity();
 	auto angle = XMMatrixRotationY(3.14f);
-	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 5, 20);
+	XMFLOAT3 eye(0, 15, 20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
@@ -252,9 +255,18 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
+	
 	mappedMatrix->world = worldMat;
 	mappedMatrix->view = viewMat;
 	mappedMatrix->proj = projMat;
+    
+	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
+	XMVECTOR det;
+	invBonesInitialPostureMatrixMap.resize(bonesInitialPostureMatrixMap.size());
+	for (int i = 0; i < bonesInitialPostureMatrixMap.size(); ++i)
+	{
+		invBonesInitialPostureMatrixMap[i] = XMMatrixInverse(&det, bonesInitialPostureMatrixMap[i]);
+	}
 
 	// Mapping Phong Material Parameters
 	auto phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
@@ -346,10 +358,14 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle.ptr += inc;
 
 		textureSRVDesc.Format = textureReadBuff[i]->GetDesc().Format;
-		//if (textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-		//{
-		//	textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS;
-		//}
+
+		// Temporary : Accessoriesのcolor以外のjpegがSRGBになっている。Photoshop導入して変更出来るようにするまでこのまま。
+		if (i == 1 || i == 2 || i == 3)
+		{
+			textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		}
+
+
 		_dev->CreateShaderResourceView
 		(	
 			resource.Get(),
@@ -426,4 +442,31 @@ void ResourceManager::ClearReference()
 {
 	_dev->Release();
 	delete _prepareRenderingWindow;
+}
+
+void ResourceManager::PlayAnimation()
+{
+	_startTime = timeGetTime();
+}
+
+void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
+{
+	elapsedTime = timeGetTime() - _startTime; // 経過時間を測定して格納
+	frameNo = 30 * (elapsedTime / 1000.0f);
+
+	if (frameNo > maxFrameNum)
+	{
+		PlayAnimation();
+		frameNo = 0;
+	}
+
+	auto animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
+	XMVECTOR det;
+
+	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"].size(); ++i)
+	{
+		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix["Armature|Walking"][i][frameNo] * invIdentify);
+	}
+	
 }

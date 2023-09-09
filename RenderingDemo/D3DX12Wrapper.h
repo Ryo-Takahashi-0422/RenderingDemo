@@ -149,7 +149,7 @@ private:
 	XMMATRIX projMat;
 
 	// Rebuild
-	FBXInfoManager* fbxInfoManager = nullptr;
+	FBXInfoManager fbxInfoManager;
 	ResourceManager* resourceManager = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;

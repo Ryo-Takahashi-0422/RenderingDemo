@@ -1,6 +1,12 @@
 #include <stdafx.h>
 #include <FBXInfoManager.h>
 
+FBXInfoManager& FBXInfoManager::Instance()
+{
+    static FBXInfoManager instance;
+    return instance;
+};
+
 int FBXInfoManager::Init()
 {
     FbxManager* manager = nullptr;
@@ -8,9 +14,13 @@ int FBXInfoManager::Init()
 
     modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
     
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight50.fbx";
+    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight100.fbx";
     
     // create manager
     manager = FbxManager::Create();
@@ -43,8 +53,44 @@ int FBXInfoManager::Init()
     FbxNode* root = scene->GetRootNode();
     if (root != 0) {
         // ぶら下がっているノードの名前を列挙
-        enumNodeNamesAndAttributes(root, 0, modelPath);
+        ReadFBXFile(root, modelPath);
     }
+
+    auto it = indexWithBonesNumAndWeight.begin();
+    int meshIndex = 0;
+    int vertexIndex = 0;
+    int VertexTotalNum = finalVertexDrawOrder[0].second.vertices.size(); // ループ処理内iとの値比較に用いる。この値にiが到達したらmeshIndexをインクリメントして、次のメッシュを読む。その際にそのメッシュのvertex数を加算しておく。
+    int lastVertexTotalNum = 0;
+    for (int i = 0; i < indexWithBonesNumAndWeight.size(); ++i)
+    {
+        if (i == VertexTotalNum)
+        {
+            ++meshIndex;
+            lastVertexTotalNum = VertexTotalNum;
+            VertexTotalNum += finalVertexDrawOrder[meshIndex].second.vertices.size();
+            vertexIndex = 0;
+        }
+        
+        auto it2 = it->second.begin();
+        for (int j = 0; j < it->second.size(); ++j)
+        {
+            if (j < 3)
+            {
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_index1[j] = it2->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_weight1[j] = it2->second;
+            }
+            else
+            {
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_index2[j - 3] = it2->first;
+                finalVertexDrawOrder[meshIndex].second.vertices[it->first - lastVertexTotalNum].bone_weight2[j - 3] = it2->second;
+            }
+            ++it2;
+
+        }
+        ++it;
+        
+        ++vertexIndex;
+     }
 
     // マネージャ解放
     // 関連するすべてのオブジェクトが解放される
@@ -57,7 +103,7 @@ int FBXInfoManager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ★複数メッシュは読み込めるがローカル座標で描画するため重複する。読み込みモデルをメッシュ結合することで回避する。
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const std::string& filePath)
+void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
 {
     FbxMesh* fbxMesh = nullptr;
     std::vector<int> indiceVec; // 右手系インデクス
@@ -94,7 +140,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             fbxMesh->GetUVSetNames(uvSetNameList);
             const char* uvSetName = uvSetNameList.GetStringAt(0);
             // 頂点座標情報のリストを生成
-            std::vector<std::vector<float>> vertexInfoList;
+            //std::vector<std::vector<float>> vertexInfoList;
             for (int i = 0; i < fbxMesh->GetControlPointsCount(); i++)
             {
                 // 頂点座標を読み込んで設定
@@ -115,11 +161,15 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                 {
                     // インデックス座標
                     auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
+                    vertexIndex += meshVertIndexStart;
+
                     // 頂点座標
                     std::vector<float> vertexInfo = vertexInfoList[vertexIndex];
+
                     // 法線座標
                     FbxVector4 normalVec4;
-                    fbxMesh->GetPolygonVertexNormal(polIndex, polVertexIndex, normalVec4);
+                    fbxMesh->GetPolygonVertexNormal(polIndex, polVertexIndex, normalVec4);  
+
                     // UV座標
                     FbxVector2 uvVec2;
                     bool isUnMapped;
@@ -139,33 +189,33 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
 
                     // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
                     // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
-                    vertexIndex += meshVertIndexStart;                                                       
-                    indices.push_back(vertexIndex);                    
+                    indices.push_back(vertexIndex);
                 }                
             }
 
-            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
-            auto iter = std::max_element(indices.begin(), indices.end());
-            size_t index = std::distance(indices.begin(), iter);
-            meshVertIndexStart = indices[index] + 1;                       
-
             // 頂点情報を生成
             std::vector<FBXVertex> vertices;
-            for (int i = 0; i < vertexInfoList.size(); i++)
+            for (int i = meshVertIndexStart; i < vertexInfoList.size(); i++)
             {
                 std::vector<float> vertexInfo = vertexInfoList[i];
-                vertices.push_back(FBXVertex{
+                vertices.push_back(FBXVertex
+                {
                     {
-                        -vertexInfo[0], vertexInfo[1], vertexInfo[2] // なぜかY軸ミラーされた状態の頂点座標になっている。ので、とりあえずX座標値に-1しとく。
+                        vertexInfo[0], vertexInfo[1], vertexInfo[2]
                     },
                     {
-                        vertexInfo[3], vertexInfo[4], vertexInfo[5] // ↑の影響に注意
+                        vertexInfo[3], vertexInfo[4], vertexInfo[5]
                     },
                     {
                         vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
                     }
-                    });
+                });
             }
+
+            //// 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            //auto iter = std::max_element(indices.begin(), indices.end());
+            //size_t index = std::distance(indices.begin(), iter);
+            //meshVertIndexStart = indices[index] + 1;
 
             //// 左手系インデクスに修正
             //for (int i = 0; i < /*fbxMesh->GetPolygonCount()*/indices.size() / 3; ++i)
@@ -200,6 +250,22 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
             finalVertexDrawOrder.at(nameCnt).second.vertices = vertices;
             finalVertexDrawOrder.at(nameCnt).second.indices = indices;
 
+            // 接空間処理
+            int iTangentCnt = fbxMesh->GetElementTangentCount();
+            if (iTangentCnt != 0)
+            {
+                for (int i = 0; i < finalVertexDrawOrder.at(nameCnt).second.indices.size(); ++i)
+                {
+                    ProcessTangent(fbxMesh, name, nameCnt, finalVertexDrawOrder.at(nameCnt).second.indices[i] - meshVertIndexStart);
+                    ++testCnt;
+                }
+            }
+            testCnt = 0;
+
+            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            auto iter = std::max_element(indices.begin(), indices.end());
+            size_t index = std::distance(indices.begin(), iter);
+            meshVertIndexStart = indices[index] + 1;
 
             // Get material information
             // マテリアル情報元のノード取得
@@ -364,8 +430,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                 FbxTime::EMode timeMode = globalSettings.GetTimeMode();
                 FbxTime period;
                 period.SetTime(0, 0, 0, 1, 0, timeMode);
-
-                //printf("%s\n", name);
+                                
                 for (int skinNum = 0; skinNum < skinCount; ++skinNum) {
                     // skinNum番目のスキンを取得
                     FbxStatus* eStatus;
@@ -383,7 +448,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
 
                         for (int i = 0; i < pointNum; ++i) {
                             // 頂点インデックスとウェイトを取得
-                            int index = pointAry[i];
+                            int index = pointAry[i]; //////////////////////////
                             index += lastMeshIndexNumByCluster;
                             float weight = (float)weightAry[i];
 
@@ -408,26 +473,28 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                         int numTake = takeNameAry.GetCount();     // テイク数
                         FbxTime start;
                         FbxTime stop;
-                        bool isTakeExist = false;
-
+                        
                         // "Take" is Skin name and Animation name set like "Armature|Walking", "Armature|Punching", etc.
                         for (int i = 0; i < numTake; ++i)
                         {
+                            // 複数アニメーション情報切り替え
+                            FbxAnimStack* pStack = scene->GetSrcObject<FbxAnimStack>(i);
+                            scene->SetCurrentAnimationStack(pStack);
+
                             // テイク名からテイク情報を取得
                             FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
                             if (currentTakeInfo)
                             {
                                 start = currentTakeInfo->mLocalTimeSpan.GetStart();
                                 stop = currentTakeInfo->mLocalTimeSpan.GetStop();
-                                isTakeExist = true;
-                                //break;
-
+                                
                                 // 1フレーム時間（period）で割ればフレーム数になる
                                 int startFrame = (int)(start.Get() / period.Get());
                                 int stopFrame = (int)(stop.Get() / period.Get());
-                                for (int i = startFrame; i < stopFrame; ++i) {
+                                for (int j = startFrame; j < stopFrame; ++j) 
+                                {
                                     FbxMatrix mat;
-                                    FbxTime time = start + period * i;
+                                    FbxTime time = start + period * j;
                                     mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
 
                                     XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
@@ -435,24 +502,33 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
                                     XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
                                     XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
 
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[0] = v0;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[1] = v1;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[2] = v2;
-                                    AnimationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][i].r[3] = v3;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[0] = v0;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[1] = v1;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[2] = v2;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[3] = v3;
                                 }
                             }
                         }
                     }
                 }
 
-                // 前処理(頂点インデックスとウェイトを取得)によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイトをコピーしていく。
+                // 前処理(頂点インデックスとウェイトを取得)によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイト、接空間情報をコピーしていく。
                 auto itAddtionalIndex = addtionalVertexIndexByApplication.begin();
                 for (int i = 0; i < addtionalVertexIndexByApplication.size(); ++i)
                 {
                     for (int j = 0; j < itAddtionalIndex->second.size(); ++j)
                     {
                         auto iter = indexWithBonesNumAndWeight.find(itAddtionalIndex->first);
-                        indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                        if (iter != indexWithBonesNumAndWeight.end())
+                        {
+                            indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
+                        }
+
+                        //auto iter2 = indexWithTangentBinormalNormalByMaterialName[name].find(itAddtionalIndex->first);
+                        //if (iter2 != indexWithTangentBinormalNormalByMaterialName[name].end())
+                        //{
+                        //    indexWithTangentBinormalNormalByMaterialName[name][itAddtionalIndex->second[j]] = iter2->second;
+                        //}
                     }
                     ++itAddtionalIndex;
                 }
@@ -467,7 +543,7 @@ void FBXInfoManager::enumNodeNamesAndAttributes(FbxNode* node, int indent, const
     int childCount = node->GetChildCount();
 
     for (int i = 0; i < childCount; ++i) {
-        enumNodeNamesAndAttributes(node->GetChild(i), indent + 1, modelPath);
+        ReadFBXFile(node->GetChild(i), modelPath);
     }
 }
 
@@ -516,7 +592,7 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
     std::array<int, 2> oldNewIndexPair{ oldIndex , newIndex };
     oldNewIndexPairList.push_back(oldNewIndexPair);
 
-    int reserveNewIndex = newIndex + meshVertIndexStart;
+    int reserveNewIndex = newIndex;
     addtionalVertexIndexByApplication[oldIndex].push_back(reserveNewIndex);
     return newIndex;
 }
@@ -529,4 +605,111 @@ bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const Fb
         && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
         && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
         && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
+}
+
+void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int nameCnt, int indexNum)
+{
+    if (mesh->GetElementTangentCount() == 0)
+    {
+        return;
+    }
+
+    FbxGeometryElementTangent* tangent = mesh->GetElementTangent(0);
+    FbxGeometryElementBinormal* biNormal = mesh->GetElementBinormal(0);
+    FbxGeometryElementNormal* vertexNormal = mesh->GetElementNormal(0);
+
+    switch (tangent->GetMappingMode())
+    {
+    case FbxGeometryElement::eByControlPoint:
+        switch (tangent->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            //const auto vt = tangent->GetDirectArray().GetAt(vertexIndex);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            //const int index = tangent->GetIndexArray().GetAt(vertexIndex);
+            //const auto vt = tangent->GetDirectArray().GetAt(index);
+            //outTangent.x = static_cast<float>(vt.mData[0]);
+            //outTangent.y = static_cast<float>(vt.mData[1]);
+            //outTangent.z = static_cast<float>(vt.mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
+        }
+        break;
+
+        default:
+            assert(!"invalid reference.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eByPolygonVertex:
+        switch (tangent->GetReferenceMode())
+        {
+        case FbxGeometryElement::eDirect:
+        {
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt].resize(9);
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][0] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][1] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][2] = (static_cast<float>(tangent->GetDirectArray().GetAt(testCnt).mData[2]));
+
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][3] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][4] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][5] = (static_cast<float>(biNormal->GetDirectArray().GetAt(testCnt).mData[2]));
+
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][6] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[0]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][7] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[1]));
+            //indexWithTangentBinormalNormalByMaterialName[materialName][testCnt][8] = (static_cast<float>(vertexNormal->GetDirectArray().GetAt(testCnt).mData[2]));
+            
+
+            if (std::find(indexOFTangentBinormalNormalByMaterialName[materialName].begin(), indexOFTangentBinormalNormalByMaterialName[materialName].end(), indexNum) == indexOFTangentBinormalNormalByMaterialName[materialName].end())
+            {
+                indexOFTangentBinormalNormalByMaterialName[materialName].emplace_back(indexNum);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[0] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[1] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[2] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]);
+
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[0] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[1] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[2] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[0] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[1] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[2] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+            }
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(tangent->GetDirectArray().GetAt( vertexCounter ).mData[ 3 ]);            
+        }
+        break;
+
+        case FbxGeometryElement::eIndexToDirect:
+        {
+            //int index = tangent->GetIndexArray().GetAt(vertexCounter);
+            //outTangent.x = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[0]);
+            //outTangent.y = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[1]);
+            //outTangent.z = static_cast<float>(tangent->GetDirectArray().GetAt(index).mData[2]);
+            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(tangent->GetDirectArray().GetAt( index ).mData[ 3 ]);
+        }
+        break;
+
+        default:
+            assert(!"Invalid reference for tangent.");
+            exit(1);
+        }
+        break;
+
+    case FbxGeometryElement::eNone:
+    case FbxGeometryElement::eByPolygon:
+    case FbxGeometryElement::eByEdge:
+    case FbxGeometryElement::eAllSame:
+        std::cerr << "Unhandled mapping mode for tangent.";
+        exit(1);
+        break;
+    }
 }
