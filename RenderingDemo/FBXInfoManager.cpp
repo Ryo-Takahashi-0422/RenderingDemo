@@ -57,7 +57,6 @@ int FBXInfoManager::Init()
     }
 
     auto it = indexWithBonesNumAndWeight.begin();
-    auto itTan = indexWithTangentBinormalNormalByMaterialName.begin();
     int meshIndex = 0;
     int vertexIndex = 0;
     int VertexTotalNum = finalVertexDrawOrder[0].second.vertices.size(); // ループ処理内iとの値比較に用いる。この値にiが到達したらmeshIndexをインクリメントして、次のメッシュを読む。その際にそのメッシュのvertex数を加算しておく。
@@ -89,18 +88,6 @@ int FBXInfoManager::Init()
 
         }
         ++it;
-
-
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[0] = itTan->second[0];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[1] = itTan->second[1];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].tangent[2] = itTan->second[2];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[0] = itTan->second[3];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[1] = itTan->second[4];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].biNormal[2] = itTan->second[5];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[0] = itTan->second[6];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[1] = itTan->second[7];
-        //finalVertexDrawOrder[meshIndex].second.vertices[itTan->first - lastVertexTotalNum].vNormal[2] = itTan->second[8];
-        //++itTan;
         
         ++vertexIndex;
      }
@@ -220,15 +207,15 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                         vertexInfo[3], vertexInfo[4], vertexInfo[5]
                     },
                     {
-                        vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
+                        vertexInfo[6], /*1.0f - */vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
                     }
                 });
             }
 
-            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
-            auto iter = std::max_element(indices.begin(), indices.end());
-            size_t index = std::distance(indices.begin(), iter);
-            meshVertIndexStart = indices[index] + 1;
+            //// 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            //auto iter = std::max_element(indices.begin(), indices.end());
+            //size_t index = std::distance(indices.begin(), iter);
+            //meshVertIndexStart = indices[index] + 1;
 
             //// 左手系インデクスに修正
             //for (int i = 0; i < /*fbxMesh->GetPolygonCount()*/indices.size() / 3; ++i)
@@ -269,11 +256,16 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
             {
                 for (int i = 0; i < finalVertexDrawOrder.at(nameCnt).second.indices.size(); ++i)
                 {
-                    ProcessTangent(fbxMesh, name, i, finalVertexDrawOrder.at(nameCnt).second.indices[i]);
+                    ProcessTangent(fbxMesh, name, nameCnt, finalVertexDrawOrder.at(nameCnt).second.indices[i] - meshVertIndexStart);
                     //ProcessBinormal(fbxMesh, name, i, finalVertexDrawOrder.at(nameCnt).second.indices[i]);
                     //ProcessNormal(fbxMesh, name, i, finalVertexDrawOrder.at(nameCnt).second.indices[i]);
                 }
             }
+
+            // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
+            auto iter = std::max_element(indices.begin(), indices.end());
+            size_t index = std::distance(indices.begin(), iter);
+            meshVertIndexStart = indices[index] + 1;
 
             // Get material information
             // マテリアル情報元のノード取得
@@ -532,11 +524,11 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                             indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
                         }
 
-                        auto iter2 = indexWithTangentBinormalNormalByMaterialName[name].find(itAddtionalIndex->first);
-                        if (iter2 != indexWithTangentBinormalNormalByMaterialName[name].end())
-                        {
-                            indexWithTangentBinormalNormalByMaterialName[name][itAddtionalIndex->second[j]] = iter2->second;
-                        }
+                        //auto iter2 = indexWithTangentBinormalNormalByMaterialName[name].find(itAddtionalIndex->first);
+                        //if (iter2 != indexWithTangentBinormalNormalByMaterialName[name].end())
+                        //{
+                        //    indexWithTangentBinormalNormalByMaterialName[name][itAddtionalIndex->second[j]] = iter2->second;
+                        //}
                     }
                     ++itAddtionalIndex;
                 }
@@ -615,7 +607,7 @@ bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const Fb
         && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
 }
 
-void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int roopCnt, int indexNum)
+void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int nameCnt, int indexNum)
 {
     if (mesh->GetElementTangentCount() == 0)
     {
@@ -625,7 +617,6 @@ void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int
     FbxGeometryElementTangent* tangent = mesh->GetElementTangent(0);
     FbxGeometryElementBinormal* biNormal = mesh->GetElementBinormal(0);
     FbxGeometryElementNormal* vertexNormal = mesh->GetElementNormal(0);
-
 
     switch (tangent->GetMappingMode())
     {
@@ -664,36 +655,36 @@ void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int
         {
         case FbxGeometryElement::eDirect:
         {
-            if (indexWithTangentBinormalNormalByMaterialName[materialName].find(indexNum) == indexWithTangentBinormalNormalByMaterialName[materialName].end())
-            {
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]));
-
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]));
-
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]));
-            }
-
-            //if (std::find(indexOFTangentBinormalNormalByMaterialName[materialName].begin(), indexOFTangentBinormalNormalByMaterialName[materialName].end(), indexNum) == indexOFTangentBinormalNormalByMaterialName[materialName].end())
+            //if (indexWithTangentBinormalNormalByMaterialName[materialName].find(indexNum) == indexWithTangentBinormalNormalByMaterialName[materialName].end())
             //{
-            //    indexOFTangentBinormalNormalByMaterialName[materialName].emplace_back(indexNum);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).tangent[0] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).tangent[1] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).tangent[2] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]);
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]));
 
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).biNormal[0] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).biNormal[1] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).biNormal[2] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]));
 
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).vNormal[0] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).vNormal[1] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]);
-            //    finalVertexDrawOrder[0].second.vertices.at(indexNum).vNormal[2] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]));
+            //    indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]));
             //}
+
+            if (std::find(indexOFTangentBinormalNormalByMaterialName[materialName].begin(), indexOFTangentBinormalNormalByMaterialName[materialName].end(), indexNum) == indexOFTangentBinormalNormalByMaterialName[materialName].end())
+            {
+                indexOFTangentBinormalNormalByMaterialName[materialName].emplace_back(indexNum);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[0] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[1] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).tangent[2] = static_cast<float>(tangent->GetDirectArray().GetAt(indexNum).mData[2]);
+
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[0] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[1] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).biNormal[2] = static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[0] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[1] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]);
+                finalVertexDrawOrder[nameCnt].second.vertices.at(indexNum).vNormal[2] = static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]);
+            }
             // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(tangent->GetDirectArray().GetAt( vertexCounter ).mData[ 3 ]);            
         }
         break;
@@ -719,164 +710,6 @@ void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int
     case FbxGeometryElement::eByEdge:
     case FbxGeometryElement::eAllSame:
         std::cerr << "Unhandled mapping mode for tangent.";
-        exit(1);
-        break;
-    }
-}
-
-void FBXInfoManager::ProcessBinormal(FbxMesh* mesh, std::string materialName, int roopCnt, int indexNum)
-{
-    if (mesh->GetElementTangentCount() == 0)
-    {
-        return;
-    }
-
-    FbxGeometryElementBinormal* biNormal = mesh->GetElementBinormal(0);
-    int proccessCnt = biNormal->GetDirectArray().GetCount();
-
-    switch (biNormal->GetMappingMode())
-    {
-    case FbxGeometryElement::eByControlPoint:
-        switch (biNormal->GetReferenceMode())
-        {
-        case FbxGeometryElement::eDirect:
-        {
-            //const auto vt = biNormal->GetDirectArray().GetAt(vertexIndex);
-            //outTangent.x = static_cast<float>(vt.mData[0]);
-            //outTangent.y = static_cast<float>(vt.mData[1]);
-            //outTangent.z = static_cast<float>(vt.mData[2]);
-            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
-        }
-        break;
-
-        case FbxGeometryElement::eIndexToDirect:
-        {
-            //const int index = biNormal->GetIndexArray().GetAt(vertexIndex);
-            //const auto vt = biNormal->GetDirectArray().GetAt(index);
-            //outTangent.x = static_cast<float>(vt.mData[0]);
-            //outTangent.y = static_cast<float>(vt.mData[1]);
-            //outTangent.z = static_cast<float>(vt.mData[2]);
-            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>( vt.mData[ 3 ] );
-        }
-        break;
-
-        default:
-            assert(!"invalid reference.");
-            exit(1);
-        }
-        break;
-
-    case FbxGeometryElement::eByPolygonVertex:
-        switch (biNormal->GetReferenceMode())
-        {
-        case FbxGeometryElement::eDirect:
-        {
-            if (indexWithTangentBinormalNormalByMaterialName[materialName].find(indexNum) == indexWithTangentBinormalNormalByMaterialName[materialName].end())
-            {
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(biNormal->GetDirectArray().GetAt(indexNum).mData[2]));
-            }
-            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(biNormal->GetDirectArray().GetAt( vertexCounter ).mData[ 3 ]);
-            
-        }
-        break;
-
-        case FbxGeometryElement::eIndexToDirect:
-        {
-            //int index = biNormal->GetIndexArray().GetAt(vertexCounter);
-            //outTangent.x = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[0]);
-            //outTangent.y = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[1]);
-            //outTangent.z = static_cast<float>(biNormal->GetDirectArray().GetAt(index).mData[2]);
-            // FIXME: returns 0, but must be -1 or 1: outTangent.w = static_cast<float>(biNormal->GetDirectArray().GetAt( index ).mData[ 3 ]);
-        }
-        break;
-
-        default:
-            assert(!"Invalid reference for biNormal.");
-            exit(1);
-        }
-        break;
-
-    case FbxGeometryElement::eNone:
-    case FbxGeometryElement::eByPolygon:
-    case FbxGeometryElement::eByEdge:
-    case FbxGeometryElement::eAllSame:
-        std::cerr << "Unhandled mapping mode for biNormal.";
-        exit(1);
-        break;
-    }
-}
-
-void FBXInfoManager::ProcessNormal(FbxMesh* mesh, std::string materialName, int roopCnt, int indexNum)
-{
-    FbxGeometryElementNormal* vertexNormal = mesh->GetElementNormal(0);
-    int proccessCnt = vertexNormal->GetDirectArray().GetCount();
-
-    switch (vertexNormal->GetMappingMode())
-    {
-    case FbxGeometryElement::eByControlPoint:
-        switch (vertexNormal->GetReferenceMode())
-        {
-        case FbxGeometryElement::eDirect:
-        {
-            //const auto vn = vertexNormal->GetDirectArray().GetAt(vertexIndex);
-            //outNormal.x = static_cast<float>(vn.mData[0]);
-            //outNormal.y = static_cast<float>(vn.mData[1]);
-            //outNormal.z = static_cast<float>(vn.mData[2]);
-        }
-        break;
-
-        case FbxGeometryElement::eIndexToDirect:
-        {
-            //const int index = vertexNormal->GetIndexArray().GetAt(vertexIndex);
-            //const auto vn = vertexNormal->GetDirectArray().GetAt(index);
-            //outNormal.x = static_cast<float>(vn.mData[0]);
-            //outNormal.y = static_cast<float>(vn.mData[1]);
-            //outNormal.z = static_cast<float>(vn.mData[2]);
-        }
-        break;
-
-        default:
-            assert(!"invalid reference.");
-            exit(1);
-        }
-        break;
-
-    case FbxGeometryElement::eByPolygonVertex:
-        switch (vertexNormal->GetReferenceMode())
-        {
-        case FbxGeometryElement::eDirect:
-        {
-            if (indexWithTangentBinormalNormalByMaterialName[materialName].find(indexNum) == indexWithTangentBinormalNormalByMaterialName[materialName].end())
-            {
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[0]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[1]));
-                indexWithTangentBinormalNormalByMaterialName[materialName][indexNum].push_back(static_cast<float>(vertexNormal->GetDirectArray().GetAt(indexNum).mData[2]));
-            }
-        }
-        break;
-
-        case FbxGeometryElement::eIndexToDirect:
-        {
-            //int index = vertexNormal->GetIndexArray().GetAt(vertexCounter);
-            //outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
-            //outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
-            //outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
-        }
-        break;
-
-        default:
-            assert(!"Invalid reference.");
-            exit(1);
-        }
-        break;
-
-    case FbxGeometryElement::eNone:
-    case FbxGeometryElement::eByPolygon:
-    case FbxGeometryElement::eByEdge:
-    case FbxGeometryElement::eAllSame:
-        std::cerr << "Unhandled mapping mode for vertex normal.";
         exit(1);
         break;
     }

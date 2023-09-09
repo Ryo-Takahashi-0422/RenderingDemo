@@ -2,15 +2,15 @@
 
 Output FBXVS
 (float4 pos : POSITION,
-    float4 norm : NORMAL,
+    float4 norm : NORMAL_Vertex,
     float2 uv : TEXCOORD,
     uint3 boneno1 : BONE_NO_ZeroToTwo,
     uint3 boneno2 : BONE_NO_ThreeToFive,
     float3 boneweight1 : WEIGHT_ZeroToTwo,
     float3 boneweight2 : WEIGHT_ThreeToFive,
-    float3 tangent : Tangent,
-    float3 binormal : Binormal,
-    float3 vnormal : vNormal)
+    float3 tangent : TANGENT,
+    float3 binormal : BINORMAL,
+    float3 vnormal : NORMAL)
 {
     Output output; // ピクセルシェーダーに渡す値
     
@@ -29,7 +29,6 @@ Output FBXVS
         bm[1][1] = 1;
         bm[2][2] = 1;
         bm[3][3] = 1;
-
     }
     pos = mul(bm, pos);
     
@@ -44,8 +43,14 @@ Output FBXVS
     mat[2] = float4(vnormal, 0.0f);
     mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
     mat = transpose(mat);
+
     float3 lightDirection = float3(0, 1, 0);
     output.lightTangentDirection = mul(-lightDirection, mat);
+    //output.lightTangentDirection = float4(normalize(lightDirection), 1);
+    
+    output.tangent = normalize(mul(world, tangent));
+    output.biNormal = normalize(mul(world, binormal));
+    output.normal = normalize(mul(world, vnormal));
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)

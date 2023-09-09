@@ -10,12 +10,16 @@ float4 FBXPS(Output input) : SV_TARGET
     
     
     float3 normCol = normalmap.Sample(smp, input.uv);
+    //return float4(normCol, 1);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
+    //return float4(normVec, 1);
+    //float3 normal = input.tangent * normVec.x + input.biNormal * normVec.y + input.normal * normVec.z;
     
+    return float4(input.lightTangentDirection.xyz, 1);
     float bright = dot(input.lightTangentDirection.xyz, normVec);
     bright = max(0, bright);
-    bright = saturate(bright);
+    //bright = saturate(bright);
     
     float4 col = colormap.Sample(smp, input.uv);
     

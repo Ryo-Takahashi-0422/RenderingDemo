@@ -18,7 +18,7 @@ VertexInputLayout::VertexInputLayout()
 
 		//法線ベクトル
 		{
-			"NORMAL",
+			"NORMAL_Vertex",
 			0,
 			DXGI_FORMAT_R32G32B32_FLOAT,
 			0,
@@ -84,7 +84,7 @@ VertexInputLayout::VertexInputLayout()
 
 		//Tangent
 		{
-			"Tangent",
+			"TANGENT",
 			0,
 			DXGI_FORMAT_R32G32B32_FLOAT,
 			0,
@@ -95,7 +95,7 @@ VertexInputLayout::VertexInputLayout()
 
 		//Binormal
 		{
-			"Binormal",
+			"BINORMAL",
 			0,
 			DXGI_FORMAT_R32G32B32_FLOAT,
 			0,
@@ -106,7 +106,7 @@ VertexInputLayout::VertexInputLayout()
 
 		//vNormal
 		{
-			"vNormal",
+			"NORMAL",
 			0,
 			DXGI_FORMAT_R32G32B32_FLOAT,
 			0,

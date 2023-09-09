@@ -358,10 +358,14 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle.ptr += inc;
 
 		textureSRVDesc.Format = textureReadBuff[i]->GetDesc().Format;
-		//if (textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-		//{
-		//	textureSRVDesc.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS;
-		//}
+
+		// Temporary : Accessoriesのcolor以外のjpegがSRGBになっている。Photoshop導入して変更出来るようにするまでこのまま。
+		if (i == 1 || i == 2 || i == 3)
+		{
+			textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		}
+
+
 		_dev->CreateShaderResourceView
 		(	
 			resource.Get(),

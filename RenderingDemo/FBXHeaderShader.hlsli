@@ -5,7 +5,10 @@ struct Output
     float4 norm : NORMAL0; // 法線ベクトル
     //float4 vnormal : NORMAL1; // ビュー変換後の法線ベクトル
     float2 uv : TEXCOORD; // uv値
-    float4 lightTangentDirection : TEXCOORD3;
+    float4 lightTangentDirection : LightTangentDirection;
+    float3 tangent : TANGENT;
+    float3 biNormal : BINORMAL;
+    float3 normal : NORMAL2;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
