@@ -17,11 +17,8 @@ int FBXInfoManager::Init()
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
-    
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight50.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\test1_weight100.fbx";
-    
+    modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test.fbx";
+
     // create manager
     manager = FbxManager::Create();
 
@@ -523,12 +520,6 @@ void FBXInfoManager::ReadFBXFile(FbxNode* node, const std::string& filePath)
                         {
                             indexWithBonesNumAndWeight[itAddtionalIndex->second[j]] = iter->second;
                         }
-
-                        //auto iter2 = indexWithTangentBinormalNormalByMaterialName[name].find(itAddtionalIndex->first);
-                        //if (iter2 != indexWithTangentBinormalNormalByMaterialName[name].end())
-                        //{
-                        //    indexWithTangentBinormalNormalByMaterialName[name][itAddtionalIndex->second[j]] = iter2->second;
-                        //}
                     }
                     ++itAddtionalIndex;
                 }
