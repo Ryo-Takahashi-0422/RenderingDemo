@@ -60,7 +60,7 @@ private:
 	//FbxManager* manager = nullptr;
 	FbxScene* scene = nullptr;
 
-	void ReadFBXFile(FbxNode* node, const std::string& filePath);
+	void ReadFBXFile();
 
 	std::unordered_map<std::string, VertexInfo> materialNameAndVertexInfo;
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder; // material name and VectorInfo(vertex number, index number) pair

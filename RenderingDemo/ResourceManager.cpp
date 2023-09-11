@@ -235,7 +235,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 40,100);
+	XMFLOAT3 eye(0, 10,20);
 	XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH

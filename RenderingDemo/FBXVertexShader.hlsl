@@ -45,7 +45,6 @@ Output FBXVS
     mat = transpose(mat);
 
     float3 lightDirection = float3(0, 1, 1);
-    //output.lightTangentDirection = mul(-lightDirection, mat);
     output.lightTangentDirection = float4(normalize(lightDirection), 1);
     
     //output.tangent = normalize(mul(world, tangent));

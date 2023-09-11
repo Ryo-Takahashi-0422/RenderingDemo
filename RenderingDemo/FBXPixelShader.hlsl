@@ -35,6 +35,7 @@ float4 FBXPS(Output input) : SV_TARGET
     //return specularmap.Sample(smp, input.uv);
     //return metalmap.Sample(smp, input.uv);
     //return transparentmap.Sample(smp, input.uv);
+    //return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1); // Ziggrat‚Å‚àƒ‰ƒO‚ª‚È‚¢I‚Ç‚¤‚â‚çSample‚ğ—˜—p‚µ‚Ä‚¢‚écol‚ânormal‚ªŒ´ˆö‚ç‚µ‚¢
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     return renderingResultOfNormalMapAndDiffuseMap/* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     return input.norm;
