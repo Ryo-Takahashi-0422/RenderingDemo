@@ -239,11 +239,11 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		
 	auto worldMat = XMMatrixIdentity();
 	auto angle = XMMatrixRotationY(3.14f);
-	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 10,20);
-	XMFLOAT3 target(0, 10, 0);
+	XMFLOAT3 eye(0, 1.5, 2);
+	XMFLOAT3 target(0, 1.5, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
 	(
@@ -456,12 +456,13 @@ void ResourceManager::PlayAnimation()
 	_startTime = timeGetTime();
 }
 
-void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
+void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrameNum)
 {
 	elapsedTime = timeGetTime() - _startTime; // 経過時間を測定して格納
 	frameNo = 30 * (elapsedTime / 1000.0f);
 
-	if (frameNo > maxFrameNum)
+	// 現在フレーム数 >= 最大フレーム数にすることで、同一モーションが最終フレームで開始フレームと滑らかに繋がっている場合はシームレスになる
+	if (frameNo >= maxFrameNum)
 	{
 		PlayAnimation();
 		frameNo = 0;
@@ -471,9 +472,9 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 	XMVECTOR det;
 
 	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
-	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"].size(); ++i)
+	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix[motionName].size(); ++i)
 	{
-		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix["Armature|Punching"][i][frameNo] * invIdentify);
+		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix[motionName][i][frameNo] * invIdentify);
 	}
 	
 }

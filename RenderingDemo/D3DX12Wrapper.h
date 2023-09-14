@@ -154,9 +154,14 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;
+	Input* input = nullptr;
 	std::vector< std::string> modelPath;
+	std::pair<std::string, int> idleMotionDataNameAndMaxFrame;
+	std::pair<std::string, int> walkingMotionDataNameAndMaxFrame;
+	std::pair<std::string, int> runMotionDataNameAndMaxFrame;
+	bool inputRet; // 入力に対する判定 true:指定の入力あり
 
-	void DrawFBX(int fbxIndex, UINT buffSize);
+	void DrawFBX(UINT buffSize);
 
 public:
 	///Applicationのシングルトンインスタンスを得る

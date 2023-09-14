@@ -255,6 +255,7 @@
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
     <ClCompile Include="IGraphicsPipelineSetting.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputLayoutBase.cpp" />
     <ClCompile Include="LightMapGraphicsPipelineSetting.cpp" />
     <ClCompile Include="LightMapShaderCompile.cpp" />
@@ -306,6 +307,7 @@
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />
     <ClInclude Include="IGraphicsPipelineSetting.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="InputLayoutBase.h" />
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
