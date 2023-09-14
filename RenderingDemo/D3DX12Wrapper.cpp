@@ -386,17 +386,33 @@ void D3DX12Wrapper::EffekseerInit()
 
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
+	
+	// connan, zig   zigを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
+	// connan, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
+	// zig, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
+	// battlefield, battlefieldは〇、connao,connanは×
 
-	// FBXInfoManager Instance
-	fbxInfoManager = FBXInfoManager::Instance();
-	fbxInfoManager.Init();
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx");
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
+	
 
-	// FBX resource creation
-	resourceManager = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
-	resourceManager->Init();
+	resourceManager.resize(modelPath.size());
+
+	for (int i = 0; i < modelPath.size(); ++i)
+	{
+		// FBXInfoManager Instance
+		fbxInfoManager = FBXInfoManager::Instance();
+		fbxInfoManager.Init(modelPath[i]);
+
+		// FBX resource creation
+		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
+		resourceManager[i]->Init();
+	}
 
 	// TextureTransporterクラスのインスタンス化
-	textureTransporter = new TextureTransporter(&fbxInfoManager);
+	textureTransporter = new TextureTransporter;
 
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
@@ -624,11 +640,15 @@ bool D3DX12Wrapper::ResourceInit() {
 	////{
 	//bufferHeapCreator[i]->CreateUploadAndReadBuff4Normalmap(_dev, strModelPath[i], "jpg", 1);
 	////}
-
-	textureTransporter->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
-		resourceManager->GetTextureMetaData(), resourceManager->GetTextureImg(),
-		_fence, _fenceVal, resourceManager->GetTextureUploadBuff(), resourceManager->GetTextureReadBuff());
-
+	for (int i = 0; i < modelPath.size(); ++i)
+	{
+		if (resourceManager[i]->GetMaterialAndTexturePath().size() != 0)
+		{
+			textureTransporter->TransportPMDMaterialTexture(resourceManager[i], _cmdList, _cmdAllocator, _cmdQueue,
+				resourceManager[i]->GetTextureMetaData(), resourceManager[i]->GetTextureImg(),
+				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
+		}
+	}
 	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetNormalMapUploadBuff(), bufferHeapCreator[i]->GetNormalMapImg(), 1);
 	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
 	//	bufferHeapCreator[i]->GetNormalMapMetadata(), bufferHeapCreator[i]->GetNormalMapImg(),
@@ -726,9 +746,14 @@ void D3DX12Wrapper::Run() {
 
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
-	resourceManager->PlayAnimation();
-	resourceManager->MotionUpdate(30);
-
+	for (int i = 0; i < modelPath.size(); ++i)
+	{
+		if (resourceManager[i]->GetIsAnimationModel())
+		{
+			resourceManager[i]->PlayAnimation();
+			resourceManager[i]->MotionUpdate(30);
+		}
+	}
 
 	while (true)
 	{
@@ -771,8 +796,19 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-		resourceManager->MotionUpdate(30);
-		DrawFBX(cbv_srv_Size);
+		
+
+		for (int i = 0; i < modelPath.size(); ++i)
+		{
+			if (resourceManager[i]->GetIsAnimationModel())
+			{
+				resourceManager[i]->MotionUpdate(30);
+			}
+			
+			DrawFBX(i, cbv_srv_Size);
+		}
+		
+		//DrawFBX(1, cbv_srv_Size);
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
 		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
@@ -824,7 +860,7 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
-		resourceManager->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
+		//resourceManager[i]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
 		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
 
 		//フリップしてレンダリングされたイメージをユーザーに表示
@@ -876,13 +912,13 @@ void D3DX12Wrapper::Run() {
 	//delete peraSetRootSignature;
 }
 
-void D3DX12Wrapper::DrawFBX(UINT buffSize)
+void D3DX12Wrapper::DrawFBX(int fbxIndex, UINT buffSize)
 {
 	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
 	D3D12_RESOURCE_BARRIER BarrierDesc = {};
 	BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	BarrierDesc.Transition.pResource = resourceManager->GetRenderingBuff().Get();
+	BarrierDesc.Transition.pResource = resourceManager[fbxIndex]->GetRenderingBuff().Get();
 	BarrierDesc.Transition.Subresource = 0;
 	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -895,8 +931,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->RSSetViewports(1, prepareRenderingWindow->GetViewPortPointer());
 	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer());
 
-	auto dsvh = resourceManager->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+	auto dsvh = resourceManager[fbxIndex]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[fbxIndex]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 
 	_cmdList->OMSetRenderTargets(1, &handle, false, &dsvh);
 	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
@@ -911,29 +947,29 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
 	//頂点バッファーのCPU記述子ハンドルを設定
-	_cmdList->IASetVertexBuffers(0, 1, resourceManager->GetVbView());
+	_cmdList->IASetVertexBuffers(0, 1, resourceManager[fbxIndex]->GetVbView());
 
 	//★インデックスバッファーのビューを設定
-	_cmdList->IASetIndexBuffer(resourceManager->GetIbView());
+	_cmdList->IASetIndexBuffer(resourceManager[fbxIndex]->GetIbView());
 
 	//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
-	_cmdList->SetDescriptorHeaps(1, resourceManager->GetSRVHeap().GetAddressOf());
+	_cmdList->SetDescriptorHeaps(1, resourceManager[fbxIndex]->GetSRVHeap().GetAddressOf());
 
-	auto dHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	auto dHandle = resourceManager[fbxIndex]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 	dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 	//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 	
-	auto indiceContainer = fbxInfoManager.GetIndiceAndVertexInfo();
+	auto indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfo();
 	auto itIndiceFirst = indiceContainer.begin();
 	int ofst = 0;
 
-	auto phongInfos = fbxInfoManager.GetPhongMaterialParamertInfo();
+	auto phongInfos = resourceManager[fbxIndex]->GetPhongMaterialParamertInfo();
 	auto itPhonsInfos = phongInfos.begin();
-	auto mappedPhong = resourceManager->GetMappedPhong();
-	auto materialAndTexturenameInfo = fbxInfoManager.GetMaterialAndTexturePath();
+	auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
+	auto materialAndTexturenameInfo = resourceManager[fbxIndex]->GetMaterialAndTexturePath();
 	auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
 	int itMATCnt = 0;
 	int matTexSize = materialAndTexturenameInfo.size();
@@ -1489,9 +1525,9 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList->SetGraphicsRootSignature(peraSetRootSignature->GetRootSignature().Get());
-	_cmdList->SetDescriptorHeaps(1, resourceManager->GetSRVHeap().GetAddressOf());
+	_cmdList->SetDescriptorHeaps(1, resourceManager[1]->GetSRVHeap().GetAddressOf());
 
-	auto gHandle = resourceManager->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	auto gHandle = resourceManager[1]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
 	_cmdList->SetGraphicsRootDescriptorTable(0, gHandle);
 	_cmdList->SetPipelineState(peraGPLSetting->GetPipelineState().Get());

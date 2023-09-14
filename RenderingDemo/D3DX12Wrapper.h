@@ -150,12 +150,13 @@ private:
 
 	// Rebuild
 	FBXInfoManager fbxInfoManager;
-	ResourceManager* resourceManager = nullptr;
+	std::vector<ResourceManager*> resourceManager;// = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;
+	std::vector< std::string> modelPath;
 
-	void DrawFBX(UINT buffSize);
+	void DrawFBX(int fbxIndex, UINT buffSize);
 
 public:
 	///Applicationのシングルトンインスタンスを得る

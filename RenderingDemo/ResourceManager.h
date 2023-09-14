@@ -189,6 +189,12 @@ private:
 	XMMATRIX invIdentify = XMMatrixIdentity();
 	std::vector<XMMATRIX> invBonesInitialPostureMatrixMap;
 
+	std::vector<std::pair<std::string, VertexInfo>> vertMap;
+	std::vector<std::pair<std::string, PhongInfo>> phongInfos;
+	std::vector<std::pair<std::string, std::string>> materialAndTexturePath;
+	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> animationNameAndBoneNameWithTranslationMatrix;
+	bool isAnimationModel = false;
+
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
 	HRESULT Init();
@@ -213,5 +219,11 @@ public:
 	void PlayAnimation();
 	void MotionUpdate(unsigned int maxFrameNum);
 	unsigned int GetFrameNo() { return frameNo; };
+
+	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return vertMap; };
+	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return phongInfos; };
+	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturePath; };
+
+	bool GetIsAnimationModel() { return isAnimationModel; };
 };
 

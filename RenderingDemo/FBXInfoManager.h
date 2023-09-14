@@ -102,7 +102,7 @@ private:
 public:
 	//Get Singleton Instance
 	static FBXInfoManager& Instance();
-	int Init();
+	int Init(std::string _modelPath);
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturenameInfo; };

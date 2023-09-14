@@ -3,7 +3,7 @@
 class TextureTransporter
 {
 private:
-	FBXInfoManager* fbxInfoManager = nullptr;
+	ResourceManager* resourceManager = nullptr;
 
 	// PMDテクスチャ用転送オブジェクト
 	std::vector<D3D12_TEXTURE_COPY_LOCATION> source;
@@ -11,12 +11,12 @@ private:
 	std::vector<D3D12_RESOURCE_BARRIER> texBarriierDesc;
 
 public:
-	TextureTransporter(FBXInfoManager* _fbxInfoManager);
 
 	// テクスチャをitCount数分まとめてGPUのUpload用バッファからGPUのRead用バッファへデータコピー
 	// 元はpmdマテリアル数分まとめて処理していたメソッドを共通化した
 	void TransportPMDMaterialTexture
 	(
+		ResourceManager* _resourceManager,
 		ComPtr<ID3D12GraphicsCommandList> _cmdList,
 		ComPtr<ID3D12CommandAllocator> _cmdAllocator,
 		ComPtr<ID3D12CommandQueue> _cmdQueue,

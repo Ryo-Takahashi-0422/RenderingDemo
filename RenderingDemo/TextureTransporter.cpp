@@ -1,13 +1,8 @@
 #include <stdafx.h>
 #include <TextureTransporter.h>
 
-TextureTransporter::TextureTransporter(FBXInfoManager* _fbxInfoManager)
-{
-	fbxInfoManager = new FBXInfoManager;
-	fbxInfoManager = _fbxInfoManager;
-}
-
 void TextureTransporter::TransportPMDMaterialTexture(
+	ResourceManager* _resourceManager,
 	ComPtr<ID3D12GraphicsCommandList> _cmdList,
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator,
 	ComPtr<ID3D12CommandQueue> _cmdQueue,
@@ -20,7 +15,7 @@ void TextureTransporter::TransportPMDMaterialTexture(
 	)
 {
 	// テクスチャ用転送オブジェクトのリサイズ
-	auto size = fbxInfoManager->GetMaterialAndTexturePath().size();
+	auto size = _resourceManager->GetMaterialAndTexturePath().size();
 	source.resize(size);
 	dest.resize(size);
 	texBarriierDesc.resize(size);

@@ -17,7 +17,7 @@ HRESULT ResourceManager::Init()
 	HRESULT result = E_FAIL;
 
 	// vertex Resource		
-	auto vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
+	vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
 	auto itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
@@ -140,17 +140,17 @@ HRESULT ResourceManager::Init()
 	CreateRTV();
 
 	// create upload/read texture buffer and mapping Texture and Upload them to GPU
-	auto msterialAndTexturePath = _fbxInfoManager->GetMaterialAndTexturePath();
-	auto textureNum = msterialAndTexturePath.size();
-	auto iter = msterialAndTexturePath.begin();
-	int  texNum = msterialAndTexturePath.size();
+	materialAndTexturePath = _fbxInfoManager->GetMaterialAndTexturePath();
+	auto textureNum = materialAndTexturePath.size();
+	auto iter = materialAndTexturePath.begin();
+	int  texNum = materialAndTexturePath.size();
 	textureUploadBuff.resize(texNum);
 	textureReadBuff.resize(texNum);
 	textureMetaData.resize(texNum);
 	textureImg.resize(texNum);
 	textureImgPixelValue.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-	for (int i = 0; i < msterialAndTexturePath.size(); ++i)
+	for (int i = 0; i < materialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
 		++iter;
@@ -158,6 +158,13 @@ HRESULT ResourceManager::Init()
 
 	// create matrix buffer and mapping matrix, create CBV
 	CreateAndMapResources(textureNum); // mapping
+
+	// get animationInfo
+	animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
+	if (animationNameAndBoneNameWithTranslationMatrix.size() != 0)
+	{
+		isAnimationModel = true;
+	}
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -269,7 +276,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	}
 
 	// Mapping Phong Material Parameters
-	auto phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
+	phongInfos = _fbxInfoManager->GetPhongMaterialParamertInfo();
 	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
@@ -460,7 +467,7 @@ void ResourceManager::MotionUpdate(unsigned int maxFrameNum)
 		frameNo = 0;
 	}
 
-	auto animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
+	//animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
 	XMVECTOR det;
 
 	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる

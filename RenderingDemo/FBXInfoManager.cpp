@@ -7,12 +7,12 @@ FBXInfoManager& FBXInfoManager::Instance()
     return instance;
 };
 
-int FBXInfoManager::Init()
+int FBXInfoManager::Init(std::string _modelPath)
 {
     FbxManager* manager = nullptr;
     //FbxScene* scene = nullptr;
 
-    modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
+    modelPath = _modelPath;// "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
     //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
@@ -46,12 +46,7 @@ int FBXInfoManager::Init()
     converter.SplitMeshesPerMaterial(scene, true);
 
     // Scene解析
-    // ルートノードを取得
-    //FbxNode* root = scene->GetRootNode();
-    //if (root != 0) {
-        // ぶら下がっているノードの名前を列挙
-        ReadFBXFile();
-    //}
+    ReadFBXFile();
 
     auto it = indexWithBonesNumAndWeight.begin();
     int meshIndex = 0;

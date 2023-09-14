@@ -28,6 +28,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 col = colormap.Sample(smp, input.uv);
     
     //return col;
+    return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
     //return float4(bright, bright, bright, 1);
     
     //return float4(bright * col.x, bright * col.y, bright * col.z, 1);
