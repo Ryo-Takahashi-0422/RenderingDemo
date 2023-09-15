@@ -336,16 +336,23 @@ bool D3DX12Wrapper::ResourceInit() {
 	// connan, zig   zigを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
 	// connan, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
 	// zig, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
-	// battlefield, battlefieldは〇、connao,connanは×
+	// battlefield, battlefieldは〇、NewConnan,NewConnanは〇
+	// ★テクスチャをDrawFBXでSetGraphicsRootDescriptorTableでバインドしているが、別のメッシュを描画する場合にSetDescriptorHeapsでそのメッシュのSRVに切り替えるが、
+	// そのメッシュに利用しているテクスチャ枚数が前回描画したメッシュのテクスチャ枚数より少ないと、SetGraphicsRootDescriptorTableによるバインドの上書き(されていると仮定)が
+	// 行われず前回のバインドメモリが残ってしまい、#554 DescriptorHeap Invalidエラーが発生している模様。テクスチャのバインドをコメントアウトでエラー消失すること、
+	// エラーメッセージ(現在バインドされているDescriptorheapが現在設定されているものと異なる的な)から推測した。
+	// 現状の回避策は、読み込むモデルをテクスチャの少ない順にすることに限られる。
+	
 
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test.fbx");
-
-
+	// 0 texture model
 	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
+
+	// 3 texture model
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
+	 
+	// 4 textures model
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan.fbx");
-
-
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx");
+	
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	
 
@@ -407,12 +414,14 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
+	delete settingShaderCompile;
 
 	// ﾏﾙﾁﾊﾟｽ1枚目用
 	auto mBlobs = peraShaderCompile->SetPeraShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob);
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
+	delete peraShaderCompile;
 
 	//// 表示用
 	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
@@ -490,7 +499,8 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-
+	delete textureLoader;
+	delete textureTransporter;
 	//// ガウシアンぼかし用ウェイト、バッファー作成、マッピング、ディスクリプタヒープ作成、ビュー作成まで
 	//auto weights = Utility::GetGaussianWeight(8, 5.0f);
 	//bufferHeapCreator[i]->CreateConstBufferOfGaussian(_dev, weights);
@@ -720,6 +730,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 	_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
 
+	int lastSRVSetNum = 0;
 	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 	{
 		if (resourceManager[fbxIndex]->GetIsAnimationModel())
@@ -832,12 +843,22 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					tHandle.ptr += buffSize;
 					++textureTableStartIndex;
 					++itMATCnt;
+					//++lastSRVSetNum;
 					if (itMATCnt == matTexSize) break;
 					++itMaterialAndTextureName;
 
 				}
 			}
-			//if(i==1)
+
+			//else
+			//{
+			//	for (int j = textureTableStartIndex; j < 4 + textureTableStartIndex; ++j)
+			//	{
+			//		_cmdList->SetGraphicsRootDescriptorTable(j, tHandle); // index of texture
+			//		tHandle.ptr += buffSize;
+			//	}
+			//}
+			
 			_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
 			dHandle.ptr += buffSize;
 			ofst += itIndiceFirst->second.indices.size();
