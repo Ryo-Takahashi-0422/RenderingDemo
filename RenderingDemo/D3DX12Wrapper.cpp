@@ -127,64 +127,15 @@ bool D3DX12Wrapper::PrepareRendering() {
 	vertexInputLayout = new VertexInputLayout;
 
 
-
-	
-	//// PMDファイルの読み込み
-	//pmdMaterialInfo.resize(strModelNum);
-
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	pmdMaterialInfo[i] = new PMDMaterialInfo;
-	//	if (FAILED(pmdMaterialInfo[i]->ReadPMDHeaderFile(strModelPath[i]))) return false;
-	//}
-
-	//// VMDモーションファイルの読み込み
-	//vmdMotionInfo.resize(strModelNum);
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	vmdMotionInfo[i] = new VMDMotionInfo;
-	//	if (FAILED(vmdMotionInfo[i]->ReadVMDHeaderFile(strMotionPath))) return false;
-	//}
-
-	//// PMDActorクラスのインスタンス化
-	//pmdActor.resize(strModelNum);// = new PMDActor(pmdMaterialInfo, vmdMotionInfo);
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-
-	//	pmdActor[i] = new PMDActor(pmdMaterialInfo[i], vmdMotionInfo[i]);
-	//}
-
 	// GraphicsPipelineSettingクラスのインスタンス化
 	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
 
-	//// アニメーション用の回転・並行移動行列の参照準備
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	boneMatrices[i] = pmdActor[i]->GetMatrices();
-	//	bNodeTable[i] = pmdMaterialInfo[i]->GetBoneNode();
-	//}
-	//
 	// レンダリングウィンドウ設定
 	prepareRenderingWindow = new PrepareRenderingWindow;
 	prepareRenderingWindow->CreateAppWindow();
 
 	// TextureLoaderクラスのインスタンス化
 	textureLoader = new TextureLoader;
-
-	//// アニメーション用の回転・並行移動行列の参照準備
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	// BufferHeapCreatorクラスのインスタンス化
-	//	bufferHeapCreator[i] = new BufferHeapCreator(pmdMaterialInfo[i], prepareRenderingWindow, textureLoader);
-
-
-
-	//	// MappingExecuterクラスのインスタンス化
-	//	mappingExecuter[i] = new MappingExecuter(pmdMaterialInfo[i], bufferHeapCreator[i]);
-
-	//	// ViewCreatorクラスのインスタンス化
-	//	viewCreator[i] = new ViewCreator(pmdMaterialInfo[i], bufferHeapCreator[i]);
-	//}
 
 	// レンダリングウィンドウ表示
 	ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
@@ -303,14 +254,6 @@ bool D3DX12Wrapper::PipelineInit(){
 	result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
 	if (result != S_OK) return false;
 
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	//RTV 記述子ヒープ領域の確保
-	//	bufferHeapCreator[i]->SetRTVHeapDesc();
-	//	//RTV用記述子ヒープの生成　ID3D12DescriptorHeap：記述子の連続したコレクション
-	//	result = bufferHeapCreator[i]->CreateRTVHeap(_dev);
-	//}
-
 //初期化処理６：フレームリソース(各フレームのレンダーターゲットビュー)を作成
 	_backBuffers.resize(swapChainDesc.BufferCount); // ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧｰのﾘｻｲｽﾞ
 	handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();//ヒープの先頭を表す CPU 記述子ハンドルを取得
@@ -396,8 +339,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	// battlefield, battlefieldは〇、connao,connanは×
 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test.fbx");
+
+
 	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan.fbx");
+
+
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx");
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	
@@ -533,117 +480,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	//ファイル形式毎のテクスチャロード処理
 	textureLoader->LoadTexture();
 
-	//// テクスチャ用のCPU_Upload用、GPU_Read用バッファの作成
-	//metaData.resize(pmdMaterialInfo[i]->materialNum);
-	//img.resize(pmdMaterialInfo[i]->materialNum);
-	//ScratchImage scratchImg = {};
-	////for (auto& path : strModelPath)
-	////{
-	//bufferHeapCreator[i]->CreateUploadAndReadBuff4PmdTexture(_dev, strModelPath[i], metaData, img); // バッファ作成
-	////}
-
-	//// トゥーンテクスチャ用のCPU_Upload用、GPU_Read用バッファの作成
-	//toonMetaData.resize(pmdMaterialInfo[i]->materialNum);
-	//toonImg.resize(pmdMaterialInfo[i]->materialNum);
-	////for (auto& path : strModelPath)
-	////{
-	//bufferHeapCreator[i]->CreateToonUploadAndReadBuff(_dev, strModelPath[i], toonMetaData, toonImg); // バッファ作成
-	////}
-
-	////行列用定数バッファーの生成
-	//auto worldMat = XMMatrixIdentity();
-
-	////auto worldMat = XMMatrixRotationY(15.0f);
-	//auto angle = 0.0f;
-
-	////ビュー行列の生成・乗算
-	//XMFLOAT3 eye(0, 15, -15);
-	//XMFLOAT3 target(0, 10, 0);
-	//XMFLOAT3 up(0, 1, 0);
-	//auto viewMat = XMMatrixLookAtLH
-	//(
-	//	XMLoadFloat3(&eye),
-	//	XMLoadFloat3(&target),
-	//	XMLoadFloat3(&up)
-	//);
-
-	////プロジェクション(射影)行列の生成・乗算
-	//projMat = XMMatrixPerspectiveFovLH
-	//(
-	//	XM_PIDIV2, // 画角90°
-	//	static_cast<float>(prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(prepareRenderingWindow->GetWindowWidth()),
-	//	1.0, // ニア―クリップ
-	//	100.0 // ファークリップ
-	//);
-
-	//// 行列用定数バッファーの生成
-	//result = bufferHeapCreator[i]->CreateConstBufferOfWVPMatrix(_dev);
-
-	////マテリアル用定数バッファーの生成
-	//result = bufferHeapCreator[i]->CreateConstBufferOfMaterial(_dev);
-
-	//// マルチパスレンダリング用に書き込み先リソースの作成
-	//// 作成済みのヒープ情報を使ってもう一枚レンダリング先を用意
-	//// 使っているバックバッファーの情報を利用する
-	//auto& bbuff = _backBuffers[0];
-	//auto mutipassResDesc = bbuff->GetDesc();
-	//// RTV,SRV用バッファーと各ヒープ作成
-	//result = bufferHeapCreator[i]->CreateRenderBufferForMultipass(_dev, mutipassResDesc);
-	//bufferHeapCreator[i]->CreateMultipassRTVHeap(_dev);
-	//bufferHeapCreator[i]->CreateMultipassSRVHeap(_dev);
-
-	////頂点バッファーの仮想アドレスをポインタにマップ(関連付け)して、仮想的に頂点データをコピーする。
-	//mappingExecuter[i]->MappingVertBuff();
-
-	////インデクスバッファーの仮想アドレスをポインタにマップ(関連付け)して、仮想的にインデックスデータをコピーする。
-	//mappingExecuter[i]->MappingIndexOfVertexBuff();
-
-	////行列用定数バッファーのマッピング
-	//// 平面、ライト座標
-	//_planeNormalVec = XMFLOAT4(0, 1, 0, 0);
-	//eyePos = XMLoadFloat3(&eye);
-	//targetPos = XMLoadFloat3(&target);
-	//upVec = XMLoadFloat3(&up);
-	//lightVec = XMFLOAT3(-0.5f, 1, -0.5f);
-	//light = XMLoadFloat3(&lightVec);
-	//light = targetPos + XMVector3Normalize(light) * XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
-	//XMVECTOR det;
-
-	//result = bufferHeapCreator[i]->GetMatrixBuff()->Map(0, nullptr, (void**)&pmdMaterialInfo[i]->mapMatrix);
-	//pmdMaterialInfo[i]->mapMatrix->world = pmdMaterialInfo[i]->worldMat;
-	//pmdMaterialInfo[i]->mapMatrix->view = viewMat;
-	//pmdMaterialInfo[i]->mapMatrix->proj = projMat;
-	//pmdMaterialInfo[i]->mapMatrix->invProj = XMMatrixInverse(&det, projMat);
-	//pmdMaterialInfo[i]->mapMatrix->invView = XMMatrixInverse(&det, viewMat);
-	//pmdMaterialInfo[i]->mapMatrix->lightCamera = XMMatrixLookAtLH(light, targetPos, upVec) * XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
-	//pmdMaterialInfo[i]->mapMatrix->shadow = XMMatrixShadow(XMLoadFloat4(&_planeNormalVec), -XMLoadFloat3(&lightVec));
-	//pmdMaterialInfo[i]->mapMatrix->eye = eye;
-
-	//result = bufferHeapCreator[i]->GetMatrixBuff4Multipass()->Map(0, nullptr, (void**)&pmdMaterialInfo[i]->mapMatrix4Lightmap); // ライトマップ用にもマッピング
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->world = pmdMaterialInfo[i]->worldMat;
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->view = viewMat;
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->proj = projMat;
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->lightCamera = XMMatrixLookAtLH(light, targetPos, upVec) * XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->shadow = XMMatrixShadow(XMLoadFloat4(&_planeNormalVec), -XMLoadFloat3(&lightVec));
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->invProj = XMMatrixInverse(&det, projMat);
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->invView = XMMatrixInverse(&det, viewMat);				
-	//pmdMaterialInfo[i]->mapMatrix4Lightmap->eye = eye;
-
-	////auto p = XMMatrixTranslation(2.0f, 3.0f, 4.0f);
-	////p *= viewMat;
-	////p *= projMat;
-	////p *= XMMatrixInverse(&det, projMat);
-	////p *= XMMatrixInverse(&det, viewMat);		
-
-	////マテリアル用バッファーへのマッピング
-	//mappingExecuter[i]->MappingMaterialBuff();
-
-	//// TODO:strMoodelPathをリスト化してまとめて処理出来るようにする。BufferHeapCreatorにMappngExecuterを握らせる。
-	//// ノーマルマップ読み込み、バッファ作成、マッピング
-	////for (auto& path : strModelPath)
-	////{
-	//bufferHeapCreator[i]->CreateUploadAndReadBuff4Normalmap(_dev, strModelPath[i], "jpg", 1);
-	////}
+	// テクスチャアップロード
 	for (int i = 0; i < modelPath.size(); ++i)
 	{
 		if (resourceManager[i]->GetMaterialAndTexturePath().size() != 0)
@@ -653,44 +490,6 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetNormalMapUploadBuff(), bufferHeapCreator[i]->GetNormalMapImg(), 1);
-	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue,
-	//	bufferHeapCreator[i]->GetNormalMapMetadata(), bufferHeapCreator[i]->GetNormalMapImg(),
-	//	_fence, _fenceVal, bufferHeapCreator[i]->GetNormalMapUploadBuff(), bufferHeapCreator[i]->GetNormalMapReadBuff(), 1);
-
-	//// テクスチャのアップロード用バッファへのマッピング
-	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetPMDTexUploadBuff(), img, pmdMaterialInfo[i]->materialNum);
-	//// テクスチャをGPUのUpload用バッファからGPUのRead用バッファへデータコピー
-	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue, metaData, img,
-	//	_fence, _fenceVal, bufferHeapCreator[i]->GetPMDTexUploadBuff(), bufferHeapCreator[i]->GetPMDTexReadBuff(), pmdMaterialInfo[i]->materialNum);
-
-	//// トゥーンテクスチャも同様にマッピング
-	//mappingExecuter[i]->TransferTexUploadToBuff(bufferHeapCreator[i]->GetToonUploadBuff(), toonImg, pmdMaterialInfo[i]->materialNum);
-	//// トゥーンテクスチャをGPUのUpload用バッファからGPUのRead用バッファへデータコピー
-	//textureTransporter[i]->TransportPMDMaterialTexture(_cmdList, _cmdAllocator, _cmdQueue, toonMetaData, toonImg,
-	//	_fence, _fenceVal, bufferHeapCreator[i]->GetToonUploadBuff(), bufferHeapCreator[i]->GetToonReadBuff(), pmdMaterialInfo[i]->materialNum);
-
-	////CBV,SRVディスクリプタヒープ作成(行列、テクスチャに利用)
-	//result = bufferHeapCreator[i]->CreateCBVSRVHeap(_dev);
-
-	////DSVビュー用にディスクリプタヒープ作成
-	//result = bufferHeapCreator[i]->CreateDSVHeap(_dev);
-
-	//// 初期化処理8：各ビューを作成
-
-	//	// Vertexビュー作成
-	//viewCreator[i]->CreateVertexBufferView();
-
-	//// Indexビュー作成
-	//viewCreator[i]->CreateIndexBufferView();
-
-	//// DSV作成
-	//viewCreator[i]->CreateDSVWrapper(_dev);
-
-	//// 行列用cbv作成
-	//viewCreator[i]->CreateCBV4Matrix(_dev);
-	//// pmdモデルのマテリアル、テクスチャ、sph用ビューを作成。これがないとモデル真っ黒になる。
-	//viewCreator[i]->CreateCBVSRV4MateriallTextureSph(_dev);
 
 	//// ガウシアンぼかし用ウェイト、バッファー作成、マッピング、ディスクリプタヒープ作成、ビュー作成まで
 	//auto weights = Utility::GetGaussianWeight(8, 5.0f);
@@ -703,12 +502,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	peraPolygon->CreatePeraView(_dev);
 	//viewCreator[i]->CreateRTV4Multipasses(_dev);
 	//viewCreator[i]->CreateSRV4Multipasses(_dev);
-
-
-
-
-
-	//}
 
 // 初期化処理9：フェンスの生成
 	//	ID3D12Fence* _fence = nullptr;
@@ -820,18 +613,7 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-		
-
-		//for (int i = 0; i < modelPath.size(); ++i)
-		//{
-		//	if (resourceManager[i]->GetIsAnimationModel())
-		//	{
-		//		resourceManager[i]->MotionUpdate(30);
-		//	}
-		//	
-		//	DrawFBX(i, cbv_srv_Size);
-		//}
-		
+				
 		DrawFBX(cbv_srv_Size);
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
@@ -860,27 +642,6 @@ void D3DX12Wrapper::Run() {
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する		
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);//コマンドリストを、新しいコマンドリストが作成されたかのように初期状態にリセット
 	
-		//pmdMaterialInfo[0]->worldMat = XMMatrixTranslation(0.0f, 0, -5.0f);
-		//pmdMaterialInfo[1]->worldMat = XMMatrixTranslation(-24.0f, 0, 20.0f);
-		//pmdMaterialInfo[2]->worldMat = XMMatrixTranslation(15.0f, 0, 10.0f);
-
-		//for (int i = 0; i < strModelNum; ++i)
-		//{
-		//	//行列情報の更新
-		//	//pmdMaterialInfo[i]->angle += 0.01f;
-		//	//pmdMaterialInfo->angle = 200.0f;
-		//	//pmdMaterialInfo[i]->worldMat *= XMMatrixRotationY(pmdMaterialInfo[i]->angle);
-
-		//	pmdMaterialInfo[i]->mapMatrix->world = pmdMaterialInfo[i]->worldMat;
-		//	pmdMaterialInfo[i]->mapMatrix4Lightmap->world = pmdMaterialInfo[i]->worldMat; // for AO!!!
-
-		//	// モーション用行列の更新と書き込み
-		//	pmdActor[i]->MotionUpdate(pmdActor[i]->GetDuration());
-		//	pmdActor[i]->UpdateVMDMotion();
-		//	std::copy(boneMatrices[i]->begin(), boneMatrices[i]->end(), pmdMaterialInfo[i]->mapMatrix->bones);
-		//	std::copy(boneMatrices[i]->begin(), boneMatrices[i]->end(), pmdMaterialInfo[i]->mapMatrix4Lightmap->bones); // for AO!!!
-		//}
-
 		//// update by imgui
 		//SetFov();
 
@@ -899,16 +660,8 @@ void D3DX12Wrapper::Run() {
 	delete lightMapGPLSetting;	
 	delete lightMapShaderCompile;
 	
-	for (int i = 0; i < strModelNum; ++i)
-	{
-		delete viewCreator[i];
-		delete mappingExecuter[i];
-		delete bufferHeapCreator[i];
-		delete textureTransporter;
-		delete pmdActor[i];
-		delete vmdMotionInfo[i];
-		delete pmdMaterialInfo[i];
-	}
+	delete textureTransporter;
+
 	UnregisterClass(prepareRenderingWindow->GetWNDCCLASSEX().lpszClassName, prepareRenderingWindow->GetWNDCCLASSEX().hInstance);
 
 

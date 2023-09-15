@@ -100,8 +100,8 @@ void FBXInfoManager::ReadFBXFile()
     FbxMesh* fbxMesh = nullptr;
     std::vector<int> indiceVec; // 右手系インデクス
     std::map<std::string, std::vector<int>> fixedIndiceVec; // 左手系インデクス]DirectX用
-    std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
-    std::map<std::string, PhongInfo> m_PhongInfo;
+    //std::map<std::string, std::vector<LambertInfo>> m_LambertInfo;
+    //std::map<std::string, PhongInfo> m_PhongInfo;
     int nameCnt = 0;
     int materialNameCnt = 0;
     int textureNumCnt = 0;
@@ -136,7 +136,7 @@ void FBXInfoManager::ReadFBXFile()
 
         // 頂点毎の情報を取得する
         std::vector<unsigned int> indices;
-        std::vector<unsigned int> indicesFiexed4DirectX;
+        //std::vector<unsigned int> indicesFiexed4DirectX;
         std::vector<std::array<int, 2>> oldNewIndexPairList;
         for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
         {
@@ -307,67 +307,42 @@ void FBXInfoManager::ReadFBXFile()
                 // Phongにダウンキャスト
                 FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
 
-                // Diffuse
-                m_PhongInfo[name].diffuse[0] = (float)phong->Diffuse.Get().mData[0];
-                m_PhongInfo[name].diffuse[1] = (float)phong->Diffuse.Get().mData[1];
-                m_PhongInfo[name].diffuse[2] = (float)phong->Diffuse.Get().mData[2];
-
-                // Ambient
-                m_PhongInfo[name].ambient[0] = (float)phong->Ambient.Get().mData[0];
-                m_PhongInfo[name].ambient[1] = (float)phong->Ambient.Get().mData[1];
-                m_PhongInfo[name].ambient[2] = (float)phong->Ambient.Get().mData[2];
-
-                // emissive
-                m_PhongInfo[name].emissive[0] = (float)phong->Emissive.Get().mData[0];
-                m_PhongInfo[name].emissive[1] = (float)phong->Emissive.Get().mData[1];
-                m_PhongInfo[name].emissive[2] = (float)phong->Emissive.Get().mData[2];
-
-                // bump
-                m_PhongInfo[name].bump[0] = (float)phong->Bump.Get().mData[0];
-                m_PhongInfo[name].bump[1] = (float)phong->Bump.Get().mData[1];
-                m_PhongInfo[name].bump[2] = (float)phong->Bump.Get().mData[2];
-
-                // specular
-                m_PhongInfo[name].specular[0] = (float)phong->Specular.Get().mData[0];
-                m_PhongInfo[name].specular[1] = (float)phong->Specular.Get().mData[1];
-                m_PhongInfo[name].specular[2] = (float)phong->Specular.Get().mData[2];
-
-                // reflectivity
-                m_PhongInfo[name].reflection[0] = (float)phong->Reflection.Get().mData[0];
-                m_PhongInfo[name].reflection[1] = (float)phong->Reflection.Get().mData[1];
-                m_PhongInfo[name].reflection[2] = (float)phong->Reflection.Get().mData[2];
-
-                // shiness
-                m_PhongInfo[name].transparency = (float)phong->TransparencyFactor.Get();
-
                 // copy and order material data
                 finalPhongMaterialOrder.resize(nameCnt + 1);
                 finalPhongMaterialOrder.at(nameCnt).first = name;
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[0] = m_PhongInfo[name].diffuse[0];
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[1] = m_PhongInfo[name].diffuse[1];
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[2] = m_PhongInfo[name].diffuse[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[0] = m_PhongInfo[name].ambient[0];
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[1] = m_PhongInfo[name].ambient[1];
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[2] = m_PhongInfo[name].ambient[2];
+                // Diffuse
+                finalPhongMaterialOrder.at(nameCnt).second.diffuse[0] = (float)phong->Diffuse.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.diffuse[1] = (float)phong->Diffuse.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.diffuse[2] = (float)phong->Diffuse.Get().mData[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[0] = m_PhongInfo[name].emissive[0];
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[1] = m_PhongInfo[name].emissive[1];
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[2] = m_PhongInfo[name].emissive[2];
+                // Ambient
+                finalPhongMaterialOrder.at(nameCnt).second.ambient[0] = (float)phong->Ambient.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.ambient[1] = (float)phong->Ambient.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.ambient[2] = (float)phong->Ambient.Get().mData[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.bump[0] = m_PhongInfo[name].bump[0];
-                finalPhongMaterialOrder.at(nameCnt).second.bump[1] = m_PhongInfo[name].bump[1];
-                finalPhongMaterialOrder.at(nameCnt).second.bump[2] = m_PhongInfo[name].bump[2];
+                // emissive
+                finalPhongMaterialOrder.at(nameCnt).second.emissive[0] = (float)phong->Emissive.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.emissive[1] = (float)phong->Emissive.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.emissive[2] = (float)phong->Emissive.Get().mData[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.specular[0] = m_PhongInfo[name].specular[0];
-                finalPhongMaterialOrder.at(nameCnt).second.specular[1] = m_PhongInfo[name].specular[1];
-                finalPhongMaterialOrder.at(nameCnt).second.specular[2] = m_PhongInfo[name].specular[2];
+                // bump
+                finalPhongMaterialOrder.at(nameCnt).second.bump[0] = (float)phong->Bump.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.bump[1] = (float)phong->Bump.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.bump[2] = (float)phong->Bump.Get().mData[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = m_PhongInfo[name].reflection[0];
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = m_PhongInfo[name].reflection[1];
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = m_PhongInfo[name].reflection[2];
+                // specular
+                finalPhongMaterialOrder.at(nameCnt).second.specular[0] = (float)phong->Specular.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.specular[1] = (float)phong->Specular.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.specular[2] = (float)phong->Specular.Get().mData[2];
 
-                finalPhongMaterialOrder.at(nameCnt).second.transparency = m_PhongInfo[name].transparency;
+                // reflectivity
+                finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = (float)phong->Reflection.Get().mData[0];
+                finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = (float)phong->Reflection.Get().mData[1];
+                finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = (float)phong->Reflection.Get().mData[2];
+
+                // shiness
+                finalPhongMaterialOrder.at(nameCnt).second.transparency = (float)phong->TransparencyFactor.Get();
             }
         }
 
@@ -439,63 +414,68 @@ void FBXInfoManager::ReadFBXFile()
                         float weight = (float)weightAry[i];
 
                         indexWithBonesNumAndWeight[index][cluster_index] = weight; // vertex index(serial number=通し番号), bone index, bone weight set
-                    }
-
+                    }                                        
+                    
                     // ボーンの初期姿勢を取得
-                    FbxNode* linked_node = cluster->GetLink();
-                    fbxsdk::FbxAMatrix init_matrix;
-                    cluster->GetTransformLinkMatrix(init_matrix); // 初期姿勢
-                    XMVECTOR v0 = { init_matrix[0].mData[0] ,init_matrix[0].mData[1] ,init_matrix[0].mData[2] ,init_matrix[0].mData[3] };
-                    XMVECTOR v1 = { init_matrix[1].mData[0] ,init_matrix[1].mData[1] ,init_matrix[1].mData[2] ,init_matrix[1].mData[3] };
-                    XMVECTOR v2 = { init_matrix[2].mData[0] ,init_matrix[2].mData[1] ,init_matrix[2].mData[2] ,init_matrix[2].mData[3] };
-                    XMVECTOR v3 = { init_matrix[3].mData[0] ,init_matrix[3].mData[1] ,init_matrix[3].mData[2] ,init_matrix[3].mData[3] };
-                    bonesInitialPostureMatrix[cluster_index].r[0] = v0;
-                    bonesInitialPostureMatrix[cluster_index].r[1] = v1;
-                    bonesInitialPostureMatrix[cluster_index].r[2] = v2;
-                    bonesInitialPostureMatrix[cluster_index].r[3] = v3;
-
-                    FbxArray< FbxString* > takeNameAry;   // 文字列格納配列
-                    scene->FillAnimStackNameArray/*FillTakeNameArray*/(takeNameAry);  // テイク名取得
-                    int numTake = takeNameAry.GetCount();     // テイク数
-                    FbxTime start;
-                    FbxTime stop;
-                        
-                    // "Take" is Skin name and Animation name set like "Armature|Walking", "Armature|Punching", etc.
-                    for (int i = 0; i < numTake; ++i)
+                    if (!isBonesInitialPostureMatrixFilled)
                     {
-                        // 複数アニメーション情報切り替え
-                        FbxAnimStack* pStack = scene->GetSrcObject<FbxAnimStack>(i);
-                        scene->SetCurrentAnimationStack(pStack);
+                        fbxsdk::FbxAMatrix init_matrix;
+                        cluster->GetTransformLinkMatrix(init_matrix); // 初期姿勢
+                        XMVECTOR v0 = { init_matrix[0].mData[0] ,init_matrix[0].mData[1] ,init_matrix[0].mData[2] ,init_matrix[0].mData[3] };
+                        XMVECTOR v1 = { init_matrix[1].mData[0] ,init_matrix[1].mData[1] ,init_matrix[1].mData[2] ,init_matrix[1].mData[3] };
+                        XMVECTOR v2 = { init_matrix[2].mData[0] ,init_matrix[2].mData[1] ,init_matrix[2].mData[2] ,init_matrix[2].mData[3] };
+                        XMVECTOR v3 = { init_matrix[3].mData[0] ,init_matrix[3].mData[1] ,init_matrix[3].mData[2] ,init_matrix[3].mData[3] };
+                        bonesInitialPostureMatrix[cluster_index].r[0] = v0;
+                        bonesInitialPostureMatrix[cluster_index].r[1] = v1;
+                        bonesInitialPostureMatrix[cluster_index].r[2] = v2;
+                        bonesInitialPostureMatrix[cluster_index].r[3] = v3;
 
-                        // テイク名からテイク情報を取得
-                        FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
-                        if (currentTakeInfo)
+
+                        FbxNode* linked_node = cluster->GetLink();
+                        FbxArray< FbxString* > takeNameAry;   // 文字列格納配列
+                        scene->FillAnimStackNameArray/*FillTakeNameArray*/(takeNameAry);  // テイク名取得
+                        int numTake = takeNameAry.GetCount();     // テイク数
+                        FbxTime start;
+                        FbxTime stop;
+
+                        // "Take" is Skin name and Animation name set like "Armature|Walking", "Armature|Punching", etc.
+                        for (int i = 0; i < numTake; ++i)
                         {
-                            start = currentTakeInfo->mLocalTimeSpan.GetStart();
-                            stop = currentTakeInfo->mLocalTimeSpan.GetStop();
-                                
-                            // 1フレーム時間（period）で割ればフレーム数になる
-                            int startFrame = (int)(start.Get() / period.Get());
-                            int stopFrame = (int)(stop.Get() / period.Get());
-                            for (int j = startFrame; j < stopFrame; ++j) 
+                            // 複数アニメーション情報切り替え
+                            FbxAnimStack* pStack = scene->GetSrcObject<FbxAnimStack>(i);
+                            scene->SetCurrentAnimationStack(pStack);
+
+                            // テイク名からテイク情報を取得
+                            FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
+                            if (currentTakeInfo)
                             {
-                                FbxMatrix mat;
-                                FbxTime time = start + period * j;
-                                mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
+                                start = currentTakeInfo->mLocalTimeSpan.GetStart();
+                                stop = currentTakeInfo->mLocalTimeSpan.GetStop();
 
-                                XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
-                                XMVECTOR v1 = { mat[1].mData[0] ,mat[1].mData[1] ,mat[1].mData[2] ,mat[1].mData[3] };
-                                XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
-                                XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
+                                // 1フレーム時間（period）で割ればフレーム数になる
+                                int startFrame = (int)(start.Get() / period.Get());
+                                int stopFrame = (int)(stop.Get() / period.Get());
+                                for (int j = startFrame; j < stopFrame; ++j)
+                                {
+                                    FbxMatrix mat;
+                                    FbxTime time = start + period * j;
+                                    mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
 
-                                animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[0] = v0;
-                                animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[1] = v1;
-                                animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[2] = v2;
-                                animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[3] = v3;
+                                    XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
+                                    XMVECTOR v1 = { mat[1].mData[0] ,mat[1].mData[1] ,mat[1].mData[2] ,mat[1].mData[3] };
+                                    XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
+                                    XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
+
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[0] = v0;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[1] = v1;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[2] = v2;
+                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[3] = v3;
+                                }
                             }
                         }
                     }
                 }
+                isBonesInitialPostureMatrixFilled = true;
             }
 
             // 前処理(頂点インデックスとウェイトを取得)によって追加された頂点インデックスはクラスターからは読み取れないため、追加されたインデックスと元となるインデックスのマップから影響を受けるボーン番号およびそのウェイト、接空間情報をコピーしていく。
@@ -573,11 +553,19 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
 bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2)
 {
     // 法線、UV座標が同値なら設定済とみなす
-    return fabs(vertexInfo[3] - normalVec4[0]) < FLT_EPSILON
-        && fabs(vertexInfo[4] - normalVec4[1]) < FLT_EPSILON
-        && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
-        && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
-        && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
+    //return fabs(vertexInfo[3] - normalVec4[0]) < FLT_EPSILON
+    //    && fabs(vertexInfo[4] - normalVec4[1]) < FLT_EPSILON
+    //    && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
+    //    && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
+    //    && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
+
+    if (fabs(vertexInfo[3] - normalVec4[0]) > FLT_EPSILON) return false;
+    if (fabs(vertexInfo[6] - uvVec2[0]) > FLT_EPSILON) return false;
+    if (fabs(vertexInfo[4] - normalVec4[1]) > FLT_EPSILON) return false;
+    if (fabs(vertexInfo[7] - uvVec2[1]) > FLT_EPSILON) return false;
+    if (fabs(vertexInfo[5] - normalVec4[2]) > FLT_EPSILON) return false;
+
+    return true;
 }
 
 void FBXInfoManager::ProcessTangent(FbxMesh* mesh, std::string materialName, int nameCnt, int indexNum)
