@@ -1,15 +1,15 @@
 #pragma once
 
-// Lambert Material type
-struct LambertInfo
-{
-	float diffuse[3];
-	float ambient[3];
-	float emissive[3];
-	float bump[3];
-	float alpha;
-};
-
+//// Lambert Material type
+//struct LambertInfo
+//{
+//	float diffuse[3];
+//	float ambient[3];
+//	float emissive[3];
+//	float bump[3];
+//	float alpha;
+//};
+//
 // Phong Material Info
 struct PhongInfo
 {
@@ -60,7 +60,7 @@ private:
 	//FbxManager* manager = nullptr;
 	FbxScene* scene = nullptr;
 
-	void ReadFBXFile(FbxNode* node, const std::string& filePath);
+	void ReadFBXFile();
 
 	std::unordered_map<std::string, VertexInfo> materialNameAndVertexInfo;
 	std::vector<std::pair<std::string, VertexInfo>> finalVertexDrawOrder; // material name and VectorInfo(vertex number, index number) pair
@@ -92,17 +92,16 @@ private:
 	//std::vector<FBXVertex> vertices;
 
 	void ProcessTangent(FbxMesh* mesh, std::string materialName, int nameCnt, int index);
-	//void ProcessBinormal(FbxMesh* mesh, std::string materialName, int num, int index);
-	//void ProcessNormal(FbxMesh* mesh, std::string materialName, int num, int index);
 	std::map<std::string, std::vector<unsigned int>> indexOFTangentBinormalNormalByMaterialName;
 
 	std::map<std::string, std::map<int, std::vector<float>>> indexWithTangentBinormalNormalByMaterialName;
 	int testCnt = 0;
+	bool isBonesInitialPostureMatrixFilled = false;
 
 public:
 	//Get Singleton Instance
 	static FBXInfoManager& Instance();
-	int Init();
+	int Init(std::string _modelPath);
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturenameInfo; };

@@ -150,10 +150,16 @@ private:
 
 	// Rebuild
 	FBXInfoManager fbxInfoManager;
-	ResourceManager* resourceManager = nullptr;
+	std::vector<ResourceManager*> resourceManager;// = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;
+	Input* input = nullptr;
+	std::vector< std::string> modelPath;
+	std::pair<std::string, int> idleMotionDataNameAndMaxFrame;
+	std::pair<std::string, int> walkingMotionDataNameAndMaxFrame;
+	std::pair<std::string, int> runMotionDataNameAndMaxFrame;
+	bool inputRet; // “ü—Í‚É‘Î‚·‚é”»’è true:Žw’è‚Ì“ü—Í‚ ‚è
 
 	void DrawFBX(UINT buffSize);
 
