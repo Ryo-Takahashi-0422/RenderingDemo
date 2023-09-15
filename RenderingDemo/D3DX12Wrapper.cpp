@@ -976,33 +976,42 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -0.05);
 			}
 
 			inputRet = input->CheckKey(DIK_LEFT);
 			if (inputRet)
 			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-0.01);
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-0.02);
 			}
 
 
 			inputRet = input->CheckKey(DIK_RIGHT);
 			if (inputRet)
 			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(0.01);
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(0.02);
 			}
+		}
+
+		inputRet = input->CheckKey(DIK_W);
+		if (inputRet)
+		{
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, 0.05);
 		}
 
 		inputRet = input->CheckKey(DIK_LEFT);
 		if (inputRet)
 		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixRotationY(0.01);
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(0.02);
 		}
 
 
 		inputRet = input->CheckKey(DIK_RIGHT);
 		if (inputRet)
 		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixRotationY(-0.01);
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-0.02);
 		}
 
 
