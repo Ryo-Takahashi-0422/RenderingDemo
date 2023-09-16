@@ -24,9 +24,9 @@ struct PhongInfo
 
 struct FBXVertex
 {
-	float pos[3];
-	float normal[3];
-	float uv[2];
+	XMFLOAT3 pos;
+	XMFLOAT3 normal;
+	XMFLOAT2 uv;
 	unsigned int bone_index1[3];
 	unsigned int bone_index2[3];
 	float bone_weight1[3];

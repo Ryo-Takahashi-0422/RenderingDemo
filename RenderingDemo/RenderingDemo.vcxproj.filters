@@ -220,6 +220,12 @@
     <ClCompile Include="Input.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
+    <ClCompile Include="CollisionManager.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="ColliderGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -355,6 +361,12 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="Input.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionManager.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="ColliderGraphicsPipelineSetting.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

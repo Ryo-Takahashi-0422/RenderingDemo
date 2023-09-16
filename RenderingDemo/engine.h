@@ -12,6 +12,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
+#include <DirectXCollision.h>
 #include <d3dcompiler.h>//シェーダーコンパイルに必要
 #include <d3dx12.h>
 #include <string.h>
@@ -87,4 +88,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <FBXInfoManager.h>
 #include <ResourceManager.h>
 #include <TextureTransporter.h>
-#include "Input.h"
+#include <Input.h>
+#include <CollisionManager.h>
+#include <ColliderGraphicsPipelineSetting.h>
