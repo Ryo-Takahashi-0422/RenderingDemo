@@ -120,6 +120,8 @@ bool D3DX12Wrapper::PrepareRendering() {
 	// SetRootSignatureBaseクラスのインスタンス化
 	setRootSignature = new SetRootSignature;
 
+	
+
 	// SettingShaderCompileクラスのインスタンス化
 	settingShaderCompile = new SettingShaderCompile;
 
@@ -171,7 +173,10 @@ bool D3DX12Wrapper::PrepareRendering() {
 	//aoRootSignature = new SetRootSignature;
 	//aoShaderCompile = new AOShaderCompile;
 
-
+	// Collision
+	collisionRootSignature = new CollisionRootSignature;
+	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
+	collisionShaderCompile = new CollisionShaderCompile;
 
 	return true;
 }
@@ -384,8 +389,13 @@ bool D3DX12Wrapper::ResourceInit() {
 		return false;
 	}
 
-	// コライダー表示用
-	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(vertexInputLayout);
+	// ｺﾗｲﾀﾞｰ用
+	if (FAILED(collisionRootSignature->SetRootsignatureParam(_dev)))
+	{
+		return false;
+	}
+
+	
 
 	//// 表示用
 	//if (FAILED(bufferSetRootSignature->SetRootsignatureParam(_dev)))
@@ -426,6 +436,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psMBlob = mBlobs.second;
 	delete peraShaderCompile;
 
+	// コライダー用
+	auto colliderBlobs = collisionShaderCompile->SetPeraShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
+	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
+	_vsCollisionBlob = colliderBlobs.first;
+	_psCollisionBlob = colliderBlobs.second;
+	delete collisionShaderCompile;
+
 	//// 表示用
 	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
 	//if (bufferBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
@@ -455,7 +472,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
 
 	// コライダー用
-	result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
+	result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧ用
 	result = peraGPLSetting->CreateGPStateWrapper(_dev, peraSetRootSignature, _vsMBlob, _psMBlob);
@@ -723,7 +740,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 	// モデル描画
 	/*_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
-	_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
+	/*_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
 	_cmdList->RSSetViewports(1, prepareRenderingWindow->GetViewPortPointer());
 	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer());
 
@@ -742,6 +759,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	int lastSRVSetNum = 0;
 	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 	{
+		_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
 		_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());
 
 		if (resourceManager[fbxIndex]->GetIsAnimationModel())
@@ -798,7 +816,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
 			}
 		}
 
@@ -968,7 +986,7 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 
 	//_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
 
-	//_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
+	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());
 	//_cmdList->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
 	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());

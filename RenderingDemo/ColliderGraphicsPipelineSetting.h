@@ -3,7 +3,7 @@
 class ColliderGraphicsPipelineSetting : public IGraphicsPipelineSetting
 {
 private:
-	D3D12_INPUT_ELEMENT_DESC inputLayouts[10];
+	D3D12_INPUT_ELEMENT_DESC inputLayouts[2];
 
 public:
 	ColliderGraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout);

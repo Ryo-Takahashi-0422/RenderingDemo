@@ -153,6 +153,10 @@ private:
 	std::vector<ResourceManager*> resourceManager;// = nullptr;
 	CollisionManager* collisionManager = nullptr;
 	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
+	CollisionRootSignature* collisionRootSignature = nullptr;
+	CollisionShaderCompile* collisionShaderCompile = nullptr;
+	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
+	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;

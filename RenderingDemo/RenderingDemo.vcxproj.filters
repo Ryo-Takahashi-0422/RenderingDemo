@@ -51,6 +51,9 @@
     <None Include="FBXHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="CollisionHeaderShader.hlsli">
+      <Filter>Shader\Rebuild</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -87,6 +90,12 @@
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="FBXPixelShader.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="CollisionVertexShader.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>
@@ -224,6 +233,12 @@
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionRootSignature.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionShaderCompile.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -367,6 +382,12 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="ColliderGraphicsPipelineSetting.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionRootSignature.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionShaderCompile.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>
