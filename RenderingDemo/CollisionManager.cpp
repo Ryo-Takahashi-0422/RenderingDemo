@@ -8,6 +8,8 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 	Init();
 }
 
+
+// TODO : 1. シェーダーを分けて、ボーンマトリックスとの乗算をなくす&エッジのみ着色したボックスとして表示する、2. 8頂点の位置を正す
 void CollisionManager::Init()
 {
 	auto vetmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
@@ -23,8 +25,9 @@ void CollisionManager::Init()
 		input2.push_back(vetmap2.begin()->second.vertices[j].pos);
 	}
 
-	BoundingBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(input1.data()));
-	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(input2.data()));
+	BoundingBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
+	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
+
 
 	XMFLOAT3 temp1[8];
 	XMFLOAT3 temp2[8];
@@ -42,7 +45,7 @@ void CollisionManager::Init()
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output1));
 
 
-	// バッファー作成
+	// バッファー作成1
 	auto result = dev->CreateCommittedResource
 	(
 		&heapProp,
@@ -61,9 +64,9 @@ void CollisionManager::Init()
 	// マッピング
 	boxBuff1->Map(0, nullptr, (void**)&mappedBox1);
 	std::copy(std::begin(output1), std::end(output1), mappedBox1);
-	boxBuff1->Unmap(0, nullptr);
+	//boxBuff1->Unmap(0, nullptr);
 
-
+	// バッファー作成2
 	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output2));
 	result = dev->CreateCommittedResource
 	(
@@ -76,12 +79,12 @@ void CollisionManager::Init()
 	);
 
 	// ビュー作成
-	boxVBV1.BufferLocation = boxBuff2->GetGPUVirtualAddress();
-	boxVBV1.SizeInBytes = sizeof(output2);
-	boxVBV1.StrideInBytes = sizeof(XMFLOAT3);
+	boxVBV2.BufferLocation = boxBuff2->GetGPUVirtualAddress();
+	boxVBV2.SizeInBytes = sizeof(output2);
+	boxVBV2.StrideInBytes = sizeof(XMFLOAT3);
 
 	// マッピング
 	boxBuff2->Map(0, nullptr, (void**)&mappedBox2);
 	std::copy(std::begin(output2), std::end(output2), mappedBox2);
-	boxBuff2->Unmap(0, nullptr);
+	//boxBuff2->Unmap(0, nullptr);
 }

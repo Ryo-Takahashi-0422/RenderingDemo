@@ -243,7 +243,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	//ビュー行列の生成・乗算
 	//XMFLOAT3 eye(0, 1.5, 2);
-	XMFLOAT3 eye(0, 7, 8);
+	XMFLOAT3 eye(0, 1.5, 8);
 	XMFLOAT3 target(0, 1.5, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH

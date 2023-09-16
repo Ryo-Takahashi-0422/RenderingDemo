@@ -12,6 +12,9 @@ private:
 	std::vector<ResourceManager*> resourceManager;
 	void Init();
 
+	BoundingBox box1;
+	BoundingBox box2;
+
 	std::vector<XMFLOAT3> input1;
 	std::vector<XMFLOAT3> input2;
 
@@ -30,8 +33,12 @@ private:
 
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
-	BoundingBox box1;
-	BoundingBox box2;
+
+	BoundingBox GetBoundingBox1() { return box1; };
+	BoundingBox GetBoundingBox2() { return box2; };
+	BoundingBox* GetBoundingBox2Pointer() { return &box2; };
+
+	XMFLOAT3* GetMappedBoxPos() { return mappedBox2; };
 
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV1() { return &boxVBV1; };
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };

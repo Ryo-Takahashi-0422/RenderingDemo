@@ -346,7 +346,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Sphere.fbx");
 
 	// 3 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
@@ -751,28 +751,39 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
+				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
 				
 				////★test
 				//XMVECTOR f;
-				//f.m128_f32[0] = box2.Center.x;
-				//f.m128_f32[1] = box2.Center.y;
-				//f.m128_f32[2] = box2.Center.z;
+				//f.m128_f32[0] = collisionManager->GetBoundingBox1().Center.x;
+				//f.m128_f32[1] = collisionManager->GetBoundingBox1().Center.y;
+				//f.m128_f32[2] = collisionManager->GetBoundingBox1().Center.z;
 				//f.m128_f32[3] = 1;
 				//XMVECTOR scale;
 				//XMVECTOR rot;
 				//XMVECTOR mov;
 				//XMMatrixDecompose(&scale, &rot, &mov, XMMatrixTranslation(0, 0, forwardSpeed));
-				//auto result = XMVectorAdd(f, mov);
-				//box2.Center.x = result.m128_f32[0];
-				//box2.Center.y = result.m128_f32[1];
-				//box2.Center.z = result.m128_f32[2];
+				////auto result = XMVectorAdd(f, mov);
+				//auto box2 = collisionManager->GetBoundingBox2Pointer();
+				//box2->Center.x += mov.m128_f32[0];
+				//box2->Center.y += mov.m128_f32[1];
+				//box2->Center.z -= mov.m128_f32[2];
 
 
-				//if (box1.Contains(box2) == 0)
-				//{
-				//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
-				//}
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
+				{
+					XMVECTOR scale;
+					XMVECTOR rot;
+					XMVECTOR mov;
+					XMMatrixDecompose(&scale, &rot, &mov, XMMatrixTranslation(0, 0, forwardSpeed));
+					//auto result = XMVectorAdd(f, mov);
+					auto box2 = collisionManager->GetBoundingBox2Pointer();
+					box2->Center.x += mov.m128_f32[0];
+					box2->Center.y += mov.m128_f32[1];
+					box2->Center.z -= mov.m128_f32[2];
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
+				}
+				printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()));
 			}
 
 			inputRet = input->CheckKey(DIK_LEFT);
@@ -787,7 +798,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
+				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
 			}
 		}
 
@@ -963,18 +974,18 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());
 
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
-	//if (modelNum == 0)
-	//{
+	if (modelNum == 0)
+	{
 		//頂点バッファーのCPU記述子ハンドルを設定
 		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV1());
-	//}
+	}
 
-	//else
-	//{
-	//	_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV2());
-	//}
+	else
+	{
+		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV2());
+	}
 
 	////ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
 	//_cmdList->SetDescriptorHeaps(1, resourceManager[fbxIndex]->GetSRVHeap().GetAddressOf());
