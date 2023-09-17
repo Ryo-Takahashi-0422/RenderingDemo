@@ -607,6 +607,7 @@ void D3DX12Wrapper::Run() {
 
 	// 衝突判定準備
 	collisionManager = new CollisionManager(_dev, resourceManager);
+	box2 = collisionManager->GetBoundingBox2Pointer();
 
 	while (true)
 	{
@@ -769,37 +770,29 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
 				
-				////★test
-				//XMVECTOR f;
-				//f.m128_f32[0] = collisionManager->GetBoundingBox1().Center.x;
-				//f.m128_f32[1] = collisionManager->GetBoundingBox1().Center.y;
-				//f.m128_f32[2] = collisionManager->GetBoundingBox1().Center.z;
-				//f.m128_f32[3] = 1;
-				//XMVECTOR scale;
-				//XMVECTOR rot;
-				//XMVECTOR mov;
-				//XMMatrixDecompose(&scale, &rot, &mov, XMMatrixTranslation(0, 0, forwardSpeed));
-				////auto result = XMVectorAdd(f, mov);
-				//auto box2 = collisionManager->GetBoundingBox2Pointer();
-				//box2->Center.x += mov.m128_f32[0];
-				//box2->Center.y += mov.m128_f32[1];
-				//box2->Center.z -= mov.m128_f32[2];
-
-
+				// ★Collision
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
 				{
-					XMVECTOR scale;
-					XMVECTOR rot;
-					XMVECTOR mov;
-					XMMatrixDecompose(&scale, &rot, &mov, XMMatrixTranslation(0, 0, forwardSpeed));
-					//auto result = XMVectorAdd(f, mov);
-					auto box2 = collisionManager->GetBoundingBox2Pointer();
-					box2->Center.x += mov.m128_f32[0];
-					box2->Center.y += mov.m128_f32[1];
-					box2->Center.z -= mov.m128_f32[2];
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
+
+					auto tempCenterPos = XMLoadFloat3(&box2->Center);
+					tempCenterPos.m128_f32[3] = 1;
+
+					auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed), connanDirection);
+					moveMatrix.r[0].m128_f32[0] = 1;
+					moveMatrix.r[0].m128_f32[2] = 0;
+					moveMatrix.r[2].m128_f32[0] = 0;
+					moveMatrix.r[2].m128_f32[2] = 1;
+					tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // 符号注意
+
+					box2->Center.x = tempCenterPos.m128_f32[0];
+					box2->Center.y = tempCenterPos.m128_f32[1];
+					box2->Center.z = tempCenterPos.m128_f32[2];
+
+					printf("%f\n", box2->Center.x);
+					printf("%f\n", box2->Center.y);
+					printf("%f\n", box2->Center.z);
 				}
 				printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()));
 			}
@@ -808,7 +801,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
+
+				// ★Collision
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
+				{
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed));
+				}				
 			}
 
 
@@ -816,7 +815,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
+
+				// ★Collision
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
+				{
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed));
+				}
 			}
 		}
 
@@ -1008,7 +1013,7 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	////ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
 	//_cmdList->SetDescriptorHeaps(1, resourceManager[fbxIndex]->GetSRVHeap().GetAddressOf());
 
-	//auto dHandle = resourceManager[fbxIndex]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	//auto dHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	//_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 	//dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
