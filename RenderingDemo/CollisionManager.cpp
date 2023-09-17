@@ -88,3 +88,28 @@ void CollisionManager::Init()
 	std::copy(std::begin(output2), std::end(output2), mappedBox2);
 	//boxBuff2->Unmap(0, nullptr);
 }
+
+void CollisionManager::MoveCharacterBoundingBox(float speed, XMMATRIX charaDirection)
+{
+	auto tempCenterPos = XMLoadFloat3(&box2.Center);
+	tempCenterPos.m128_f32[3] = 1;
+
+	// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
+	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
+	moveMatrix.r[0].m128_f32[0] = 1;
+	moveMatrix.r[0].m128_f32[2] = 0;
+	moveMatrix.r[2].m128_f32[0] = 0;
+	moveMatrix.r[2].m128_f32[2] = 1;
+	tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // 符号注意
+
+	box2.Center.x = tempCenterPos.m128_f32[0];
+	box2.Center.y = tempCenterPos.m128_f32[1];
+	box2.Center.z = tempCenterPos.m128_f32[2];
+
+	// Debug
+	printf("%f\n", box2.Center.x);
+	printf("%f\n", box2.Center.y);
+	printf("%f\n", box2.Center.z);
+
+	printf("%d\n", box1.Contains(box2));
+}

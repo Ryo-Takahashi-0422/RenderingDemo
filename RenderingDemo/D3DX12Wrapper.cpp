@@ -771,30 +771,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				
-				// šCollision
+				// Collision process
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
-
-					auto tempCenterPos = XMLoadFloat3(&box2->Center);
-					tempCenterPos.m128_f32[3] = 1;
-
-					auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed), connanDirection);
-					moveMatrix.r[0].m128_f32[0] = 1;
-					moveMatrix.r[0].m128_f32[2] = 0;
-					moveMatrix.r[2].m128_f32[0] = 0;
-					moveMatrix.r[2].m128_f32[2] = 1;
-					tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // •„†’ˆÓ
-
-					box2->Center.x = tempCenterPos.m128_f32[0];
-					box2->Center.y = tempCenterPos.m128_f32[1];
-					box2->Center.z = tempCenterPos.m128_f32[2];
-
-					printf("%f\n", box2->Center.x);
-					printf("%f\n", box2->Center.y);
-					printf("%f\n", box2->Center.z);
-				}
-				printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()));
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection);
+				}				
 			}
 
 			inputRet = input->CheckKey(DIK_LEFT);
@@ -802,10 +784,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
-				// šCollision
+				// Collision process
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed));
 				}				
 			}
@@ -816,10 +798,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
-				// šCollision
+				// Collision process
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingBox2()) == 0)
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed));
 				}
 			}
