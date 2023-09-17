@@ -1,4 +1,4 @@
-#include <stdafx.h>
+ï»¿#include <stdafx.h>
 #include <CollisionManager.h>
 
 CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers)
@@ -9,7 +9,7 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 }
 
 
-// TODO : 1. ƒVƒF[ƒ_[‚ğ•ª‚¯‚ÄAƒ{[ƒ“ƒ}ƒgƒŠƒbƒNƒX‚Æ‚ÌæZ‚ğ‚È‚­‚·&ƒGƒbƒW‚Ì‚İ’…F‚µ‚½ƒ{ƒbƒNƒX‚Æ‚µ‚Ä•\¦‚·‚éA2. 8’¸“_‚ÌˆÊ’u‚ğ³‚·
+// TODO : 1. ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’åˆ†ã‘ã¦ã€ãƒœãƒ¼ãƒ³ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã¨ã®ä¹—ç®—ã‚’ãªãã™&ã‚¨ãƒƒã‚¸ã®ã¿ç€è‰²ã—ãŸãƒœãƒƒã‚¯ã‚¹ã¨ã—ã¦è¡¨ç¤ºã™ã‚‹ã€2. 8é ‚ç‚¹ã®ä½ç½®ã‚’æ­£ã™
 void CollisionManager::Init()
 {
 	auto vetmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
@@ -27,25 +27,28 @@ void CollisionManager::Init()
 
 	BoundingBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
 	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
-
+	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
 
 	XMFLOAT3 temp1[8];
 	XMFLOAT3 temp2[8];
+	XMFLOAT3 temp3[8];
 	box1.GetCorners(temp1);
 	box2.GetCorners(temp2);
-
-
+	
+	
 	for (int i = 0; i < 8; ++i)
 	{
 		output1[i] = temp1[i];
 		output2[i] = temp2[i];
 	}
 
+	CreateSpherePoints(bSphere.Center, bSphere.Radius);
+
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output1));
 
 
-	// ƒoƒbƒtƒ@[ì¬1
+	// ãƒãƒƒãƒ•ã‚¡ãƒ¼ä½œæˆ1
 	auto result = dev->CreateCommittedResource
 	(
 		&heapProp,
@@ -56,18 +59,18 @@ void CollisionManager::Init()
 		IID_PPV_ARGS(boxBuff1.ReleaseAndGetAddressOf())
 	);
 
-	// ƒrƒ…[ì¬
+	// ãƒ“ãƒ¥ãƒ¼ä½œæˆ
 	boxVBV1.BufferLocation = boxBuff1->GetGPUVirtualAddress();
 	boxVBV1.SizeInBytes = sizeof(output1);
 	boxVBV1.StrideInBytes = sizeof(XMFLOAT3);
 
-	// ƒ}ƒbƒsƒ“ƒO
+	// ãƒãƒƒãƒ”ãƒ³ã‚°
 	boxBuff1->Map(0, nullptr, (void**)&mappedBox1);
 	std::copy(std::begin(output1), std::end(output1), mappedBox1);
 	//boxBuff1->Unmap(0, nullptr);
 
-	// ƒoƒbƒtƒ@[ì¬2
-	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output2));
+	// ãƒãƒƒãƒ•ã‚¡ãƒ¼ä½œæˆ2
+	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(/*output2*/output3));
 	result = dev->CreateCommittedResource
 	(
 		&heapProp,
@@ -78,38 +81,84 @@ void CollisionManager::Init()
 		IID_PPV_ARGS(boxBuff2.ReleaseAndGetAddressOf())
 	);
 
-	// ƒrƒ…[ì¬
+	// ãƒ“ãƒ¥ãƒ¼ä½œæˆ
 	boxVBV2.BufferLocation = boxBuff2->GetGPUVirtualAddress();
-	boxVBV2.SizeInBytes = sizeof(output2);
+	boxVBV2.SizeInBytes = sizeof(output3);
 	boxVBV2.StrideInBytes = sizeof(XMFLOAT3);
 
-	// ƒ}ƒbƒsƒ“ƒO
+	// ãƒãƒƒãƒ”ãƒ³ã‚°
 	boxBuff2->Map(0, nullptr, (void**)&mappedBox2);
-	std::copy(std::begin(output2), std::end(output2), mappedBox2);
+	std::copy(std::begin(output3), std::end(output3), mappedBox2);
 	//boxBuff2->Unmap(0, nullptr);
 }
 
 void CollisionManager::MoveCharacterBoundingBox(float speed, XMMATRIX charaDirection)
 {
-	auto tempCenterPos = XMLoadFloat3(&box2.Center);
+	auto tempCenterPos = XMLoadFloat3(&/*box2*/bSphere.Center);
 	tempCenterPos.m128_f32[3] = 1;
 
-	// •½sˆÚ“®¬•ª‚ÉƒLƒƒƒ‰ƒNƒ^[‚ÌŒü‚«‚©‚ç‰ñ“]¬•ª‚ğæZ‚µ‚Ä•ûŒü•Ï‚¦B‚±‚ê‚É‚æ‚é‰ñ“]ˆÚ“®¬•ª‚Í•s—v‚È‚Ì‚ÅA1‚Æ0‚É‚·‚éBY²‰ñ“]‚Ì‚İ‘Î‰‚µ‚Ä‚¢‚éB
+	// å¹³è¡Œç§»å‹•æˆåˆ†ã«ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®å‘ãã‹ã‚‰å›è»¢æˆåˆ†ã‚’ä¹—ç®—ã—ã¦æ–¹å‘å¤‰ãˆã€‚ã“ã‚Œã«ã‚ˆã‚‹å›è»¢ç§»å‹•æˆåˆ†ã¯ä¸è¦ãªã®ã§ã€1ã¨0ã«ã™ã‚‹ã€‚Yè»¸å›è»¢ã®ã¿å¯¾å¿œã—ã¦ã„ã‚‹ã€‚
 	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
 	moveMatrix.r[0].m128_f32[0] = 1;
 	moveMatrix.r[0].m128_f32[2] = 0;
 	moveMatrix.r[2].m128_f32[0] = 0;
 	moveMatrix.r[2].m128_f32[2] = 1;
-	tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // •„†’ˆÓ
+	tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // ç¬¦å·æ³¨æ„
 
-	box2.Center.x = tempCenterPos.m128_f32[0];
-	box2.Center.y = tempCenterPos.m128_f32[1];
-	box2.Center.z = tempCenterPos.m128_f32[2];
+	bSphere.Center.x = tempCenterPos.m128_f32[0];
+	bSphere.Center.y = tempCenterPos.m128_f32[1];
+	bSphere.Center.z = tempCenterPos.m128_f32[2];
 
 	// Debug
-	printf("%f\n", box2.Center.x);
-	printf("%f\n", box2.Center.y);
-	printf("%f\n", box2.Center.z);
+	printf("%f\n", bSphere.Center.x);
+	printf("%f\n", bSphere.Center.y);
+	printf("%f\n", bSphere.Center.z);
 
-	printf("%d\n", box1.Contains(box2));
+	printf("%d\n", box1.Contains(bSphere));
+}
+
+void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
+{
+	TEST temp;
+	std::vector<std::vector<TEST>> iList;
+	std::vector<TEST> tTest;
+	//float degree[] = {90.0f, 80.0f, 70.0f, 60.0f, 50.0f, 40.0f, 30.0f, 20.0f, 10.0f, 0.0f};
+	//float degree[] = {90.0f, 75.5f, 50.0f, 22.5f, 0.0f};
+	float degree[] = { 90.0f, 60.0f, 30.0f, 0.0f };
+	
+	// å¤©
+	output3[0].x = center.x;
+	output3[0].y = center.y + Radius;
+	output3[0].z = center.z;
+
+	// åœ°
+	output3[1].x = center.x;
+	output3[1].y = center.y - Radius;
+	output3[1].z = center.z;
+
+	// æ°´å¹³
+	for (int i = 2; i < 10; ++i)
+	{		
+		output3[i].x = center.x + Radius * cosf(XMConvertToRadians(45 * i));
+		output3[i].y = center.y;
+		output3[i].z = center.z + Radius * sinf(XMConvertToRadians(45 * i));
+	}
+
+	float halfR = Radius * cosf(XMConvertToRadians(45));
+
+	// åŠå¤©	
+	for (int i = 10; i < 18; ++i)
+	{
+		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(45 * i));
+		output3[i].y = center.y + halfR;
+		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(45 * i));
+	}
+
+	// åŠåœ°
+	for (int i = 18; i < 26; ++i)
+	{
+		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(45 * i));
+		output3[i].y = center.y - halfR;
+		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(45 * i));
+	}
 }

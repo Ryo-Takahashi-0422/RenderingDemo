@@ -157,7 +157,7 @@ private:
 	CollisionShaderCompile* collisionShaderCompile = nullptr;
 	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
 	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
-	BoundingBox* box2 = nullptr;
+	/*BoundingBox*/BoundingSphere* box2 = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity();
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;

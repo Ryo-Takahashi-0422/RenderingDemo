@@ -5,6 +5,21 @@ struct BoundingBoxVertex
 	XMFLOAT3 pos;
 };
 
+typedef struct _TEST {
+	XMFLOAT3 p;
+	XMFLOAT3 n;
+	DWORD color;
+	_TEST() {
+		p.x = 0.0f;
+		p.y = 0.0f;
+		p.z = 0.0f;
+		n.x = 0.0f;
+		n.y = 0.0f;
+		n.z = 0.0f;
+		color = 0xffffffff;
+	}
+}TEST;
+
 class CollisionManager
 {
 private:
@@ -15,6 +30,8 @@ private:
 	BoundingBox box1;
 	BoundingBox box2;
 
+	BoundingSphere bSphere;
+
 	std::vector<XMFLOAT3> input1;
 	std::vector<XMFLOAT3> input2;
 
@@ -23,6 +40,7 @@ private:
 
 	XMFLOAT3 output1[8];
 	XMFLOAT3 output2[8];
+	XMFLOAT3 output3[26];
 
 	XMFLOAT3* mappedBox1 = nullptr;
 	XMFLOAT3* mappedBox2 = nullptr;
@@ -31,12 +49,18 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW boxVBV1 = {};
 	D3D12_VERTEX_BUFFER_VIEW boxVBV2 = {};
 
+	void CreateSpherePoints(const XMFLOAT3& pt, float Radius);
+	std::vector<TEST> sphere;
+
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
 	BoundingBox GetBoundingBox1() { return box1; };
 	BoundingBox GetBoundingBox2() { return box2; };
 	BoundingBox* GetBoundingBox2Pointer() { return &box2; };
+
+	BoundingSphere GetBoundingSphere() { return bSphere; };
+	BoundingSphere* GetBoundingSpherePointer() { return &bSphere; };
 
 	XMFLOAT3* GetMappedBoxPos() { return mappedBox2; };
 
