@@ -42,12 +42,23 @@ void CollisionManager::Init()
 		output2[i] = temp2[i];
 	}
 
+	//★test キャラのworldと切り離す
+	//auto m1 = resourceManager[0]->GetMappedMatrix();
+	//auto a = XMVector4Transform(XMLoadFloat3(&box1.Center), m1->world);
+	//box1.Center.x = a.m128_f32[0];
+	//box1.Center.y = a.m128_f32[1];
+	//box1.Center.z = a.m128_f32[2];
+	//auto m2 = resourceManager[1]->GetMappedMatrix();
+	//auto b = XMVector4Transform(XMLoadFloat3(&bSphere.Center), m2->world);
+	//bSphere.Center.x = b.m128_f32[0];
+	//bSphere.Center.y = b.m128_f32[1];
+	//bSphere.Center.z = b.m128_f32[2];
+
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);
 
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output1));
-
-
+		
 	// バッファー作成1
 	auto result = dev->CreateCommittedResource
 	(
@@ -92,7 +103,7 @@ void CollisionManager::Init()
 	//boxBuff2->Unmap(0, nullptr);
 }
 
-void CollisionManager::MoveCharacterBoundingBox(float speed, XMMATRIX charaDirection)
+void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection)
 {
 	auto tempCenterPos = XMLoadFloat3(&/*box2*/bSphere.Center);
 	tempCenterPos.m128_f32[3] = 1;
@@ -109,6 +120,28 @@ void CollisionManager::MoveCharacterBoundingBox(float speed, XMMATRIX charaDirec
 	bSphere.Center.y = tempCenterPos.m128_f32[1];
 	bSphere.Center.z = tempCenterPos.m128_f32[2];
 
+	//CreateSpherePoints(bSphere.Center, bSphere.Radius);
+	//std::copy(std::begin(output3), std::end(output3), mappedBox2);
+
+	// Debug
+	printf("%f\n", bSphere.Center.x);
+	printf("%f\n", bSphere.Center.y);
+	printf("%f\n", bSphere.Center.z);
+
+	printf("%d\n", box1.Contains(bSphere));
+}
+
+void CollisionManager::SneakCharacterFromBoundingBox(double speed, XMVECTOR sneakDirection)
+{
+	auto sneakVector = speed * sneakDirection;
+
+	bSphere.Center.x -= sneakVector.m128_f32[0];
+	bSphere.Center.y -= sneakVector.m128_f32[1];
+	bSphere.Center.z -= sneakVector.m128_f32[2];
+
+	//CreateSpherePoints(bSphere.Center, bSphere.Radius);
+	//std::copy(std::begin(output3), std::end(output3), mappedBox2);
+
 	// Debug
 	printf("%f\n", bSphere.Center.x);
 	printf("%f\n", bSphere.Center.y);
@@ -119,12 +152,9 @@ void CollisionManager::MoveCharacterBoundingBox(float speed, XMMATRIX charaDirec
 
 void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 {
-	TEST temp;
-	std::vector<std::vector<TEST>> iList;
-	std::vector<TEST> tTest;
-	//float degree[] = {90.0f, 80.0f, 70.0f, 60.0f, 50.0f, 40.0f, 30.0f, 20.0f, 10.0f, 0.0f};
-	//float degree[] = {90.0f, 75.5f, 50.0f, 22.5f, 0.0f};
-	float degree[] = { 90.0f, 60.0f, 30.0f, 0.0f };
+	int div = 8;
+	int loopStartCnt = 2;
+	int loopEndCnt = 2 + div;
 	
 	// 天
 	output3[0].x = center.x;
@@ -137,28 +167,32 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	output3[1].z = center.z;
 
 	// 水平
-	for (int i = 2; i < 10; ++i)
+	for (int i = loopStartCnt; i < loopEndCnt; ++i)
 	{		
-		output3[i].x = center.x + Radius * cosf(XMConvertToRadians(45 * i));
+		output3[i].x = center.x + Radius * cosf(XMConvertToRadians(360 / div * i));
 		output3[i].y = center.y;
-		output3[i].z = center.z + Radius * sinf(XMConvertToRadians(45 * i));
+		output3[i].z = center.z + Radius * sinf(XMConvertToRadians(360 / div * i));
 	}
+	loopStartCnt += div;
+	loopEndCnt += div;
 
 	float halfR = Radius * cosf(XMConvertToRadians(45));
 
 	// 半天	
-	for (int i = 10; i < 18; ++i)
+	for (int i = loopStartCnt; i < loopEndCnt; ++i)
 	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(45 * i));
+		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
 		output3[i].y = center.y + halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(45 * i));
+		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
 	}
+	loopStartCnt += div;
+	loopEndCnt += div;
 
 	// 半地
-	for (int i = 18; i < 26; ++i)
+	for (int i = loopStartCnt; i < loopEndCnt; ++i)
 	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(45 * i));
+		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
 		output3[i].y = center.y - halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(45 * i));
+		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
 	}
 }

@@ -5,21 +5,6 @@ struct BoundingBoxVertex
 	XMFLOAT3 pos;
 };
 
-typedef struct _TEST {
-	XMFLOAT3 p;
-	XMFLOAT3 n;
-	DWORD color;
-	_TEST() {
-		p.x = 0.0f;
-		p.y = 0.0f;
-		p.z = 0.0f;
-		n.x = 0.0f;
-		n.y = 0.0f;
-		n.z = 0.0f;
-		color = 0xffffffff;
-	}
-}TEST;
-
 class CollisionManager
 {
 private:
@@ -50,12 +35,13 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW boxVBV2 = {};
 
 	void CreateSpherePoints(const XMFLOAT3& pt, float Radius);
-	std::vector<TEST> sphere;
 
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
 	BoundingBox GetBoundingBox1() { return box1; };
+	BoundingBox* GetBoundingBox1Pointer() { return &box1; };
+
 	BoundingBox GetBoundingBox2() { return box2; };
 	BoundingBox* GetBoundingBox2Pointer() { return &box2; };
 
@@ -67,5 +53,6 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV1() { return &boxVBV1; };
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };
 
-	void MoveCharacterBoundingBox(float speed, XMMATRIX charaDirection);
+	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
+	void SneakCharacterFromBoundingBox(double speed, XMVECTOR sneakDirection);
 };

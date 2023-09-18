@@ -607,7 +607,7 @@ void D3DX12Wrapper::Run() {
 
 	// 衝突判定準備
 	collisionManager = new CollisionManager(_dev, resourceManager);
-	box2 = collisionManager->GetBoundingSpherePointer();
+	//box2 = collisionManager->GetBoundingSpherePointer();
 
 	while (true)
 	{
@@ -777,12 +777,19 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
 					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection);
+					connanDirectionUntilCollision = connanDirection; // need update after collision
 				}
 				// After Collision
 				else
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed-0.01); // move character
-					collisionManager->MoveCharacterBoundingBox(-forwardSpeed-0.01, connanDirection);
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum); // move character
+					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision);// ★not enough
+
+					//auto characterBSphere = collisionManager->GetBoundingSpherePointer();
+					//auto obstacleBBox = collisionManager->GetBoundingBox1Pointer();
+					//auto sneakDirection = XMVectorSubtract(XMLoadFloat3(&obstacleBBox->Center), XMLoadFloat3(&characterBSphere->Center));
+					//sneakDirection = XMVector3Normalize(sneakDirection);
+					//collisionManager->SneakCharacterFromBoundingBox(-forwardSpeed - sneakCorrectNum, sneakDirection);
 				}
 			}
 
@@ -795,13 +802,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
-					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed));
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
+					connanDirectionUntilCollision = connanDirection;
 				}
 				// After Collision
 				else
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
-					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed));
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
 				}
 			}
 
@@ -814,13 +822,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
-					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed));
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
+					connanDirectionUntilCollision = connanDirection;
 				}
 				// After Collision
 				else
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
-					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed));
+					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
 				}
 			}
 		}
@@ -832,7 +841,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		}
 		else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) != 0)
 		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + 0.01); // move character
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + sneakCorrectNum); // move character
 		}
 
 		inputRet = input->CheckKey(DIK_LEFT);
@@ -1001,7 +1010,7 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());
 
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+	_cmdList->IASetPrimitiveTopology(/*D3D_PRIMITIVE_TOPOLOGY_LINELIST*/D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	if (modelNum == 0)
 	{
@@ -1022,7 +1031,14 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	//dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
-	_cmdList->DrawInstanced(8, 1, 0, 0);
+	if (modelNum == 0)
+	{
+		_cmdList->DrawInstanced(8, 1, 0, 0);
+	}
+	else
+	{
+		_cmdList->DrawInstanced(26, 1, 0, 0);
+	}
 }
 
 

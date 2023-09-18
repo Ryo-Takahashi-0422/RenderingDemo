@@ -157,8 +157,9 @@ private:
 	CollisionShaderCompile* collisionShaderCompile = nullptr;
 	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
 	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
-	/*BoundingBox*/BoundingSphere* box2 = nullptr;
-	XMMATRIX connanDirection = XMMatrixIdentity();
+	//BoundingSphere* characterBSphere = nullptr;
+	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
+	XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;
@@ -169,8 +170,9 @@ private:
 	std::pair<std::string, int> runMotionDataNameAndMaxFrame;
 	bool inputRet; // 入力に対する判定 true:指定の入力あり
 
-	float forwardSpeed = -0.05f;
-	float turnSpeed = 0.02f;
+	double forwardSpeed = -0.05;
+	double turnSpeed = 0.02;
+	double sneakCorrectNum = 0.01;
 	void DrawFBX(UINT buffSize);
 	void DrawCollider(int modelNum, UINT buffSize);
 
