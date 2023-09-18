@@ -117,25 +117,6 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 	printf("%d\n", box1.Contains(bSphere));
 }
 
-void CollisionManager::SneakCharacterFromBoundingBox(double speed, XMVECTOR sneakDirection)
-{
-	auto sneakVector = speed * sneakDirection;
-
-	bSphere.Center.x -= sneakVector.m128_f32[0];
-	bSphere.Center.y -= sneakVector.m128_f32[1];
-	bSphere.Center.z -= sneakVector.m128_f32[2];
-
-	//CreateSpherePoints(bSphere.Center, bSphere.Radius);
-	//std::copy(std::begin(output3), std::end(output3), mappedBox2);
-
-	// Debug
-	printf("%f\n", bSphere.Center.x);
-	printf("%f\n", bSphere.Center.y);
-	printf("%f\n", bSphere.Center.z);
-
-	printf("%d\n", box1.Contains(bSphere));
-}
-
 void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 {
 	int div = 8;

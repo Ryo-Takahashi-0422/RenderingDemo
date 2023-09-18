@@ -54,5 +54,4 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
-	void SneakCharacterFromBoundingBox(double speed, XMVECTOR sneakDirection);
 };
