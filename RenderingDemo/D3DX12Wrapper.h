@@ -172,7 +172,7 @@ private:
 
 	double forwardSpeed = -0.05;
 	double turnSpeed = 0.02;
-	double sneakCorrectNum = 0.01;
+	double sneakCorrectNum = 0.049;
 	void DrawFBX(UINT buffSize);
 	void DrawCollider(int modelNum, UINT buffSize);
 

@@ -28,6 +28,7 @@ void CollisionManager::Init()
 	BoundingBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
 	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
 	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
+	bSphere.Radius -= 0.2f; // 球体コライダーの半径を微調整。数値適当
 
 	XMFLOAT3 temp1[8];
 	XMFLOAT3 temp2[8];
@@ -41,18 +42,6 @@ void CollisionManager::Init()
 		output1[i] = temp1[i];
 		output2[i] = temp2[i];
 	}
-
-	//★test キャラのworldと切り離す
-	//auto m1 = resourceManager[0]->GetMappedMatrix();
-	//auto a = XMVector4Transform(XMLoadFloat3(&box1.Center), m1->world);
-	//box1.Center.x = a.m128_f32[0];
-	//box1.Center.y = a.m128_f32[1];
-	//box1.Center.z = a.m128_f32[2];
-	//auto m2 = resourceManager[1]->GetMappedMatrix();
-	//auto b = XMVector4Transform(XMLoadFloat3(&bSphere.Center), m2->world);
-	//bSphere.Center.x = b.m128_f32[0];
-	//bSphere.Center.y = b.m128_f32[1];
-	//bSphere.Center.z = b.m128_f32[2];
 
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);
 
@@ -105,7 +94,7 @@ void CollisionManager::Init()
 
 void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection)
 {
-	auto tempCenterPos = XMLoadFloat3(&/*box2*/bSphere.Center);
+	auto tempCenterPos = XMLoadFloat3(&bSphere.Center);
 	tempCenterPos.m128_f32[3] = 1;
 
 	// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
@@ -119,9 +108,6 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 	bSphere.Center.x = tempCenterPos.m128_f32[0];
 	bSphere.Center.y = tempCenterPos.m128_f32[1];
 	bSphere.Center.z = tempCenterPos.m128_f32[2];
-
-	//CreateSpherePoints(bSphere.Center, bSphere.Radius);
-	//std::copy(std::begin(output3), std::end(output3), mappedBox2);
 
 	// Debug
 	printf("%f\n", bSphere.Center.x);

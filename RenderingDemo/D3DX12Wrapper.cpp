@@ -765,6 +765,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 		if (resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
+			// start character with idle animation
 			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 
 			inputRet = input->CheckKey(DIK_W);
@@ -773,23 +774,26 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
-					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection);
+					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 					connanDirectionUntilCollision = connanDirection; // need update after collision
 				}
 				// After Collision
 				else
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum); // move character
-					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision);// ★not enough
-
-					//auto characterBSphere = collisionManager->GetBoundingSpherePointer();
-					//auto obstacleBBox = collisionManager->GetBoundingBox1Pointer();
-					//auto sneakDirection = XMVectorSubtract(XMLoadFloat3(&obstacleBBox->Center), XMLoadFloat3(&characterBSphere->Center));
-					//sneakDirection = XMVector3Normalize(sneakDirection);
-					//collisionManager->SneakCharacterFromBoundingBox(-forwardSpeed - sneakCorrectNum, sneakDirection);
+					auto characterWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
+					// キャラクターがコライダー衝突時に、キャラクターを動かすためのワールド変換行列のひな形作成
+					auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum), connanDirectionUntilCollision);
+					// キャラクター対象時は現在の向きを継承する。
+					moveMatrix.r[0].m128_f32[0] = characterWorldMatrix.r[0].m128_f32[0];
+					moveMatrix.r[0].m128_f32[2] = characterWorldMatrix.r[0].m128_f32[2];
+					moveMatrix.r[2].m128_f32[0] = characterWorldMatrix.r[2].m128_f32[0];
+					moveMatrix.r[2].m128_f32[2] = characterWorldMatrix.r[2].m128_f32[2];
+					
+					resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
+					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
 				}
 			}
 
@@ -799,7 +803,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
@@ -819,7 +823,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
@@ -835,11 +839,11 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		}
 
 		inputRet = input->CheckKey(DIK_W);
-		if (inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) == 0)
+		if (inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 		}
-		else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->/*GetBoundingBox2*/GetBoundingSphere()) != 0)
+		else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) != 0)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + sneakCorrectNum); // move character
 		}
@@ -850,13 +854,11 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
 		}
 
-
 		inputRet = input->CheckKey(DIK_RIGHT);
 		if (inputRet)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
 		}
-
 
 		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
