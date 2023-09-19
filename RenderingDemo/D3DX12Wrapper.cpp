@@ -774,7 +774,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (isCameraCanMove/*collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
+				if (/*isCameraCanMove*/collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
@@ -794,7 +794,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (isCameraCanMove/*collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
+				if (/*isCameraCanMove*/collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
@@ -963,13 +963,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		//}
 
 		inputRet = input->CheckKey(DIK_LEFT);
-		if (inputRet)
+		if (inputRet/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
 		}
 
 		inputRet = input->CheckKey(DIK_RIGHT);
-		if (inputRet)
+		if (inputRet/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
 		}
