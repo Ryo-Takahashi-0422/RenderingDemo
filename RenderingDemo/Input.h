@@ -40,4 +40,6 @@ public:
 	// ƒgƒŠƒK[‚Ì“ü—Í
 	bool TriggerKey(UINT index);
 
+	BYTE* GetKey() { return keys; };
+
 };

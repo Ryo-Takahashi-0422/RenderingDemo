@@ -652,6 +652,7 @@ void D3DX12Wrapper::Run() {
 		//SetBloomColor();
 				
 		DrawFBX(cbv_srv_Size);
+		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
 		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
@@ -726,6 +727,13 @@ void D3DX12Wrapper::Run() {
 	//delete peraSetRootSignature;
 }
 
+void D3DX12Wrapper::AllKeyBoolFalse()
+{
+	inputW = false;
+	inputLeft = false;
+	inputRight = false;
+}
+
 void D3DX12Wrapper::DrawFBX(UINT buffSize)
 {
 	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
@@ -763,18 +771,22 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
 		_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());
 
+		if (input->CheckKey(DIK_W)) inputW = true;
+		if (input->CheckKey(DIK_LEFT)) inputLeft = true;
+		if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+
 		if (resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
 			// start character with idle animation
 			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 
-			inputRet = input->CheckKey(DIK_LEFT);
-			if (inputRet)
+			// Left Key
+			if (inputLeft)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (/*isCameraCanMove*/collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
@@ -788,13 +800,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				}
 			}
 
-			inputRet = input->CheckKey(DIK_RIGHT);
-			if (inputRet)
+			// Right Key
+			if (inputRight)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (/*isCameraCanMove*/collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
@@ -808,8 +820,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				}
 			}
 
-			inputRet = input->CheckKey(DIK_W);
-			if (inputRet)
+			// W Key
+			if (inputW)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				
@@ -818,9 +830,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
 					BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
-					double x = reserveSphere.Center.x;
-					double y = reserveSphere.Center.y;
-					double z = reserveSphere.Center.z;
 					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 					if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 					{
@@ -943,33 +952,20 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			}
 		}
 
-		inputRet = input->CheckKey(DIK_W);
-		if (inputRet && isCameraCanMove)
+		// W Key
+		if (inputW && isCameraCanMove)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 		}
-		//else if(inputRet && !isCameraCanMove)
-		//{
-		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, 0/*forwardSpeed + sneakCorrectNum*/); // move character
-		//}
-		
-		//if (inputRet && isCameraCanMove && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
-		//{
-		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
-		//}
-		//else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) != 0)
-		//{
-		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + sneakCorrectNum); // move character
-		//}
 
-		inputRet = input->CheckKey(DIK_LEFT);
-		if (inputRet/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
+		// Left Key
+		if (inputLeft && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed);
 		}
 
-		inputRet = input->CheckKey(DIK_RIGHT);
-		if (inputRet/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
+		// Right Key
+		if (inputRight && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed);
 		}

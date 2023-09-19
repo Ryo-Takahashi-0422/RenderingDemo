@@ -169,6 +169,10 @@ private:
 	std::pair<std::string, int> walkingMotionDataNameAndMaxFrame;
 	std::pair<std::string, int> runMotionDataNameAndMaxFrame;
 	bool inputRet; // “ü—Í‚É‘Î‚·‚é”»’è true:Žw’è‚Ì“ü—Í‚ ‚è
+	bool inputW = false;
+	bool inputLeft = false;
+	bool inputRight = false;
+	void AllKeyBoolFalse();
 
 	double forwardSpeed = -0.05;
 	double turnSpeed = 20;
