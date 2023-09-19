@@ -791,9 +791,11 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					moveMatrix.r[0].m128_f32[2] = characterWorldMatrix.r[0].m128_f32[2];
 					moveMatrix.r[2].m128_f32[0] = characterWorldMatrix.r[2].m128_f32[0];
 					moveMatrix.r[2].m128_f32[2] = characterWorldMatrix.r[2].m128_f32[2];
+					resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
+					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
 
-					
 					// ★面滑らせ実装
+					moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 					XMFLOAT3 boxVertexPos[8];
 					collisionManager->GetBoundingBox1().GetCorners(boxVertexPos);
 					std::vector<std::pair<float, int>> distances;
@@ -827,15 +829,58 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						boxPoint4Cal.push_back(boxVertexPos[it->second]);
 						++it;
 					}
-					// boxPoint4Cal[0]とx座標が同じもの、y座標が同じものを見つける。
-					// それぞれ引いてベクトル化して、単位ベクトルとする。
+					// boxPoint4Cal[0]とx座標が同じものとy座標が同じものを見つけ、それぞれ引いてベクトル化する。
+					float epsilon = 0.00005f;
+					XMFLOAT3 boxXDirection, boxYDirection;
+					for (int i = 1; i < 4; ++i)
+					{
+						float xResult, yResult, zResult;
+						xResult = abs(boxPoint4Cal[0].x - boxPoint4Cal[i].x);
+						yResult = abs(boxPoint4Cal[0].y - boxPoint4Cal[i].y);
+						zResult = abs(boxPoint4Cal[0].z - boxPoint4Cal[i].z);
+						if (xResult < epsilon && yResult > epsilon)
+						{
+							boxYDirection = { xResult , yResult , zResult };
+						}
+						else if (xResult > epsilon && yResult < epsilon)
+						{
+							boxXDirection = { xResult , yResult , zResult };
+						}
+					}
+					// 正規化して単位ベクトルとする。
+					XMVECTOR boxXNormal, boxYNormal;
+					boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
+					boxXNormal.m128_f32[3] = 1.0f;
+					boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
+					boxYNormal.m128_f32[3] = 1.0f;
+					
 					// それら単位ベクトルの外積から衝突面の法線ベクトルを求める。
-					// 上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる。
-					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。0なら滑り無し。+なら..-なら..
+					auto boxZNormal = XMVector3Cross(boxXNormal, boxYNormal);
 
+					// (必要に応じて上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる)
+					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。0なら滑り無し。+なら..-なら..
+					auto tempZDir = boxZNormal;
+					tempZDir = XMVector4Transform(tempZDir, connanDirectionUntilCollision);
+					auto dotboxZAndCharacterDir = XMVector3Dot(boxZNormal, tempZDir).m128_f32[0];
+
+					// キャラクターが衝突面に対して右向きの場合
+					if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] < 0)
+					{
+						moveMatrix.r[3].m128_f32[0] -= boxXNormal.m128_f32[0] * 0.1;
+						moveMatrix.r[3].m128_f32[2] -= boxXNormal.m128_f32[2] * 0.1;
+					}
+					// キャラクターが衝突面に対して左向きの場合
+					else if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] > 0)
+					{
+						moveMatrix.r[3].m128_f32[0] += boxXNormal.m128_f32[0] * 0.1;
+						moveMatrix.r[3].m128_f32[2] += boxXNormal.m128_f32[2] * 0.1;
+					}
+
+					
+					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0]; // move character with slide
+					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
+					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
 					//★ここまで
-					resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
-					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
 				}
 			}
 
