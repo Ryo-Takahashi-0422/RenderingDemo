@@ -171,8 +171,9 @@ private:
 	bool inputRet; // “ü—Í‚É‘Î‚·‚é”»’è true:Žw’è‚Ì“ü—Í‚ ‚è
 
 	double forwardSpeed = -0.05;
-	double turnSpeed = 0.02;
+	double turnSpeed = 30;
 	double sneakCorrectNum = 0.049;
+	bool isCameraCanMove = true;
 	void DrawFBX(UINT buffSize);
 	void DrawCollider(int modelNum, UINT buffSize);
 

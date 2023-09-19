@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(DXTEX_DIR);$(Imgui);$(EFK_ROOT_DIR)\Effekseer;$(EFK_ROOT_DIR)\Effekseer\Effekseer;$(EFK_ROOT_DIR)\EffekseerRendererDX12;$(EFK_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_ROOT_DIR)\EffekseerRendererCommon;$(DirectXTK_hpp);$(MSBuildProjectDirectory)\packages\WinPixEventRuntime.1.0.230302001\Include\WinPixEventRuntime;%(AdditionalIncludeDirectories);$(FBX_SDK_Include);$(Imgui_Backends)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(DXTEX_DIR);$(Imgui);$(EFK_ROOT_DIR)\Effekseer;$(EFK_ROOT_DIR)\Effekseer\Effekseer;$(EFK_ROOT_DIR)\EffekseerRendererDX12;$(EFK_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_ROOT_DIR)\EffekseerRendererCommon;$(DirectXTK_hpp);$(MSBuildProjectDirectory)\packages\WinPixEventRuntime.1.0.230302001\Include\WinPixEventRuntime;%(AdditionalIncludeDirectories);$(FBX_SDK_Include);$(Imgui_Backends);C:\Users\RyoTaka\Documents\eigen-3.4.0</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>

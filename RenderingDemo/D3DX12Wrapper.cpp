@@ -768,129 +768,13 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			// start character with idle animation
 			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 
-			inputRet = input->CheckKey(DIK_W);
-			if (inputRet)
-			{
-				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				
-				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
-					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
-					connanDirectionUntilCollision = connanDirection; // need update after collision
-				}
-				// After Collision
-				else
-				{
-					auto characterWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
-					// キャラクターがコライダー衝突時に、キャラクターを動かすためのワールド変換行列のひな形作成
-					auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum), connanDirectionUntilCollision);
-					// キャラクターの向きは現在の向きを継承する。
-					moveMatrix.r[0].m128_f32[0] = characterWorldMatrix.r[0].m128_f32[0];
-					moveMatrix.r[0].m128_f32[2] = characterWorldMatrix.r[0].m128_f32[2];
-					moveMatrix.r[2].m128_f32[0] = characterWorldMatrix.r[2].m128_f32[0];
-					moveMatrix.r[2].m128_f32[2] = characterWorldMatrix.r[2].m128_f32[2];
-					resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
-					collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
-
-					// ★面滑らせ実装
-					moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
-					XMFLOAT3 boxVertexPos[8];
-					collisionManager->GetBoundingBox1().GetCorners(boxVertexPos);
-					std::vector<std::pair<float, int>> distances;
-					distances.resize(4);
-					for (int i = 0; i < 4; ++i)
-					{
-						distances[i].first = 1000.0f;
-						distances[i].second = 0;			
-					}
-					// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
-					auto sCenter = collisionManager->GetBoundingSphere().Center;
-					for (int h = 0; h < 8; ++h)
-					{
-						float distance = powf(sCenter.x - boxVertexPos[h].x, 2.f) + powf(sCenter.y - boxVertexPos[h].y, 2.f) + powf(sCenter.z - boxVertexPos[h].z, 2.f);
-						for (int i = 0; i < 4; ++i)
-						{
-							if (distance < distances[i].first)
-							{
-								distances[i].first = distance;
-								distances[i].second = h;
-								std::sort(distances.rbegin(), distances.rend());
-								break;
-							}
-						}
-					}
-					// 選出した4点のXYZ座標を抽出する。
-					auto it = distances.begin();
-					std::vector<XMFLOAT3> boxPoint4Cal;
-					for (int i = 0; i < 4; ++i)
-					{
-						boxPoint4Cal.push_back(boxVertexPos[it->second]);
-						++it;
-					}
-					// boxPoint4Cal[0]とx座標が同じものとy座標が同じものを見つけ、それぞれ引いてベクトル化する。
-					float epsilon = 0.00005f;
-					XMFLOAT3 boxXDirection, boxYDirection;
-					for (int i = 1; i < 4; ++i)
-					{
-						float xResult, yResult, zResult;
-						xResult = abs(boxPoint4Cal[0].x - boxPoint4Cal[i].x);
-						yResult = abs(boxPoint4Cal[0].y - boxPoint4Cal[i].y);
-						zResult = abs(boxPoint4Cal[0].z - boxPoint4Cal[i].z);
-						if (xResult < epsilon && yResult > epsilon)
-						{
-							boxYDirection = { xResult , yResult , zResult };
-						}
-						else if (xResult > epsilon && yResult < epsilon)
-						{
-							boxXDirection = { xResult , yResult , zResult };
-						}
-					}
-					// 正規化して単位ベクトルとする。
-					XMVECTOR boxXNormal, boxYNormal;
-					boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
-					boxXNormal.m128_f32[3] = 1.0f;
-					boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
-					boxYNormal.m128_f32[3] = 1.0f;
-					
-					// それら単位ベクトルの外積から衝突面の法線ベクトルを求める。
-					auto boxZNormal = XMVector3Cross(boxXNormal, boxYNormal);
-
-					// (必要に応じて上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる)
-					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。0なら滑り無し。+なら..-なら..
-					auto tempZDir = boxZNormal;
-					tempZDir = XMVector4Transform(tempZDir, connanDirectionUntilCollision);
-					auto dotboxZAndCharacterDir = XMVector3Dot(boxZNormal, tempZDir).m128_f32[0];
-
-					// キャラクターが衝突面に対して右向きの場合
-					if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] < 0)
-					{
-						moveMatrix.r[3].m128_f32[0] -= boxXNormal.m128_f32[0] * 0.1;
-						moveMatrix.r[3].m128_f32[2] -= boxXNormal.m128_f32[2] * 0.1;
-					}
-					// キャラクターが衝突面に対して左向きの場合
-					else if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] > 0)
-					{
-						moveMatrix.r[3].m128_f32[0] += boxXNormal.m128_f32[0] * 0.1;
-						moveMatrix.r[3].m128_f32[2] += boxXNormal.m128_f32[2] * 0.1;
-					}
-
-					
-					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0]; // move character with slide
-					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
-					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
-					//★ここまで
-				}
-			}
-
 			inputRet = input->CheckKey(DIK_LEFT);
 			if (inputRet)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (isCameraCanMove/*collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(-turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed)); // reserve character's direction
@@ -910,7 +794,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (isCameraCanMove/*collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0*/)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixRotationY(turnSpeed); // turn character
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
@@ -923,17 +807,160 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					connanDirection = XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed)); // reserve character's direction
 				}
 			}
+
+			inputRet = input->CheckKey(DIK_W);
+			if (inputRet)
+			{
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				
+				// Collision process
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				{
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+					BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
+					double x = reserveSphere.Center.x;
+					double y = reserveSphere.Center.y;
+					double z = reserveSphere.Center.z;
+					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+					if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+					{
+						resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+						//connanDirectionUntilCollision = connanDirection; // need update after collision
+						isCameraCanMove = true;
+					}
+					// After Collision
+					else
+					{
+						collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
+						//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
+						isCameraCanMove = false;
+						printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
+					}
+					//connanDirectionUntilCollision = connanDirection; // need update after collision
+				}
+				// After Collision
+				else
+				{
+					//auto characterWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
+					//// キャラクターがコライダー衝突時に、キャラクターを動かすためのワールド変換行列のひな形作成
+					//auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum), connanDirectionUntilCollision);
+					//// キャラクターの向きは現在の向きを継承する。
+					//moveMatrix.r[0].m128_f32[0] = characterWorldMatrix.r[0].m128_f32[0];
+					//moveMatrix.r[0].m128_f32[2] = characterWorldMatrix.r[0].m128_f32[2];
+					//moveMatrix.r[2].m128_f32[0] = characterWorldMatrix.r[2].m128_f32[0];
+					//moveMatrix.r[2].m128_f32[2] = characterWorldMatrix.r[2].m128_f32[2];
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
+					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
+
+					//// ★面滑らせ実装
+					//moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
+					//XMFLOAT3 boxVertexPos[8];
+					//collisionManager->GetBoundingBox1().GetCorners(boxVertexPos);
+					//std::vector<std::pair<float, int>> distances;
+					//distances.resize(4);
+					//for (int i = 0; i < 4; ++i)
+					//{
+					//	distances[i].first = 1000.0f;
+					//	distances[i].second = 0;			
+					//}
+					//// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
+					//auto sCenter = collisionManager->GetBoundingSphere().Center;
+					//for (int h = 0; h < 8; ++h)
+					//{
+					//	float distance = powf(sCenter.x - boxVertexPos[h].x, 2.f) + powf(sCenter.y - boxVertexPos[h].y, 2.f) + powf(sCenter.z - boxVertexPos[h].z, 2.f);
+					//	for (int i = 0; i < 4; ++i)
+					//	{
+					//		if (distance < distances[i].first)
+					//		{
+					//			distances[i].first = distance;
+					//			distances[i].second = h;
+					//			std::sort(distances.rbegin(), distances.rend());
+					//			break;
+					//		}
+					//	}
+					//}
+					//// 選出した4点のXYZ座標を抽出する。
+					//auto it = distances.begin();
+					//std::vector<XMFLOAT3> boxPoint4Cal;
+					//for (int i = 0; i < 4; ++i)
+					//{
+					//	boxPoint4Cal.push_back(boxVertexPos[it->second]);
+					//	++it;
+					//}
+					//// boxPoint4Cal[0]とx座標が同じものとy座標が同じものを見つけ、それぞれ引いてベクトル化する。
+					//float epsilon = 0.00005f;
+					//XMFLOAT3 boxXDirection, boxYDirection;
+					//for (int i = 1; i < 4; ++i)
+					//{
+					//	float xResult, yResult, zResult;
+					//	xResult = abs(boxPoint4Cal[0].x - boxPoint4Cal[i].x);
+					//	yResult = abs(boxPoint4Cal[0].y - boxPoint4Cal[i].y);
+					//	zResult = abs(boxPoint4Cal[0].z - boxPoint4Cal[i].z);
+					//	if (xResult < epsilon && yResult > epsilon)
+					//	{
+					//		boxYDirection = { xResult , yResult , zResult };
+					//	}
+					//	else if (xResult > epsilon && yResult < epsilon)
+					//	{
+					//		boxXDirection = { xResult , yResult , zResult };
+					//	}
+					//}
+					//// 正規化して単位ベクトルとする。
+					//XMVECTOR boxXNormal, boxYNormal;
+					//boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
+					//boxXNormal.m128_f32[3] = 1.0f;
+					//boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
+					//boxYNormal.m128_f32[3] = 1.0f;
+					//
+					//// それら単位ベクトルの外積から衝突面の法線ベクトルを求める。
+					//auto boxZNormal = XMVector3Cross(boxXNormal, boxYNormal);
+
+					//// (必要に応じて上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる)
+					//// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。0なら滑り無し。+なら..-なら..
+					//auto tempZDir = boxZNormal;
+					//tempZDir = XMVector4Transform(tempZDir, connanDirectionUntilCollision);
+					//auto dotboxZAndCharacterDir = XMVector3Dot(boxZNormal, tempZDir).m128_f32[0];
+
+					//// キャラクターが衝突面に対して右向きの場合
+					//if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] < 0)
+					//{
+					//	moveMatrix.r[3].m128_f32[0] -= boxXNormal.m128_f32[0] * 0.1;
+					//	moveMatrix.r[3].m128_f32[2] -= boxXNormal.m128_f32[2] * 0.1;
+					//}
+					//// キャラクターが衝突面に対して左向きの場合
+					//else if (dotboxZAndCharacterDir != 0 && connanDirectionUntilCollision.r[0].m128_f32[2] > 0)
+					//{
+					//	moveMatrix.r[3].m128_f32[0] += boxXNormal.m128_f32[0] * 0.1;
+					//	moveMatrix.r[3].m128_f32[2] += boxXNormal.m128_f32[2] * 0.1;
+					//}
+
+					//
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0]; // move character with slide
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
+					////collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
+					////★ここまで
+				}
+			}
 		}
 
 		inputRet = input->CheckKey(DIK_W);
-		if (inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+		if (inputRet && isCameraCanMove)
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 		}
-		else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) != 0)
-		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + sneakCorrectNum); // move character
-		}
+		//else if(inputRet && !isCameraCanMove)
+		//{
+		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, 0/*forwardSpeed + sneakCorrectNum*/); // move character
+		//}
+		
+		//if (inputRet && isCameraCanMove && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+		//{
+		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+		//}
+		//else if(inputRet && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) != 0)
+		//{
+		//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed + sneakCorrectNum); // move character
+		//}
 
 		inputRet = input->CheckKey(DIK_LEFT);
 		if (inputRet)
