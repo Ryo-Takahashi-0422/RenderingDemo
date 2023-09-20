@@ -14,13 +14,6 @@
 #pragma comment(lib, "EffekseerRendererLLGI.lib")
 
 
-#define _USE_MATH_DEFINES
-#include <iostream>  // たぶん絶対必要
-#include <Eigen/Dense>
-#include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
-#include <math.h> // sin cos とか
-using namespace Eigen;
-
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
@@ -617,14 +610,16 @@ void D3DX12Wrapper::Run() {
 	collisionManager = new CollisionManager(_dev, resourceManager);
 	//connanDirection = resourceManager[1]->GetMappedMatrix()->world;
 	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
-	rightSpinMatrix = XMMatrixRotationY(turnSpeed);
+	XMVECTOR det;
+	rightSpinMatrix = XMMatrixInverse(&det, leftSpinMatrix);//XMMatrixRotationY(turnSpeed);
 	//box2 = collisionManager->GetBoundingSpherePointer();
-	
+	auto idn = leftSpinMatrix * rightSpinMatrix;
+
 	//★eigen test
 	Matrix3d leftSpinEigen;
 	Vector3d axis;
 	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(M_PI*0.3f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
 	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -635,7 +630,7 @@ void D3DX12Wrapper::Run() {
 	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-M_PI*0.3f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(-M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
 	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -825,14 +820,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				// Collision process
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/; // turn character
-					connanDirection  *= leftSpinMatrix;//XMMatrixMultiply(connanDirection, leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/); // reserve character's direction
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/; // turn character
+					//connanDirection  *= leftSpinMatrix;//XMMatrixMultiply(connanDirection, leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/); // reserve character's direction
 					connanDirectionUntilCollision = connanDirection;
 				}
 				// After Collision
 				else
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/; // turn character
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/; // turn character
 					connanDirection *= leftSpinMatrix/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed))*/; // reserve character's direction
 				}
 			}
@@ -845,14 +840,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				// Collision process
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed/1000)*/; // turn character
-					connanDirection *= rightSpinMatrix/* XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed / 1000))*/; // reserve character's direction
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed/1000)*/; // turn character
+					//connanDirection *= rightSpinMatrix/* XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed / 1000))*/; // reserve character's direction
 					connanDirectionUntilCollision = connanDirection;
 				}
 				// After Collision
 				else
 				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed / 1000)*/; // turn character
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed / 1000)*/; // turn character
 					connanDirection *= rightSpinMatrix;/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed / 1000));*/ // reserve character's direction
 				}
 			}
@@ -870,7 +865,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 					if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 					{
-						resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+						//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
 						//connanDirectionUntilCollision = connanDirection; // need update after collision
 						isCameraCanMove = true;
 					}
@@ -990,21 +985,23 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		}
 
 		// W Key
-		if (inputW && isCameraCanMove)
+		if (inputW && isCameraCanMove && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 		}
 
 		// Left Key
-		if (inputLeft && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+		if (inputLeft/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0 */&& !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed)*/;
+			connanDirection *= rightSpinMatrix;
 		}
 
 		// Right Key
-		if (inputRight && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+		if (inputRight/* && collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0 */&& !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
 			resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed / 1000)*/;
+			connanDirection *= leftSpinMatrix;
 		}
 
 		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド

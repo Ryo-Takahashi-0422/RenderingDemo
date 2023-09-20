@@ -25,6 +25,14 @@
 #include <ReadData.h>
 #include <stdlib.h>
 
+//eigen
+#define _USE_MATH_DEFINES
+#include <iostream>  // たぶん絶対必要
+#include <Eigen/Dense>
+#include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
+#include <math.h> // sin cos とか
+using namespace Eigen;
+
 // Effekseer
 #include <Effekseer.h>
 #include <EffekseerRendererDx12.h>

@@ -30,7 +30,7 @@ Output FBXVS
         bm[2][2] = 1;
         bm[3][3] = 1;
     }
-    //pos = mul(bm, pos);
+    pos = mul(bm, pos);
     
     //if(instNo == 1)
     //{
