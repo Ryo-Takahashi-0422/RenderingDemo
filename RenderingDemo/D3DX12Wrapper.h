@@ -176,6 +176,8 @@ private:
 
 	double forwardSpeed = -0.05;
 	double turnSpeed = 20;
+	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
+	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
 	bool isCameraCanMove = true;
 	void DrawFBX(UINT buffSize);
