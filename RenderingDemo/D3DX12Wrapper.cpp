@@ -619,7 +619,7 @@ void D3DX12Wrapper::Run() {
 	Matrix3d leftSpinEigen;
 	Vector3d axis;
 	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(M_PI*3.3f, axis);  //Z軸周りに90度反時計回りに回転
 	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -630,7 +630,7 @@ void D3DX12Wrapper::Run() {
 	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(-M_PI*3.3f, axis);  //Z軸周りに90度反時計回りに回転
 	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -828,7 +828,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				else
 				{
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix/*XMMatrixRotationY(-turnSpeed)*/; // turn character
-					connanDirection *= leftSpinMatrix/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed))*/; // reserve character's direction
+					//connanDirection *= leftSpinMatrix/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(-turnSpeed))*/; // reserve character's direction
 				}
 			}
 
@@ -848,7 +848,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				else
 				{
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix/*XMMatrixRotationY(turnSpeed / 1000)*/; // turn character
-					connanDirection *= rightSpinMatrix;/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed / 1000));*/ // reserve character's direction
+					//connanDirection *= rightSpinMatrix;/*XMMatrixMultiply(connanDirection, XMMatrixRotationY(turnSpeed / 1000));*/ // reserve character's direction
 				}
 			}
 
