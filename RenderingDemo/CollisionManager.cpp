@@ -115,7 +115,7 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 	printf("%f\n", bSphere.Center.z);
 	printf("\n");
 
-	//printf("%d\n", box1.Contains(bSphere));
+	printf("%d\n", box1.Contains(bSphere));
 }
 
 void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)

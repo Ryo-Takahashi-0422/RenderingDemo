@@ -179,7 +179,6 @@ private:
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
-	bool isCameraCanMove = true;
 	void DrawFBX(UINT buffSize);
 	void DrawCollider(int modelNum, UINT buffSize);
 
