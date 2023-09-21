@@ -857,31 +857,31 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				
-				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
-				{
-					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
-					BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
-					collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
-					if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
-					{
-						//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
-						//connanDirectionUntilCollision = connanDirection; // need update after collision
-						isCameraCanMove = true;
-					}
-					// After Collision
-					else
-					{
-						collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
-						//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
-						isCameraCanMove = false;
-						printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
-					}
-					//connanDirectionUntilCollision = connanDirection; // need update after collision
-				}
+				//// Collision process
+				//if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				//{
+				//	//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+				//	BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
+				//	collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+				//	if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				//	{
+				//		//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+				//		//connanDirectionUntilCollision = connanDirection; // need update after collision
+				//		isCameraCanMove = true;
+				//	}
+				//	// After Collision
+				//	else
+				//	{
+				//		collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
+				//		//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
+				//		isCameraCanMove = false;
+				//		printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
+				//	}
+				//	//connanDirectionUntilCollision = connanDirection; // need update after collision
+				//}
 				// After Collision
-				else
-				{
+				//else
+				//{
 					//auto characterWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
 					//// キャラクターがコライダー衝突時に、キャラクターを動かすためのワールド変換行列のひな形作成
 					//auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum), connanDirectionUntilCollision);
@@ -980,14 +980,37 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
 					////collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
 					////★ここまで
-				}
+				//}
 			}
 		}
 
 		// W Key
-		if (inputW && isCameraCanMove && !resourceManager[fbxIndex]->GetIsAnimationModel())
+		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+			//isCameraCanMove = true;
+			// Collision process
+			if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+			{
+				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
+				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				{
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
+					//connanDirectionUntilCollision = connanDirection; // need update after collision
+					//isCameraCanMove = true;
+				}
+				// After Collision
+				else
+				{
+					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
+					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
+					//isCameraCanMove = false;
+					printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
+				}
+				//connanDirectionUntilCollision = connanDirection; // need update after collision
+			}			
 		}
 
 		// Left Key
