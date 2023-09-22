@@ -869,6 +869,17 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		// W Key
 		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
+			auto box1 = collisionManager->GetBoundingBox1Pointer();
+
+			printf("sphere x:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0]);
+			printf("sphere y:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1]);
+			printf("sphere z:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2]);
+			printf("box x:%f\n", box1->Center.x);
+			printf("box z:%f\n", box1->Center.y);
+			printf("box z:%f\n", box1->Center.z);
+			printf("\n");
+			printf("\n");
+			printf("\n");
 			//isCameraCanMove = true;
 			// Collision process
 			if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
@@ -926,29 +937,46 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						boxPoint4Cal.push_back(boxVertexPos[it->second]);
 						++it;
 					}
-					// boxPoint4Cal[0]とx座標が同じものとy座標が同じものを見つけ、それぞれ引いてベクトル化する。
+					// boxPoint4Cal[0]から他の頂点に対して方向ベクトルを作成し、その長さが最大のものを削除する。残った2本の内y成分が大きいものを削除して、流す方向ベクトルを求める。
 					float epsilon = 0.00005f;
-					XMFLOAT3 boxXDirection, boxYDirection;
-					for (int i = 1; i < 4; ++i)
+					XMVECTOR line1, line2, line3;
+					std::vector<XMVECTOR> lines;
+					line1 = XMVectorSubtract(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[1]));
+					line2 = XMVectorSubtract(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[2]));
+					line3 = XMVectorSubtract(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[3]));
+					lines.push_back(line1);
+					lines.push_back(line2);
+					lines.push_back(line3);
+					auto lengthL1 = pow(abs(line1.m128_f32[0]) + abs(line1.m128_f32[1]) + abs(line1.m128_f32[2]), 2);
+					auto lengthL2 = pow(abs(line2.m128_f32[0]) + abs(line2.m128_f32[1]) + abs(line2.m128_f32[2]), 2);
+					auto lengthL3 = pow(abs(line3.m128_f32[0]) + abs(line3.m128_f32[1]) + abs(line3.m128_f32[2]), 2);
+					std::vector<double> lineLength;
+					lineLength.push_back(lengthL1);
+					lineLength.push_back(lengthL2);
+					lineLength.push_back(lengthL3);
+					auto iter = std::max_element(lineLength.begin(), lineLength.end());
+					size_t index = std::distance(lineLength.begin(), iter);
+					lines.erase(lines.cbegin() + index); // 最大値の要素は四角形面の対角線なので削除する
+					auto normal = XMVector3Cross(lines[0], lines[1]); // 削除処理の前に衝突面の法線を求めておく
+					 // y要素が大きい成分は流し方向ではない線分なので削除する
+					if (abs(lines[0].m128_f32[1]) < abs(lines[1].m128_f32[1]))
 					{
-						float xResult, yResult, zResult;
-						xResult = abs(boxPoint4Cal[0].x - boxPoint4Cal[i].x);
-						yResult = abs(boxPoint4Cal[0].y - boxPoint4Cal[i].y);
-						zResult = abs(boxPoint4Cal[0].z - boxPoint4Cal[i].z);
-						if (xResult < epsilon && yResult > epsilon)
-						{
-							boxYDirection = { xResult , yResult , zResult };
-						}
-						else if (xResult > epsilon && yResult < epsilon)
-						{
-							boxXDirection = { xResult , yResult , zResult };
-						}
+						lines.erase(lines.cbegin() + 1);
 					}
+					else
+					{
+						lines.erase(lines.cbegin());
+					}
+
+					auto slideVector = XMVector3Normalize(lines[0]);
+					normal = XMVector3Normalize(normal);
+					//9/22 続きはここから
+
 					// 正規化して単位ベクトルとする。
 					XMVECTOR boxXNormal, boxYNormal;
-					boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
+					//boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
 					boxXNormal.m128_f32[3] = 1.0f;
-					boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
+					//boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
 					boxYNormal.m128_f32[3] = 1.0f;
 				
 					// それら単位ベクトルの外積から衝突面の法線ベクトルを求める。
@@ -989,6 +1017,11 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					result.r[3].m128_f32[1] = moveMatrix.r[3].m128_f32[1];
 					result.r[3].m128_f32[2] = moveMatrix.r[3].m128_f32[2];
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(moveMatrix.r[3].m128_f32[0], moveMatrix.r[3].m128_f32[1], moveMatrix.r[3].m128_f32[2]);
+
+					auto box1 = collisionManager->GetBoundingBox1Pointer();
+					box1->Center.x += moveMatrix.r[3].m128_f32[0];
+					box1->Center.y += moveMatrix.r[3].m128_f32[1];
+					box1->Center.z += moveMatrix.r[3].m128_f32[2];
 
 					//auto pos = collisionManager->GetBoundingSpherePointer()->Center;
 					//auto ppos = XMVector4Transform(XMLoadFloat3(&pos), result);
