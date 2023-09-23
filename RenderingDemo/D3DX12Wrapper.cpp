@@ -822,11 +822,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
-				// After Collision
-				else
-				{
-
-				}
 			}
 
 			// Right Key
@@ -839,30 +834,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
-				// After Collision
-				else
-				{
-
-				}
 			}
 
 			// W Key
 			if (inputW)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				
-				//auto characterWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
-				//// キャラクターがコライダー衝突時に、キャラクターを動かすためのワールド変換行列のひな形作成
-				//auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -forwardSpeed - sneakCorrectNum), connanDirectionUntilCollision);
-				//// キャラクターの向きは現在の向きを継承する。
-				//moveMatrix.r[0].m128_f32[0] = characterWorldMatrix.r[0].m128_f32[0];
-				//moveMatrix.r[0].m128_f32[2] = characterWorldMatrix.r[0].m128_f32[2];
-				//moveMatrix.r[2].m128_f32[0] = characterWorldMatrix.r[2].m128_f32[0];
-				//moveMatrix.r[2].m128_f32[2] = characterWorldMatrix.r[2].m128_f32[2];
-				//resourceManager[fbxIndex]->GetMappedMatrix()->world = moveMatrix; // move character
-				//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
-
-				
 			}
 		}
 
@@ -886,27 +863,20 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			printf("\n");
 			printf("\n");
 			printf("\n");
-			//isCameraCanMove = true;
+
 			// Collision process
 			if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 			{
-				//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
-					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed); // move character
-					//connanDirectionUntilCollision = connanDirection; // need update after collision
-					//isCameraCanMove = true;
 				}
 				// After Collision
 				else
 				{
 					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
-					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
-					//isCameraCanMove = false;
-					//printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
 
 					// ★面滑らせ実装
 					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
@@ -1037,53 +1007,23 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						moveMatrix.r[3].m128_f32[0] += slideVector.m128_f32[0] * 0.01;
 						moveMatrix.r[3].m128_f32[2] -= slideVector.m128_f32[2] * 0.01;
 					}
-				
-					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0]; // move character with slide
-					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
-					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
-					//XMMATRIX worldMatrixSpinElem = XMMatrixIdentity();
-					auto nowWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
-					nowWorldMatrix.r[3].m128_f32[0] = 0;
-					nowWorldMatrix.r[3].m128_f32[1] = 0;
-					nowWorldMatrix.r[3].m128_f32[2] = 0;
-					//worldMatrixSpinElem.r[0].m128_f32[0] = nowWorldMatrix.r[0].m128_f32[0];
-					//worldMatrixSpinElem.r[0].m128_f32[2] = nowWorldMatrix.r[0].m128_f32[2];
-					//worldMatrixSpinElem.r[2].m128_f32[0] = nowWorldMatrix.r[2].m128_f32[0];
-					//worldMatrixSpinElem.r[2].m128_f32[2] = nowWorldMatrix.r[2].m128_f32[2];
-					//moveMatrix *= worldMatrixSpinElem;
-					//XMMATRIX result = XMMatrixIdentity();
-					//result.r[3].m128_f32[0] = moveMatrix.r[3].m128_f32[0];
-					//result.r[3].m128_f32[1] = moveMatrix.r[3].m128_f32[1];
-					//result.r[3].m128_f32[2] = moveMatrix.r[3].m128_f32[2];
 
-
-
-					//auto box1 = collisionManager->GetBoundingBox1Pointer();
+					// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 					box1->Center.x += moveMatrix.r[3].m128_f32[0];
 					box1->Center.y += moveMatrix.r[3].m128_f32[1];
 					box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+
+					// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
+					// オブジェクトが流れるようにする
 					moveMatrix *= connanDirection;
 					moveMatrix.r[0].m128_f32[0] = 1;
 					moveMatrix.r[0].m128_f32[2] = 0;
 					moveMatrix.r[2].m128_f32[0] = 0;
 					moveMatrix.r[2].m128_f32[2] = 1;
 
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;//XMMatrixTranslation(moveMatrix.r[3].m128_f32[0], moveMatrix.r[3].m128_f32[1], moveMatrix.r[3].m128_f32[2]);
-					printf("sphere x:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0]);
-					printf("sphere y:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1]);
-					printf("sphere z:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2]);
-					printf("box x:%f\n", box1->Center.x);
-					printf("box z:%f\n", box1->Center.y);
-					printf("box z:%f\n", box1->Center.z);
-					//auto pos = collisionManager->GetBoundingSpherePointer()->Center;
-					//auto ppos = XMVector4Transform(XMLoadFloat3(&pos), result);
-					//collisionManager->GetBoundingSpherePointer()->Center.x = ppos.m128_f32[0];
-					//collisionManager->GetBoundingSpherePointer()->Center.y = ppos.m128_f32[1];
-					//collisionManager->GetBoundingSpherePointer()->Center.z = ppos.m128_f32[2];
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
 					//★ここまで
-
 				}
-				//connanDirectionUntilCollision = connanDirection; // need update after collision
 			}			
 		}
 
