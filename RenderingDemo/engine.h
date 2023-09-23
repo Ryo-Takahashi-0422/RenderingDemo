@@ -12,6 +12,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
+#include <DirectXCollision.h>
 #include <d3dcompiler.h>//シェーダーコンパイルに必要
 #include <d3dx12.h>
 #include <string.h>
@@ -23,6 +24,14 @@
 #include <array>
 #include <ReadData.h>
 #include <stdlib.h>
+
+//eigen
+#define _USE_MATH_DEFINES
+#include <iostream>  // たぶん絶対必要
+#include <Eigen/Dense>
+#include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
+#include <math.h> // sin cos とか
+using namespace Eigen;
 
 // Effekseer
 #include <Effekseer.h>
@@ -87,4 +96,8 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <FBXInfoManager.h>
 #include <ResourceManager.h>
 #include <TextureTransporter.h>
-#include "Input.h"
+#include <Input.h>
+#include <CollisionManager.h>
+#include <CollisionRootSignature.h>
+#include <ColliderGraphicsPipelineSetting.h>
+#include <CollisionShaderCompile.h>

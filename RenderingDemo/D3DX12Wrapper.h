@@ -29,10 +29,10 @@ private:
 
 	ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
 	GraphicsPipelineSetting* gPLSetting = nullptr;
-	std::vector<BufferHeapCreator*> bufferHeapCreator;
+	//std::vector<BufferHeapCreator*> bufferHeapCreator;
 	TextureTransporter* textureTransporter;
-	std::vector<MappingExecuter*> mappingExecuter;
-	std::vector<ViewCreator*> viewCreator;
+	//std::vector<MappingExecuter*> mappingExecuter;
+	//std::vector<ViewCreator*> viewCreator;
 
 	std::vector<DirectX::TexMetadata*> metaData;
 	std::vector<DirectX::Image*> img;
@@ -52,19 +52,19 @@ private:
 	SetRootSignature* setRootSignature = nullptr;
 	SettingShaderCompile* settingShaderCompile = nullptr;
 	VertexInputLayout* vertexInputLayout = nullptr;
-	std::vector<PMDMaterialInfo*> pmdMaterialInfo;
-	std::vector<VMDMotionInfo*> vmdMotionInfo;
-	std::vector<PMDActor*> pmdActor;
+	//std::vector<PMDMaterialInfo*> pmdMaterialInfo;
+	//std::vector<VMDMotionInfo*> vmdMotionInfo;
+	//std::vector<PMDActor*> pmdActor;
 	PrepareRenderingWindow* prepareRenderingWindow = nullptr;	
 	TextureLoader* textureLoader = nullptr;
 
 	std::map<int, std::vector<DirectX::XMMATRIX>*> boneMatrices;
-	std::map<int, std::map<std::string, BoneNode>> bNodeTable;
+	//std::map<int, std::map<std::string, BoneNode>> bNodeTable;
 	unsigned int _duration; // アニメーションの最大フレーム番号
 
-	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
-	void UpdateVMDMotion(std::map<std::string, BoneNode> bNodeTable, 
-		std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
+	//void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
+	//void UpdateVMDMotion(std::map<std::string, BoneNode> bNodeTable, 
+		//std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -151,6 +151,15 @@ private:
 	// Rebuild
 	FBXInfoManager fbxInfoManager;
 	std::vector<ResourceManager*> resourceManager;// = nullptr;
+	CollisionManager* collisionManager = nullptr;
+	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
+	CollisionRootSignature* collisionRootSignature = nullptr;
+	CollisionShaderCompile* collisionShaderCompile = nullptr;
+	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
+	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
+	//BoundingSphere* characterBSphere = nullptr;
+	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
+	XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	ComPtr<ID3D12Resource> backBufferResource = nullptr;
@@ -160,8 +169,18 @@ private:
 	std::pair<std::string, int> walkingMotionDataNameAndMaxFrame;
 	std::pair<std::string, int> runMotionDataNameAndMaxFrame;
 	bool inputRet; // 入力に対する判定 true:指定の入力あり
+	bool inputW = false;
+	bool inputLeft = false;
+	bool inputRight = false;
+	void AllKeyBoolFalse();
 
+	double forwardSpeed = -0.05;
+	double turnSpeed = 20;
+	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
+	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
+	double sneakCorrectNum = 0.049;
 	void DrawFBX(UINT buffSize);
+	void DrawCollider(int modelNum, UINT buffSize);
 
 public:
 	///Applicationのシングルトンインスタンスを得る
