@@ -871,6 +871,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		{
 			auto box1 = collisionManager->GetBoundingBox1Pointer();
 
+			//printf("connanDir x:%f %f %f\n", connanDirection.r[0].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[2]); // X方向は[2][0]で、Z方向は[0][0]と[2][2]そのまま判断可能
+			//printf("connanDir y:%f %f %f\n", connanDirection.r[1].m128_f32[0], connanDirection.r[1].m128_f32[1], connanDirection.r[1].m128_f32[2]);
+			//printf("connanDir z:%f %f %f\n", connanDirection.r[2].m128_f32[0], connanDirection.r[2].m128_f32[1], connanDirection.r[2].m128_f32[2]);
+			//printf("chara x:%f\n", collisionManager->GetBoundingSphere().Center.x);
+			//printf("chara y:%f\n", collisionManager->GetBoundingSphere().Center.y);
+			//printf("chara z:%f\n", collisionManager->GetBoundingSphere().Center.z);
 			printf("sphere x:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0]);
 			printf("sphere y:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1]);
 			printf("sphere z:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2]);
@@ -900,7 +906,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
 					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed, connanDirectionUntilCollision); // return collider pos
 					//isCameraCanMove = false;
-					printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
+					//printf("%d\n", collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()));
 
 					// ★面滑らせ実装
 					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
@@ -957,8 +963,40 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto iter = std::max_element(lineLength.begin(), lineLength.end());
 					size_t index = std::distance(lineLength.begin(), iter);
 					lines.erase(lines.cbegin() + index); // 最大値の要素は四角形面の対角線なので削除する
-					auto normal = XMVector3Cross(lines[0], lines[1]); // 削除処理の前に衝突面の法線を求めておく
-					 // y要素が大きい成分は流し方向ではない線分なので削除する
+					// 削除処理の前に衝突面の法線を求めておく
+					float normXPos = 0;
+					float normYPos = 0;
+					float normZPos = 0;
+					if (index == 0)
+					{
+						normXPos = (boxPoint4Cal[0].x + boxPoint4Cal[1].x) / 2.0f;
+						normYPos = (boxPoint4Cal[0].y + boxPoint4Cal[1].y) / 2.0f;
+						normZPos = (boxPoint4Cal[0].z + boxPoint4Cal[1].z) / 2.0f;
+					}
+					else if (index == 1)
+					{
+						normXPos = (boxPoint4Cal[0].x + boxPoint4Cal[2].x) / 2.0f;
+						normYPos = (boxPoint4Cal[0].y + boxPoint4Cal[2].y) / 2.0f;
+						normZPos = (boxPoint4Cal[0].z + boxPoint4Cal[2].z) / 2.0f;
+					}
+					else if (index == 2)
+					{
+						normXPos = (boxPoint4Cal[0].x + boxPoint4Cal[3].x) / 2.0f;
+						normYPos = (boxPoint4Cal[0].y + boxPoint4Cal[3].y) / 2.0f;
+						normZPos = (boxPoint4Cal[0].z + boxPoint4Cal[3].z) / 2.0f;
+					}
+					XMVECTOR normPos = { normXPos, normYPos, normZPos, 1};
+					auto boxCenter = collisionManager->GetBoundingBox1().Center;
+					XMVECTOR boxCenterVec = {boxCenter.x, boxCenter.y, boxCenter.z, 1};
+					auto normal = XMVectorSubtract(normPos, boxCenterVec);// XMVector3Cross(lines[0], lines[1]);
+					normal = XMVector4Normalize(normal); // 衝突面法線の算出完了
+					//★バグチェック
+					if (normal.m128_f32[1] != 0)
+					{
+						int i = 0;
+						++i;
+					}
+					// y要素が大きい成分は流し方向ではない線分なので削除する
 					if (abs(lines[0].m128_f32[1]) < abs(lines[1].m128_f32[1]))
 					{
 						lines.erase(lines.cbegin() + 1);
@@ -967,62 +1005,76 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					{
 						lines.erase(lines.cbegin());
 					}
-
 					auto slideVector = XMVector3Normalize(lines[0]);
-					normal = XMVector3Normalize(normal);
-					//9/22 続きはここから
-
-					// 正規化して単位ベクトルとする。
-					XMVECTOR boxXNormal, boxYNormal;
-					//boxXNormal = XMVector3Normalize(XMLoadFloat3(&boxXDirection));
-					boxXNormal.m128_f32[3] = 1.0f;
-					//boxYNormal = XMVector3Normalize(XMLoadFloat3(&boxYDirection));
-					boxYNormal.m128_f32[3] = 1.0f;
-				
-					// それら単位ベクトルの外積から衝突面の法線ベクトルを求める。
-					auto boxZNormal = XMVector3Cross(boxXNormal, boxYNormal);
+					slideVector.m128_f32[3] = 1; // 衝突面のスライド方向ベクトルを特定した
 
 					// (必要に応じて上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる)
-					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。0なら滑り無し。+なら..-なら..
-					auto tempZDir = boxZNormal;
-					tempZDir = XMVector4Transform(tempZDir, connanDirection);
-					auto dotboxZAndCharacterDir = XMVector3Dot(boxZNormal, tempZDir).m128_f32[0];
+					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。-1.0(正面衝突)なら滑り無し。+なら..-なら..
+					XMVECTOR characterZDir = {connanDirection.r[2].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[0], 1};
+					auto dotboxZAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
 
 					// キャラクターが衝突面に対して右向きの場合
-					if (dotboxZAndCharacterDir != 0 && connanDirection.r[0].m128_f32[2] < 0)
+					if (dotboxZAndCharacterDir != -1.0f)
 					{
-						moveMatrix.r[3].m128_f32[0] += boxXNormal.m128_f32[0] * 0.1;
-						moveMatrix.r[3].m128_f32[2] += boxXNormal.m128_f32[2] * 0.1;
-					}
-					// キャラクターが衝突面に対して左向きの場合
-					else if (dotboxZAndCharacterDir != 0 && connanDirection.r[0].m128_f32[2] > 0)
-					{
-						moveMatrix.r[3].m128_f32[0] -= boxXNormal.m128_f32[0] * 0.1;
-						moveMatrix.r[3].m128_f32[2] -= boxXNormal.m128_f32[2] * 0.1;
-					}
+						if (characterZDir.m128_f32[0] > 0)
+						{
+							slideVector.m128_f32[0] = abs(slideVector.m128_f32[0]) * -1;
+						}
+						else if (characterZDir.m128_f32[0] < 0)
+						{
+							slideVector.m128_f32[0] = abs(slideVector.m128_f32[0]);
+						}
 
+						if (characterZDir.m128_f32[2] > 0)
+						{
+							slideVector.m128_f32[2] = abs(slideVector.m128_f32[2]) * -1;
+						}
+						else if (characterZDir.m128_f32[2] < 0)
+						{
+							slideVector.m128_f32[2] = abs(slideVector.m128_f32[2]);
+						}
+
+						moveMatrix.r[3].m128_f32[0] += slideVector.m128_f32[0] * 0.01;
+						moveMatrix.r[3].m128_f32[2] -= slideVector.m128_f32[2] * 0.01;
+					}
 				
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0]; // move character with slide
 					//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2]; // move character with slide
 					//collisionManager->MoveCharacterBoundingBox(-forwardSpeed - sneakCorrectNum, connanDirectionUntilCollision); // move collider
-					XMMATRIX worldMatrixSpinElem = XMMatrixIdentity();
+					//XMMATRIX worldMatrixSpinElem = XMMatrixIdentity();
 					auto nowWorldMatrix = resourceManager[fbxIndex]->GetMappedMatrix()->world;
-					worldMatrixSpinElem.r[0].m128_f32[0] = nowWorldMatrix.r[0].m128_f32[0];
-					worldMatrixSpinElem.r[0].m128_f32[2] = nowWorldMatrix.r[0].m128_f32[2];
-					worldMatrixSpinElem.r[2].m128_f32[0] = nowWorldMatrix.r[2].m128_f32[0];
-					worldMatrixSpinElem.r[2].m128_f32[2] = nowWorldMatrix.r[2].m128_f32[2];
-					moveMatrix *= worldMatrixSpinElem;
-					XMMATRIX result = XMMatrixIdentity();
-					result.r[3].m128_f32[0] = moveMatrix.r[3].m128_f32[0];
-					result.r[3].m128_f32[1] = moveMatrix.r[3].m128_f32[1];
-					result.r[3].m128_f32[2] = moveMatrix.r[3].m128_f32[2];
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(moveMatrix.r[3].m128_f32[0], moveMatrix.r[3].m128_f32[1], moveMatrix.r[3].m128_f32[2]);
+					nowWorldMatrix.r[3].m128_f32[0] = 0;
+					nowWorldMatrix.r[3].m128_f32[1] = 0;
+					nowWorldMatrix.r[3].m128_f32[2] = 0;
+					//worldMatrixSpinElem.r[0].m128_f32[0] = nowWorldMatrix.r[0].m128_f32[0];
+					//worldMatrixSpinElem.r[0].m128_f32[2] = nowWorldMatrix.r[0].m128_f32[2];
+					//worldMatrixSpinElem.r[2].m128_f32[0] = nowWorldMatrix.r[2].m128_f32[0];
+					//worldMatrixSpinElem.r[2].m128_f32[2] = nowWorldMatrix.r[2].m128_f32[2];
+					//moveMatrix *= worldMatrixSpinElem;
+					//XMMATRIX result = XMMatrixIdentity();
+					//result.r[3].m128_f32[0] = moveMatrix.r[3].m128_f32[0];
+					//result.r[3].m128_f32[1] = moveMatrix.r[3].m128_f32[1];
+					//result.r[3].m128_f32[2] = moveMatrix.r[3].m128_f32[2];
 
-					auto box1 = collisionManager->GetBoundingBox1Pointer();
+
+
+					//auto box1 = collisionManager->GetBoundingBox1Pointer();
 					box1->Center.x += moveMatrix.r[3].m128_f32[0];
 					box1->Center.y += moveMatrix.r[3].m128_f32[1];
-					box1->Center.z += moveMatrix.r[3].m128_f32[2];
+					box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+					moveMatrix *= connanDirection;
+					moveMatrix.r[0].m128_f32[0] = 1;
+					moveMatrix.r[0].m128_f32[2] = 0;
+					moveMatrix.r[2].m128_f32[0] = 0;
+					moveMatrix.r[2].m128_f32[2] = 1;
 
+					resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;//XMMatrixTranslation(moveMatrix.r[3].m128_f32[0], moveMatrix.r[3].m128_f32[1], moveMatrix.r[3].m128_f32[2]);
+					printf("sphere x:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0]);
+					printf("sphere y:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1]);
+					printf("sphere z:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2]);
+					printf("box x:%f\n", box1->Center.x);
+					printf("box z:%f\n", box1->Center.y);
+					printf("box z:%f\n", box1->Center.z);
 					//auto pos = collisionManager->GetBoundingSpherePointer()->Center;
 					//auto ppos = XMVector4Transform(XMLoadFloat3(&pos), result);
 					//collisionManager->GetBoundingSpherePointer()->Center.x = ppos.m128_f32[0];
