@@ -17,6 +17,8 @@ void CollisionManager::Init()
 
 	for (int j = 0; j < resourceManager[0]->GetVertexTotalNum(); ++j)
 	{
+		// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整している。
+		vetmap1.begin()->second.vertices[j].pos.z *= -1;
 		input1.push_back(vetmap1.begin()->second.vertices[j].pos);
 	}
 
@@ -40,6 +42,7 @@ void CollisionManager::Init()
 	for (int i = 0; i < 8; ++i)
 	{
 		output1[i] = temp1[i];
+		output1[i].z *= -1; // x軸に対して対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。
 		output2[i] = temp2[i];
 	}
 

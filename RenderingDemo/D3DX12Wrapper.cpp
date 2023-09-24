@@ -352,13 +352,14 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Sphere.fbx");
-
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Sphere.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal.fbx");
 	// 3 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
 	 
 	// 4 textures model
-	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan.fbx");
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx");
 	
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	
@@ -867,7 +868,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			// Collision process
 			if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 			{
-				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 動かす前の情報を残しておく
+				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
@@ -876,12 +877,23 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				// After Collision
 				else
 				{
-					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center;
-
-					// ★面滑らせ実装
 					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 					XMFLOAT3 boxVertexPos[8];
 					collisionManager->GetBoundingBox1().GetCorners(boxVertexPos);
+
+					// AABB範囲外(角を含む)かどうかの判定
+
+					// 範囲外の場合
+					// x1 > && z1 > : 
+					// x1 > && z2 < : 
+					// x2 < && z1 > : 
+					// x2 < && z2 < : 
+
+					// 範囲内であればこのまま処理を進める
+					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
+					
+					// ★面滑らせ実装
+
 					std::vector<std::pair<float, int>> distances;
 					distances.resize(4);
 					for (int i = 0; i < 4; ++i)
@@ -893,7 +905,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto sCenter = collisionManager->GetBoundingSphere().Center;
 					for (int h = 0; h < 8; ++h)
 					{
-						float distance = powf(sCenter.x - boxVertexPos[h].x, 2.f) + powf(sCenter.y - boxVertexPos[h].y, 2.f) + powf(sCenter.z - boxVertexPos[h].z, 2.f);
+						float distance = powf(sCenter.x - boxVertexPos[h].x, 2.0f) + powf(sCenter.y - boxVertexPos[h].y, 2.0f) + powf(sCenter.z - boxVertexPos[h].z, 2.0f);
 						for (int i = 0; i < 4; ++i)
 						{
 							if (distance < distances[i].first)
@@ -913,6 +925,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						boxPoint4Cal.push_back(boxVertexPos[it->second]);
 						++it;
 					}
+					// y座標が全て閾値未満で無ければ、角との接触等で
 					// boxPoint4Cal[0]から他の頂点に対して方向ベクトルを作成し、その長さが最大のものを削除する。残った2本の内y成分が大きいものを削除して、流す方向ベクトルを求める。
 					float epsilon = 0.00005f;
 					XMVECTOR line1, line2, line3;

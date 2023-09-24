@@ -45,6 +45,8 @@ int FBXInfoManager::Init(std::string _modelPath)
     // ‘SMesh•ªŠ„
     converter.SplitMeshesPerMaterial(scene, true);
 
+
+
     // Scene‰ğÍ
     ReadFBXFile();
 
@@ -391,7 +393,7 @@ void FBXInfoManager::ReadFBXFile()
             FbxTime::EMode timeMode = globalSettings.GetTimeMode();
             FbxTime period;
             period.SetTime(0, 0, 0, 1, 0, timeMode);
-                                
+
             for (int skinNum = 0; skinNum < skinCount; ++skinNum) {
                 // skinNum”Ô–Ú‚ÌƒXƒLƒ“‚ğæ“¾
                 FbxStatus* eStatus;
