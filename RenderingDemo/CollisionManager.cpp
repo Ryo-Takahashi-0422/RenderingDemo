@@ -15,9 +15,28 @@ void CollisionManager::Init()
 	auto vetmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
 	auto vetmap2 = resourceManager[1]->GetIndiceAndVertexInfo();
 
+	///
+	auto loalRotation = resourceManager[0]->GetLocalRotationFloat();
+	XMMATRIX localRotaionXMatrix = XMMatrixRotationX(loalRotation.x);
+	XMMATRIX localRotaionYMatrix = XMMatrixRotationY(45); // blenderと符号逆
+	XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(loalRotation.z);
+	XMMATRIX localRotaionMatrix = /*localRotaionXMatrix * */localRotaionYMatrix/* * localRotaionZMatrix*/;
+	XMVECTOR quaternion = XMQuaternionRotationMatrix(localRotaionMatrix);
+	///
+	//resourceManager[0]->GetMappedMatrix()->world *= localRotaionMatrix; // モデルとコライダー描画はworld原点中心に回転するも、コライダー実態には影響無し。惜しい。これ+コライダーのworld原点回転か...?
+	
+	//XMVECTOR qu = XMQuaternionRotationAxis();
 	for (int j = 0; j < resourceManager[0]->GetVertexTotalNum(); ++j)
 	{
-		// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整している。
+		//// 回転している場合も考慮する...以下コードは平行移動にしかならない。
+		//XMVECTOR pos = XMLoadFloat3(&vetmap1.begin()->second.vertices[j].pos);
+		//pos.m128_f32[3] = 1;
+		//pos = XMVector3Rotate(pos, quaternion);//XMVector3Transform(pos, localRotaionMatrix);
+		//vetmap1.begin()->second.vertices[j].pos.x = pos.m128_f32[0];
+		//vetmap1.begin()->second.vertices[j].pos.y = pos.m128_f32[1];
+		//vetmap1.begin()->second.vertices[j].pos.z = pos.m128_f32[2];
+
+		// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。少しずれている？
 		vetmap1.begin()->second.vertices[j].pos.z *= -1;
 		input1.push_back(vetmap1.begin()->second.vertices[j].pos);
 	}
@@ -27,10 +46,22 @@ void CollisionManager::Init()
 		input2.push_back(vetmap2.begin()->second.vertices[j].pos);
 	}
 
-	BoundingBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
+	/*BoundingBox*/BoundingOrientedBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
+	// fbxモデルデータからのxyz回転成分に基づきOBB回転
+	XMVECTOR scale;
+	XMVECTOR rotation;
+	XMVECTOR transition;
+	XMMatrixDecompose(&scale, &rotation, &transition, localRotaionMatrix);
+	/*box1.Transform(box1, 1.0f, rotation, transition);*/
+
+	/*resourceManager[0]->GetMappedMatrix()->world *= localRotaionMatrix;*/
+	///
+
 	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
 	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
 	bSphere.Radius -= 0.2f; // 球体コライダーの半径を微調整。数値適当
+
+
 
 	XMFLOAT3 temp1[8];
 	XMFLOAT3 temp2[8];
@@ -38,7 +69,15 @@ void CollisionManager::Init()
 	box1.GetCorners(temp1);
 	box2.GetCorners(temp2);
 	
-	
+	//localRotaionMatrix.r[0].m128_f32[0] *= -1;
+	//localRotaionMatrix.r[0].m128_f32[2] *= -1;
+	//localRotaionMatrix.r[2].m128_f32[0] *= -1;
+	//localRotaionMatrix.r[2].m128_f32[2] *= -1;
+	//auto k = XMVector3Transform(XMLoadFloat3(&box1.Center), localRotaionMatrix);
+	//box1.Center.x = k.m128_f32[0];
+	//box1.Center.y = k.m128_f32[1];
+	//box1.Center.z = k.m128_f32[2];
+
 	for (int i = 0; i < 8; ++i)
 	{
 		output1[i] = temp1[i];

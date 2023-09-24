@@ -98,6 +98,8 @@ private:
 	int testCnt = 0;
 	bool isBonesInitialPostureMatrixFilled = false;
 
+	FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
+
 public:
 	//Get Singleton Instance
 	static FBXInfoManager& Instance();
@@ -108,4 +110,5 @@ public:
 	std::map<int, std::map<int, float>> GetIndexWithBonesNumAndWeight() { return indexWithBonesNumAndWeight; };
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
 	std::map<int, XMMATRIX> GetBonesInitialPostureMatrix() { return bonesInitialPostureMatrix; };
+	FbxDouble3 GetLocalRotation() { return localRotation; };
 };

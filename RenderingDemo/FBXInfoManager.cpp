@@ -259,6 +259,7 @@ void FBXInfoManager::ReadFBXFile()
         {
             continue;
         }
+        localRotation = node->LclRotation.Get();
 
         // マテリアルの数をチェック
         int materialNum = node->GetMaterialCount();
