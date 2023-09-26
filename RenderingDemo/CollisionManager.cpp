@@ -40,6 +40,9 @@ void CollisionManager::Init()
 
 	// fbxモデルのxyzローカル回転値から回転行列を作成して、メッシュとコライダーの描画に利用するworld変換行列に乗算しておく。これで描画座標にローカル空間での回転情報が反映される。
 	auto localRotation = resourceManager[0]->GetLocalRotationFloat();
+	localRotation.x = XMConvertToRadians(localRotation.x);
+	localRotation.y = XMConvertToRadians(localRotation.y);
+	localRotation.z = XMConvertToRadians(localRotation.z);
 	XMMATRIX localRotaionXMatrix = XMMatrixRotationX(localRotation.x);
 	XMMATRIX localRotaionYMatrix = XMMatrixRotationY(localRotation.y); // blenderと符号逆
 	XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(localRotation.z);
