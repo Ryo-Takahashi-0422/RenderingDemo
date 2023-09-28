@@ -870,6 +870,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+
 				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
@@ -988,43 +989,39 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					{
 						lines.erase(lines.cbegin());
 					}
-					auto slideVector = XMVector3Normalize(lines[0]);
-					slideVector.m128_f32[3] = 1; // 衝突面のスライド方向ベクトルを特定した
+					auto slideVector = XMVector3Normalize(lines[0]); // スライド方向ベクトル候補1
+					auto reverseSlideVector = -slideVector; // スライド方向ベクトル候補2(1の逆方向)
+					slideVector.m128_f32[3] = 1;
+					reverseSlideVector.m128_f32[3] = 1;
 
-					// (必要に応じて上ベクトルと法線ベクトルの外積を求める。これが滑らせ方向になる)
-					// 衝突面法線ベクトルとconnanDirectionUntilCollisionの内積により処理を分ける。-1.0(正面衝突)なら滑り無し。+なら..-なら..
+					// キャラクターの進行方向に対して、衝突面法線ベクトル・スライド候補1・スライド候補2との各内積を求める。
 					XMVECTOR characterZDir = {connanDirection.r[2].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[0], 1};
-					auto dotboxZAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
+					auto dotboxNormalAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
+					auto dotslideVectorAndCharacterDir = XMVector3Dot(slideVector, characterZDir).m128_f32[0];
+					auto dotReverseSlideVectorAndCharacterDir = XMVector3Dot(reverseSlideVector, characterZDir).m128_f32[0];
 
-					// キャラクターが衝突面に対して右向きの場合
-					if (dotboxZAndCharacterDir != -1.0f)
+					// キャラクターが衝突面に対して垂直ではない場合、キャラクターを衝突面に対してスライドさせる
+					if (dotboxNormalAndCharacterDir != -1.0f)
 					{
-						if (characterZDir.m128_f32[0] > 0)
+						// キャラクターの進行方向との内積が小さいスライド方向が正解。このスライド方向はコライダーの頂点座標に基づいているが、fbxモデルはZ成分の符号を逆転させている。fbxモデル同様にZ成分を-1乗算して
+						// ワールド空間におけるZ方向をFBXと同様の画面下方向に変換している。そのため、次の処理でコライダーにスライド方向で調整したmoveMAtrixを適用する際にはZ成分の符号をまた-1掛けしている...
+						if (dotslideVectorAndCharacterDir < dotReverseSlideVectorAndCharacterDir)
 						{
-							slideVector.m128_f32[0] = abs(slideVector.m128_f32[0]) * -1;
+							moveMatrix.r[3].m128_f32[0] += slideVector.m128_f32[0] * 0.01;
+							moveMatrix.r[3].m128_f32[2] -= slideVector.m128_f32[2] * 0.01;
 						}
-						else if (characterZDir.m128_f32[0] < 0)
+						else
 						{
-							slideVector.m128_f32[0] = abs(slideVector.m128_f32[0]);
+							moveMatrix.r[3].m128_f32[0] += reverseSlideVector.m128_f32[0] * 0.01;
+							moveMatrix.r[3].m128_f32[2] -= reverseSlideVector.m128_f32[2] * 0.01;
 						}
-
-						if (characterZDir.m128_f32[2] > 0)
-						{
-							slideVector.m128_f32[2] = abs(slideVector.m128_f32[2]) * -1;
-						}
-						else if (characterZDir.m128_f32[2] < 0)
-						{
-							slideVector.m128_f32[2] = abs(slideVector.m128_f32[2]);
-						}
-
-						moveMatrix.r[3].m128_f32[0] += slideVector.m128_f32[0] * 0.01;
-						moveMatrix.r[3].m128_f32[2] -= slideVector.m128_f32[2] * 0.01;
 					}
 
 					// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 					box1->Center.x += moveMatrix.r[3].m128_f32[0];
 					box1->Center.y += moveMatrix.r[3].m128_f32[1];
 					box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+
 
 					// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
 					// オブジェクトが流れるようにする
