@@ -999,6 +999,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto dotboxNormalAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
 					auto dotslideVectorAndCharacterDir = XMVector3Dot(slideVector, characterZDir).m128_f32[0];
 					auto dotReverseSlideVectorAndCharacterDir = XMVector3Dot(reverseSlideVector, characterZDir).m128_f32[0];
+					XMVECTOR determinedSlideVector; // 決定したスライド方向(キャラクターコライダーが角にぶつかっているか判定するのにも使う)
 
 					// キャラクターが衝突面に対して垂直ではない場合、キャラクターを衝突面に対してスライドさせる
 					if (dotboxNormalAndCharacterDir != -1.0f)
@@ -1007,14 +1008,26 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						// ワールド空間におけるZ方向をFBXと同様の画面下方向に変換している。そのため、次の処理でコライダーにスライド方向で調整したmoveMAtrixを適用する際にはZ成分の符号をまた-1掛けしている...
 						if (dotslideVectorAndCharacterDir < dotReverseSlideVectorAndCharacterDir)
 						{
-							moveMatrix.r[3].m128_f32[0] += slideVector.m128_f32[0] * 0.01;
-							moveMatrix.r[3].m128_f32[2] -= slideVector.m128_f32[2] * 0.01;
+							determinedSlideVector = slideVector;
+							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * 0.01;
+							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * 0.01;
 						}
 						else
 						{
-							moveMatrix.r[3].m128_f32[0] += reverseSlideVector.m128_f32[0] * 0.01;
-							moveMatrix.r[3].m128_f32[2] -= reverseSlideVector.m128_f32[2] * 0.01;
+							determinedSlideVector = reverseSlideVector;
+							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * 0.01;
+							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * 0.01;
 						}
+					}
+
+					// キャラクターコライダーが角にぶつかっているか判定する
+					auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), XMLoadFloat3(&boxCenter)); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
+					centerToCenter = XMVector3Normalize(centerToCenter);
+					auto dot1 = XMVector3Dot(centerToCenter, determinedSlideVector); //×normal2
+					auto dot2 = XMVector3Dot(centerToCenter, normal);
+					if (dot1.m128_f32[0] * dot2.m128_f32[0] < 0)
+					{
+						// 角に接触していない。
 					}
 
 					// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
