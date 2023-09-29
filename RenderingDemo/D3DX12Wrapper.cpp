@@ -848,7 +848,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
 			auto box1 = collisionManager->GetBoundingBox1Pointer();
-
+			auto sCenter = collisionManager->GetBoundingSphere().Center;
 			//printf("connanDir x:%f %f %f\n", connanDirection.r[0].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[2]); // X方向は[2][0]で、Z方向は[0][0]と[2][2]そのまま判断可能
 			//printf("connanDir y:%f %f %f\n", connanDirection.r[1].m128_f32[0], connanDirection.r[1].m128_f32[1], connanDirection.r[1].m128_f32[2]);
 			//printf("connanDir z:%f %f %f\n", connanDirection.r[2].m128_f32[0], connanDirection.r[2].m128_f32[1], connanDirection.r[2].m128_f32[2]);
@@ -865,8 +865,24 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			printf("\n");
 			printf("\n");
 
+			// キャラクター中心は移動と共にワールド座標が変化していく。XYZ座標絶対値にOBBのExtentsを追加した値に対して、オブジェクトコライダーのXYZ座標総数を算出する。
+			// これらを比較して前者の方が値が大きい場合のみ衝突判定を行う。複数オブジェクトが存在する際の総当たり判定を回避する一次対策。空間分割法を目標とする。
+			auto boxCenter = XMLoadFloat3(&box1->Center);
+			auto colliderTotalExtents = pow(box1->Extents.x + box1->Extents.y + box1->Extents.z, 1.0f);
+			auto colliderTotalVal = abs(boxCenter.m128_f32[0]) + abs(boxCenter.m128_f32[1]) + abs(boxCenter.m128_f32[2]);
+			auto charaTotalVal = abs(sCenter.x) + abs(sCenter.y) + abs(sCenter.z);
+			int margin = colliderTotalExtents;
+			charaTotalVal += collisionManager->GetBoundingSphere().Radius + margin;
+			bool isCheckNecessary = charaTotalVal > colliderTotalVal;
+
+			if (!isCheckNecessary)
+			{
+				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+			}
+
 			// Collision process
-			if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+			else/* if(collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)*/
 			{
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
@@ -903,7 +919,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						distances[i].second = 0;			
 					}
 					// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
-					auto sCenter = collisionManager->GetBoundingSphere().Center;
+					
 					for (int h = 0; h < 8; ++h)
 					{
 						float distance = powf(sCenter.x - boxVertexPos[h].x, 2.0f) + powf(sCenter.y - boxVertexPos[h].y, 2.0f) + powf(sCenter.z - boxVertexPos[h].z, 2.0f);
@@ -1020,15 +1036,15 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						}
 					}
 
-					// キャラクターコライダーが角にぶつかっているか判定する
-					auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), XMLoadFloat3(&boxCenter)); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
-					centerToCenter = XMVector3Normalize(centerToCenter);
-					auto dot1 = XMVector3Dot(centerToCenter, determinedSlideVector); //×normal2
-					auto dot2 = XMVector3Dot(centerToCenter, normal);
-					if (dot1.m128_f32[0] * dot2.m128_f32[0] < 0)
-					{
-						// 角に接触していない。
-					}
+					//// キャラクターコライダーが角にぶつかっているか判定する
+					//auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), XMLoadFloat3(&boxCenter)); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
+					//centerToCenter = XMVector3Normalize(centerToCenter);
+					//auto dot1 = XMVector3Dot(centerToCenter, determinedSlideVector); //×normal2
+					//auto dot2 = XMVector3Dot(centerToCenter, normal);
+					//if (dot1.m128_f32[0] * dot2.m128_f32[0] < 0)
+					//{
+					//	// 角に接触していない。
+					//}
 
 					// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 					box1->Center.x += moveMatrix.r[3].m128_f32[0];
