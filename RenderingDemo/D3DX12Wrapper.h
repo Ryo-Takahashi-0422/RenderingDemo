@@ -181,6 +181,8 @@ private:
 	double sneakCorrectNum = 0.049;
 	void DrawFBX(UINT buffSize);
 	void DrawCollider(int modelNum, UINT buffSize);
+	XMFLOAT3 CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8]);
+	std::pair<XMVECTOR, XMVECTOR> CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points);
 
 public:
 	///Applicationのシングルトンインスタンスを得る
