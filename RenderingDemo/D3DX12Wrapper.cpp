@@ -939,7 +939,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						if (abs(x) < epsilon && abs(z) < epsilon && abs(y) > epsilon)
 						{
 							boxPoint4Cal.push_back(boxVertexPos[it->second]);
-							// 3つ目の頂点を格納する
+							// 3つ目の頂点を格納する。3つ目のイテレータまでに要素が決定するためi = 1で処理終了する。
 							if (i == 0)
 							{
 								++it;
@@ -950,11 +950,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 								--it;
 								boxPoint4Cal.push_back(boxVertexPos[it->second]);
 							}
-							//else if (i == 2)
-							//{
-							//	it -= 2;
-							//	boxPoint4Cal.push_back(boxVertexPos[it->second]);
-							//}
 						}
 						++it;
 					}
@@ -999,35 +994,35 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					// キャラクターに近いもう片方の面を構成する座標を格納する。こちらは角との衝突判定に使う法線を求めるために利用する。
 					it = distances.begin();
 					std::vector<XMFLOAT3> boxPoint4NextPlaneCal;
+					boxPoint4NextPlaneCal.push_back(boxPoint4Cal[0]); // 最初の要素を格納しておく
+					boxPoint4NextPlaneCal.push_back(boxPoint4Cal[1]); // 二つ目の要素を格納しておく
+					// 3つ目の要素を抽出する。	
+					it += 4; // distancesの上位4番目まで、もしくは上位1,2,5,6位が選定された状態。どちらか分からないので一旦上位5番目と予想される要素に基づき値を調べていく				
+					// 角ではbox4Calの頂点とかぶるので対処する
+					float x1 = abs(boxPoint4Cal[2].x) - abs(boxVertexPos[it->second].x);
+					float z1 = abs(boxPoint4Cal[2].z) - abs(boxVertexPos[it->second].z);
 
-					// 選出した最も近い3点のXYZ座標を抽出する。					
-					for (int i = 0; i < 3; ++i)
+					float x2 = abs(boxPoint4Cal[3].x) - abs(boxVertexPos[it->second].x);
+					float z2 = abs(boxPoint4Cal[3].z) - abs(boxVertexPos[it->second].z);
+
+					// distancesのitretorは[4]つまり5番目に近い頂点を指している状態。ただし、角に衝突した時は5番目に近いとは限らず4番目に近い頂点の可能性がある。
+					// そこで、[5]を指すことで3番目に近い線を構成する片方の頂点を確実に選定することが可能。この頂点に基づき4つ目の頂点を計算する。
+					if (abs(x1) < epsilon && abs(z1) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
+					{
+						++it;
+						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
+					}
+
+					else if(abs(x2) < epsilon && abs(z2) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
+					{
+						++it;
+						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
+					}
+					else // box4Calに上位5番目と推測される要素が格納されていない場合はこのまま格納する
 					{
 						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-						++it;
-						if (i == 1)
-						{
-							it += 2;
-							// 角ではbox4Calの頂点とかぶるので対処する
-							float x1 = abs(boxPoint4Cal[2].x) - abs(boxVertexPos[it->second].x);
-							float z1 = abs(boxPoint4Cal[2].z) - abs(boxVertexPos[it->second].z);
-
-							float x2 = abs(boxPoint4Cal[3].x) - abs(boxVertexPos[it->second].x);
-							float z2 = abs(boxPoint4Cal[3].z) - abs(boxVertexPos[it->second].z);
-
-							// distancesのitretorは[4]つまり5番目に近い頂点を指している状態。ただし、角に衝突した時は5番目に近いとは限らず4番目に近い頂点の可能性がある。
-							// そこで、[5]を指すことで3番目に近い線を構成する片方の頂点を確実に選定することが可能。この頂点に基づき4つ目の頂点を計算する。
-							if (abs(x1) < epsilon && abs(z1) < epsilon)
-							{
-								++it;
-							}
-							else if(abs(x2) < epsilon && abs(z2) < epsilon)
-							{
-								++it;
-							}
-						}					
-						
 					}
+
 					// 2点目もしくは3点目から4点目を決定する
 					fourthPoint = CalculateForthPoint(boxPoint4NextPlaneCal, boxVertexPos);
 					boxPoint4NextPlaneCal.push_back(fourthPoint);
@@ -1044,24 +1039,45 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					printf("dot2 : %f\n", dot2.m128_f32[0]);
 					printf("\n");
 
-					//if (dot1.m128_f32[0] < 0.5f && dot2.m128_f32[0] < 0.5f/* && XMVector3Length(centerToCenter).m128_f32[0] < 1.5f*/)
-					//{
-					// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-					box1->Center.x += moveMatrix.r[3].m128_f32[0];
-					box1->Center.y += moveMatrix.r[3].m128_f32[1];
-					box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+					// 角に接触していない場合
+					if (dot1.m128_f32[0] < 0.5f || dot2.m128_f32[0] < 0.5f)
+					{
+						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
+						box1->Center.x += moveMatrix.r[3].m128_f32[0];
+						box1->Center.y += moveMatrix.r[3].m128_f32[1];
+						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
 
 
-					// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
-					// オブジェクトが流れるようにする
-					moveMatrix *= connanDirection;
-					moveMatrix.r[0].m128_f32[0] = 1;
-					moveMatrix.r[0].m128_f32[2] = 0;
-					moveMatrix.r[2].m128_f32[0] = 0;
-					moveMatrix.r[2].m128_f32[2] = 1;
+						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
+						// オブジェクトが流れるようにする
+						moveMatrix *= connanDirection;
+						moveMatrix.r[0].m128_f32[0] = 1;
+						moveMatrix.r[0].m128_f32[2] = 0;
+						moveMatrix.r[2].m128_f32[0] = 0;
+						moveMatrix.r[2].m128_f32[2] = 1;
 
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
-					//}
+						resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+					}
+
+					// 角に接触している場合
+					else
+					{
+						//// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
+						//box1->Center.x += moveMatrix.r[3].m128_f32[0];
+						//box1->Center.y += moveMatrix.r[3].m128_f32[1];
+						//box1->Center.z += moveMatrix.r[3].m128_f32[2];
+
+						//moveMatrix.r[3].m128_f32[2] *= -1;
+						//// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
+						//// オブジェクトが流れるようにする
+						//moveMatrix *= connanDirection;
+						//moveMatrix.r[0].m128_f32[0] = 1;
+						//moveMatrix.r[0].m128_f32[2] = 0;
+						//moveMatrix.r[2].m128_f32[0] = 0;
+						//moveMatrix.r[2].m128_f32[2] = 1;
+
+						//resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+					}
 					//★ここまで
 				}
 			}			
