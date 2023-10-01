@@ -1037,10 +1037,11 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 					printf("dot1 : %f\n", dot1.m128_f32[0]);
 					printf("dot2 : %f\n", dot2.m128_f32[0]);
+					//printf("%f, %f, %f\n", slideVector.m128_f32[0], slideVector.m128_f32[1], slideVector.m128_f32[2]);
 					printf("\n");
 
 					// 角に接触していない場合
-					if (dot1.m128_f32[0] < 0.5f || dot2.m128_f32[0] < 0.5f)
+					if (/*dot1.m128_f32[0] < 0.5f || */dot2.m128_f32[0] < 0.5f)
 					{
 						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 						box1->Center.x += moveMatrix.r[3].m128_f32[0];
@@ -1060,23 +1061,87 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					}
 
 					// 角に接触している場合
-					else
+					else if(dot2.m128_f32[0] >= 0.5f)
 					{
-						//// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-						//box1->Center.x += moveMatrix.r[3].m128_f32[0];
-						//box1->Center.y += moveMatrix.r[3].m128_f32[1];
-						//box1->Center.z += moveMatrix.r[3].m128_f32[2];
+						printf("dir x:%f\n", characterZDir.m128_f32[0]);
+						printf("dir y:%f\n", characterZDir.m128_f32[1]);
+						printf("dir z:%f\n", characterZDir.m128_f32[2]);
 
-						//moveMatrix.r[3].m128_f32[2] *= -1;
-						//// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
-						//// オブジェクトが流れるようにする
-						//moveMatrix *= connanDirection;
-						//moveMatrix.r[0].m128_f32[0] = 1;
-						//moveMatrix.r[0].m128_f32[2] = 0;
-						//moveMatrix.r[2].m128_f32[0] = 0;
-						//moveMatrix.r[2].m128_f32[2] = 1;
+						printf("centerToCenter x:%f\n", centerToCenter.m128_f32[0]);
+						printf("centerToCenter y:%f\n", centerToCenter.m128_f32[1]);
+						printf("centerToCenter z:%f\n", centerToCenter.m128_f32[2]);
+						printf("normal x:%f\n", normal.m128_f32[0]);
+						printf("normal y:%f\n", normal.m128_f32[1]);
+						printf("normal z:%f\n", normal.m128_f32[2]);
+						printf("slidevec x:%f\n", slideVector.m128_f32[0]);
+						printf("slidevec y:%f\n", slideVector.m128_f32[1]);
+						printf("slidevec z:%f\n", slideVector.m128_f32[2]);
+						centerToCenter *= 0.03;
 
-						//resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+						//if (centerToCenter.m128_f32[0] < 0)
+						//{
+						//	centerToCenter.m128_f32[2] *= -1;
+						//}
+
+						//if (characterZDir.m128_f32[0] > 0 && centerToCenter.m128_f32[0] < 0)
+						//{
+						//	centerToCenter.m128_f32[0] *= -1;
+						//}
+						//else if (characterZDir.m128_f32[0] < 0 && centerToCenter.m128_f32[0] > 0)
+						//{
+						//	centerToCenter.m128_f32[0] *= -1;
+						//}
+						//if (characterZDir.m128_f32[2] > 0 && centerToCenter.m128_f32[2] < 0)
+						//{
+						//	centerToCenter.m128_f32[2] *= -1;
+						//}
+						//else if (characterZDir.m128_f32[2] < 0 && centerToCenter.m128_f32[2] > 0)
+						//{
+						//	centerToCenter.m128_f32[2] *= -1;
+						//}
+
+						// 以下は角のスライド偏り(時計回り)を中和するが、現状の片側対角しか角避け出来ない状態においては効果的とはいえない
+						int slideVectorXSign, slideVectorZSign = 0;
+						if (slideVector.m128_f32[0] > 0)
+						{
+							slideVectorXSign = 1;
+						}
+						else
+						{
+							slideVectorXSign = -1;
+						}
+						if (slideVector.m128_f32[2] > 0)
+						{
+							slideVectorZSign = 1;
+						}
+						else
+						{
+							slideVectorZSign = -1;
+						}
+						centerToCenter.m128_f32[0] = abs(centerToCenter.m128_f32[0]) * slideVectorXSign;
+						centerToCenter.m128_f32[2] = abs(centerToCenter.m128_f32[2]) * slideVectorZSign;
+
+						moveMatrix.r[3].m128_f32[0] += centerToCenter.m128_f32[0];
+						//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
+						moveMatrix.r[3].m128_f32[2] += centerToCenter.m128_f32[2];
+						printf("moveMatrix x:%f\n", moveMatrix.r[3].m128_f32[0]);
+						printf("moveMatrix y:%f\n", moveMatrix.r[3].m128_f32[1]);
+						printf("moveMatrix z:%f\n", moveMatrix.r[3].m128_f32[2]);
+						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
+						box1->Center.x += moveMatrix.r[3].m128_f32[0];
+						box1->Center.y += moveMatrix.r[3].m128_f32[1];
+						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+
+
+						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
+						// オブジェクトが流れるようにする
+						moveMatrix *= connanDirection;
+						moveMatrix.r[0].m128_f32[0] = 1;
+						moveMatrix.r[0].m128_f32[2] = 0;
+						moveMatrix.r[2].m128_f32[0] = 0;
+						moveMatrix.r[2].m128_f32[2] = 1;
+
+						resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
 					}
 					//★ここまで
 				}
