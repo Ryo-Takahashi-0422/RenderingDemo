@@ -165,6 +165,12 @@ HRESULT ResourceManager::Init()
 	{
 		isAnimationModel = true;
 	}
+
+	// fbxモデルのxyzローカル座標回転値を取得
+	auto localRotation = _fbxInfoManager->GetLocalRotation();
+	localRotationFloat.x = (float)localRotation.mData[0];
+	localRotationFloat.y = (float)localRotation.mData[1];
+	localRotationFloat.z = (float)localRotation.mData[2];
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -239,7 +245,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		
 	auto worldMat = XMMatrixIdentity();
 	auto angle = XMMatrixRotationY(M_PI);
-	worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
+	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
 	//XMFLOAT3 eye(0, 1.5, 2);

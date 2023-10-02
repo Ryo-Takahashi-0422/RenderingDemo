@@ -45,6 +45,8 @@ int FBXInfoManager::Init(std::string _modelPath)
     // 全Mesh分割
     converter.SplitMeshesPerMaterial(scene, true);
 
+
+
     // Scene解析
     ReadFBXFile();
 
@@ -257,6 +259,7 @@ void FBXInfoManager::ReadFBXFile()
         {
             continue;
         }
+        localRotation = node->LclRotation.Get();
 
         // マテリアルの数をチェック
         int materialNum = node->GetMaterialCount();
@@ -391,7 +394,7 @@ void FBXInfoManager::ReadFBXFile()
             FbxTime::EMode timeMode = globalSettings.GetTimeMode();
             FbxTime period;
             period.SetTime(0, 0, 0, 1, 0, timeMode);
-                                
+
             for (int skinNum = 0; skinNum < skinCount; ++skinNum) {
                 // skinNum番目のスキンを取得
                 FbxStatus* eStatus;

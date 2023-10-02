@@ -194,6 +194,7 @@ private:
 	std::vector<std::pair<std::string, std::string>> materialAndTexturePath;
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> animationNameAndBoneNameWithTranslationMatrix;
 	bool isAnimationModel = false;
+	XMFLOAT3 localRotationFloat; // FBXManager‚æ‚èæ“¾‚µ‚½fbxƒ‚ƒfƒ‹‚Ìxyzƒ[ƒJƒ‹‰ñ“]
 
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
@@ -226,5 +227,6 @@ public:
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
 
 	bool GetIsAnimationModel() { return isAnimationModel; };
+	XMFLOAT3 GetLocalRotationFloat() { return localRotationFloat; };
 };
 

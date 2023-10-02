@@ -12,7 +12,7 @@ private:
 	std::vector<ResourceManager*> resourceManager;
 	void Init();
 
-	BoundingBox box1;
+	/*BoundingBox*/BoundingOrientedBox box1;
 	BoundingBox box2;
 
 	BoundingSphere bSphere;
@@ -39,8 +39,8 @@ private:
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
-	BoundingBox GetBoundingBox1() { return box1; };
-	BoundingBox* GetBoundingBox1Pointer() { return &box1; };
+	BoundingOrientedBox GetBoundingBox1() { return box1; };
+	BoundingOrientedBox* GetBoundingBox1Pointer() { return &box1; };
 
 	BoundingBox GetBoundingBox2() { return box2; };
 	BoundingBox* GetBoundingBox2Pointer() { return &box2; };
