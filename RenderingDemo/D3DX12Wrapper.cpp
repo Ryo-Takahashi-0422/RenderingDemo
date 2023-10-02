@@ -849,22 +849,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		{
 			auto box1 = collisionManager->GetBoundingBox1Pointer();
 			auto sCenter = collisionManager->GetBoundingSphere().Center;
-			//printf("connanDir x:%f %f %f\n", connanDirection.r[0].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[2]); // X方向は[2][0]で、Z方向は[0][0]と[2][2]そのまま判断可能
-			//printf("connanDir y:%f %f %f\n", connanDirection.r[1].m128_f32[0], connanDirection.r[1].m128_f32[1], connanDirection.r[1].m128_f32[2]);
-			//printf("connanDir z:%f %f %f\n", connanDirection.r[2].m128_f32[0], connanDirection.r[2].m128_f32[1], connanDirection.r[2].m128_f32[2]);
-			//printf("chara x:%f\n", collisionManager->GetBoundingSphere().Center.x);
-			//printf("chara y:%f\n", collisionManager->GetBoundingSphere().Center.y);
-			//printf("chara z:%f\n", collisionManager->GetBoundingSphere().Center.z);
-			//printf("sphere x:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0]);
-			//printf("sphere y:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1]);
-			//printf("sphere z:%f\n", resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2]);
-			//printf("box x:%f\n", box1->Center.x);
-			//printf("box z:%f\n", box1->Center.y);
-			//printf("box z:%f\n", box1->Center.z);
-			//printf("\n");
-			//printf("\n");
-			//printf("\n");
-
 			// キャラクター中心は移動と共にワールド座標が変化していく。XYZ座標絶対値にOBBのExtentsを追加した値に対して、オブジェクトコライダーのXYZ座標総数を算出する。
 			// これらを比較して前者の方が値が大きい場合のみ衝突判定を行う。複数オブジェクトが存在する際の総当たり判定を回避する一次対策。空間分割法を目標とする。
 			auto boxCenter = XMLoadFloat3(&box1->Center);
@@ -882,7 +866,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			}
 
 			// Collision process
-			else/* if(collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)*/
+			else
 			{
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
@@ -970,6 +954,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto dotslideVectorAndCharacterDir = XMVector3Dot(slideVector, characterZDir).m128_f32[0];
 					auto dotReverseSlideVectorAndCharacterDir = XMVector3Dot(reverseSlideVector, characterZDir).m128_f32[0];
 					XMVECTOR determinedSlideVector; // 決定したスライド方向(キャラクターコライダーが角にぶつかっているか判定するのにも使う)
+					float adjustSpeed = 0.02f;
 
 					// キャラクターが衝突面に対して垂直ではない場合、キャラクターを衝突面に対してスライドさせる
 					if (dotboxNormalAndCharacterDir != -1.0f)
@@ -979,14 +964,14 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						if (dotslideVectorAndCharacterDir < dotReverseSlideVectorAndCharacterDir)
 						{
 							determinedSlideVector = slideVector;
-							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * 0.01;
-							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * 0.01;
+							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
+							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
 						}
 						else
 						{
 							determinedSlideVector = reverseSlideVector;
-							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * 0.01;
-							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * 0.01;
+							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
+							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
 						}
 					}
 
@@ -1035,11 +1020,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto dot1 = XMVector3Dot(centerToCenter, normal);
 					auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane);
 
-					printf("dot1 : %f\n", dot1.m128_f32[0]);
-					printf("dot2 : %f\n", dot2.m128_f32[0]);
-					//printf("%f, %f, %f\n", slideVector.m128_f32[0], slideVector.m128_f32[1], slideVector.m128_f32[2]);
-					printf("\n");
-
 					// 角に接触していない場合
 					if (/*dot1.m128_f32[0] < 0.5f || */dot2.m128_f32[0] < 0.5f)
 					{
@@ -1048,9 +1028,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						box1->Center.y += moveMatrix.r[3].m128_f32[1];
 						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
 
-
-						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
-						// オブジェクトが流れるようにする
+						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
+						// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
 						moveMatrix *= connanDirection;
 						moveMatrix.r[0].m128_f32[0] = 1;
 						moveMatrix.r[0].m128_f32[2] = 0;
@@ -1063,75 +1042,33 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					// 角に接触している場合
 					else if(dot2.m128_f32[0] >= 0.5f)
 					{
-						printf("dir x:%f\n", characterZDir.m128_f32[0]);
-						printf("dir y:%f\n", characterZDir.m128_f32[1]);
-						printf("dir z:%f\n", characterZDir.m128_f32[2]);
-
-						printf("centerToCenter x:%f\n", centerToCenter.m128_f32[0]);
-						printf("centerToCenter y:%f\n", centerToCenter.m128_f32[1]);
-						printf("centerToCenter z:%f\n", centerToCenter.m128_f32[2]);
 						printf("normal x:%f\n", normal.m128_f32[0]);
 						printf("normal y:%f\n", normal.m128_f32[1]);
 						printf("normal z:%f\n", normal.m128_f32[2]);
-						printf("slidevec x:%f\n", slideVector.m128_f32[0]);
-						printf("slidevec y:%f\n", slideVector.m128_f32[1]);
-						printf("slidevec z:%f\n", slideVector.m128_f32[2]);
-						centerToCenter *= 0.03;
+						printf("nextnormal x:%f\n", normalOfNextPlane.m128_f32[0]);
+						printf("nextnormal y:%f\n", normalOfNextPlane.m128_f32[1]);
+						printf("nextnormal z:%f\n", normalOfNextPlane.m128_f32[2]);
+					
+						float normalWeight = 1.0f - dot2.m128_f32[0];
+						float nextNormalWeight = dot2.m128_f32[0];
+						normal *= normalWeight;
+						normalOfNextPlane *= nextNormalWeight;
+						XMVECTOR slideCol;
+						slideCol.m128_f32[0] = normal.m128_f32[0] + normalOfNextPlane.m128_f32[0];
+						slideCol.m128_f32[1] = normal.m128_f32[1] + normalOfNextPlane.m128_f32[1];
+						slideCol.m128_f32[2] = normal.m128_f32[2] + normalOfNextPlane.m128_f32[2];
+						slideCol.m128_f32[3] = 1.0f;
+						slideCol = XMVector3Normalize(slideCol);
+						slideCol *= adjustSpeed;
 
-						//if (centerToCenter.m128_f32[0] < 0)
-						//{
-						//	centerToCenter.m128_f32[2] *= -1;
-						//}
-
-						//if (characterZDir.m128_f32[0] > 0 && centerToCenter.m128_f32[0] < 0)
-						//{
-						//	centerToCenter.m128_f32[0] *= -1;
-						//}
-						//else if (characterZDir.m128_f32[0] < 0 && centerToCenter.m128_f32[0] > 0)
-						//{
-						//	centerToCenter.m128_f32[0] *= -1;
-						//}
-						//if (characterZDir.m128_f32[2] > 0 && centerToCenter.m128_f32[2] < 0)
-						//{
-						//	centerToCenter.m128_f32[2] *= -1;
-						//}
-						//else if (characterZDir.m128_f32[2] < 0 && centerToCenter.m128_f32[2] > 0)
-						//{
-						//	centerToCenter.m128_f32[2] *= -1;
-						//}
-
-						// 以下は角のスライド偏り(時計回り)を中和するが、現状の片側対角しか角避け出来ない状態においては効果的とはいえない
-						int slideVectorXSign, slideVectorZSign = 0;
-						if (slideVector.m128_f32[0] > 0)
-						{
-							slideVectorXSign = 1;
-						}
-						else
-						{
-							slideVectorXSign = -1;
-						}
-						if (slideVector.m128_f32[2] > 0)
-						{
-							slideVectorZSign = 1;
-						}
-						else
-						{
-							slideVectorZSign = -1;
-						}
-						centerToCenter.m128_f32[0] = abs(centerToCenter.m128_f32[0]) * slideVectorXSign;
-						centerToCenter.m128_f32[2] = abs(centerToCenter.m128_f32[2]) * slideVectorZSign;
-
-						moveMatrix.r[3].m128_f32[0] += centerToCenter.m128_f32[0];
+						moveMatrix.r[3].m128_f32[0] = /*centerToCenter*/slideCol.m128_f32[0];
+						moveMatrix.r[3].m128_f32[0] *= -1;
 						//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
-						moveMatrix.r[3].m128_f32[2] += centerToCenter.m128_f32[2];
-						printf("moveMatrix x:%f\n", moveMatrix.r[3].m128_f32[0]);
-						printf("moveMatrix y:%f\n", moveMatrix.r[3].m128_f32[1]);
-						printf("moveMatrix z:%f\n", moveMatrix.r[3].m128_f32[2]);
+						moveMatrix.r[3].m128_f32[2] = /*centerToCenter*/slideCol.m128_f32[2];
 						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 						box1->Center.x += moveMatrix.r[3].m128_f32[0];
 						box1->Center.y += moveMatrix.r[3].m128_f32[1];
 						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
-
 
 						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
 						// オブジェクトが流れるようにする
@@ -1143,7 +1080,6 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 						resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
 					}
-					//★ここまで
 				}
 			}			
 		}
