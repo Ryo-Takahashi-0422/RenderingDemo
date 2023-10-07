@@ -1018,10 +1018,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), boxCenter); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
 					centerToCenter = XMVector3Normalize(centerToCenter);
 					auto dot1 = XMVector3Dot(centerToCenter, normal);
-					auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane);
+					auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
 
 					// 角に接触していない場合
-					if (/*dot1.m128_f32[0] < 0.5f || */dot2.m128_f32[0] < 0.5f)
+					if (dot2.m128_f32[0] < 0.5f)
 					{
 						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 						box1->Center.x += moveMatrix.r[3].m128_f32[0];
@@ -1042,13 +1042,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 					// 角に接触している場合
 					else if(dot2.m128_f32[0] >= 0.5f)
 					{
-						printf("normal x:%f\n", normal.m128_f32[0]);
-						printf("normal y:%f\n", normal.m128_f32[1]);
-						printf("normal z:%f\n", normal.m128_f32[2]);
-						printf("nextnormal x:%f\n", normalOfNextPlane.m128_f32[0]);
-						printf("nextnormal y:%f\n", normalOfNextPlane.m128_f32[1]);
-						printf("nextnormal z:%f\n", normalOfNextPlane.m128_f32[2]);
-					
+						// 衝突面の法線方向と隣面の法線方向の合成ベクトルを利用して、角から弾かれるようにしてコライダー同士の交差を防ぐ
+						// ガタついた動きになるのがネック
 						float normalWeight = 1.0f - dot2.m128_f32[0];
 						float nextNormalWeight = dot2.m128_f32[0];
 						normal *= normalWeight;
@@ -1061,17 +1056,17 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 						slideCol = XMVector3Normalize(slideCol);
 						slideCol *= adjustSpeed;
 
-						moveMatrix.r[3].m128_f32[0] = /*centerToCenter*/slideCol.m128_f32[0];
+						moveMatrix.r[3].m128_f32[0] = slideCol.m128_f32[0];
 						moveMatrix.r[3].m128_f32[0] *= -1;
 						//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
-						moveMatrix.r[3].m128_f32[2] = /*centerToCenter*/slideCol.m128_f32[2];
+						moveMatrix.r[3].m128_f32[2] = slideCol.m128_f32[2];
 						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 						box1->Center.x += moveMatrix.r[3].m128_f32[0];
 						box1->Center.y += moveMatrix.r[3].m128_f32[1];
 						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
 
-						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きに
-						// オブジェクトが流れるようにする
+						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
+						// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
 						moveMatrix *= connanDirection;
 						moveMatrix.r[0].m128_f32[0] = 1;
 						moveMatrix.r[0].m128_f32[2] = 0;

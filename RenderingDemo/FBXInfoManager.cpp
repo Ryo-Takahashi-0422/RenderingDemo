@@ -12,12 +12,7 @@ int FBXInfoManager::Init(std::string _modelPath)
     FbxManager* manager = nullptr;
     //FbxScene* scene = nullptr;
 
-    modelPath = _modelPath;// "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_WalkingAndPunching_Tri_textured.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan_Walking_Tri_textured.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Walking.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleTank.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx";
-    //modelPath = "C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test.fbx";
+    modelPath = _modelPath;
 
     // create manager
     manager = FbxManager::Create();
@@ -44,8 +39,6 @@ int FBXInfoManager::Init(std::string _modelPath)
     // FbxGeometryConverter converter(manager);
     // 全Mesh分割
     converter.SplitMeshesPerMaterial(scene, true);
-
-
 
     // Scene解析
     ReadFBXFile();
@@ -269,7 +262,7 @@ void FBXInfoManager::ReadFBXFile()
         }
 
         // マテリアル情報を取得
-        FbxSurfaceMaterial* material = node->GetMaterial(i);
+        FbxSurfaceMaterial* material = node->GetMaterial(i); // 統合したメッシュでは「i」
                 
         if (material != 0) 
         {
