@@ -5,6 +5,11 @@ struct BoundingBoxVertex
 	XMFLOAT3 pos;
 };
 
+//struct OBBVertices
+//{
+//	XMFLOAT3 pos[8];
+//};
+
 class CollisionManager
 {
 private:
@@ -12,8 +17,8 @@ private:
 	std::vector<ResourceManager*> resourceManager;
 	void Init();
 
-	/*BoundingBox*/BoundingOrientedBox box1;
-	BoundingBox box2;
+	BoundingOrientedBox box1;
+	std::vector<BoundingOrientedBox> boxes;
 
 	BoundingSphere bSphere;
 
@@ -23,7 +28,8 @@ private:
 	BoundingBoxVertex bbv1[8];
 	BoundingBoxVertex bbv2[8];
 
-	XMFLOAT3 output1[8];
+	//XMFLOAT3 output1[8];
+	std::vector<XMFLOAT3> output1;
 	XMFLOAT3 output2[8];
 	XMFLOAT3 output3[26];
 
@@ -39,11 +45,8 @@ private:
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
-	BoundingOrientedBox GetBoundingBox1() { return box1; };
-	BoundingOrientedBox* GetBoundingBox1Pointer() { return &box1; };
-
-	BoundingBox GetBoundingBox2() { return box2; };
-	BoundingBox* GetBoundingBox2Pointer() { return &box2; };
+	/*BoundingOrientedBox*/std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
+	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return boxes.data(); };
 
 	BoundingSphere GetBoundingSphere() { return bSphere; };
 	BoundingSphere* GetBoundingSpherePointer() { return &bSphere; };

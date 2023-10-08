@@ -821,7 +821,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -833,7 +833,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -873,7 +873,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 
-				if (collisionManager->GetBoundingBox1().Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 				}
@@ -882,7 +882,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 					XMFLOAT3 boxVertexPos[8];
-					collisionManager->GetBoundingBox1().GetCorners(boxVertexPos);
+					collisionManager->GetBoundingBox1()[0].GetCorners(boxVertexPos);
 					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
 					
 					// ★面滑らせ実装
@@ -2165,7 +2165,7 @@ std::pair<XMVECTOR, XMVECTOR> D3DX12Wrapper::CalcurateNormalAndSlideVector(std::
 		normZPos = (points[0].z + points[3].z) / 2.0f;
 	}
 	XMVECTOR normPos = { normXPos, normYPos, normZPos, 1 };
-	auto boxCenter = collisionManager->GetBoundingBox1().Center;
+	auto boxCenter = collisionManager->GetBoundingBox1()[0].Center;
 	XMVECTOR boxCenterVec = { boxCenter.x, boxCenter.y, boxCenter.z, 1 };
 	auto normal = XMVectorSubtract(normPos, boxCenterVec);// XMVector3Cross(lines[0], lines[1]);
 	normal = XMVector4Normalize(normal); // 衝突面法線の算出完了

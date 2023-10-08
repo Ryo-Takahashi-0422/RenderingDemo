@@ -11,58 +11,71 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 // TODO : 1. シェーダーを分けて、ボーンマトリックスとの乗算をなくす&エッジのみ着色したボックスとして表示する、2. 8頂点の位置を正す 3. 複数のメッシュ(障害物)とキャラクターメッシュを判別して処理出来るようにする
 void CollisionManager::Init()
 {
-	auto vetmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
-	auto vetmap2 = resourceManager[1]->GetIndiceAndVertexInfo();
-	for (int j = 0; j < resourceManager[0]->GetVertexTotalNum(); ++j)
+	auto vertmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
+	boxes.resize(vertmap1.size());
+	auto it = vertmap1.begin();
+	std::map<std::string, std::vector<XMFLOAT3>> vertMaps;
+	for (int i = 0; i < vertmap1.size(); ++i)
 	{
-		// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。少しずれている？
-		vetmap1.begin()->second.vertices[j].pos.z *= -1;
-		input1.push_back(vetmap1.begin()->second.vertices[j].pos);
+		for (int j = 0; j < it->second.vertices.size(); ++j)
+		{
+			// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。少しずれている？
+			it->second.vertices[j].pos.z *= -1;
+			vertMaps[it->first].push_back(it->second.vertices[j].pos);
+		}
+		it++;
 	}
 
-	for (int j = 0; j < 4454; ++j)
+	// オブジェクトの頂点情報からそれぞれのOBBを生成する
+	auto itVertMap = vertMaps.begin();
+	for (int i = 0; i < vertmap1.size(); ++i)
 	{
-		input2.push_back(vetmap2.begin()->second.vertices[j].pos);
+		BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
 	}
 
-	BoundingOrientedBox::CreateFromPoints(box1, input1.size(), input1.data(), (size_t)sizeof(XMFLOAT3));
-	BoundingBox::CreateFromPoints(box2, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
-	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
-	bSphere.Radius -= 0.2f; // 球体コライダーの半径を微調整。数値適当
+	// fbxモデルのxyzローカル回転・平行移動行列群を取得
+	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
+	output1.resize(8 * vertMaps.size());
 
-	// fbxモデルのxyzローカル回転値から回転行列を作成して、メッシュとコライダーの描画に利用するworld変換行列に乗算しておく。これで描画座標にローカル空間での回転情報が反映される。
-	auto localRotation = resourceManager[0]->GetLocalRotationFloat();
-	localRotation.x = XMConvertToRadians(localRotation.x);
-	localRotation.y = XMConvertToRadians(localRotation.y);
-	localRotation.z = XMConvertToRadians(localRotation.z);
-	XMMATRIX localRotaionXMatrix = XMMatrixRotationX(localRotation.x);
-	XMMATRIX localRotaionYMatrix = XMMatrixRotationY(localRotation.y); // blenderと符号逆
-	XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(localRotation.z);
-	XMMATRIX localRotaionMatrix = /*localRotaionXMatrix * */localRotaionYMatrix/* * localRotaionZMatrix*/;
-	XMVECTOR quaternion = XMQuaternionRotationMatrix(localRotaionMatrix);
+	// 各OBBをクォータニオンにより回転させ、Extentsを調整し、その頂点群を描画目的で格納していく
+	for (int i = 0; i < vertMaps.size(); ++i)
+	{
+		// fbxモデルのxyzローカル回転・平行移動行列からクォータニオン生成
+		XMVECTOR quaternion = XMQuaternionRotationMatrix(localTransitionAndRotation[i]);
 
-	// OBBの頂点を回転させる。クォータニオンなのでOBB中心点に基づき姿勢が変化する。ワールド空間原点を中心とした回転ではないことに注意。
-	XMFLOAT4 orientation;
-	orientation.x = quaternion.m128_f32[0];
-	orientation.y = -quaternion.m128_f32[1];
-	orientation.z = quaternion.m128_f32[2];
-	orientation.w = quaternion.m128_f32[3];
-	box1.Orientation = orientation;
-	// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
-	auto yLen = box1.Extents.y;
-	box1.Extents.x = yLen;
-	box1.Extents.z = yLen;
+		// OBBの頂点を回転させる。クォータニオンなのでOBB中心点に基づき姿勢が変化する。ワールド空間原点を中心とした回転ではないことに注意。
+		XMFLOAT4 orientation;
+		orientation.x = quaternion.m128_f32[0];
+		orientation.y = -quaternion.m128_f32[1];
+		orientation.z = quaternion.m128_f32[2];
+		orientation.w = quaternion.m128_f32[3];
+		boxes[i].Orientation = orientation;
+		// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
+		auto yLen = boxes[i].Extents.y;
+		boxes[i].Extents.x = yLen;
+		boxes[i].Extents.z = yLen;
 
-	box1.GetCorners(output1);
-	box2.GetCorners(output2);
+		boxes[i].GetCorners(output1.data());
+	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
 	for (int i = 0; i < 8; ++i)
 	{
 		output1[i].z *= -1;
 	}
 
+
+	// キャラクター用のスフィアコライダー生成
+	auto vetmap2 = resourceManager[1]->GetIndiceAndVertexInfo();
+	for (int j = 0; j < 4454; ++j)
+	{
+		input2.push_back(vetmap2.begin()->second.vertices[j].pos);
+	}
+	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
+	bSphere.Radius -= 0.2f; // 球体コライダーの半径を微調整。数値適当
+
 	// 操作キャラクターの球体コライダー作成
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);
+
 
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output1));
@@ -78,6 +91,8 @@ void CollisionManager::Init()
 		IID_PPV_ARGS(boxBuff1.ReleaseAndGetAddressOf())
 	);
 
+	XMFLOAT3 output[8];
+	printf("%d\n", sizeof(output1));
 	// ビュー作成
 	boxVBV1.BufferLocation = boxBuff1->GetGPUVirtualAddress();
 	boxVBV1.SizeInBytes = sizeof(output1);
