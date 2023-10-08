@@ -17,8 +17,50 @@ HRESULT ResourceManager::Init()
 	HRESULT result = E_FAIL;
 
 	// vertex Resource		
-	vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
+	vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();	
+
+	// 各メッシュの回転・平行移動行列を作る
+	auto localPosAndRotOfMesh = _fbxInfoManager->GetLocalPosAndRotOfMesh();
+	localMatrix.resize(localPosAndRotOfMesh.size());
+	auto itlPosRot = localPosAndRotOfMesh.begin();
+	for (int i = 0; i < localMatrix.size(); ++i)
+	{
+		// 回転成分の抽出・反映 ※Y軸(UP)回転のみ対応
+		auto localRotation = itlPosRot->second.second;
+		localRotation.x = XMConvertToRadians(localRotation.x);
+		localRotation.y = XMConvertToRadians(localRotation.y);
+		localRotation.z = XMConvertToRadians(localRotation.z);
+		//XMMATRIX localRotaionXMatrix = XMMatrixRotationX(localRotation.x);
+		XMMATRIX localRotaionYMatrix = XMMatrixRotationY(localRotation.y); // blenderと符号逆
+		//XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(localRotation.z);
+		localMatrix[i] = localRotaionYMatrix/*XMMatrixIdentity()*/;
+
+		// 平行移動成分の抽出・反映
+		localMatrix[i].r[3].m128_f32[0] = itlPosRot->second.first.x;
+		localMatrix[i].r[3].m128_f32[1] = itlPosRot->second.first.y;
+		localMatrix[i].r[3].m128_f32[2] = itlPosRot->second.first.z;
+
+		++itlPosRot;
+	}
+
 	auto itFirst = vertMap.begin();
+	// 各メッシュの頂点座標にローカル回転平行移動行列を乗算してワールド空間へ配置するための座標に変換
+	for (int i = 0; i < vertMap.size(); ++i)
+	{
+		for (int j = 0; j < itFirst->second.vertices.size(); ++j)
+		{
+			XMFLOAT3 vertCopy = itFirst->second.vertices[j].pos;
+			XMVECTOR vertexPos = XMLoadFloat3(&vertCopy);
+			vertexPos = XMVector3Transform(vertexPos, localMatrix[i]);
+			vertCopy.x = vertexPos.m128_f32[0];
+			vertCopy.y = vertexPos.m128_f32[1];
+			vertCopy.z = vertexPos.m128_f32[2];
+			itFirst->second.vertices[j].pos = vertCopy;
+		}
+		++itFirst;
+	}
+
+	itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
 	{		
@@ -171,6 +213,7 @@ HRESULT ResourceManager::Init()
 	localRotationFloat.x = (float)localRotation.mData[0];
 	localRotationFloat.y = (float)localRotation.mData[1];
 	localRotationFloat.z = (float)localRotation.mData[2];
+	
 }
 
 HRESULT ResourceManager::CreateRTV()

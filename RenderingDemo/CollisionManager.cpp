@@ -30,14 +30,6 @@ void CollisionManager::Init()
 	BoundingSphere::CreateFromPoints(bSphere, 4454, input2.data(), (size_t)sizeof(XMFLOAT3));
 	bSphere.Radius -= 0.2f; // 球体コライダーの半径を微調整。数値適当
 
-	box1.GetCorners(output1);
-	box2.GetCorners(output2);
-	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
-	for (int i = 0; i < 8; ++i)
-	{
-		output1[i].z *= -1; 
-	}
-
 	// fbxモデルのxyzローカル回転値から回転行列を作成して、メッシュとコライダーの描画に利用するworld変換行列に乗算しておく。これで描画座標にローカル空間での回転情報が反映される。
 	auto localRotation = resourceManager[0]->GetLocalRotationFloat();
 	localRotation.x = XMConvertToRadians(localRotation.x);
@@ -48,20 +40,26 @@ void CollisionManager::Init()
 	XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(localRotation.z);
 	XMMATRIX localRotaionMatrix = /*localRotaionXMatrix * */localRotaionYMatrix/* * localRotaionZMatrix*/;
 	XMVECTOR quaternion = XMQuaternionRotationMatrix(localRotaionMatrix);
-	resourceManager[0]->GetMappedMatrix()->world *= localRotaionMatrix; // モデルとコライダー描画をworld原点中心に回転させる。コライダーそのものは後に回転させる。
 
-	// コライダーの生成が完了し、コライダーの描画world変換行列にfbxローカル回転値を乗算してメッシュとコライダーの描画位置に反映させた状態。
-	// このままではコライダーの位置だけがfbxローカル回転値を反映していないので反映させる。コライダーのz座標はfbxモデルのそれに-1を乗算しており
-	// y軸回りの回転が逆転しているため、fbxローカル回転値に-1を乗算して同次座標系行列を作成して回転成分のXMVECTORを抽出して、コライダーの座標を
-	// ワールド空間原点に対して回転させて、メッシュとコライダー描画の位置に合わせている。(なおXMVecto3rRotateでメッシュ頂点そのものを回転させてもOBBではなくOBBだがAABBになる)
-	// ※この処理を無くしたいが、Blenderからのfbx export設定をいくら変えてもメッシュとコライダー座標のx軸反転問題が解決しない。
-	XMVECTOR scale; // ダミー
-	XMVECTOR rotation; // 回転成分のみ有効
-	XMVECTOR transition; //ダミー
-	localRotaionYMatrix = XMMatrixRotationY(-localRotation.y); // 符号逆転に注意
-	localRotaionMatrix = /*localRotaionXMatrix * */localRotaionYMatrix/* * localRotaionZMatrix*/;
-	XMMatrixDecompose(&scale, &rotation, &transition, localRotaionMatrix);
-	box1.Transform(box1, 1.0f, rotation, transition);
+	// OBBの頂点を回転させる。クォータニオンなのでOBB中心点に基づき姿勢が変化する。ワールド空間原点を中心とした回転ではないことに注意。
+	XMFLOAT4 orientation;
+	orientation.x = quaternion.m128_f32[0];
+	orientation.y = -quaternion.m128_f32[1];
+	orientation.z = quaternion.m128_f32[2];
+	orientation.w = quaternion.m128_f32[3];
+	box1.Orientation = orientation;
+	// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
+	auto yLen = box1.Extents.y;
+	box1.Extents.x = yLen;
+	box1.Extents.z = yLen;
+
+	box1.GetCorners(output1);
+	box2.GetCorners(output2);
+	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
+	for (int i = 0; i < 8; ++i)
+	{
+		output1[i].z *= -1;
+	}
 
 	// 操作キャラクターの球体コライダー作成
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);

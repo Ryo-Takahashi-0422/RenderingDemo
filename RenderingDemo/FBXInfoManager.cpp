@@ -252,7 +252,21 @@ void FBXInfoManager::ReadFBXFile()
         {
             continue;
         }
+
+        // OBBのためローカル座標・角度取得
+        localTransition = node->LclTranslation.Get();
+        XMFLOAT3 lPos;
+        lPos.x = (float)localTransition.mData[0];
+        lPos.y = (float)localTransition.mData[1];
+        lPos.z = (float)localTransition.mData[2];
+        localPosAndRotOfMesh[name].first = lPos;
         localRotation = node->LclRotation.Get();
+        XMFLOAT3 lRot;
+        lRot.x = (float)localRotation.mData[0];
+        lRot.y = (float)localRotation.mData[1];
+        lRot.z = (float)localRotation.mData[2];
+        localPosAndRotOfMesh[name].second = lRot;
+
 
         // マテリアルの数をチェック
         int materialNum = node->GetMaterialCount();
@@ -262,7 +276,7 @@ void FBXInfoManager::ReadFBXFile()
         }
 
         // マテリアル情報を取得
-        FbxSurfaceMaterial* material = node->GetMaterial(i); // 統合したメッシュでは「i」
+        FbxSurfaceMaterial* material = node->GetMaterial(0); // 統合したメッシュでは「i」
                 
         if (material != 0) 
         {
