@@ -128,7 +128,7 @@ void FBXInfoManager::ReadFBXFile()
             vertex.push_back(point[2]);
             vertexInfoList.push_back(vertex);
         }
-
+        
         // 頂点毎の情報を取得する
         std::vector<unsigned int> indices;
         //std::vector<unsigned int> indicesFiexed4DirectX;
@@ -176,18 +176,21 @@ void FBXInfoManager::ReadFBXFile()
         for (int i = meshVertIndexStart; i < vertexInfoList.size(); i++)
         {
             std::vector<float> vertexInfo = vertexInfoList[i];
-            vertices.push_back(FBXVertex
+            if (vertexInfo.size() > 3)
             {
+                vertices.push_back(FBXVertex
                 {
-                    vertexInfo[0], vertexInfo[1], vertexInfo[2]
-                },
-                {
-                    vertexInfo[3], vertexInfo[4], vertexInfo[5]
-                },
-                {
-                    vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
-                }
-            });
+                    {
+                        vertexInfo[0], vertexInfo[1], vertexInfo[2]
+                    },
+                    {
+                        vertexInfo[3], vertexInfo[4], vertexInfo[5]
+                    },
+                    {
+                        vertexInfo[6], 1.0f - vertexInfo[7] // Blenderから出力した場合、V値は反転させる(モデルが最初に作成されたときのソフト(例：Maya)は関係ない)
+                    }
+                });
+            }
         }
 
         //// 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
@@ -276,7 +279,7 @@ void FBXInfoManager::ReadFBXFile()
         }
 
         // マテリアル情報を取得
-        FbxSurfaceMaterial* material = node->GetMaterial(0); // 統合したメッシュでは「i」
+        FbxSurfaceMaterial* material = node->GetMaterial(0); // ★統合したメッシュでは「i」
                 
         if (material != 0) 
         {
@@ -559,16 +562,9 @@ int FBXInfoManager::CreateNewVertexIndex(const std::vector<float>& vertexInfo, c
     addtionalVertexIndexByApplication[oldIndex].push_back(reserveNewIndex);
     return newIndex;
 }
-// vertexInfoに法線、UV座標が設定済かどうか？
+// vertexInfoに法線、UV座標が設定済かどうか
 bool FBXInfoManager::IsSetNormalUV(const std::vector<float> vertexInfo, const FbxVector4& normalVec4, const FbxVector2& uvVec2)
 {
-    // 法線、UV座標が同値なら設定済とみなす
-    //return fabs(vertexInfo[3] - normalVec4[0]) < FLT_EPSILON
-    //    && fabs(vertexInfo[4] - normalVec4[1]) < FLT_EPSILON
-    //    && fabs(vertexInfo[5] - normalVec4[2]) < FLT_EPSILON
-    //    && fabs(vertexInfo[6] - uvVec2[0]) < FLT_EPSILON
-    //    && fabs(vertexInfo[7] - uvVec2[1]) < FLT_EPSILON;
-
     if (fabs(vertexInfo[3] - normalVec4[0]) > FLT_EPSILON) return false;
     if (fabs(vertexInfo[6] - uvVec2[0]) > FLT_EPSILON) return false;
     if (fabs(vertexInfo[4] - normalVec4[1]) > FLT_EPSILON) return false;

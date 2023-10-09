@@ -28,11 +28,69 @@ void CollisionManager::Init()
 
 	// オブジェクトの頂点情報からそれぞれのOBBを生成する
 	auto itVertMap = vertMaps.begin();
-	for (int i = 0; i < vertmap1.size(); ++i)
+
+	//★xyz max,min test BattleField.fbxの壁のcenterがNanになる。原因は頂点数？最小データでOBB作成したい
+	std::map<std::string, std::vector<float>> xContainer, yContainer, zContainer;
+	int containerSize = vertMaps.begin()->second.size();
+	for (int i = 0; i < vertMaps.size(); ++i)
 	{
-		BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
+		for (int j = 0; j < itVertMap->second.size(); ++j)
+		{
+			xContainer[itVertMap->first].push_back(itVertMap->second[j].x);
+			yContainer[itVertMap->first].push_back(itVertMap->second[j].y);
+			zContainer[itVertMap->first].push_back(itVertMap->second[j].z);
+		}
 		++itVertMap;
 	}
+
+	std::map<std::string, std::vector<XMFLOAT3>> boxPoints;
+	itVertMap = vertMaps.begin();
+	//std::vector<float> xMax, xMin, yMax, yMin, zMax, zMin;
+	for (int i = 0; i < vertMaps.size(); ++i)
+	{
+		auto xMax = *std::max_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
+		auto xMin = *std::min_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
+		auto yMax = *std::max_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
+		auto yMin = *std::min_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
+		auto zMax = *std::max_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
+		auto zMin = *std::min_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
+
+		XMFLOAT3 xMaxYMaxZmax = { xMax ,yMax ,zMax };
+		XMFLOAT3 xMaxYMinZmax = { xMax ,yMin ,zMax };
+		XMFLOAT3 xMaxYMaxZmin = { xMax ,yMax ,zMin };
+		XMFLOAT3 xMaxYMinZmin = { xMax ,yMin ,zMin };
+
+		XMFLOAT3 xMinYMaxZmax = { xMin ,yMax ,zMax };
+		XMFLOAT3 xMinYMinZmax = { xMin ,yMin ,zMax };
+		XMFLOAT3 xMinYMaxZmin = { xMin ,yMax ,zMin };
+		XMFLOAT3 xMinYMinZmin = { xMin ,yMin ,zMin };
+
+		boxPoints[itVertMap->first].push_back(xMaxYMaxZmax);
+		boxPoints[itVertMap->first].push_back(xMaxYMinZmax);
+		boxPoints[itVertMap->first].push_back(xMaxYMaxZmin);
+		boxPoints[itVertMap->first].push_back(xMaxYMinZmin);
+		boxPoints[itVertMap->first].push_back(xMinYMaxZmax);
+		boxPoints[itVertMap->first].push_back(xMinYMinZmax);
+		boxPoints[itVertMap->first].push_back(xMinYMaxZmin);
+		boxPoints[itVertMap->first].push_back(xMinYMinZmin);
+
+		++itVertMap;
+	}
+
+	auto itBoxPoints = boxPoints.begin();
+	for (int i = 0; i < vertmap1.size(); ++i)
+	{
+		BoundingOrientedBox::CreateFromPoints(boxes[i], itBoxPoints->second.size(), itBoxPoints->second.data(), (size_t)sizeof(XMFLOAT3));
+		++itBoxPoints;
+	}
+	//★///
+
+	//itVertMap = vertMaps.begin();
+	//for (int i = 0; i < vertmap1.size(); ++i)
+	//{
+	//	BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
+	//	++itVertMap;
+	//}
 
 	// fbxモデルのxyzローカル回転・平行移動行列群を取得
 	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
@@ -54,8 +112,14 @@ void CollisionManager::Init()
 		boxes[i].Orientation = orientation;
 		// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
 		auto yLen = boxes[i].Extents.y;
-		boxes[i].Extents.x = yLen;
-		boxes[i].Extents.z = yLen;
+		//boxes[i].Extents.x = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
+		//boxes[i].Extents.z = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
+		
+		//★Extentsを調整した結果、boxesは問題ないがBattleFieldは角めり込み発生する。無しの方向でいくか...
+		//float adjustExtents = abs(localTransitionAndRotation[i].r[0].m128_f32[0]) + abs(localTransitionAndRotation[i].r[0].m128_f32[2]);
+		//boxes[i].Extents.x /= adjustExtents;
+		//boxes[i].Extents.z /= adjustExtents;
+
 		boxes[i].GetCorners(oBBVertices[i].pos);
 	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
