@@ -58,7 +58,7 @@ public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
 	/*BoundingOrientedBox*/std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
-	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return boxes.data(); };
+	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[1]; };
 
 	BoundingSphere GetBoundingSphere() { return bSphere; };
 	BoundingSphere* GetBoundingSpherePointer() { return &bSphere; };

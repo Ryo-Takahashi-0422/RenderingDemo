@@ -184,6 +184,9 @@ private:
 	XMFLOAT3 CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8]);
 	std::pair<XMVECTOR, XMVECTOR> CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points);
 
+	//★★★コライダーdebug用
+	int debugNum = 1;
+
 public:
 	///Applicationのシングルトンインスタンスを得る
 	static D3DX12Wrapper& Instance();
