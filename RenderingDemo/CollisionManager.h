@@ -5,10 +5,21 @@ struct BoundingBoxVertex
 	XMFLOAT3 pos;
 };
 
-//struct OBBVertices
-//{
-//	XMFLOAT3 pos[8];
-//};
+struct OBBVertices
+{
+	XMFLOAT3 pos[8];
+	//typedef std::vector<int>::iterator iterator;
+	//typedef std::vector<int>::const_iterator const_iterator;
+	//iterator begin();
+	//const_iterator begin() const;
+	//iterator end();
+	//const_iterator end() const;
+	//OBBVertices::iterator begin()
+	//{
+	//	return std::begin(pos);
+	//}
+
+};
 
 class CollisionManager
 {
@@ -29,7 +40,8 @@ private:
 	BoundingBoxVertex bbv2[8];
 
 	//XMFLOAT3 output1[8];
-	std::vector<XMFLOAT3> output1;
+	//std::vector<XMFLOAT3> output1;
+	std::vector<OBBVertices> oBBVertices;
 	XMFLOAT3 output2[8];
 	XMFLOAT3 output3[26];
 

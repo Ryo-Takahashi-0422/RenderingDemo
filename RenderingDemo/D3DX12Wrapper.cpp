@@ -353,8 +353,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Sphere.fbx");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal_lpos.fbx"); 
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal_lpos.fbx"); 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal.fbx"); 
 	// 3 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
@@ -821,7 +821,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[1].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -833,7 +833,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[1].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -873,7 +873,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 
-				if (collisionManager->GetBoundingBox1()[0].Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->GetBoundingBox1()[1].Contains(collisionManager->GetBoundingSphere()) == 0)
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
 				}
@@ -882,7 +882,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				{
 					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 					XMFLOAT3 boxVertexPos[8];
-					collisionManager->GetBoundingBox1()[0].GetCorners(boxVertexPos);
+					collisionManager->GetBoundingBox1()[1].GetCorners(boxVertexPos);
 					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
 					
 					// ★面滑らせ実装

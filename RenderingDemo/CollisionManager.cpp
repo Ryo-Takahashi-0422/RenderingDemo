@@ -19,7 +19,7 @@ void CollisionManager::Init()
 	{
 		for (int j = 0; j < it->second.vertices.size(); ++j)
 		{
-			// ★ オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。少しずれている？
+			// オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。
 			it->second.vertices[j].pos.z *= -1;
 			vertMaps[it->first].push_back(it->second.vertices[j].pos);
 		}
@@ -31,11 +31,13 @@ void CollisionManager::Init()
 	for (int i = 0; i < vertmap1.size(); ++i)
 	{
 		BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
+		++itVertMap;
 	}
 
 	// fbxモデルのxyzローカル回転・平行移動行列群を取得
 	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
-	output1.resize(8 * vertMaps.size());
+	//output1.resize(8 * vertMaps.size());
+	oBBVertices.resize(vertMaps.size());
 
 	// 各OBBをクォータニオンにより回転させ、Extentsを調整し、その頂点群を描画目的で格納していく
 	for (int i = 0; i < vertMaps.size(); ++i)
@@ -54,13 +56,15 @@ void CollisionManager::Init()
 		auto yLen = boxes[i].Extents.y;
 		boxes[i].Extents.x = yLen;
 		boxes[i].Extents.z = yLen;
-
-		boxes[i].GetCorners(output1.data());
+		boxes[i].GetCorners(oBBVertices[i].pos);
 	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < vertMaps.size(); ++i)
 	{
-		output1[i].z *= -1;
+		for (int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+		{
+			oBBVertices[i].pos[j].z *= -1;
+		}
 	}
 
 
@@ -76,9 +80,8 @@ void CollisionManager::Init()
 	// 操作キャラクターの球体コライダー作成
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);
 
-
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(output1));
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(oBBVertices));
 		
 	// バッファー作成1
 	auto result = dev->CreateCommittedResource
@@ -91,16 +94,21 @@ void CollisionManager::Init()
 		IID_PPV_ARGS(boxBuff1.ReleaseAndGetAddressOf())
 	);
 
-	XMFLOAT3 output[8];
-	printf("%d\n", sizeof(output1));
 	// ビュー作成
 	boxVBV1.BufferLocation = boxBuff1->GetGPUVirtualAddress();
-	boxVBV1.SizeInBytes = sizeof(output1);
+	boxVBV1.SizeInBytes = sizeof(oBBVertices);
 	boxVBV1.StrideInBytes = sizeof(XMFLOAT3);
 
 	// マッピング
 	boxBuff1->Map(0, nullptr, (void**)&mappedBox1);
-	std::copy(std::begin(output1), std::end(output1), mappedBox1);
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		for(int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+		{
+			mappedBox1 = &oBBVertices[i].pos[j];
+			++mappedBox1;
+		}
+	}
 	//boxBuff1->Unmap(0, nullptr);
 
 	// バッファー作成2
