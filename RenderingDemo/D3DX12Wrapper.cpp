@@ -821,7 +821,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -833,7 +833,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0)
+				if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
 				{
 					connanDirectionUntilCollision = connanDirection;
 				}
@@ -849,19 +849,19 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		// W Key
 		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
-			auto box1 = collisionManager->GetBoundingBox1Pointer();
-			auto sCenter = collisionManager->GetBoundingSphere().Center;
-			// キャラクター中心は移動と共にワールド座標が変化していく。XYZ座標絶対値にOBBのExtentsを追加した値に対して、オブジェクトコライダーのXYZ座標総数を算出する。
-			// これらを比較して前者の方が値が大きい場合のみ衝突判定を行う。複数オブジェクトが存在する際の総当たり判定を回避する一次対策。空間分割法を目標とする。
-			auto boxCenter = XMLoadFloat3(&box1->Center);
-			auto colliderTotalExtents = pow(box1->Extents.x + box1->Extents.y + box1->Extents.z, 1.0f);
-			auto colliderTotalVal = abs(boxCenter.m128_f32[0]) + abs(boxCenter.m128_f32[1]) + abs(boxCenter.m128_f32[2]);
-			auto charaTotalVal = abs(sCenter.x) + abs(sCenter.y) + abs(sCenter.z);
-			int margin = colliderTotalExtents;
-			charaTotalVal += collisionManager->GetBoundingSphere().Radius + margin;
-			bool isCheckNecessary = charaTotalVal > colliderTotalVal;
+			//auto box1 = collisionManager->GetBoundingBox1Pointer();
+			//auto sCenter = collisionManager->GetBoundingSphere().Center;
+			//// キャラクター中心は移動と共にワールド座標が変化していく。XYZ座標絶対値にOBBのExtentsを追加した値に対して、オブジェクトコライダーのXYZ座標総数を算出する。
+			//// これらを比較して前者の方が値が大きい場合のみ衝突判定を行う。複数オブジェクトが存在する際の総当たり判定を回避する一次対策。空間分割法を目標とする。
+			//auto boxCenterVec = XMLoadFloat3(&box1->Center);
+			//auto colliderTotalExtents = pow(box1->Extents.x + box1->Extents.y + box1->Extents.z, 1.0f);
+			//auto colliderTotalVal = abs(boxCenterVec.m128_f32[0]) + abs(boxCenterVec.m128_f32[1]) + abs(boxCenterVec.m128_f32[2]);
+			//auto charaTotalVal = abs(sCenter.x) + abs(sCenter.y) + abs(sCenter.z);
+			//int margin = colliderTotalExtents;
+			//charaTotalVal += collisionManager->GetBoundingSphere().Radius + margin;
+			//bool isCheckNecessary = charaTotalVal > colliderTotalVal;
 
-			if (!isCheckNecessary)
+			if (collisionManager->OBBCollisionCheck()/*!isCheckNecessary*/)
 			{
 				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
@@ -870,214 +870,216 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			// Collision process
 			else
 			{
-				BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
-				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+				collisionManager->OBBTransrationWithCollision(forwardSpeed, connanDirection, fbxIndex);
+				//XMFLOAT3 boxCenterPos = box1->Center;
+				//BoundingSphere reserveSphere = collisionManager->GetBoundingSphere(); // 操作キャラクターコリジョンを動かす前の情報を残しておく
+				//collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
 
-				if (collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0)
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
-				}
-				// After Collision
-				else
-				{
-					auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
-					XMFLOAT3 boxVertexPos[8];
-					collisionManager->GetBoundingBox1()[debugNum].GetCorners(boxVertexPos);
-					collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
-					
-					// ★面滑らせ実装
-					std::vector<std::pair<float, int>> distances;
-					distances.resize(8);
-					for (int i = 0; i < 8; ++i)
-					{
-						distances[i].first = 1000.0f;
-						distances[i].second = 0;			
-					}
-					// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
-					
-					for (int h = 0; h < 8; ++h)
-					{
-						float distance = powf(sCenter.x - boxVertexPos[h].x, 2.0f) + powf(sCenter.y - boxVertexPos[h].y, 2.0f) + powf(sCenter.z - boxVertexPos[h].z, 2.0f);
-						for (int i = 0; i < 8; ++i)
-						{
-							if (distance < distances[i].first)
-							{
-								distances[i].first = distance;
-								distances[i].second = h;
-								std::sort(distances.rbegin(), distances.rend());
-								break;
-							}
-						}
-					}
-					std::sort(distances.begin(), distances.end()); // 距離の降順になっているので昇順にする
-					// 選出した最も近い3点のXYZ座標を抽出する。
-					float epsilon = 0.00005f;
-					auto it = distances.begin();
-					std::vector<XMFLOAT3> boxPoint4Cal;
-					boxPoint4Cal.push_back(boxVertexPos[it->second]); // 最初の頂点を格納してイテレータを進める
-					++it;
-					for (int i = 0; i < 2; ++i)
-					{
-						// 衝突面の中心では各頂点までの距離が重複する可能性があるため、最初の頂点に基づき座標の差で二つ目以降を求めていく
-						float x = abs(boxPoint4Cal[0].x) - abs(boxVertexPos[it->second].x);
-						float y = abs(boxPoint4Cal[0].y) - abs(boxVertexPos[it->second].y);
-						float z = abs(boxPoint4Cal[0].z) - abs(boxVertexPos[it->second].z);
-						if (abs(x) < epsilon && abs(z) < epsilon && abs(y) > epsilon)
-						{
-							boxPoint4Cal.push_back(boxVertexPos[it->second]);
-							// 3つ目の頂点を格納する。3つ目のイテレータまでに要素が決定するためi = 1で処理終了する。
-							if (i == 0)
-							{
-								++it;
-								boxPoint4Cal.push_back(boxVertexPos[it->second]);
-							}
-							else if(i == 1)
-							{
-								--it;
-								boxPoint4Cal.push_back(boxVertexPos[it->second]);
-							}
-						}
-						++it;
-					}
-					// 2点目もしくは3点目から4点目を決定する
-					auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
-					boxPoint4Cal.push_back(fourthPoint);
-					// 法線ベクトルとスライド方向を算出する
-					auto normalAndSlideVector = CalcurateNormalAndSlideVector(boxPoint4Cal);
-					auto normal = normalAndSlideVector.first;
-					auto slideVector = normalAndSlideVector.second;
-					auto reverseSlideVector = -slideVector; // スライド方向ベクトル候補2(1の逆方向)
-					slideVector.m128_f32[3] = 1;
-					reverseSlideVector.m128_f32[3] = 1;
+				//if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
+				//{
+				//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+				//}
+				//// After Collision
+				//else
+				//{
+				//	auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
+				//	XMFLOAT3 boxVertexPos[8];
+				//	collisionManager->GetBoundingBox1()[debugNum].GetCorners(boxVertexPos);
+				//	collisionManager->GetBoundingSpherePointer()->Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
+				//	
+				//	// ★面滑らせ実装
+				//	std::vector<std::pair<float, int>> distances;
+				//	distances.resize(8);
+				//	for (int i = 0; i < 8; ++i)
+				//	{
+				//		distances[i].first = 1000.0f;
+				//		distances[i].second = 0;			
+				//	}
+				//	// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
+				//	
+				//	for (int h = 0; h < 8; ++h)
+				//	{
+				//		float distance = powf(sCenter.x - boxVertexPos[h].x, 2.0f) + powf(sCenter.y - boxVertexPos[h].y, 2.0f) + powf(sCenter.z - boxVertexPos[h].z, 2.0f);
+				//		for (int i = 0; i < 8; ++i)
+				//		{
+				//			if (distance < distances[i].first)
+				//			{
+				//				distances[i].first = distance;
+				//				distances[i].second = h;
+				//				std::sort(distances.rbegin(), distances.rend());
+				//				break;
+				//			}
+				//		}
+				//	}
+				//	std::sort(distances.begin(), distances.end()); // 距離の降順になっているので昇順にする
+				//	// 選出した最も近い3点のXYZ座標を抽出する。
+				//	float epsilon = 0.00005f;
+				//	auto it = distances.begin();
+				//	std::vector<XMFLOAT3> boxPoint4Cal;
+				//	boxPoint4Cal.push_back(boxVertexPos[it->second]); // 最初の頂点を格納してイテレータを進める
+				//	++it;
+				//	for (int i = 0; i < 2; ++i)
+				//	{
+				//		// 衝突面の中心では各頂点までの距離が重複する可能性があるため、最初の頂点に基づき座標の差で二つ目以降を求めていく
+				//		float x = abs(boxPoint4Cal[0].x) - abs(boxVertexPos[it->second].x);
+				//		float y = abs(boxPoint4Cal[0].y) - abs(boxVertexPos[it->second].y);
+				//		float z = abs(boxPoint4Cal[0].z) - abs(boxVertexPos[it->second].z);
+				//		if (abs(x) < epsilon && abs(z) < epsilon && abs(y) > epsilon)
+				//		{
+				//			boxPoint4Cal.push_back(boxVertexPos[it->second]);
+				//			// 3つ目の頂点を格納する。3つ目のイテレータまでに要素が決定するためi = 1で処理終了する。
+				//			if (i == 0)
+				//			{
+				//				++it;
+				//				boxPoint4Cal.push_back(boxVertexPos[it->second]);
+				//			}
+				//			else if(i == 1)
+				//			{
+				//				--it;
+				//				boxPoint4Cal.push_back(boxVertexPos[it->second]);
+				//			}
+				//		}
+				//		++it;
+				//	}
+				//	// 2点目もしくは3点目から4点目を決定する
+				//	auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
+				//	boxPoint4Cal.push_back(fourthPoint);
+				//	// 法線ベクトルとスライド方向を算出する
+				//	auto normalAndSlideVector = CalcurateNormalAndSlideVector(boxPoint4Cal, boxCenterPos);
+				//	auto normal = normalAndSlideVector.first;
+				//	auto slideVector = normalAndSlideVector.second;
+				//	auto reverseSlideVector = -slideVector; // スライド方向ベクトル候補2(1の逆方向)
+				//	slideVector.m128_f32[3] = 1;
+				//	reverseSlideVector.m128_f32[3] = 1;
 
-					// キャラクターの進行方向に対して、衝突面法線ベクトル・スライド候補1・スライド候補2との各内積を求める。
-					XMVECTOR characterZDir = {connanDirection.r[2].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[0], 1};
-					auto dotboxNormalAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
-					auto dotslideVectorAndCharacterDir = XMVector3Dot(slideVector, characterZDir).m128_f32[0];
-					auto dotReverseSlideVectorAndCharacterDir = XMVector3Dot(reverseSlideVector, characterZDir).m128_f32[0];
-					XMVECTOR determinedSlideVector; // 決定したスライド方向(キャラクターコライダーが角にぶつかっているか判定するのにも使う)
-					float adjustSpeed = 0.02f;
+				//	// キャラクターの進行方向に対して、衝突面法線ベクトル・スライド候補1・スライド候補2との各内積を求める。
+				//	XMVECTOR characterZDir = {connanDirection.r[2].m128_f32[0], connanDirection.r[0].m128_f32[1], connanDirection.r[0].m128_f32[0], 1};
+				//	auto dotboxNormalAndCharacterDir = XMVector3Dot(normal, characterZDir).m128_f32[0];
+				//	auto dotslideVectorAndCharacterDir = XMVector3Dot(slideVector, characterZDir).m128_f32[0];
+				//	auto dotReverseSlideVectorAndCharacterDir = XMVector3Dot(reverseSlideVector, characterZDir).m128_f32[0];
+				//	XMVECTOR determinedSlideVector; // 決定したスライド方向(キャラクターコライダーが角にぶつかっているか判定するのにも使う)
+				//	float adjustSpeed = 0.02f;
 
-					// キャラクターが衝突面に対して垂直ではない場合、キャラクターを衝突面に対してスライドさせる
-					if (dotboxNormalAndCharacterDir != -1.0f)
-					{
-						// キャラクターの進行方向との内積が小さいスライド方向が正解。このスライド方向はコライダーの頂点座標に基づいているが、fbxモデルはZ成分の符号を逆転させている。fbxモデル同様にZ成分を-1乗算して
-						// ワールド空間におけるZ方向をFBXと同様の画面下方向に変換している。そのため、次の処理でコライダーにスライド方向で調整したmoveMAtrixを適用する際にはZ成分の符号をまた-1掛けしている...
-						if (dotslideVectorAndCharacterDir < dotReverseSlideVectorAndCharacterDir)
-						{
-							determinedSlideVector = slideVector;
-							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
-							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
-						}
-						else
-						{
-							determinedSlideVector = reverseSlideVector;
-							moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
-							moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
-						}
-					}
+				//	// キャラクターが衝突面に対して垂直ではない場合、キャラクターを衝突面に対してスライドさせる
+				//	if (dotboxNormalAndCharacterDir != -1.0f)
+				//	{
+				//		// キャラクターの進行方向との内積が小さいスライド方向が正解。このスライド方向はコライダーの頂点座標に基づいているが、fbxモデルはZ成分の符号を逆転させている。fbxモデル同様にZ成分を-1乗算して
+				//		// ワールド空間におけるZ方向をFBXと同様の画面下方向に変換している。そのため、次の処理でコライダーにスライド方向で調整したmoveMAtrixを適用する際にはZ成分の符号をまた-1掛けしている...
+				//		if (dotslideVectorAndCharacterDir < dotReverseSlideVectorAndCharacterDir)
+				//		{
+				//			determinedSlideVector = slideVector;
+				//			moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
+				//			moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
+				//		}
+				//		else
+				//		{
+				//			determinedSlideVector = reverseSlideVector;
+				//			moveMatrix.r[3].m128_f32[0] += determinedSlideVector.m128_f32[0] * adjustSpeed;
+				//			moveMatrix.r[3].m128_f32[2] -= determinedSlideVector.m128_f32[2] * adjustSpeed;
+				//		}
+				//	}
 
-					// キャラクターコライダーが角にぶつかっているか判定する
-					// キャラクターに近いもう片方の面を構成する座標を格納する。こちらは角との衝突判定に使う法線を求めるために利用する。
-					it = distances.begin();
-					std::vector<XMFLOAT3> boxPoint4NextPlaneCal;
-					boxPoint4NextPlaneCal.push_back(boxPoint4Cal[0]); // 最初の要素を格納しておく
-					boxPoint4NextPlaneCal.push_back(boxPoint4Cal[1]); // 二つ目の要素を格納しておく
-					// 3つ目の要素を抽出する。	
-					it += 4; // distancesの上位4番目まで、もしくは上位1,2,5,6位が選定された状態。どちらか分からないので一旦上位5番目と予想される要素に基づき値を調べていく				
-					// 角ではbox4Calの頂点とかぶるので対処する
-					float x1 = abs(boxPoint4Cal[2].x) - abs(boxVertexPos[it->second].x);
-					float z1 = abs(boxPoint4Cal[2].z) - abs(boxVertexPos[it->second].z);
+				//	// キャラクターコライダーが角にぶつかっているか判定する
+				//	// キャラクターに近いもう片方の面を構成する座標を格納する。こちらは角との衝突判定に使う法線を求めるために利用する。
+				//	it = distances.begin();
+				//	std::vector<XMFLOAT3> boxPoint4NextPlaneCal;
+				//	boxPoint4NextPlaneCal.push_back(boxPoint4Cal[0]); // 最初の要素を格納しておく
+				//	boxPoint4NextPlaneCal.push_back(boxPoint4Cal[1]); // 二つ目の要素を格納しておく
+				//	// 3つ目の要素を抽出する。	
+				//	it += 4; // distancesの上位4番目まで、もしくは上位1,2,5,6位が選定された状態。どちらか分からないので一旦上位5番目と予想される要素に基づき値を調べていく				
+				//	// 角ではbox4Calの頂点とかぶるので対処する
+				//	float x1 = abs(boxPoint4Cal[2].x) - abs(boxVertexPos[it->second].x);
+				//	float z1 = abs(boxPoint4Cal[2].z) - abs(boxVertexPos[it->second].z);
 
-					float x2 = abs(boxPoint4Cal[3].x) - abs(boxVertexPos[it->second].x);
-					float z2 = abs(boxPoint4Cal[3].z) - abs(boxVertexPos[it->second].z);
+				//	float x2 = abs(boxPoint4Cal[3].x) - abs(boxVertexPos[it->second].x);
+				//	float z2 = abs(boxPoint4Cal[3].z) - abs(boxVertexPos[it->second].z);
 
-					// distancesのitretorは[4]つまり5番目に近い頂点を指している状態。ただし、角に衝突した時は5番目に近いとは限らず4番目に近い頂点の可能性がある。
-					// そこで、[5]を指すことで3番目に近い線を構成する片方の頂点を確実に選定することが可能。この頂点に基づき4つ目の頂点を計算する。
-					if (abs(x1) < epsilon && abs(z1) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
-					{
-						++it;
-						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-					}
+				//	// distancesのitretorは[4]つまり5番目に近い頂点を指している状態。ただし、角に衝突した時は5番目に近いとは限らず4番目に近い頂点の可能性がある。
+				//	// そこで、[5]を指すことで3番目に近い線を構成する片方の頂点を確実に選定することが可能。この頂点に基づき4つ目の頂点を計算する。
+				//	if (abs(x1) < epsilon && abs(z1) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
+				//	{
+				//		++it;
+				//		boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
+				//	}
 
-					else if(abs(x2) < epsilon && abs(z2) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
-					{
-						++it;
-						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-					}
-					else // box4Calに上位5番目と推測される要素が格納されていない場合はこのまま格納する
-					{
-						boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-					}
+				//	else if(abs(x2) < epsilon && abs(z2) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
+				//	{
+				//		++it;
+				//		boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
+				//	}
+				//	else // box4Calに上位5番目と推測される要素が格納されていない場合はこのまま格納する
+				//	{
+				//		boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
+				//	}
 
-					// 2点目もしくは3点目から4点目を決定する
-					fourthPoint = CalculateForthPoint(boxPoint4NextPlaneCal, boxVertexPos);
-					boxPoint4NextPlaneCal.push_back(fourthPoint);
-					// 法線ベクトルとスライド方向を算出する
-					auto normalAndSlideVectorOfNextPlane = CalcurateNormalAndSlideVector(boxPoint4NextPlaneCal);
-					auto normalOfNextPlane = normalAndSlideVectorOfNextPlane.first;
+				//	// 2点目もしくは3点目から4点目を決定する
+				//	fourthPoint = CalculateForthPoint(boxPoint4NextPlaneCal, boxVertexPos);
+				//	boxPoint4NextPlaneCal.push_back(fourthPoint);
+				//	// 法線ベクトルとスライド方向を算出する
+				//	auto normalAndSlideVectorOfNextPlane = CalcurateNormalAndSlideVector(boxPoint4NextPlaneCal, boxCenterPos);
+				//	auto normalOfNextPlane = normalAndSlideVectorOfNextPlane.first;
 
-					auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), boxCenter); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
-					centerToCenter = XMVector3Normalize(centerToCenter);
-					auto dot1 = XMVector3Dot(centerToCenter, normal);
-					auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
+				//	auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), boxCenterVec); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
+				//	centerToCenter = XMVector3Normalize(centerToCenter);
+				//	auto dot1 = XMVector3Dot(centerToCenter, normal);
+				//	auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
 
-					// 角に接触していない場合
-					if (dot2.m128_f32[0] < 0.5f)
-					{
-						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-						box1->Center.x += moveMatrix.r[3].m128_f32[0];
-						box1->Center.y += moveMatrix.r[3].m128_f32[1];
-						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+				//	// 角に接触していない場合
+				//	if (dot2.m128_f32[0] < 0.5f)
+				//	{
+				//		// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
+				//		box1->Center.x += moveMatrix.r[3].m128_f32[0];
+				//		box1->Center.y += moveMatrix.r[3].m128_f32[1];
+				//		box1->Center.z -= moveMatrix.r[3].m128_f32[2];
 
-						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
-						// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
-						moveMatrix *= connanDirection;
-						moveMatrix.r[0].m128_f32[0] = 1;
-						moveMatrix.r[0].m128_f32[2] = 0;
-						moveMatrix.r[2].m128_f32[0] = 0;
-						moveMatrix.r[2].m128_f32[2] = 1;
+				//		// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
+				//		// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
+				//		moveMatrix *= connanDirection;
+				//		moveMatrix.r[0].m128_f32[0] = 1;
+				//		moveMatrix.r[0].m128_f32[2] = 0;
+				//		moveMatrix.r[2].m128_f32[0] = 0;
+				//		moveMatrix.r[2].m128_f32[2] = 1;
 
-						resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
-					}
+				//		resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+				//	}
 
-					// 角に接触している場合
-					else if(dot2.m128_f32[0] >= 0.5f)
-					{
-						// 衝突面の法線方向と隣面の法線方向の合成ベクトルを利用して、角から弾かれるようにしてコライダー同士の交差を防ぐ
-						// ガタついた動きになるのがネック
-						float normalWeight = 1.0f - dot2.m128_f32[0];
-						float nextNormalWeight = dot2.m128_f32[0];
-						normal *= normalWeight;
-						normalOfNextPlane *= nextNormalWeight;
-						XMVECTOR slideCol;
-						slideCol.m128_f32[0] = normal.m128_f32[0] + normalOfNextPlane.m128_f32[0];
-						slideCol.m128_f32[1] = normal.m128_f32[1] + normalOfNextPlane.m128_f32[1];
-						slideCol.m128_f32[2] = normal.m128_f32[2] + normalOfNextPlane.m128_f32[2];
-						slideCol.m128_f32[3] = 1.0f;
-						slideCol = XMVector3Normalize(slideCol);
-						slideCol *= adjustSpeed;
+				//	// 角に接触している場合
+				//	else if(dot2.m128_f32[0] >= 0.5f)
+				//	{
+				//		// 衝突面の法線方向と隣面の法線方向の合成ベクトルを利用して、角から弾かれるようにしてコライダー同士の交差を防ぐ
+				//		// ガタついた動きになるのがネック
+				//		float normalWeight = 1.0f - dot2.m128_f32[0];
+				//		float nextNormalWeight = dot2.m128_f32[0];
+				//		normal *= normalWeight;
+				//		normalOfNextPlane *= nextNormalWeight;
+				//		XMVECTOR slideCol;
+				//		slideCol.m128_f32[0] = normal.m128_f32[0] + normalOfNextPlane.m128_f32[0];
+				//		slideCol.m128_f32[1] = normal.m128_f32[1] + normalOfNextPlane.m128_f32[1];
+				//		slideCol.m128_f32[2] = normal.m128_f32[2] + normalOfNextPlane.m128_f32[2];
+				//		slideCol.m128_f32[3] = 1.0f;
+				//		slideCol = XMVector3Normalize(slideCol);
+				//		slideCol *= adjustSpeed;
 
-						moveMatrix.r[3].m128_f32[0] = slideCol.m128_f32[0];
-						moveMatrix.r[3].m128_f32[0] *= -1;
-						//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
-						moveMatrix.r[3].m128_f32[2] = slideCol.m128_f32[2];
-						// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-						box1->Center.x += moveMatrix.r[3].m128_f32[0];
-						box1->Center.y += moveMatrix.r[3].m128_f32[1];
-						box1->Center.z -= moveMatrix.r[3].m128_f32[2];
+				//		moveMatrix.r[3].m128_f32[0] = slideCol.m128_f32[0];
+				//		moveMatrix.r[3].m128_f32[0] *= -1;
+				//		//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
+				//		moveMatrix.r[3].m128_f32[2] = slideCol.m128_f32[2];
+				//		// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
+				//		box1->Center.x += moveMatrix.r[3].m128_f32[0];
+				//		box1->Center.y += moveMatrix.r[3].m128_f32[1];
+				//		box1->Center.z -= moveMatrix.r[3].m128_f32[2];
 
-						// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
-						// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
-						moveMatrix *= connanDirection;
-						moveMatrix.r[0].m128_f32[0] = 1;
-						moveMatrix.r[0].m128_f32[2] = 0;
-						moveMatrix.r[2].m128_f32[0] = 0;
-						moveMatrix.r[2].m128_f32[2] = 1;
+				//		// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
+				//		// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
+				//		moveMatrix *= connanDirection;
+				//		moveMatrix.r[0].m128_f32[0] = 1;
+				//		moveMatrix.r[0].m128_f32[2] = 0;
+				//		moveMatrix.r[2].m128_f32[0] = 0;
+				//		moveMatrix.r[2].m128_f32[2] = 1;
 
-						resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
-					}
-				}
+				//		resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+				//	}
+				//}
 			}			
 		}
 
@@ -2122,7 +2124,7 @@ XMFLOAT3 D3DX12Wrapper::CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, 
 	return result;
 }
 
-std::pair<XMVECTOR, XMVECTOR> D3DX12Wrapper::CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points)
+std::pair<XMVECTOR, XMVECTOR> D3DX12Wrapper::CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points, XMFLOAT3 boxCenter)
 {
 	XMVECTOR line1, line2, line3;
 	std::vector<XMVECTOR> lines;
@@ -2165,7 +2167,7 @@ std::pair<XMVECTOR, XMVECTOR> D3DX12Wrapper::CalcurateNormalAndSlideVector(std::
 		normZPos = (points[0].z + points[3].z) / 2.0f;
 	}
 	XMVECTOR normPos = { normXPos, normYPos, normZPos, 1 };
-	auto boxCenter = collisionManager->GetBoundingBox1()[debugNum].Center;
+	//auto boxCenter = collisionManager->GetBoundingBox1()[debugNum].Center;
 	XMVECTOR boxCenterVec = { boxCenter.x, boxCenter.y, boxCenter.z, 1 };
 	auto normal = XMVectorSubtract(normPos, boxCenterVec);// XMVector3Cross(lines[0], lines[1]);
 	normal = XMVector4Normalize(normal); // 衝突面法線の算出完了

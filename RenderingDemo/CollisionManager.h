@@ -52,13 +52,16 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW boxVBV1 = {};
 	D3D12_VERTEX_BUFFER_VIEW boxVBV2 = {};
 
+	BoundingOrientedBox collidedOBB;
 	void CreateSpherePoints(const XMFLOAT3& pt, float Radius);
+	XMFLOAT3 CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8]);
+	std::pair<XMVECTOR, XMVECTOR> CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points, XMFLOAT3 boxCenter);
 
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
 	/*BoundingOrientedBox*/std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
-	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[1]; };
+	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[2]; };
 
 	BoundingSphere GetBoundingSphere() { return bSphere; };
 	BoundingSphere* GetBoundingSpherePointer() { return &bSphere; };
@@ -69,4 +72,6 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
+	bool OBBCollisionCheck();
+	void OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
 };
