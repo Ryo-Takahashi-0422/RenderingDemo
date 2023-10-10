@@ -50,6 +50,7 @@ private:
 	ComPtr<ID3D12Resource> boxBuff1 = nullptr;
 	ComPtr<ID3D12Resource> boxBuff2 = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW boxVBV1 = {};
+	//std::vector<D3D12_VERTEX_BUFFER_VIEW> boxVBV1;
 	D3D12_VERTEX_BUFFER_VIEW boxVBV2 = {};
 
 	BoundingOrientedBox collidedOBB;
@@ -68,7 +69,7 @@ public:
 
 	XMFLOAT3* GetMappedBoxPos() { return mappedBox2; };
 
-	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV1() { return &boxVBV1; };
+	D3D12_VERTEX_BUFFER_VIEW/*std::vector<D3D12_VERTEX_BUFFER_VIEW>*/* GetBoxVBV1() { return &boxVBV1; };
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);

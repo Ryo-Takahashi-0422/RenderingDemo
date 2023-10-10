@@ -159,20 +159,27 @@ void CollisionManager::Init()
 	);
 
 	// ビュー作成
+	//boxVBV1.resize(oBBVertices.size());
+	//for (int i = 0; i < oBBVertices.size(); ++i)
+	//{
+	printf("%d\n", sizeof(oBBVertices));
 	boxVBV1.BufferLocation = boxBuff1->GetGPUVirtualAddress();
 	boxVBV1.SizeInBytes = sizeof(oBBVertices);
 	boxVBV1.StrideInBytes = sizeof(XMFLOAT3);
-
+	//}
 	// マッピング
 	boxBuff1->Map(0, nullptr, (void**)&mappedBox1);
-	for (int i = 0; i < oBBVertices.size(); ++i)
-	{
-		for(int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
-		{
-			mappedBox1 = &oBBVertices[i].pos[j];
-			++mappedBox1;
-		}
-	}
+	//for (int i = 0; i < /*oBBVertices.size()*/1; ++i)
+	//{		
+	//	for(int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+	//	{
+	//		mappedBox1 = &oBBVertices[i].pos[j];
+	//		++mappedBox1;
+	//	}
+	//}
+	
+	// [0]について正しくコピー出来ている。問題は↑のSizeInBytes = sizeof(oBBVertices) = 32であることか。XMFLOAT3が12なので、2点しか読めていない？実際2点は正しく描画されていて、残りは(0,0,0)つまり読めていないように見える。
+	std::copy(std::begin(oBBVertices.begin()->pos), std::end(oBBVertices.begin()->pos), mappedBox1);
 	//boxBuff1->Unmap(0, nullptr);
 
 	// バッファー作成2
