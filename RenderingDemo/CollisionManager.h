@@ -32,7 +32,7 @@ private:
 	XMFLOAT3 output2[8];
 	XMFLOAT3 output3[26];
 
-	std::vector<XMFLOAT3*> mappedOBBs; // ★
+	std::vector<XMFLOAT3*> mappedOBBs; // 各OBBの8頂点のマッピング先
 	XMFLOAT3* mappedBox2 = nullptr;
 	std::vector<ComPtr<ID3D12Resource>> boxBuffs; // ★
 
@@ -63,4 +63,5 @@ public:
 	bool OBBCollisionCheck();
 	void OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBVs(int index) { return &boxVBVs[index]; }; // ★
+	int GetOBBNum() { return oBBVertices.size(); };
 };

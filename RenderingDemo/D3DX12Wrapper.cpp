@@ -352,8 +352,8 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx");
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx");
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal_lpos.fbx"); 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal.fbx"); 
 	// 3 texture model
@@ -1045,7 +1045,7 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	if (modelNum == 0)
 	{
 		//頂点バッファーのCPU記述子ハンドルを設定
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < collisionManager->GetOBBNum(); ++i)
 		{
 			//★boxvbv1のGPU仮想アドレスが同じである以上、上書きしてるだけ。最後に上書きされた頂点が描画される。バッファを数分増やすか...
 			//collisionManager->MappingVertexBufferViewOfOBB(i);
