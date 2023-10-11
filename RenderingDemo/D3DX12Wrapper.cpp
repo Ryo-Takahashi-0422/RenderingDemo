@@ -1045,12 +1045,19 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	if (modelNum == 0)
 	{
 		//頂点バッファーのCPU記述子ハンドルを設定
-		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV1());
+		for (int i = 0; i < 3; ++i)
+		{
+			//★boxvbv1のGPU仮想アドレスが同じである以上、上書きしてるだけ。最後に上書きされた頂点が描画される。バッファを数分増やすか...
+			//collisionManager->MappingVertexBufferViewOfOBB(i);
+			_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBVs(i));
+			_cmdList->DrawInstanced(8, 1, 0, 0);
+		}
 	}
 
 	else
 	{
 		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV2());
+		_cmdList->DrawInstanced(26, 1, 0, 0);
 	}
 
 	////ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
@@ -1060,15 +1067,6 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	//_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 	//dHandle.ptr += buffSize * 2;
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-
-	if (modelNum == 0)
-	{
-		_cmdList->DrawInstanced(8, 1, 0, 0);
-	}
-	else
-	{
-		_cmdList->DrawInstanced(26, 1, 0, 0);
-	}
 }
 
 

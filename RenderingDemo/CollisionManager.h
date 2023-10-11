@@ -8,17 +8,6 @@ struct BoundingBoxVertex
 struct OBBVertices
 {
 	XMFLOAT3 pos[8];
-	//typedef std::vector<int>::iterator iterator;
-	//typedef std::vector<int>::const_iterator const_iterator;
-	//iterator begin();
-	//const_iterator begin() const;
-	//iterator end();
-	//const_iterator end() const;
-	//OBBVertices::iterator begin()
-	//{
-	//	return std::begin(pos);
-	//}
-
 };
 
 class CollisionManager
@@ -39,18 +28,17 @@ private:
 	BoundingBoxVertex bbv1[8];
 	BoundingBoxVertex bbv2[8];
 
-	//XMFLOAT3 output1[8];
-	//std::vector<XMFLOAT3> output1;
 	std::vector<OBBVertices> oBBVertices;
 	XMFLOAT3 output2[8];
 	XMFLOAT3 output3[26];
 
-	XMFLOAT3* mappedBox1 = nullptr;
+	std::vector<XMFLOAT3*> mappedOBBs; // Åö
 	XMFLOAT3* mappedBox2 = nullptr;
-	ComPtr<ID3D12Resource> boxBuff1 = nullptr;
+	std::vector<ComPtr<ID3D12Resource>> boxBuffs; // Åö
+
 	ComPtr<ID3D12Resource> boxBuff2 = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW boxVBV1 = {};
-	//std::vector<D3D12_VERTEX_BUFFER_VIEW> boxVBV1;
+	std::vector<D3D12_VERTEX_BUFFER_VIEW> boxVBVs; // Åö
+
 	D3D12_VERTEX_BUFFER_VIEW boxVBV2 = {};
 
 	BoundingOrientedBox collidedOBB;
@@ -61,18 +49,18 @@ private:
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
-	/*BoundingOrientedBox*/std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
-	/*BoundingOrientedBox*/BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[2]; };
+	std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
+	BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[2]; };
 
 	BoundingSphere GetBoundingSphere() { return bSphere; };
 	BoundingSphere* GetBoundingSpherePointer() { return &bSphere; };
 
 	XMFLOAT3* GetMappedBoxPos() { return mappedBox2; };
 
-	D3D12_VERTEX_BUFFER_VIEW/*std::vector<D3D12_VERTEX_BUFFER_VIEW>*/* GetBoxVBV1() { return &boxVBV1; };
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBV2() { return &boxVBV2; };
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
 	bool OBBCollisionCheck();
 	void OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
+	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBVs(int index) { return &boxVBVs[index]; }; // Åö
 };

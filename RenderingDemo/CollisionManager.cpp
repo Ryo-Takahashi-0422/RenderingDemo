@@ -145,46 +145,38 @@ void CollisionManager::Init()
 	CreateSpherePoints(bSphere.Center, bSphere.Radius);
 
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(oBBVertices));
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(oBBVertices[0]));
 		
-	// バッファー作成1
-	auto result = dev->CreateCommittedResource
-	(
-		&heapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&resDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(boxBuff1.ReleaseAndGetAddressOf())
-	);
-
-	// ビュー作成
-	//boxVBV1.resize(oBBVertices.size());
-	//for (int i = 0; i < oBBVertices.size(); ++i)
-	//{
-	printf("%d\n", sizeof(oBBVertices));
-	boxVBV1.BufferLocation = boxBuff1->GetGPUVirtualAddress();
-	boxVBV1.SizeInBytes = sizeof(oBBVertices);
-	boxVBV1.StrideInBytes = sizeof(XMFLOAT3);
-	//}
-	// マッピング
-	boxBuff1->Map(0, nullptr, (void**)&mappedBox1);
-	//for (int i = 0; i < /*oBBVertices.size()*/1; ++i)
-	//{		
-	//	for(int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
-	//	{
-	//		mappedBox1 = &oBBVertices[i].pos[j];
-	//		++mappedBox1;
-	//	}
-	//}
-	
-	// [0]について正しくコピー出来ている。問題は↑のSizeInBytes = sizeof(oBBVertices) = 32であることか。XMFLOAT3が12なので、2点しか読めていない？実際2点は正しく描画されていて、残りは(0,0,0)つまり読めていないように見える。
-	std::copy(std::begin(oBBVertices.begin()->pos), std::end(oBBVertices.begin()->pos), mappedBox1);
-	//boxBuff1->Unmap(0, nullptr);
+	//★ OBBの数分リソースを用意し、マッピングする
+	boxBuffs.resize(oBBVertices.size());
+	boxVBVs.resize(oBBVertices.size());
+	mappedOBBs.resize(oBBVertices.size());
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		// バッファー作成
+		boxBuffs[i] = nullptr;
+		auto result = dev->CreateCommittedResource
+		(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&resDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(boxBuffs[i].ReleaseAndGetAddressOf())
+		);
+		// ビュー作成
+		boxVBVs[i].BufferLocation = boxBuffs[i]->GetGPUVirtualAddress();
+		boxVBVs[i].SizeInBytes = sizeof(oBBVertices[i]);
+		boxVBVs[i].StrideInBytes = sizeof(XMFLOAT3);
+		// マッピング
+		mappedOBBs[i] = nullptr;
+		boxBuffs[i]->Map(0, nullptr, (void**)&mappedOBBs[i]);
+		std::copy(std::begin(oBBVertices[i].pos), std::end(oBBVertices[i].pos), mappedOBBs[i]);
+	}
 
 	// バッファー作成2
 	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(/*output2*/output3));
-	result = dev->CreateCommittedResource
+	auto result = dev->CreateCommittedResource
 	(
 		&heapProp,
 		D3D12_HEAP_FLAG_NONE,
