@@ -192,6 +192,8 @@ HRESULT ResourceManager::Init()
 	textureImg.resize(texNum);
 	textureImgPixelValue.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
+
+	mappedImgContainer.resize(mappingSize);
 	for (int i = 0; i < materialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
@@ -291,10 +293,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	//XMFLOAT3 eye(0, 1.5, 2);
-	//XMFLOAT3 target(0, 1.5, 0);
-	XMFLOAT3 eye(0, 10, 0.01);
+	XMFLOAT3 eye(0, 1.5, 2);
 	XMFLOAT3 target(0, 1.5, 0);
+	//XMFLOAT3 eye(0, 10, 0.01);
+	//XMFLOAT3 target(0, 1.5, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
 	(
@@ -331,8 +333,11 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
+	materialParamBuffContainer.resize(mappingSize);
+	mappedPhoneContainer.resize(mappingSize);
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
+		//materialParamBuffContainer[i] = nullptr;
 		auto& resource = materialParamBuffContainer[i];
 		auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);

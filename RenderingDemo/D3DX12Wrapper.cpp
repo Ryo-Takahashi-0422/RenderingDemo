@@ -1069,15 +1069,6 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 }
 
-
-
-
-
-
-
-
-
-
 //void D3DX12Wrapper::DrawLightMap(unsigned int modelNum, UINT buffSize)
 //{
 //	constexpr uint32_t shadow_difinition = 1024;
