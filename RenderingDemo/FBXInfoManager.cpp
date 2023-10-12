@@ -279,8 +279,16 @@ void FBXInfoManager::ReadFBXFile()
         }
 
         // マテリアル情報を取得
-        FbxSurfaceMaterial* material = node->GetMaterial(0); // ★統合したメッシュでは「i」
-                
+        FbxSurfaceMaterial* material;
+        if (modelPath == "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx")
+        {
+            material = node->GetMaterial(i); // ★統合したメッシュでは「i」、特にデバッグ用にmodelpath == ...のようにしている(コナンのテクスチャ描画且つbattlefield描画(真っ黒)に合わせて)
+        }
+        else
+        {
+            material = node->GetMaterial(0);
+        }
+
         if (material != 0) 
         {
             std::string type;

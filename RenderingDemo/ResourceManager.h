@@ -34,45 +34,10 @@ private:
 	ComPtr<ID3D12Resource> depthBuff = nullptr; // depth buffer
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
-	ComPtr<ID3D12Resource> materialParamBuff0 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff1 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff2 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff3 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff4 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff5 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff6 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff7 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff8 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff9 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff10 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff11 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff12 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff13 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff14 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff15 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff16 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff17 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff18 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff19 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff20 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff21 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff22 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff23 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff24 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff25 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff26 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff27 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff28 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff29 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff30 = nullptr; // Phong Material Parameter
-	ComPtr<ID3D12Resource> materialParamBuff31 = nullptr; // Phong Material Parameter
-
-	// able to contain 32 materials
-	std::vector<ComPtr<ID3D12Resource>> materialParamBuffContainer =
-	{ materialParamBuff0 , materialParamBuff1, materialParamBuff2 ,materialParamBuff3 ,materialParamBuff4 ,materialParamBuff5 ,materialParamBuff6 ,materialParamBuff7 ,materialParamBuff8,materialParamBuff9,materialParamBuff10,
-	  materialParamBuff11, materialParamBuff12, materialParamBuff13, materialParamBuff14, materialParamBuff15, materialParamBuff16, materialParamBuff17, materialParamBuff18, materialParamBuff19, materialParamBuff20,
-	  materialParamBuff21, materialParamBuff22, materialParamBuff23, materialParamBuff24, materialParamBuff25, materialParamBuff26, materialParamBuff27, materialParamBuff28, materialParamBuff29, materialParamBuff30, materialParamBuff31
-	};
+	
+	const int mappingSize = 32; // mapping size
+	std::vector<ComPtr<ID3D12Resource>> materialParamBuffContainer; // resource of mappedPhoneContainer[...]
+	std::vector<PhongInfo*> mappedPhoneContainer; // mapped phong infos
 
 	D3D12_VERTEX_BUFFER_VIEW vbView = {}; // Vertexビュー
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)Indexビュー
@@ -86,45 +51,7 @@ private:
 	int indexNum; // index total num
 
 	FBXSceneMatrix* mappedMatrix = nullptr;
-	PhongInfo* mappedPhong0 = nullptr;
-	PhongInfo* mappedPhong1 = nullptr;
-	PhongInfo* mappedPhong2 = nullptr;
-	PhongInfo* mappedPhong3 = nullptr;
-	PhongInfo* mappedPhong4 = nullptr;
-	PhongInfo* mappedPhong5 = nullptr;
-	PhongInfo* mappedPhong6 = nullptr;
-	PhongInfo* mappedPhong7 = nullptr;
-	PhongInfo* mappedPhong8 = nullptr;
-	PhongInfo* mappedPhong9 = nullptr;
-	PhongInfo* mappedPhong10 = nullptr;
-	PhongInfo* mappedPhong11 = nullptr;
-	PhongInfo* mappedPhong12 = nullptr;
-	PhongInfo* mappedPhong13 = nullptr;
-	PhongInfo* mappedPhong14 = nullptr;
-	PhongInfo* mappedPhong15 = nullptr;
-	PhongInfo* mappedPhong16 = nullptr;
-	PhongInfo* mappedPhong17 = nullptr;
-	PhongInfo* mappedPhong18 = nullptr;
-	PhongInfo* mappedPhong19 = nullptr;
-	PhongInfo* mappedPhong20 = nullptr;
-	PhongInfo* mappedPhong21 = nullptr;
-	PhongInfo* mappedPhong22 = nullptr;
-	PhongInfo* mappedPhong23 = nullptr;
-	PhongInfo* mappedPhong24 = nullptr;
-	PhongInfo* mappedPhong25 = nullptr;
-	PhongInfo* mappedPhong26 = nullptr;
-	PhongInfo* mappedPhong27 = nullptr;
-	PhongInfo* mappedPhong28 = nullptr;
-	PhongInfo* mappedPhong29 = nullptr;
-	PhongInfo* mappedPhong30 = nullptr;
-	PhongInfo* mappedPhong31 = nullptr;
-	// able to contain 32 materials
-	std::vector<PhongInfo*> mappedPhoneContainer =
-	{
-		mappedPhong0, mappedPhong1, mappedPhong2, mappedPhong3, mappedPhong4, mappedPhong5, mappedPhong6, mappedPhong7, mappedPhong8, mappedPhong9,
-		mappedPhong10, mappedPhong11, mappedPhong12, mappedPhong13, mappedPhong14, mappedPhong15, mappedPhong16, mappedPhong17, mappedPhong18, mappedPhong19,
-		mappedPhong20, mappedPhong21, mappedPhong22, mappedPhong23, mappedPhong24, mappedPhong25, mappedPhong26, mappedPhong27, mappedPhong28, mappedPhong29, mappedPhong30, mappedPhong31
-	};
+	
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle;
 
@@ -134,44 +61,7 @@ private:
 	void CreateUploadAndReadBuff4Texture(std::string texturePath, int iterationNum);
 	void MappingTextureToUploadBuff(int count);
 
-	uint8_t* mappedImg0 = nullptr;
-	uint8_t* mappedImg1 = nullptr;
-	uint8_t* mappedImg2 = nullptr;
-	uint8_t* mappedImg3 = nullptr;
-	uint8_t* mappedImg4 = nullptr;
-	uint8_t* mappedImg5 = nullptr;
-	uint8_t* mappedImg6 = nullptr;
-	uint8_t* mappedImg7 = nullptr;
-	uint8_t* mappedImg8 = nullptr;
-	uint8_t* mappedImg9 = nullptr;
-	uint8_t* mappedImg10 = nullptr;
-	uint8_t* mappedImg11 = nullptr;
-	uint8_t* mappedImg12 = nullptr;
-	uint8_t* mappedImg13 = nullptr;
-	uint8_t* mappedImg14 = nullptr;
-	uint8_t* mappedImg15 = nullptr;
-	uint8_t* mappedImg16 = nullptr;
-	uint8_t* mappedImg17 = nullptr;
-	uint8_t* mappedImg18 = nullptr;
-	uint8_t* mappedImg19 = nullptr;
-	uint8_t* mappedImg20 = nullptr;
-	uint8_t* mappedImg21 = nullptr;
-	uint8_t* mappedImg22 = nullptr;
-	uint8_t* mappedImg23 = nullptr;
-	uint8_t* mappedImg24 = nullptr;
-	uint8_t* mappedImg25 = nullptr;
-	uint8_t* mappedImg26 = nullptr;
-	uint8_t* mappedImg27 = nullptr;
-	uint8_t* mappedImg28 = nullptr;
-	uint8_t* mappedImg29 = nullptr;
-	uint8_t* mappedImg30 = nullptr;
-	uint8_t* mappedImg31 = nullptr;
-	std::vector<uint8_t*> mappedImgContainer =
-	{
-		mappedImg0, mappedImg1, mappedImg2, mappedImg3, mappedImg4, mappedImg5, mappedImg6, mappedImg7, mappedImg8, mappedImg9,
-		mappedImg10, mappedImg11, mappedImg12, mappedImg13, mappedImg14, mappedImg15, mappedImg16, mappedImg17, mappedImg18, mappedImg19,
-		mappedImg20, mappedImg21, mappedImg22, mappedImg23, mappedImg24, mappedImg25, mappedImg26, mappedImg27, mappedImg28, mappedImg29, mappedImg30, mappedImg31
-	};
+	std::vector<uint8_t*> mappedImgContainer; // mapped Img
 
 	std::vector<ComPtr<ID3D12Resource>> textureUploadBuff; // ノーマルマップ用アップロードバッファー
 	std::vector<ComPtr<ID3D12Resource>> textureReadBuff; // ノーマルマップ用リードバッファー
