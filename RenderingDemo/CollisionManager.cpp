@@ -293,48 +293,49 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 {
 	int div = 8;
-	int loopStartCnt = 2;
-	int loopEndCnt = 2 + div;
+	int loopStartCnt = 1;
+	int loopEndCnt = 1 + div;
 	
-	// 天
+	// 北極点
 	output3[0].x = center.x;
 	output3[0].y = center.y + Radius;
 	output3[0].z = center.z;
 
-	// 地
-	output3[1].x = center.x;
-	output3[1].y = center.y - Radius;
-	output3[1].z = center.z;
-
-	// 水平
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
-	{		
-		output3[i].x = center.x + Radius * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y;
-		output3[i].z = center.z + Radius * sinf(XMConvertToRadians(360 / div * i));
-	}
-	loopStartCnt += div;
-	loopEndCnt += div;
-
 	float halfR = Radius * cosf(XMConvertToRadians(45));
 
-	// 半天	
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
+	// 北極点と赤道の間
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
 	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y + halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y + halfR;
+		output3[loopStartCnt].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
 	}
-	loopStartCnt += div;
-	loopEndCnt += div;
 
-	// 半地
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
-	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y - halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+	loopEndCnt += div;
+	// 赤道
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
+	{		
+		output3[loopStartCnt].x = center.x + Radius * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y;
+		output3[loopStartCnt].z = center.z + Radius * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
 	}
+
+	loopEndCnt += div;
+	// 南極点と赤道の間
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
+	{
+		output3[loopStartCnt].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y - halfR;
+		output3[loopStartCnt].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
+	}
+
+	// 南極点
+	output3[loopEndCnt].x = center.x;
+	output3[loopEndCnt].y = center.y - Radius;
+	output3[loopEndCnt].z = center.z;
 }
 
 bool CollisionManager::OBBCollisionCheck()
