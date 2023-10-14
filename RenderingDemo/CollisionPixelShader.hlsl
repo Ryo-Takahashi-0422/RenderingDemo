@@ -2,6 +2,6 @@
 
 float4 ps(Output input) : SV_TARGET
 {
-    float4 result = { 0.8, 0.8, 0.8, 1 };
+    float4 result = { 0.0, 0.0, 1.0, 1 };
     return result;
 }

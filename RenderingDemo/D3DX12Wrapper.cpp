@@ -352,8 +352,8 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Boxs_diagonal.fbx"); 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal_lpos.fbx"); 
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\Box_diagonal.fbx"); 
 	// 3 texture model
@@ -1040,7 +1040,7 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());
 
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-	_cmdList->IASetPrimitiveTopology(/*D3D_PRIMITIVE_TOPOLOGY_LINELIST*/D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP/*D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP*/);
 
 	if (modelNum == 0)
 	{
@@ -1050,7 +1050,11 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 			//★boxvbv1のGPU仮想アドレスが同じである以上、上書きしてるだけ。最後に上書きされた頂点が描画される。バッファを数分増やすか...
 			//collisionManager->MappingVertexBufferViewOfOBB(i);
 			_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBVs(i));
-			_cmdList->DrawInstanced(8, 1, 0, 0);
+			//★インデックスバッファーのビューを設定
+			_cmdList->IASetIndexBuffer(collisionManager->GetBoxIBVs(i));
+			_cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+
+			//_cmdList->DrawInstanced(8, 1, 0, 0);
 		}
 	}
 

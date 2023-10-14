@@ -174,6 +174,73 @@ void CollisionManager::Init()
 		std::copy(std::begin(oBBVertices[i].pos), std::end(oBBVertices[i].pos), mappedOBBs[i]);
 	}
 
+	// 頂点インデックスを生成してマッピングする
+	// まずは距離から頂点の位置関係を把握する。ロジックとしては
+	// 1. 各OBBの[0]頂点と他頂点の距離を算出して小さい順に並び変える
+	// 2. [0][1][2],[0][1][3],[0][2][3]を[0]回りのインデックスとして抽出する。
+	// 3. 距離最大のものを除いて、距離の大きな3点は対角線を形成する頂点で、それぞれに対して手順1,2を繰り返す。
+	std::map<int, std::vector<std::pair<float, int>>> res;
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		for (int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+		{
+			auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[i].pos[0]), XMLoadFloat3(&oBBVertices[i].pos[j]));
+			std::pair<float, int> pair = {XMVector4Length(v1).m128_f32[0], j};
+			res[i].push_back(pair);
+		}
+		std::sort(res[i].begin(), res[i].end());
+		
+		// ポリゴン1のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][1].second);
+		oBBIndices[i].push_back(res[i][2].second);
+
+		// ポリゴン2のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][1].second);
+		oBBIndices[i].push_back(res[i][3].second);
+
+		// ポリゴン3のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][2].second);
+		oBBIndices[i].push_back(res[i][3].second);
+
+		// 以下ポリゴン4→8まで繰り返し
+		StoreIndiceOfOBB(res, i, 4);
+		StoreIndiceOfOBB(res, i, 5);
+		StoreIndiceOfOBB(res, i, 6);
+	}
+
+	boxIBVs.resize(oBBVertices.size());
+	boxIbBuffs.resize(oBBVertices.size());
+	mappedIdx.resize(oBBVertices.size());
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		auto indexNum = oBBIndices[i].size();
+		auto indiceBuffSize = indexNum * sizeof(unsigned int);
+		auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
+		boxIbBuffs[i] = nullptr;
+		auto result = dev->CreateCommittedResource
+		(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&indicesDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+			nullptr,
+			IID_PPV_ARGS(boxIbBuffs[i].ReleaseAndGetAddressOf())
+		);
+		//if (result != S_OK) return result;
+
+		mappedIdx[i] = nullptr;
+		result = boxIbBuffs[i]->Map(0, nullptr, (void**)&mappedIdx[i]); // mapping
+		std::copy(std::begin(oBBIndices[i]), std::end(oBBIndices[i]), mappedIdx[i]);
+		boxIbBuffs[i]->Unmap(0, nullptr);
+
+		boxIBVs[i].BufferLocation = boxIbBuffs[i]->GetGPUVirtualAddress();
+		boxIBVs[i].SizeInBytes = indiceBuffSize;
+		boxIBVs[i].Format = DXGI_FORMAT_R32_UINT;
+	}
+
 	// バッファー作成2
 	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(/*output2*/output3));
 	auto result = dev->CreateCommittedResource
@@ -453,9 +520,6 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
 				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
 			}
-			//collidedOBB.Center.x += moveMatrix.r[3].m128_f32[0];
-			//collidedOBB.Center.y += moveMatrix.r[3].m128_f32[1];
-			//collidedOBB.Center.z -= moveMatrix.r[3].m128_f32[2];
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
@@ -496,9 +560,6 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
 				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
 			}
-			//collidedOBB.Center.x += moveMatrix.r[3].m128_f32[0];
-			//collidedOBB.Center.y += moveMatrix.r[3].m128_f32[1];
-			//collidedOBB.Center.z -= moveMatrix.r[3].m128_f32[2];
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
@@ -598,7 +659,6 @@ std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(st
 		normZPos = (points[0].z + points[3].z) / 2.0f;
 	}
 	XMVECTOR normPos = { normXPos, normYPos, normZPos, 1 };
-	//auto boxCenter = collidedOBB.Center;
 	XMVECTOR boxCenterVec = { boxCenter.x, boxCenter.y, boxCenter.z, 1 };
 	auto normal = XMVectorSubtract(normPos, boxCenterVec);// XMVector3Cross(lines[0], lines[1]);
 	normal = XMVector4Normalize(normal); // 衝突面法線の算出完了
@@ -619,4 +679,31 @@ std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(st
 	result.second = slideVector;
 
 	return result;
+}
+
+void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
+{
+	std::map<int, std::vector<std::pair<float, int>>> res2;
+	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
+	{
+		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
+		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
+		res2[loopCnt].push_back(pair);
+	}
+	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
+
+	// ポリゴン1のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+
+	// ポリゴン2のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+
+	// ポリゴン3のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
 }

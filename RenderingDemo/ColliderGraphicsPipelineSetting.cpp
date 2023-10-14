@@ -71,7 +71,7 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC ColliderGraphicsPipelineSetting::SetGPL(
 	gpipeLine.SampleDesc.Count = 1; //1サンプル/ピクセル
 	gpipeLine.SampleDesc.Quality = 0;
 
-	gpipeLine.PrimitiveTopologyType = /*D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE*/D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	gpipeLine.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE/*D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE*/;
 
 	gpipeLine.DepthStencilState.DepthEnable = true;
 	gpipeLine.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
