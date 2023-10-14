@@ -340,14 +340,54 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 bool CollisionManager::OBBCollisionCheck()
 {
 	bool result = true;
-	for (auto& box : boxes)
+
+	// 各OBB中心からキャラクターコライダー中心までの距離を測定し、OBB.Extents.x * 2(この数値の決定根拠はない)とキャラコライダー半径を足した数値を減算する。
+	bool isUpperMargin = true;
+	auto sCenter = bSphere.Center;
+	BoundingOrientedBox targetOBB;
+
+	for (int i = 0; i < boxes.size(); ++i)
 	{
-		if (box.Contains(bSphere) != 0)
+		float maxExtents = boxes[i].Extents.x;
+		if (maxExtents < boxes[i].Extents.y)
 		{
-			result = false;
-			collidedOBB = box;
-			break;
+			maxExtents = boxes[i].Extents.y;
 		}
+		if (maxExtents < boxes[i].Extents.z)
+		{
+			maxExtents = boxes[i].Extents.z;
+		}
+		auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
+		auto len = XMVector3Length(dist);
+		len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
+		if (len.m128_f32[0] < 0)
+		{
+			isUpperMargin = false;
+			targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
+		}
+	}
+	// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
+	if (isUpperMargin)
+	{
+		return result;
+	}
+
+	// 総当たりの場合
+	//for (auto& box : boxes)
+	//{
+	//	if (box.Contains(bSphere) != 0)
+	//	{
+	//		result = false;
+	//		collidedOBB = box;
+	//		break;
+	//	}
+	//}
+
+	// 総当たりではなくtargetOBBにのみ当たり判定を行う
+	if (targetOBB.Contains(bSphere) != 0)
+	{
+		result = false;
+		collidedOBB = targetOBB;
 	}
 
 	return result;

@@ -806,6 +806,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
 		_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());
 
+		// キー入力処理。当たり判定処理も含める。
 		if (input->CheckKey(DIK_W)) inputW = true;
 		if (input->CheckKey(DIK_LEFT)) inputLeft = true;
 		if (input->CheckKey(DIK_RIGHT)) inputRight = true;
@@ -819,24 +820,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			if (inputLeft)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-
-				// Collision process
-				//if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
-				//{
-				//	connanDirectionUntilCollision = connanDirection;
-				//}
 			}
 
 			// Right Key
 			if (inputRight)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-
-				// Collision process
-				//if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
-				//{
-				//	connanDirectionUntilCollision = connanDirection;
-				//}
 			}
 
 			// W Key
@@ -863,32 +852,9 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		// W Key
 		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 		{
-			//auto box1 = collisionManager->GetBoundingBox1Pointer();
-			//auto sCenter = collisionManager->GetBoundingSphere().Center;
-			//// キャラクター中心は移動と共にワールド座標が変化していく。XYZ座標絶対値にOBBのExtentsを追加した値に対して、オブジェクトコライダーのXYZ座標総数を算出する。
-			//// これらを比較して前者の方が値が大きい場合のみ衝突判定を行う。複数オブジェクトが存在する際の総当たり判定を回避する一次対策。空間分割法を目標とする。
-			//auto boxCenterVec = XMLoadFloat3(&box1->Center);
-			//auto colliderTotalExtents = pow(box1->Extents.x + box1->Extents.y + box1->Extents.z, 1.0f);
-			//auto colliderTotalVal = abs(boxCenterVec.m128_f32[0]) + abs(boxCenterVec.m128_f32[1]) + abs(boxCenterVec.m128_f32[2]);
-			//auto charaTotalVal = abs(sCenter.x) + abs(sCenter.y) + abs(sCenter.z);
-			//int margin = colliderTotalExtents;
-			//charaTotalVal += collisionManager->GetBoundingSphere().Radius + margin;
-			//bool isCheckNecessary = charaTotalVal > colliderTotalVal;
-
-			//if (collisionManager->OBBCollisionCheck()/*!isCheckNecessary*/)
-			//{
-			//	collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
-			//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
-			//}
-
-			//// Collision process
-			//else
-			//{
-			collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);				
-			//}			
+			// 当たり判定処理
+			collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);
 		}
-
-
 
 		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
@@ -1049,10 +1015,8 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 		//頂点バッファーのCPU記述子ハンドルを設定
 		for (int i = 0; i < collisionManager->GetOBBNum(); ++i)
 		{
-			//★boxvbv1のGPU仮想アドレスが同じである以上、上書きしてるだけ。最後に上書きされた頂点が描画される。バッファを数分増やすか...
-			//collisionManager->MappingVertexBufferViewOfOBB(i);
 			_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBVs(i));
-			//★インデックスバッファーのビューを設定
+			// インデックスバッファーのビューを設定
 			_cmdList->IASetIndexBuffer(collisionManager->GetBoxIBVs(i));
 			_cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
