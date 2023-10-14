@@ -353,13 +353,13 @@ bool CollisionManager::OBBCollisionCheck()
 	return result;
 }
 
-void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex)
+void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex)
 {
 	XMFLOAT3 boxCenterPos = collidedOBB.Center;
 	XMVECTOR boxCenterVec = XMLoadFloat3(&collidedOBB.Center);
 	BoundingSphere reserveSphere = bSphere; // 操作キャラクターコリジョンを動かす前の情報を残しておく
 	auto sCenter = bSphere.Center;
-	MoveCharacterBoundingBox(forwardSpeed, characterDirection); // move collider
+	MoveCharacterBoundingBox(forwardSpeed, characterDirection); // move collider for collision test
 
 	if (OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
 	{

@@ -821,10 +821,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
-				{
-					connanDirectionUntilCollision = connanDirection;
-				}
+				//if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
+				//{
+				//	connanDirectionUntilCollision = connanDirection;
+				//}
 			}
 
 			// Right Key
@@ -833,10 +833,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 
 				// Collision process
-				if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
-				{
-					connanDirectionUntilCollision = connanDirection;
-				}
+				//if (collisionManager->OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
+				//{
+				//	connanDirectionUntilCollision = connanDirection;
+				//}
 			}
 
 			// W Key
@@ -844,6 +844,20 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			{
 				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 			}
+		}
+
+		// Left Key
+		if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
+		{
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
+			connanDirection *= rightSpinMatrix;
+		}
+
+		// Right Key
+		if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
+		{
+			resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
+			connanDirection *= leftSpinMatrix;
 		}
 
 		// W Key
@@ -861,32 +875,20 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			//charaTotalVal += collisionManager->GetBoundingSphere().Radius + margin;
 			//bool isCheckNecessary = charaTotalVal > colliderTotalVal;
 
-			if (collisionManager->OBBCollisionCheck()/*!isCheckNecessary*/)
-			{
-				collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
-			}
+			//if (collisionManager->OBBCollisionCheck()/*!isCheckNecessary*/)
+			//{
+			//	collisionManager->MoveCharacterBoundingBox(forwardSpeed, connanDirection); // move collider
+			//	resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+			//}
 
-			// Collision process
-			else
-			{
-				collisionManager->OBBTransrationWithCollision(forwardSpeed, connanDirection, fbxIndex);				
-			}			
+			//// Collision process
+			//else
+			//{
+			collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);				
+			//}			
 		}
 
-		// Left Key
-		if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
-		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
-			connanDirection *= rightSpinMatrix;
-		}
 
-		// Right Key
-		if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
-		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
-			connanDirection *= leftSpinMatrix;
-		}
 
 		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);

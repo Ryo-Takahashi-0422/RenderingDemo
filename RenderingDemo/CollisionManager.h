@@ -66,7 +66,7 @@ public:
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
 	bool OBBCollisionCheck();
-	void OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
+	void OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBVs(int index) { return &boxVBVs[index]; }; // Åö
 	D3D12_INDEX_BUFFER_VIEW* GetBoxIBVs(int index) { return &boxIBVs[index]; }; // Åö
 	int GetOBBNum() { return oBBVertices.size(); };
