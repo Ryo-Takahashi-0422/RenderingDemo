@@ -262,6 +262,30 @@ void CollisionManager::Init()
 	boxBuff2->Map(0, nullptr, (void**)&mappedBox2);
 	std::copy(std::begin(output3), std::end(output3), mappedBox2);
 	//boxBuff2->Unmap(0, nullptr);
+
+	// ｲﾝﾃﾞｯｸｽﾊﾞｯﾌｧー作成
+	auto indexNum = sphereColliderIndices.size();
+	auto indiceBuffSize = indexNum * sizeof(unsigned int);
+	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
+
+	result = dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&indicesDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(sphereIbBuff.ReleaseAndGetAddressOf())
+	);
+	//if (result != S_OK) return result;
+
+	result = sphereIbBuff->Map(0, nullptr, (void**)&mappedSphereIdx); // mapping
+	std::copy(std::begin(sphereColliderIndices), std::end(sphereColliderIndices), mappedSphereIdx);
+	sphereIbBuff->Unmap(0, nullptr);
+
+	sphereIBV.BufferLocation = sphereIbBuff->GetGPUVirtualAddress();
+	sphereIBV.SizeInBytes = indiceBuffSize;
+	sphereIBV.Format = DXGI_FORMAT_R32_UINT;
 }
 
 void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection)
@@ -336,6 +360,80 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	output3[loopEndCnt].x = center.x;
 	output3[loopEndCnt].y = center.y - Radius;
 	output3[loopEndCnt].z = center.z;
+
+	// インデックス作成
+	// 北極点～北極点と赤道の間
+	for (int j = 1; j < 8; ++j)
+	{
+		sphereColliderIndices.push_back(0);
+		sphereColliderIndices.push_back(j);
+		sphereColliderIndices.push_back(j + 1);
+	}
+
+	sphereColliderIndices.push_back(0);
+	sphereColliderIndices.push_back(8);
+	sphereColliderIndices.push_back(1);
+
+	// 北極点と赤道の間～赤道
+	sphereColliderIndices.push_back(1);
+	sphereColliderIndices.push_back(2);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(2);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(10);
+
+	for (int k = 2; k < 8; ++k)
+	{
+		sphereColliderIndices.push_back(k);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 9);
+	}
+
+	sphereColliderIndices.push_back(8);
+	sphereColliderIndices.push_back(1);
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(1);
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(9);
+
+	// 赤道～南極点と赤道の間
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(10);
+	sphereColliderIndices.push_back(17);
+	sphereColliderIndices.push_back(10);
+	sphereColliderIndices.push_back(17);
+	sphereColliderIndices.push_back(18);
+
+	for (int k = 10; k < 16; ++k)
+	{
+		sphereColliderIndices.push_back(k);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 9);
+	}
+
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(17);
+
+	// 南極点と赤道の間～南極
+	for (int j = 17; j < 24; ++j)
+	{
+		sphereColliderIndices.push_back(25);
+		sphereColliderIndices.push_back(j);
+		sphereColliderIndices.push_back(j + 1);
+	}
+	sphereColliderIndices.push_back(25);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(17);
 }
 
 bool CollisionManager::OBBCollisionCheck()

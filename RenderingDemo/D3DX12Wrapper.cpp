@@ -718,7 +718,7 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
-		//resourceManager[i]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
+		resourceManager[1]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
 		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
 
 		//フリップしてレンダリングされたイメージをユーザーに表示
@@ -1027,7 +1027,9 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 	else
 	{
 		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV2());
-		_cmdList->DrawInstanced(26, 1, 0, 0);
+		_cmdList->IASetIndexBuffer(collisionManager->GetCharacterSphereColliderIBVs());
+		_cmdList->DrawIndexedInstanced(144, 1, 0, 0, 0);
+		//_cmdList->DrawInstanced(26, 1, 0, 0);
 	}
 
 	////ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
