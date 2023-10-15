@@ -718,7 +718,7 @@ void D3DX12Wrapper::Run() {
 		//// update by imgui
 		//SetFov();
 
-		resourceManager[1]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
+		//resourceManager[1]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
 		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
 
 		//フリップしてレンダリングされたイメージをユーザーに表示

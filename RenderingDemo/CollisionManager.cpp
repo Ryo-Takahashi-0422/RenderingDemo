@@ -375,21 +375,22 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	sphereColliderIndices.push_back(1);
 
 	// 北極点と赤道の間～赤道
-	sphereColliderIndices.push_back(1);
-	sphereColliderIndices.push_back(2);
-	sphereColliderIndices.push_back(9);
-	sphereColliderIndices.push_back(2);
-	sphereColliderIndices.push_back(9);
-	sphereColliderIndices.push_back(10);
-
-	for (int k = 2; k < 8; ++k)
+	for (int k = 1; k < 8; ++k)
 	{
 		sphereColliderIndices.push_back(k);
-		sphereColliderIndices.push_back(k + 1);
 		sphereColliderIndices.push_back(k + 8);
 		sphereColliderIndices.push_back(k + 1);
 		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);		
 		sphereColliderIndices.push_back(k + 9);
+
+		// 以下並びでは一部のラインが生成されない。原因不明。赤道～南極点と赤道の間を上記・下記と同様の並びにすると一部ラインが描画されなくなる。
+		//sphereColliderIndices.push_back(k);
+		//sphereColliderIndices.push_back(k + 1);
+		//sphereColliderIndices.push_back(k + 8);
+		//sphereColliderIndices.push_back(k + 1);
+		//sphereColliderIndices.push_back(k + 8);
+		//sphereColliderIndices.push_back(k + 9);
 	}
 
 	sphereColliderIndices.push_back(8);
@@ -400,21 +401,17 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	sphereColliderIndices.push_back(9);
 
 	// 赤道～南極点と赤道の間
-	sphereColliderIndices.push_back(9);
-	sphereColliderIndices.push_back(10);
-	sphereColliderIndices.push_back(17);
-	sphereColliderIndices.push_back(10);
-	sphereColliderIndices.push_back(17);
-	sphereColliderIndices.push_back(18);
 
-	for (int k = 10; k < 16; ++k)
+	for (int k = 9; k < 16; ++k)
 	{
+		// 並びの規則性については謎。ライン生成は並びに影響される。ポリゴン表示は影響されない。
+		sphereColliderIndices.push_back(k + 8);
 		sphereColliderIndices.push_back(k);
-		sphereColliderIndices.push_back(k + 1);
-		sphereColliderIndices.push_back(k + 8);
-		sphereColliderIndices.push_back(k + 1);
-		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);		
 		sphereColliderIndices.push_back(k + 9);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		
 	}
 
 	sphereColliderIndices.push_back(16);
