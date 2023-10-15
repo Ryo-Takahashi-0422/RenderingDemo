@@ -433,6 +433,35 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	sphereColliderIndices.push_back(17);
 }
 
+void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
+{
+	std::map<int, std::vector<std::pair<float, int>>> res2;
+	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
+	{
+		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
+		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
+		res2[loopCnt].push_back(pair);
+	}
+	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
+
+	// 球体同様に並びの規則性は不明。[0][1][2]のように[0]を先頭に並べるとOBB内にポリゴンが描画されてしまう。
+	// ポリゴン1のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+
+	// ポリゴン2のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+
+	// ポリゴン3のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+	
+}
+
 bool CollisionManager::OBBCollisionCheck()
 {
 	bool result = true;
@@ -815,31 +844,4 @@ std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(st
 	result.second = slideVector;
 
 	return result;
-}
-
-void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
-{
-	std::map<int, std::vector<std::pair<float, int>>> res2;
-	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
-	{
-		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
-		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
-		res2[loopCnt].push_back(pair);
-	}
-	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
-
-	// ポリゴン1のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
-
-	// ポリゴン2のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
-
-	// ポリゴン3のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
 }
