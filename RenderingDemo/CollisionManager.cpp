@@ -533,12 +533,53 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 
 	else
 	{
+		bSphere.Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
 		auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 		XMFLOAT3 boxVertexPos[8];
 		collidedOBB.GetCorners(boxVertexPos);
-		bSphere.Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
+		//  1. 頂点p0, p6(g_BoxOffset[0], [6])とそれぞれに隣り合う3点を抽出し、辺を求める。点はGetCorners()でg_BoxOffset[8]の順番で取得可能。
+		//	0→1, 0→3, 0→4
+		//	6→2, 6→5, 6→7
+		//	で0と隣り合う3つの頂点への辺および、6と隣り合う3つの頂点への辺が取得できる。
+		XMVECTOR vZeroOne = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[1]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vZeroThree = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[3]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vZeroFour = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[4]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vSixTwo = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[2]), XMLoadFloat3(&boxVertexPos[6]));
+		XMVECTOR vSixFive = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[5]), XMLoadFloat3(&boxVertexPos[6]));
+		XMVECTOR vSixSeven = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[7]), XMLoadFloat3(&boxVertexPos[6]));
+		//	2. 以下ベクトルの外積 = 面の法線を算出する。DirectX = 左手系に注意
+		//	0→1, 0→3
+		XMVECTOR n1 = XMVector3Cross(vZeroOne, vZeroThree);
+		//	0→1, 0→4
+		XMVECTOR n2 = XMVector3Cross(vZeroFour, vZeroOne);
+		//	0→3, 0→4
+		XMVECTOR n3 = XMVector3Cross(vZeroThree, vZeroFour);
+		//	6→2, 6→5
+		XMVECTOR n4 = XMVector3Cross(vSixTwo, vSixFive);
+		//	6→2, 6→7
+		XMVECTOR n5 = XMVector3Cross(vSixSeven, vSixTwo);
+		//	6→5, 6→7
+		XMVECTOR n6 = XMVector3Cross(vSixFive, vSixSeven);
 
-		// ★面滑らせ実装
+		//	3. XMPlaneFromPointNormal(p0, n1 / 2 / 3), XMPlaneFromPointNormal(p6, n4 / 5 / 6)によってOBBの面を求める
+		XMVECTOR plane1 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n1));
+		XMVECTOR plane2 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n2));
+		XMVECTOR plane3 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n3));
+		XMVECTOR plane4 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n4));
+		XMVECTOR plane5 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n5));
+		XMVECTOR plane6 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n6));
+
+		//	4. XMPlaneDotCoord(plane1 / 2 / 3 / 4 / 5 / 6, bSphere.center)の結果から衝突面を求める
+		XMVECTOR sphereVec = XMLoadFloat3(&sCenter);
+		sphereVec.m128_f32[3] = 1;
+		XMVECTOR dotPlane1Sphere = XMPlaneDotCoord(plane1, sphereVec);
+		XMVECTOR dotPlane2Sphere = XMPlaneDotCoord(plane2, sphereVec);
+		XMVECTOR dotPlane3Sphere = XMPlaneDotCoord(plane3, sphereVec);
+		XMVECTOR dotPlane4Sphere = XMPlaneDotCoord(plane4, sphereVec);
+		XMVECTOR dotPlane5Sphere = XMPlaneDotCoord(plane5, sphereVec);
+		XMVECTOR dotPlane6Sphere = XMPlaneDotCoord(plane6, sphereVec);
+
+		// 面滑らせ実装
 		std::vector<std::pair<float, int>> distances;
 		distances.resize(8);
 		for (int i = 0; i < 8; ++i)
@@ -592,6 +633,8 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 			}
 			++it;
 		}
+		// ★★★BattleFieldの壁のような横長直方体では、上記のようなキャラクターとの距離では面を正しく算出出来ない。例えば横長面にぶつかっているとき、側面の構成点が算出されてしまう。
+		
 		// 2点目もしくは3点目から4点目を決定する
 		auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
 		boxPoint4Cal.push_back(fourthPoint);
@@ -674,6 +717,24 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		centerToCenter = XMVector3Normalize(centerToCenter);
 		auto dot1 = XMVector3Dot(centerToCenter, normal);
 		auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
+
+		//// ★平面作成
+		//XMVECTOR p1 = XMLoadFloat3(&boxPoint4Cal[0]);
+		//auto plane1 = /*XMPlaneFromPoints(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[1]), XMLoadFloat3(&boxPoint4Cal[2]));*/XMPlaneFromPointNormal(p1, normal);
+		//XMVECTOR p2 = XMLoadFloat3(&boxPoint4NextPlaneCal[0]);
+		//auto plane2 =/* XMPlaneFromPoints(XMLoadFloat3(&boxPoint4NextPlaneCal[0]), XMLoadFloat3(&boxPoint4NextPlaneCal[1]), XMLoadFloat3(&boxPoint4NextPlaneCal[2]));*/ XMPlaneFromPointNormal(p2, normalOfNextPlane);
+		//XMVECTOR charaC = XMLoadFloat3(&bSphere.Center);
+		////charaC = XMVectorSubtract(charaC, XMLoadFloat3(&collidedOBB.Center));
+
+		//printf("p1 : %f\n", XMPlaneDotCoord(plane1, charaC).m128_f32[0]);
+		//printf("p2 : %f\n", XMPlaneDotCoord(plane2, charaC).m128_f32[0]);
+		printf("%f\n", dotPlane1Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane2Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane3Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane4Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane5Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane6Sphere.m128_f32[0]);
+		printf("\n");
 
 		// 角に接触していない場合
 		if (dot2.m128_f32[0] < 0.5f)
