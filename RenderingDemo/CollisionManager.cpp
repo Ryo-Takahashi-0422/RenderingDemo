@@ -174,6 +174,73 @@ void CollisionManager::Init()
 		std::copy(std::begin(oBBVertices[i].pos), std::end(oBBVertices[i].pos), mappedOBBs[i]);
 	}
 
+	// 頂点インデックスを生成してマッピングする
+	// まずは距離から頂点の位置関係を把握する。ロジックとしては
+	// 1. 各OBBの[0]頂点と他頂点の距離を算出して小さい順に並び変える
+	// 2. [0][1][2],[0][1][3],[0][2][3]を[0]回りのインデックスとして抽出する。
+	// 3. 距離最大のものを除いて、距離の大きな3点は対角線を形成する頂点で、それぞれに対して手順1,2を繰り返す。
+	std::map<int, std::vector<std::pair<float, int>>> res;
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		for (int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+		{
+			auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[i].pos[0]), XMLoadFloat3(&oBBVertices[i].pos[j]));
+			std::pair<float, int> pair = {XMVector4Length(v1).m128_f32[0], j};
+			res[i].push_back(pair);
+		}
+		std::sort(res[i].begin(), res[i].end());
+		
+		// ポリゴン1のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][1].second);
+		oBBIndices[i].push_back(res[i][2].second);
+
+		// ポリゴン2のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][1].second);
+		oBBIndices[i].push_back(res[i][3].second);
+
+		// ポリゴン3のインデックス
+		oBBIndices[i].push_back(res[i][0].second);
+		oBBIndices[i].push_back(res[i][2].second);
+		oBBIndices[i].push_back(res[i][3].second);
+
+		// 以下ポリゴン4→8まで繰り返し
+		StoreIndiceOfOBB(res, i, 4);
+		StoreIndiceOfOBB(res, i, 5);
+		StoreIndiceOfOBB(res, i, 6);
+	}
+
+	boxIBVs.resize(oBBVertices.size());
+	boxIbBuffs.resize(oBBVertices.size());
+	mappedIdx.resize(oBBVertices.size());
+	for (int i = 0; i < oBBVertices.size(); ++i)
+	{
+		auto indexNum = oBBIndices[i].size();
+		auto indiceBuffSize = indexNum * sizeof(unsigned int);
+		auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
+		boxIbBuffs[i] = nullptr;
+		auto result = dev->CreateCommittedResource
+		(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&indicesDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+			nullptr,
+			IID_PPV_ARGS(boxIbBuffs[i].ReleaseAndGetAddressOf())
+		);
+		//if (result != S_OK) return result;
+
+		mappedIdx[i] = nullptr;
+		result = boxIbBuffs[i]->Map(0, nullptr, (void**)&mappedIdx[i]); // mapping
+		std::copy(std::begin(oBBIndices[i]), std::end(oBBIndices[i]), mappedIdx[i]);
+		boxIbBuffs[i]->Unmap(0, nullptr);
+
+		boxIBVs[i].BufferLocation = boxIbBuffs[i]->GetGPUVirtualAddress();
+		boxIBVs[i].SizeInBytes = indiceBuffSize;
+		boxIBVs[i].Format = DXGI_FORMAT_R32_UINT;
+	}
+
 	// バッファー作成2
 	resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(/*output2*/output3));
 	auto result = dev->CreateCommittedResource
@@ -195,6 +262,30 @@ void CollisionManager::Init()
 	boxBuff2->Map(0, nullptr, (void**)&mappedBox2);
 	std::copy(std::begin(output3), std::end(output3), mappedBox2);
 	//boxBuff2->Unmap(0, nullptr);
+
+	// ｲﾝﾃﾞｯｸｽﾊﾞｯﾌｧー作成
+	auto indexNum = sphereColliderIndices.size();
+	auto indiceBuffSize = indexNum * sizeof(unsigned int);
+	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
+
+	result = dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&indicesDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(sphereIbBuff.ReleaseAndGetAddressOf())
+	);
+	//if (result != S_OK) return result;
+
+	result = sphereIbBuff->Map(0, nullptr, (void**)&mappedSphereIdx); // mapping
+	std::copy(std::begin(sphereColliderIndices), std::end(sphereColliderIndices), mappedSphereIdx);
+	sphereIbBuff->Unmap(0, nullptr);
+
+	sphereIBV.BufferLocation = sphereIbBuff->GetGPUVirtualAddress();
+	sphereIBV.SizeInBytes = indiceBuffSize;
+	sphereIBV.Format = DXGI_FORMAT_R32_UINT;
 }
 
 void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection)
@@ -226,73 +317,214 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 {
 	int div = 8;
-	int loopStartCnt = 2;
-	int loopEndCnt = 2 + div;
+	int loopStartCnt = 1;
+	int loopEndCnt = 1 + div;
 	
-	// 天
+	// 北極点
 	output3[0].x = center.x;
 	output3[0].y = center.y + Radius;
 	output3[0].z = center.z;
 
-	// 地
-	output3[1].x = center.x;
-	output3[1].y = center.y - Radius;
-	output3[1].z = center.z;
-
-	// 水平
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
-	{		
-		output3[i].x = center.x + Radius * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y;
-		output3[i].z = center.z + Radius * sinf(XMConvertToRadians(360 / div * i));
-	}
-	loopStartCnt += div;
-	loopEndCnt += div;
-
 	float halfR = Radius * cosf(XMConvertToRadians(45));
 
-	// 半天	
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
+	// 北極点と赤道の間
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
 	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y + halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y + halfR;
+		output3[loopStartCnt].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
 	}
-	loopStartCnt += div;
-	loopEndCnt += div;
 
-	// 半地
-	for (int i = loopStartCnt; i < loopEndCnt; ++i)
-	{
-		output3[i].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
-		output3[i].y = center.y - halfR;
-		output3[i].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+	loopEndCnt += div;
+	// 赤道
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
+	{		
+		output3[loopStartCnt].x = center.x + Radius * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y;
+		output3[loopStartCnt].z = center.z + Radius * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
 	}
+
+	loopEndCnt += div;
+	// 南極点と赤道の間
+	for (int i = 0; loopStartCnt < loopEndCnt; ++i)
+	{
+		output3[loopStartCnt].x = center.x + halfR * cosf(XMConvertToRadians(360 / div * i));
+		output3[loopStartCnt].y = center.y - halfR;
+		output3[loopStartCnt].z = center.z + halfR * sinf(XMConvertToRadians(360 / div * i));
+		++loopStartCnt;
+	}
+
+	// 南極点
+	output3[loopEndCnt].x = center.x;
+	output3[loopEndCnt].y = center.y - Radius;
+	output3[loopEndCnt].z = center.z;
+
+	// インデックス作成
+	// 北極点～北極点と赤道の間
+	for (int j = 1; j < 8; ++j)
+	{
+		sphereColliderIndices.push_back(0);
+		sphereColliderIndices.push_back(j);
+		sphereColliderIndices.push_back(j + 1);
+	}
+
+	sphereColliderIndices.push_back(0);
+	sphereColliderIndices.push_back(8);
+	sphereColliderIndices.push_back(1);
+
+	// 北極点と赤道の間～赤道
+	for (int k = 1; k < 8; ++k)
+	{
+		sphereColliderIndices.push_back(k);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k + 1);		
+		sphereColliderIndices.push_back(k + 9);
+
+		// 以下並びでは一部のラインが生成されない。原因不明。赤道～南極点と赤道の間を上記・下記と同様の並びにすると一部ラインが描画されなくなる。
+		//sphereColliderIndices.push_back(k);
+		//sphereColliderIndices.push_back(k + 1);
+		//sphereColliderIndices.push_back(k + 8);
+		//sphereColliderIndices.push_back(k + 1);
+		//sphereColliderIndices.push_back(k + 8);
+		//sphereColliderIndices.push_back(k + 9);
+	}
+
+	sphereColliderIndices.push_back(8);
+	sphereColliderIndices.push_back(1);
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(1);
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(9);
+
+	// 赤道～南極点と赤道の間
+
+	for (int k = 9; k < 16; ++k)
+	{
+		// 並びの規則性については謎。ライン生成は並びに影響される。ポリゴン表示は影響されない。
+		sphereColliderIndices.push_back(k + 8);
+		sphereColliderIndices.push_back(k);
+		sphereColliderIndices.push_back(k + 1);		
+		sphereColliderIndices.push_back(k + 9);
+		sphereColliderIndices.push_back(k + 1);
+		sphereColliderIndices.push_back(k + 8);
+		
+	}
+
+	sphereColliderIndices.push_back(16);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(9);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(17);
+
+	// 南極点と赤道の間～南極
+	for (int j = 17; j < 24; ++j)
+	{
+		sphereColliderIndices.push_back(25);
+		sphereColliderIndices.push_back(j);
+		sphereColliderIndices.push_back(j + 1);
+	}
+	sphereColliderIndices.push_back(25);
+	sphereColliderIndices.push_back(24);
+	sphereColliderIndices.push_back(17);
+}
+
+void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
+{
+	std::map<int, std::vector<std::pair<float, int>>> res2;
+	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
+	{
+		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
+		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
+		res2[loopCnt].push_back(pair);
+	}
+	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
+
+	// 球体同様に並びの規則性は不明。[0][1][2]のように[0]を先頭に並べるとOBB内にポリゴンが描画されてしまう。
+	// ポリゴン1のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+
+	// ポリゴン2のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+
+	// ポリゴン3のインデックス
+	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+	
 }
 
 bool CollisionManager::OBBCollisionCheck()
 {
 	bool result = true;
-	for (auto& box : boxes)
+
+	// 各OBB中心からキャラクターコライダー中心までの距離を測定し、OBB.Extents.x * 2(この数値の決定根拠はない)とキャラコライダー半径を足した数値を減算する。
+	bool isUpperMargin = true;
+	auto sCenter = bSphere.Center;
+	BoundingOrientedBox targetOBB;
+
+	for (int i = 0; i < boxes.size(); ++i)
 	{
-		if (box.Contains(bSphere) != 0)
+		float maxExtents = boxes[i].Extents.x;
+		if (maxExtents < boxes[i].Extents.y)
 		{
-			result = false;
-			collidedOBB = box;
-			break;
+			maxExtents = boxes[i].Extents.y;
 		}
+		if (maxExtents < boxes[i].Extents.z)
+		{
+			maxExtents = boxes[i].Extents.z;
+		}
+		auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
+		auto len = XMVector3Length(dist);
+		len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
+		if (len.m128_f32[0] < 0)
+		{
+			isUpperMargin = false;
+			targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
+		}
+	}
+	// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
+	if (isUpperMargin)
+	{
+		return result;
+	}
+
+	// 総当たりの場合
+	//for (auto& box : boxes)
+	//{
+	//	if (box.Contains(bSphere) != 0)
+	//	{
+	//		result = false;
+	//		collidedOBB = box;
+	//		break;
+	//	}
+	//}
+
+	// 総当たりではなくtargetOBBにのみ当たり判定を行う
+	if (targetOBB.Contains(bSphere) != 0)
+	{
+		result = false;
+		collidedOBB = targetOBB;
 	}
 
 	return result;
 }
 
-void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex)
+void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex)
 {
 	XMFLOAT3 boxCenterPos = collidedOBB.Center;
 	XMVECTOR boxCenterVec = XMLoadFloat3(&collidedOBB.Center);
 	BoundingSphere reserveSphere = bSphere; // 操作キャラクターコリジョンを動かす前の情報を残しておく
 	auto sCenter = bSphere.Center;
-	MoveCharacterBoundingBox(forwardSpeed, characterDirection); // move collider
+	MoveCharacterBoundingBox(forwardSpeed, characterDirection); // move collider for collision test
 
 	if (OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
 	{
@@ -301,12 +533,53 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 
 	else
 	{
+		bSphere.Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
 		auto moveMatrix = XMMatrixIdentity(); // 滑らせように初期化して使いまわし
 		XMFLOAT3 boxVertexPos[8];
 		collidedOBB.GetCorners(boxVertexPos);
-		bSphere.Center = reserveSphere.Center; // 衝突したのでキャラクターコリジョンの位置を元に戻す
+		//  1. 頂点p0, p6(g_BoxOffset[0], [6])とそれぞれに隣り合う3点を抽出し、辺を求める。点はGetCorners()でg_BoxOffset[8]の順番で取得可能。
+		//	0→1, 0→3, 0→4
+		//	6→2, 6→5, 6→7
+		//	で0と隣り合う3つの頂点への辺および、6と隣り合う3つの頂点への辺が取得できる。
+		XMVECTOR vZeroOne = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[1]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vZeroThree = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[3]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vZeroFour = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[4]), XMLoadFloat3(&boxVertexPos[0]));
+		XMVECTOR vSixTwo = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[2]), XMLoadFloat3(&boxVertexPos[6]));
+		XMVECTOR vSixFive = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[5]), XMLoadFloat3(&boxVertexPos[6]));
+		XMVECTOR vSixSeven = XMVectorSubtract(XMLoadFloat3(&boxVertexPos[7]), XMLoadFloat3(&boxVertexPos[6]));
+		//	2. 以下ベクトルの外積 = 面の法線を算出する。DirectX = 左手系に注意
+		//	0→1, 0→3
+		XMVECTOR n1 = XMVector3Cross(vZeroOne, vZeroThree);
+		//	0→1, 0→4
+		XMVECTOR n2 = XMVector3Cross(vZeroFour, vZeroOne);
+		//	0→3, 0→4
+		XMVECTOR n3 = XMVector3Cross(vZeroThree, vZeroFour);
+		//	6→2, 6→5
+		XMVECTOR n4 = XMVector3Cross(vSixTwo, vSixFive);
+		//	6→2, 6→7
+		XMVECTOR n5 = XMVector3Cross(vSixSeven, vSixTwo);
+		//	6→5, 6→7
+		XMVECTOR n6 = XMVector3Cross(vSixFive, vSixSeven);
 
-		// ★面滑らせ実装
+		//	3. XMPlaneFromPointNormal(p0, n1 / 2 / 3), XMPlaneFromPointNormal(p6, n4 / 5 / 6)によってOBBの面を求める
+		XMVECTOR plane1 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n1));
+		XMVECTOR plane2 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n2));
+		XMVECTOR plane3 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[0]), n3));
+		XMVECTOR plane4 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n4));
+		XMVECTOR plane5 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n5));
+		XMVECTOR plane6 = XMVector4Normalize(XMPlaneFromPointNormal(XMLoadFloat3(&boxVertexPos[6]), n6));
+
+		//	4. XMPlaneDotCoord(plane1 / 2 / 3 / 4 / 5 / 6, bSphere.center)の結果から衝突面を求める
+		XMVECTOR sphereVec = XMLoadFloat3(&sCenter);
+		sphereVec.m128_f32[3] = 1;
+		XMVECTOR dotPlane1Sphere = XMPlaneDotCoord(plane1, sphereVec);
+		XMVECTOR dotPlane2Sphere = XMPlaneDotCoord(plane2, sphereVec);
+		XMVECTOR dotPlane3Sphere = XMPlaneDotCoord(plane3, sphereVec);
+		XMVECTOR dotPlane4Sphere = XMPlaneDotCoord(plane4, sphereVec);
+		XMVECTOR dotPlane5Sphere = XMPlaneDotCoord(plane5, sphereVec);
+		XMVECTOR dotPlane6Sphere = XMPlaneDotCoord(plane6, sphereVec);
+
+		// 面滑らせ実装
 		std::vector<std::pair<float, int>> distances;
 		distances.resize(8);
 		for (int i = 0; i < 8; ++i)
@@ -360,6 +633,8 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 			}
 			++it;
 		}
+		// ★★★BattleFieldの壁のような横長直方体では、上記のようなキャラクターとの距離では面を正しく算出出来ない。例えば横長面にぶつかっているとき、側面の構成点が算出されてしまう。
+		
 		// 2点目もしくは3点目から4点目を決定する
 		auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
 		boxPoint4Cal.push_back(fourthPoint);
@@ -443,6 +718,24 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 		auto dot1 = XMVector3Dot(centerToCenter, normal);
 		auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
 
+		//// ★平面作成
+		//XMVECTOR p1 = XMLoadFloat3(&boxPoint4Cal[0]);
+		//auto plane1 = /*XMPlaneFromPoints(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[1]), XMLoadFloat3(&boxPoint4Cal[2]));*/XMPlaneFromPointNormal(p1, normal);
+		//XMVECTOR p2 = XMLoadFloat3(&boxPoint4NextPlaneCal[0]);
+		//auto plane2 =/* XMPlaneFromPoints(XMLoadFloat3(&boxPoint4NextPlaneCal[0]), XMLoadFloat3(&boxPoint4NextPlaneCal[1]), XMLoadFloat3(&boxPoint4NextPlaneCal[2]));*/ XMPlaneFromPointNormal(p2, normalOfNextPlane);
+		//XMVECTOR charaC = XMLoadFloat3(&bSphere.Center);
+		////charaC = XMVectorSubtract(charaC, XMLoadFloat3(&collidedOBB.Center));
+
+		//printf("p1 : %f\n", XMPlaneDotCoord(plane1, charaC).m128_f32[0]);
+		//printf("p2 : %f\n", XMPlaneDotCoord(plane2, charaC).m128_f32[0]);
+		printf("%f\n", dotPlane1Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane2Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane3Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane4Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane5Sphere.m128_f32[0]);
+		printf("%f\n", dotPlane6Sphere.m128_f32[0]);
+		printf("\n");
+
 		// 角に接触していない場合
 		if (dot2.m128_f32[0] < 0.5f)
 		{
@@ -453,9 +746,6 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
 				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
 			}
-			//collidedOBB.Center.x += moveMatrix.r[3].m128_f32[0];
-			//collidedOBB.Center.y += moveMatrix.r[3].m128_f32[1];
-			//collidedOBB.Center.z -= moveMatrix.r[3].m128_f32[2];
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
@@ -496,9 +786,6 @@ void CollisionManager::OBBTransrationWithCollision(float forwardSpeed, XMMATRIX 
 				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
 				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
 			}
-			//collidedOBB.Center.x += moveMatrix.r[3].m128_f32[0];
-			//collidedOBB.Center.y += moveMatrix.r[3].m128_f32[1];
-			//collidedOBB.Center.z -= moveMatrix.r[3].m128_f32[2];
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
@@ -598,7 +885,6 @@ std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(st
 		normZPos = (points[0].z + points[3].z) / 2.0f;
 	}
 	XMVECTOR normPos = { normXPos, normYPos, normZPos, 1 };
-	//auto boxCenter = collidedOBB.Center;
 	XMVECTOR boxCenterVec = { boxCenter.x, boxCenter.y, boxCenter.z, 1 };
 	auto normal = XMVectorSubtract(normPos, boxCenterVec);// XMVector3Cross(lines[0], lines[1]);
 	normal = XMVector4Normalize(normal); // 衝突面法線の算出完了
