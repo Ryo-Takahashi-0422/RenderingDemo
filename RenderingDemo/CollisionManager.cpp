@@ -579,6 +579,107 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		XMVECTOR dotPlane5Sphere = XMPlaneDotCoord(plane5, sphereVec);
 		XMVECTOR dotPlane6Sphere = XMPlaneDotCoord(plane6, sphereVec);
 
+		int collisionPlaneCount = 0;
+		std::vector<std::pair<float, int>> collidedPlanes;
+		if (dotPlane1Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane1Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 1;
+			++collisionPlaneCount;
+		}
+		if (dotPlane2Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane2Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 2;
+			++collisionPlaneCount;
+		}
+		if (dotPlane3Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane3Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 3;
+			++collisionPlaneCount;
+		}
+		if (dotPlane4Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane4Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 4;
+			++collisionPlaneCount;
+		}
+		if (dotPlane5Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane5Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 5;
+			++collisionPlaneCount;
+		}
+		if (dotPlane6Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes[collisionPlaneCount].first = dotPlane6Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 6;
+			++collisionPlaneCount;
+		}
+
+		std::vector<XMFLOAT3> boxPoint4Cal;
+		// not corner collision && collided a plane
+		if (collisionPlaneCount == 1 && collidedPlanes[0].first > 0)
+		{
+			// plane1 points
+			if (collidedPlanes[0].second == 1)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+			}
+			// plane2 points
+			else if (collidedPlanes[0].second == 2)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+			}
+			// plane3 points
+			else if (collidedPlanes[0].second == 3)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane4 points
+			else if (collidedPlanes[0].second == 4)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+			}
+			// plane5 points
+			else if (collidedPlanes[0].second == 5)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane6 points
+			else if (collidedPlanes[0].second == 6)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+		}
+
+		// 2つの場合内積から割合計算できないか試す
+		else if (collisionPlaneCount == 2 && collidedPlanes[0].first > 0 && collidedPlanes[1].first > 0)
+		{
+			auto it = collidedPlanes.begin();
+			//std::sort(collidedPlanes.begin(), collidedPlanes.end());
+
+		}
+
 		// 面滑らせ実装
 		std::vector<std::pair<float, int>> distances;
 		distances.resize(8);
@@ -607,7 +708,7 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		// 選出した最も近い3点のXYZ座標を抽出する。
 		float epsilon = 0.00005f;
 		auto it = distances.begin();
-		std::vector<XMFLOAT3> boxPoint4Cal;
+		
 		boxPoint4Cal.push_back(boxVertexPos[it->second]); // 最初の頂点を格納してイテレータを進める
 		++it;
 		for (int i = 0; i < 2; ++i)
@@ -638,6 +739,8 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		// 2点目もしくは3点目から4点目を決定する
 		auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
 		boxPoint4Cal.push_back(fourthPoint);
+
+
 		// 法線ベクトルとスライド方向を算出する
 		auto normalAndSlideVector = CalcurateNormalAndSlideVector(boxPoint4Cal, boxCenterPos);
 		auto normal = normalAndSlideVector.first;
