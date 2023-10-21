@@ -210,11 +210,11 @@ HRESULT ResourceManager::Init()
 		isAnimationModel = true;
 	}
 
-	// fbxモデルのxyzローカル座標回転値を取得
-	auto localRotation = _fbxInfoManager->GetLocalRotation();
-	localRotationFloat.x = (float)localRotation.mData[0];
-	localRotationFloat.y = (float)localRotation.mData[1];
-	localRotationFloat.z = (float)localRotation.mData[2];
+	//// fbxモデルのxyzローカル座標回転値を取得
+	//auto localRotation = _fbxInfoManager->GetLocalRotation();
+	//localRotationFloat.x = (float)localRotation.mData[0];
+	//localRotationFloat.y = (float)localRotation.mData[1];
+	//localRotationFloat.z = (float)localRotation.mData[2];
 	
 }
 

@@ -43,6 +43,8 @@ void CollisionManager::Init()
 		++itVertMap;
 	}
 
+	// fbxモデルのxyzローカル回転・平行移動行列群を取得
+	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
 	std::map<std::string, std::vector<XMFLOAT3>> boxPoints;
 	itVertMap = vertMaps.begin();
 	//std::vector<float> xMax, xMin, yMax, yMin, zMax, zMin;
@@ -55,24 +57,92 @@ void CollisionManager::Init()
 		auto zMax = *std::max_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
 		auto zMin = *std::min_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
 
-		XMFLOAT3 xMaxYMaxZmax = { xMax ,yMax ,zMax };
-		XMFLOAT3 xMaxYMinZmax = { xMax ,yMin ,zMax };
-		XMFLOAT3 xMaxYMaxZmin = { xMax ,yMax ,zMin };
-		XMFLOAT3 xMaxYMinZmin = { xMax ,yMin ,zMin };
+		// x,y,zの値を重複なく一時配列変数に格納して、降順にソートする
+		std::vector<float> xContainerTemp;
+		for (auto& xValue : xContainer[itVertMap->first])
+		{
+			if (std::find(xContainerTemp.begin(), xContainerTemp.end(), xValue) == xContainerTemp.end())
+			{
+				xContainerTemp.push_back(xValue);
+			}
+		}
+		//std::sort(xContainerTemp.rbegin(), xContainerTemp.rend());
 
-		XMFLOAT3 xMinYMaxZmax = { xMin ,yMax ,zMax };
-		XMFLOAT3 xMinYMinZmax = { xMin ,yMin ,zMax };
-		XMFLOAT3 xMinYMaxZmin = { xMin ,yMax ,zMin };
-		XMFLOAT3 xMinYMinZmin = { xMin ,yMin ,zMin };
+		std::vector<float> yContainerTemp;
+		for (auto& yValue : yContainer[itVertMap->first])
+		{
+			if (std::find(yContainerTemp.begin(), yContainerTemp.end(), yValue) == yContainerTemp.end())
+			{
+				yContainerTemp.push_back(yValue);
+			}
+		}
+		//std::sort(yContainerTemp.rbegin(), yContainerTemp.rend());
 
-		boxPoints[itVertMap->first].push_back(xMaxYMaxZmax);
-		boxPoints[itVertMap->first].push_back(xMaxYMinZmax);
-		boxPoints[itVertMap->first].push_back(xMaxYMaxZmin);
-		boxPoints[itVertMap->first].push_back(xMaxYMinZmin);
-		boxPoints[itVertMap->first].push_back(xMinYMaxZmax);
-		boxPoints[itVertMap->first].push_back(xMinYMinZmax);
-		boxPoints[itVertMap->first].push_back(xMinYMaxZmin);
-		boxPoints[itVertMap->first].push_back(xMinYMinZmin);
+		std::vector<float> zContainerTemp;
+		for (auto& zValue : zContainer[itVertMap->first])
+		{
+			if (std::find(zContainerTemp.begin(), zContainerTemp.end(), zValue) == zContainerTemp.end())
+			{
+				zContainerTemp.push_back(zValue);
+			}
+		}
+		//std::sort(zContainerTemp.rbegin(), zContainerTemp.rend());
+
+		std::vector<XMFLOAT3> allPoints;
+		for (auto& point : vertMaps[itVertMap->first])
+		{
+			bool isStored = false;
+			for (int i = 0; i < xContainerTemp.size(); ++i)
+			{
+				if (point.x == xContainerTemp[i])
+				{
+					allPoints.push_back(point);
+					isStored = true;
+				}
+			}
+			if (isStored) continue;
+
+			for (int i = 0; i < yContainerTemp.size(); ++i)
+			{
+				if (point.y == yContainerTemp[i])
+				{
+					allPoints.push_back(point);
+					isStored = true;
+				}
+			}
+			if (isStored) continue;
+
+			for (int i = 0; i < zContainerTemp.size(); ++i)
+			{
+				if (point.z == zContainerTemp[i])
+				{
+					allPoints.push_back(point);
+				}
+			}
+		}
+
+		XMVECTOR CenterOfMass = XMVectorZero();
+		int totalCount = 0;
+		// Compute the center of mass and inertia tensor of the points.
+		for (auto& point : allPoints)
+		{
+			CenterOfMass = XMVectorAdd(CenterOfMass, XMLoadFloat3(&point));
+			++totalCount;
+		}
+
+		CenterOfMass = XMVectorMultiply(CenterOfMass, XMVectorReciprocal(XMVectorReplicate(float(totalCount))));
+
+		//★ 
+		// OBBの頂点を逆回転させて回転無しの状態にする。
+		//auto centerPos = XMFLOAT3((xMaxYMaxZmax.x + xMinYMinZmin.x) / 2, (xMaxYMaxZmax.y + xMinYMinZmin.y) / 2, (xMaxYMaxZmax.z + xMinYMinZmin.z) / 2);
+		localTransitionAndRotation[i].r[3].m128_f32[0] = 0;
+		localTransitionAndRotation[i].r[3].m128_f32[1] = 0;
+		localTransitionAndRotation[i].r[3].m128_f32[2] = 0;
+		for (auto& point : allPoints)
+		{
+			XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[i])));
+			boxPoints[itVertMap->first].push_back(point);
+		}
 
 		++itVertMap;
 	}
@@ -83,18 +153,7 @@ void CollisionManager::Init()
 		BoundingOrientedBox::CreateFromPoints(boxes[i], itBoxPoints->second.size(), itBoxPoints->second.data(), (size_t)sizeof(XMFLOAT3));
 		++itBoxPoints;
 	}
-	//★///
 
-	//itVertMap = vertMaps.begin();
-	//for (int i = 0; i < vertmap1.size(); ++i)
-	//{
-	//	BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
-	//	++itVertMap;
-	//}
-
-	// fbxモデルのxyzローカル回転・平行移動行列群を取得
-	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
-	//output1.resize(8 * vertMaps.size());
 	oBBVertices.resize(vertMaps.size());
 
 	// 各OBBをクォータニオンにより回転させ、Extentsを調整し、その頂点群を描画目的で格納していく
@@ -109,13 +168,13 @@ void CollisionManager::Init()
 		orientation.y = -quaternion.m128_f32[1];
 		orientation.z = quaternion.m128_f32[2];
 		orientation.w = quaternion.m128_f32[3];
-		boxes[i].Orientation = orientation;
+		boxes[i].Orientation = orientation; // ★あれば壁のコライダー向きがおかしく、なければ壁のコライダーは無くなり岩のコライダーの向きはOBBでなくなる
 		// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
 		auto yLen = boxes[i].Extents.y;
 		//boxes[i].Extents.x = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
 		//boxes[i].Extents.z = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
 		
-		//★Extentsを調整した結果、boxesは問題ないがBattleFieldは角めり込み発生する。無しの方向でいくか...
+		//★Extentsを調整した結果、boxesは問題ないがBattleFieldは角めり込み発生する。
 		//float adjustExtents = abs(localTransitionAndRotation[i].r[0].m128_f32[0]) + abs(localTransitionAndRotation[i].r[0].m128_f32[2]);
 		//boxes[i].Extents.x /= adjustExtents;
 		//boxes[i].Extents.z /= adjustExtents;
@@ -130,7 +189,6 @@ void CollisionManager::Init()
 			oBBVertices[i].pos[j].z *= -1;
 		}
 	}
-
 
 	// キャラクター用のスフィアコライダー生成
 	auto vetmap2 = resourceManager[1]->GetIndiceAndVertexInfo();
