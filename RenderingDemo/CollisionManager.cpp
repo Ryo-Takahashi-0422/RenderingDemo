@@ -66,7 +66,6 @@ void CollisionManager::Init()
 				xContainerTemp.push_back(xValue);
 			}
 		}
-		//std::sort(xContainerTemp.rbegin(), xContainerTemp.rend());
 
 		std::vector<float> yContainerTemp;
 		for (auto& yValue : yContainer[itVertMap->first])
@@ -76,7 +75,6 @@ void CollisionManager::Init()
 				yContainerTemp.push_back(yValue);
 			}
 		}
-		//std::sort(yContainerTemp.rbegin(), yContainerTemp.rend());
 
 		std::vector<float> zContainerTemp;
 		for (auto& zValue : zContainer[itVertMap->first])
@@ -86,45 +84,33 @@ void CollisionManager::Init()
 				zContainerTemp.push_back(zValue);
 			}
 		}
-		//std::sort(zContainerTemp.rbegin(), zContainerTemp.rend());
 
 		std::vector<XMFLOAT3> allPoints;
 		for (auto& point : vertMaps[itVertMap->first])
 		{
-			bool isStored = false;
-			for (int i = 0; i < xContainerTemp.size(); ++i)
-			{
-				if (point.x == xContainerTemp[i])
-				{
-					allPoints.push_back(point);
-					isStored = true;
-				}
-			}
-			if (isStored) continue;
 
-			for (int i = 0; i < yContainerTemp.size(); ++i)
+			if (point.x == xMax || point.x == xMin)
 			{
-				if (point.y == yContainerTemp[i])
-				{
-					allPoints.push_back(point);
-					isStored = true;
-				}
+				allPoints.push_back(point);
+				continue;
 			}
-			if (isStored) continue;
 
-			for (int i = 0; i < zContainerTemp.size(); ++i)
+			if (point.y == yMax || point.y == yMin)
 			{
-				if (point.z == zContainerTemp[i])
-				{
-					allPoints.push_back(point);
-				}
+				allPoints.push_back(point);
+				continue;
+			}
+
+			if (point.z == zMax || point.z == zMin)
+			{
+				allPoints.push_back(point);
 			}
 		}
 
 		XMVECTOR CenterOfMass = XMVectorZero();
 		int totalCount = 0;
 		// Compute the center of mass and inertia tensor of the points.
-		for (auto& point : allPoints)
+		for (auto& point : vertMaps[itVertMap->first])
 		{
 			CenterOfMass = XMVectorAdd(CenterOfMass, XMLoadFloat3(&point));
 			++totalCount;
@@ -529,49 +515,50 @@ bool CollisionManager::OBBCollisionCheck()
 	auto sCenter = bSphere.Center;
 	BoundingOrientedBox targetOBB;
 
-	for (int i = 0; i < boxes.size(); ++i)
-	{
-		float maxExtents = boxes[i].Extents.x;
-		if (maxExtents < boxes[i].Extents.y)
-		{
-			maxExtents = boxes[i].Extents.y;
-		}
-		if (maxExtents < boxes[i].Extents.z)
-		{
-			maxExtents = boxes[i].Extents.z;
-		}
-		auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
-		auto len = XMVector3Length(dist);
-		len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
-		if (len.m128_f32[0] < 0)
-		{
-			isUpperMargin = false;
-			targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
-		}
-	}
-	// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
-	if (isUpperMargin)
-	{
-		return result;
-	}
-
-	// 総当たりの場合
-	//for (auto& box : boxes)
+	// 20231021 TODO 直方体2つの内青いのが認識されない
+	//for (int i = 0; i < boxes.size(); ++i)
 	//{
-	//	if (box.Contains(bSphere) != 0)
+	//	float maxExtents = boxes[i].Extents.x;
+	//	if (maxExtents < boxes[i].Extents.y)
 	//	{
-	//		result = false;
-	//		collidedOBB = box;
-	//		break;
+	//		maxExtents = boxes[i].Extents.y;
+	//	}
+	//	if (maxExtents < boxes[i].Extents.z)
+	//	{
+	//		maxExtents = boxes[i].Extents.z;
+	//	}
+	//	auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
+	//	auto len = XMVector3Length(dist);
+	//	len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
+	//	if (len.m128_f32[0] < 0)
+	//	{
+	//		isUpperMargin = false;
+	//		targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
 	//	}
 	//}
+	//// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
+	//if (isUpperMargin)
+	//{
+	//	return result;
+	//}
 
-	// 総当たりではなくtargetOBBにのみ当たり判定を行う
-	if (targetOBB.Contains(bSphere) != 0)
+	// 総当たりの場合
+	for (auto& box : boxes)
 	{
-		result = false;
-		collidedOBB = targetOBB;
+		if (box.Contains(bSphere) != 0)
+		{
+			result = false;
+			collidedOBB = box;
+			break;
+		}
 	}
+
+	//// 総当たりではなくtargetOBBにのみ当たり判定を行う
+	//if (targetOBB.Contains(bSphere) != 0)
+	//{
+	//	result = false;
+	//	collidedOBB = targetOBB;
+	//}
 
 	return result;
 }
