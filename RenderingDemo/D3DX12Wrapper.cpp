@@ -360,7 +360,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
 	 
 	// 4 textures model
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan.fbx");
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\NewConnan\\NewConnan2.fbx");
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx");
 	
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");

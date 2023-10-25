@@ -88,20 +88,34 @@ void CollisionManager::Init()
 		std::vector<XMFLOAT3> allPoints;
 		for (auto& point : vertMaps[itVertMap->first])
 		{
+			bool isStored = false;
+			for (auto& storedPoint : allPoints)
+			{
+				if (storedPoint.x == point.x && storedPoint.y == point.y && storedPoint.z == point.z)
+				{
+					isStored = true;
+				}
+			}
 
-			if (point.x == xMax || point.x == xMin)
+			if (isStored)
+			{
+				continue;
+			}
+
+			if (point.x >= xMax-1 || point.x <= xMin+1)
+			{
+				allPoints.push_back(point);
+				continue;
+				
+			}
+
+			if (point.y >= yMax-1 || point.y <= yMin+1)
 			{
 				allPoints.push_back(point);
 				continue;
 			}
 
-			if (point.y == yMax || point.y == yMin)
-			{
-				allPoints.push_back(point);
-				continue;
-			}
-
-			if (point.z == zMax || point.z == zMin)
+			if (point.z >= zMax-1 || point.z <= zMin+1)
 			{
 				allPoints.push_back(point);
 			}
@@ -110,7 +124,7 @@ void CollisionManager::Init()
 		XMVECTOR CenterOfMass = XMVectorZero();
 		int totalCount = 0;
 		// Compute the center of mass and inertia tensor of the points.
-		for (auto& point : vertMaps[itVertMap->first])
+		for (auto& point : allPoints)
 		{
 			CenterOfMass = XMVectorAdd(CenterOfMass, XMLoadFloat3(&point));
 			++totalCount;
@@ -134,7 +148,7 @@ void CollisionManager::Init()
 	}
 
 	auto itBoxPoints = boxPoints.begin();
-	for (int i = 0; i < vertmap1.size(); ++i)
+	for (int i = 0; i < vertMaps.size(); ++i)
 	{
 		BoundingOrientedBox::CreateFromPoints(boxes[i], itBoxPoints->second.size(), itBoxPoints->second.data(), (size_t)sizeof(XMFLOAT3));
 		++itBoxPoints;
@@ -154,17 +168,7 @@ void CollisionManager::Init()
 		orientation.y = -quaternion.m128_f32[1];
 		orientation.z = quaternion.m128_f32[2];
 		orientation.w = quaternion.m128_f32[3];
-		boxes[i].Orientation = orientation; // ★あれば壁のコライダー向きがおかしく、なければ壁のコライダーは無くなり岩のコライダーの向きはOBBでなくなる
-		// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
-		auto yLen = boxes[i].Extents.y;
-		//boxes[i].Extents.x = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
-		//boxes[i].Extents.z = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
-		
-		//★Extentsを調整した結果、boxesは問題ないがBattleFieldは角めり込み発生する。
-		//float adjustExtents = abs(localTransitionAndRotation[i].r[0].m128_f32[0]) + abs(localTransitionAndRotation[i].r[0].m128_f32[2]);
-		//boxes[i].Extents.x /= adjustExtents;
-		//boxes[i].Extents.z /= adjustExtents;
-
+		boxes[i].Orientation = orientation; // ローカル回転の逆数により無回転状態にしてOBBを作成したので、元の回転状態に戻す。
 		boxes[i].GetCorners(oBBVertices[i].pos);
 	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
