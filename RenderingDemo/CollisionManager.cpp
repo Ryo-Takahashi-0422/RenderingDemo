@@ -143,15 +143,16 @@ void CollisionManager::Init()
 		//auto centerPos = XMFLOAT3((xMaxYMaxZmax.x + xMinYMinZmin.x) / 2, (xMaxYMaxZmax.y + xMinYMinZmin.y) / 2, (xMaxYMaxZmax.z + xMinYMinZmin.z) / 2);
 		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[0] = 0;
 		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[1] = 0;
-		localTransitionAndRotation[itVertMap->first].r[3].m128_f32[2] *= -1;
+		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[2] *= -1;
 		for (auto& point : itVertMap->second)
 		{
 			//CenterOfMass.m128_f32[0] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[0];
 			//CenterOfMass.m128_f32[1] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[1];
 			//CenterOfMass.m128_f32[2] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[2];
 
-			//XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
-			XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
+			XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
+			//XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
+			point.z *= -1;
 			boxPoints[itVertMap->first].push_back(point);
 		}
 
@@ -179,7 +180,7 @@ void CollisionManager::Init()
 		orientation.y = -quaternion.m128_f32[1];
 		orientation.z = quaternion.m128_f32[2];
 		orientation.w = quaternion.m128_f32[3];
-		boxes[i].Orientation = orientation; // ローカル回転の逆数により無回転状態にしてOBBを作成したので、元の回転状態に戻す。
+		//boxes[i].Orientation = orientation; // ローカル回転の逆数により無回転状態にしてOBBを作成したので、元の回転状態に戻す。
 		boxes[i].GetCorners(oBBVertices[i].pos);
 		//auto transformedCenter = XMVector3Transform(XMLoadFloat3(&boxes[i].Center), localTransitionAndRotation[itVertMap->first]);
 		//XMFLOAT3 temp;
