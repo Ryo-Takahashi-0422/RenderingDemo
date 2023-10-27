@@ -875,7 +875,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 
 		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
-		auto indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfo();
+		auto indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfoOfRenderingMesh();
 		auto itIndiceFirst = indiceContainer.begin();
 		int ofst = 0;
 

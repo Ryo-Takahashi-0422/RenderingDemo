@@ -80,6 +80,7 @@ private:
 	std::vector<XMMATRIX> invBonesInitialPostureMatrixMap;
 
 	std::vector<std::pair<std::string, VertexInfo>> vertMap;
+	std::vector<std::pair<std::string, VertexInfo>> meshVertexInfos;
 	std::vector<std::pair<std::string, PhongInfo>> phongInfos;
 	std::vector<std::pair<std::string, std::string>> materialAndTexturePath;
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> animationNameAndBoneNameWithTranslationMatrix;
@@ -87,6 +88,8 @@ private:
 	XMFLOAT3 localRotationFloat; // FBXManagerより取得したfbxモデルのxyzローカル回転
 	//std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfMesh; // メッシュ毎のローカル座標・回転
 	std::vector<XMMATRIX> localMatrix; // メッシュ毎のローカル座標・回転
+	std::map<std::string, XMMATRIX> localMatrix4OBB; // OBB毎のローカル座標・回転
+	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;
 
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
@@ -114,6 +117,7 @@ public:
 	unsigned int GetFrameNo() { return frameNo; };
 
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return vertMap; };
+	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfRenderingMesh() { return meshVertexInfos; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return phongInfos; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturePath; };
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
@@ -121,6 +125,8 @@ public:
 	bool GetIsAnimationModel() { return isAnimationModel; };
 	//XMFLOAT3 GetLocalRotationFloat() { return localRotationFloat; };
 	//std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfMesh() { return localPosAndRotOfMesh; };
-	std::vector<XMMATRIX> GetLocalMatrix() { return localMatrix; }; // メッシュ毎のローカル座標・回転を取得可能
+	std::map<std::string, XMMATRIX> GetLocalMatrixOfOBB() { return localMatrix4OBB; }; // メッシュ毎のローカル座標・回転を取得可能
+
+	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 };
 

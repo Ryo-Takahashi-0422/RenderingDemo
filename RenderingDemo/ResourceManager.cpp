@@ -16,8 +16,38 @@ HRESULT ResourceManager::Init()
 {
 	HRESULT result = E_FAIL;
 
-	// vertex Resource		
-	vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();	
+	// OBBの頂点群およびローカル回転成分・平行移動成分を取得する
+	vertexListOfOBB = _fbxInfoManager->GetIndiceAndVertexInfoOfOBB();
+
+	auto localPosAndRotOfOBB = _fbxInfoManager->GetLocalPosAndRotOfOBB();
+	//std::vector<XMMATRIX> localMatrixOfOBB; // メッシュ毎のローカル座標・回転
+	//localMatrixOfOBB.resize(localPosAndRotOfOBB.size());
+	auto itlPosRotOfOBB = localPosAndRotOfOBB.begin();
+	for (int i = 0; i < /*localMatrixOfOBB.size()*/localPosAndRotOfOBB.size(); ++i)
+	{
+		// 回転成分の抽出・反映 ※Y軸(UP)回転のみ対応
+		auto localRotation = itlPosRotOfOBB->second.second;
+		localRotation.x = XMConvertToRadians(localRotation.x);
+		localRotation.y = XMConvertToRadians(localRotation.y);
+		localRotation.z = XMConvertToRadians(localRotation.z);
+		//XMMATRIX localRotaionXMatrix = XMMatrixRotationX(localRotation.x);
+		XMMATRIX localRotaionYMatrix = XMMatrixRotationY(localRotation.y); // blenderと符号逆
+		//XMMATRIX localRotaionZMatrix = XMMatrixRotationZ(localRotation.z);
+		//localMatrixOfOBB[i] = localRotaionYMatrix/*XMMatrixIdentity()*/;
+
+		//// 平行移動成分の抽出・反映
+		//localMatrixOfOBB[i].r[3].m128_f32[0] = itlPosRotOfOBB->second.first.x;
+		//localMatrixOfOBB[i].r[3].m128_f32[1] = itlPosRotOfOBB->second.first.y;
+		//localMatrixOfOBB[i].r[3].m128_f32[2] = itlPosRotOfOBB->second.first.z;
+
+		// 平行移動成分の抽出・反映
+		localRotaionYMatrix.r[3].m128_f32[0] = itlPosRotOfOBB->second.first.x;
+		localRotaionYMatrix.r[3].m128_f32[1] = itlPosRotOfOBB->second.first.y;
+		localRotaionYMatrix.r[3].m128_f32[2] = itlPosRotOfOBB->second.first.z;
+		localMatrix4OBB[itlPosRotOfOBB->first] = localRotaionYMatrix;
+
+		++itlPosRotOfOBB;
+	}
 
 	// 各メッシュの回転・平行移動行列を作る
 	auto localPosAndRotOfMesh = _fbxInfoManager->GetLocalPosAndRotOfMesh();
@@ -43,6 +73,9 @@ HRESULT ResourceManager::Init()
 		++itlPosRot;
 	}
 
+	// メッシュの頂点情報を取得する		
+	vertMap = _fbxInfoManager->GetIndiceAndVertexInfo();
+
 	auto itFirst = vertMap.begin();
 	// 各メッシュの頂点座標にローカル回転平行移動行列を乗算してワールド空間へ配置するための座標に変換
 	for (int i = 0; i < vertMap.size(); ++i)
@@ -64,11 +97,28 @@ HRESULT ResourceManager::Init()
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
 	{		
+		//// メッシュ名の最初の3文字が"OBB"でなければ描画対象である(本プログラム仕様として、"OBB"ならOBBコライダー用の頂点情報としている)
+		//std::string targetName = "";
+		//targetName = vertMap[i].first.substr(0, 3).c_str();
+		//if (targetName != "OBB")
+		//{
+		meshVertexInfos.push_back(vertMap[i]);
 		for (int j = 0; j < itFirst->second.vertices.size(); ++j)
-		{
+		{				
 			verticesPosContainer.push_back(itFirst->second.vertices[j]);
 		}
+		//}
+		//else
+		//{
+		//	//localMatrix4OBB[itFirst->first] = localMatrix[i];
+		//}
 		++itFirst;
+	}
+	// デバッグ用。コライダーのみ読み込んだ際の回避処理。
+	if (verticesPosContainer.size() == 0)
+	{
+		FBXVertex dummy = { {0,0,0},{0,0,0},{0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0} };
+		verticesPosContainer.push_back(dummy);
 	}
 
 	auto vertexHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -100,13 +150,19 @@ HRESULT ResourceManager::Init()
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
 	{
+		//std::string targetName = "";
+		//targetName = vertMap[i].first.substr(0, 3).c_str();
+		//if (targetName != "OBB")
+		//{
 		for (int j = 0; j < itFirst->second.indices.size(); ++j)
 		{
 			indexContainer.push_back(itFirst->second.indices[j]);
 		}
+		//}
 		++itFirst;
 	}
 
+	// ★★★インデックスが怪しい...collisionmanagerを起動しないとちゃんと描画される、立方体から作られたメッシュだけが描画されない、初期立方体は少しだけ描画される
 	indexNum = indexContainer.size();
 	auto indiceBuffSize = indexNum * sizeof(unsigned int);
 	auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
