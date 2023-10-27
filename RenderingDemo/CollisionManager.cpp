@@ -16,38 +16,18 @@ void CollisionManager::Init()
 	std::map<std::string, std::vector<XMFLOAT3>> vertMaps;
 	for (int i = 0; i < vertmap1.size(); ++i)
 	{	
-		//// メッシュ名の最初の3文字が"OBB"ならOBBコライダーを生成する
-		//std::string targetName = "";
-		//targetName = vertmap1[i].first.substr(0, 3).c_str();
-		//if (targetName == "OBB")
-		//{
 		for (int j = 0; j < it->second.vertices.size(); ++j)
 		{
 			// オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。
 			it->second.vertices[j].pos.z *= -1;
 			vertMaps[it->first].push_back(it->second.vertices[j].pos);
 		}
-		//}
 		it++;
 	}
 
 	boxes.resize(vertMaps.size());
 	// オブジェクトの頂点情報からそれぞれのOBBを生成する
 	auto itVertMap = vertMaps.begin();
-
-	////★xyz max,min test BattleField.fbxの壁のcenterがNanになる。原因は頂点数？最小データでOBB作成したい
-	//std::map<std::string, std::vector<float>> xContainer, yContainer, zContainer;
-	//int containerSize = vertMaps.begin()->second.size();
-	//for (int i = 0; i < vertMaps.size(); ++i)
-	//{
-	//	for (int j = 0; j < itVertMap->second.size(); ++j)
-	//	{
-	//		xContainer[itVertMap->first].push_back(itVertMap->second[j].x);
-	//		yContainer[itVertMap->first].push_back(itVertMap->second[j].y);
-	//		zContainer[itVertMap->first].push_back(itVertMap->second[j].z);
-	//	}
-	//	++itVertMap;
-	//}
 
 	// fbxモデルのxyzローカル回転・平行移動行列群を取得
 	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrixOfOBB();
@@ -56,77 +36,6 @@ void CollisionManager::Init()
 	//std::vector<float> xMax, xMin, yMax, yMin, zMax, zMin;
 	for (int i = 0; i < vertMaps.size(); ++i)
 	{
-		//auto xMax = *std::max_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
-		//auto xMin = *std::min_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
-		//auto yMax = *std::max_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
-		//auto yMin = *std::min_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
-		//auto zMax = *std::max_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
-		//auto zMin = *std::min_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
-
-		//// x,y,zの値を重複なく一時配列変数に格納して、降順にソートする
-		//std::vector<float> xContainerTemp;
-		//for (auto& xValue : xContainer[itVertMap->first])
-		//{
-		//	if (std::find(xContainerTemp.begin(), xContainerTemp.end(), xValue) == xContainerTemp.end())
-		//	{
-		//		xContainerTemp.push_back(xValue);
-		//	}
-		//}
-
-		//std::vector<float> yContainerTemp;
-		//for (auto& yValue : yContainer[itVertMap->first])
-		//{
-		//	if (std::find(yContainerTemp.begin(), yContainerTemp.end(), yValue) == yContainerTemp.end())
-		//	{
-		//		yContainerTemp.push_back(yValue);
-		//	}
-		//}
-
-		//std::vector<float> zContainerTemp;
-		//for (auto& zValue : zContainer[itVertMap->first])
-		//{
-		//	if (std::find(zContainerTemp.begin(), zContainerTemp.end(), zValue) == zContainerTemp.end())
-		//	{
-		//		zContainerTemp.push_back(zValue);
-		//	}
-		//}
-
-		//std::vector<XMFLOAT3> allPoints;
-		//for (auto& point : vertMaps[itVertMap->first])
-		//{
-		//	bool isStored = false;
-		//	for (auto& storedPoint : allPoints)
-		//	{
-		//		if (storedPoint.x == point.x && storedPoint.y == point.y && storedPoint.z == point.z)
-		//		{
-		//			isStored = true;
-		//		}
-		//	}
-
-		//	if (isStored)
-		//	{
-		//		continue;
-		//	}
-
-		//	if (point.x >= xMax-1 || point.x <= xMin+1)
-		//	{
-		//		allPoints.push_back(point);
-		//		continue;
-		//		
-		//	}
-
-		//	if (point.y >= yMax-1 || point.y <= yMin+1)
-		//	{
-		//		allPoints.push_back(point);
-		//		continue;
-		//	}
-
-		//	if (point.z >= zMax-1 || point.z <= zMin+1)
-		//	{
-		//		allPoints.push_back(point);
-		//	}
-		//}
-
 		XMVECTOR CenterOfMass = XMVectorZero();
 		int totalCount = 0;
 		// Compute the center of mass and inertia tensor of the points.
@@ -138,20 +47,11 @@ void CollisionManager::Init()
 
 		CenterOfMass = XMVectorMultiply(CenterOfMass, XMVectorReciprocal(XMVectorReplicate(float(totalCount))));
 
-		//★ 
 		// OBBの頂点を逆回転させて回転無しの状態にする。
-		//auto centerPos = XMFLOAT3((xMaxYMaxZmax.x + xMinYMinZmin.x) / 2, (xMaxYMaxZmax.y + xMinYMinZmin.y) / 2, (xMaxYMaxZmax.z + xMinYMinZmin.z) / 2);
-		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[0] = 0;
-		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[1] = 0;
-		//localTransitionAndRotation[itVertMap->first].r[3].m128_f32[2] *= -1;
 		for (auto& point : itVertMap->second)
 		{
-			//CenterOfMass.m128_f32[0] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[0];
-			//CenterOfMass.m128_f32[1] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[1];
-			//CenterOfMass.m128_f32[2] = localTransitionAndRotation[itVertMap->first].r[3].m128_f32[2];
-
-			XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
-			//XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
+			//XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
+			XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
 			point.z *= -1;
 			boxPoints[itVertMap->first].push_back(point);
 		}
@@ -180,13 +80,8 @@ void CollisionManager::Init()
 		orientation.y = -quaternion.m128_f32[1];
 		orientation.z = quaternion.m128_f32[2];
 		orientation.w = quaternion.m128_f32[3];
-		//boxes[i].Orientation = orientation; // ローカル回転の逆数により無回転状態にしてOBBを作成したので、元の回転状態に戻す。
 		boxes[i].GetCorners(oBBVertices[i].pos);
-		//auto transformedCenter = XMVector3Transform(XMLoadFloat3(&boxes[i].Center), localTransitionAndRotation[itVertMap->first]);
-		//XMFLOAT3 temp;
-		//XMStoreFloat3(&temp, transformedCenter);
-		//boxes[i].Center = temp;
-		//boxes[i].Center.z *= -1;
+
 		++itVertMap;
 	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
@@ -967,47 +862,6 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		}
 	}
 	
-}
-
-XMFLOAT3 CollisionManager::CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8])
-{
-	float epsilon = 0.00005f;
-	float xVal = abs(storedPoints[0].x) - abs(storedPoints[1].x);
-	float yVal = abs(storedPoints[0].y) - abs(storedPoints[1].y);
-	float zVal = abs(storedPoints[0].z) - abs(storedPoints[1].z);
-	XMFLOAT3 result;
-
-	// 3点目から4点目を決定する
-	if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-	{
-		for (int i = 0; i < 8; ++i)
-		{
-			float xVal = abs(storedPoints[2].x) - abs(boxPoints[i].x);
-			float yVal = abs(storedPoints[2].y) - abs(boxPoints[i].y);
-			float zVal = abs(storedPoints[2].z) - abs(boxPoints[i].z);
-			if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-			{
-				result = boxPoints[i];
-			}
-		}
-	}
-
-	// 2点目から4点目を決定する
-	else
-	{
-		for (int i = 0; i < 8; ++i)
-		{
-			float xVal = abs(storedPoints[1].x) - abs(boxPoints[i].x);
-			float yVal = abs(storedPoints[1].y) - abs(boxPoints[i].y);
-			float zVal = abs(storedPoints[1].z) - abs(boxPoints[i].z);
-			if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-			{
-				result = boxPoints[i];
-			}
-		}
-	}
-
-	return result;
 }
 
 std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points, XMFLOAT3 boxCenter)
