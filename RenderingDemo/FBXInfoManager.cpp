@@ -109,6 +109,8 @@ void FBXInfoManager::ReadFBXFile()
         // 頂点x,y,z座標の抽出及びverticesへの格納
         fbxMesh = scene->GetSrcObject<FbxMesh>(i);
         const char* name = fbxMesh->GetName();
+        std::string targetName = name;
+        targetName = targetName.substr(0, 3).c_str();
 
         // UVセット名の取得
         // * 1つのUVセット名のみ対応
@@ -116,8 +118,72 @@ void FBXInfoManager::ReadFBXFile()
         fbxMesh->GetUVSetNames(uvSetNameList);
         const char* uvSetName = uvSetNameList.GetStringAt(0);
 
+        // OBBの処理
+        int indiceIndexOfOBB = 0;
+        if (targetName == "OBB")
+        {
+            // 頂点情報の処理
+            int controlPointCount = fbxMesh->GetControlPointsCount();
+            VertexInfo vertex;
+            for (int i = 0; i < controlPointCount; i++)
+            {
+                // 頂点座標を読み込んで設定
+                auto point = fbxMesh->GetControlPointAt(i);                
+                vertex.vertices.resize(controlPointCount);
+                vertex.vertices[i].pos.x = point[0];
+                vertex.vertices[i].pos.y = point[1];
+                vertex.vertices[i].pos.z = point[2];
+            }
+            std::pair<std::string, VertexInfo> vertexInfo;
+            vertexInfo.first = name;
+            vertexInfo.second = vertex;
+            
+
+            // インテックス情報の処理
+            std::vector<unsigned int> indices;
+            std::vector<std::array<int, 2>> oldNewIndexPairList;
+            for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
+            {
+                for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
+                {
+                    // インデックス座標
+                    auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
+                    vertexIndex += indiceIndexOfOBB;
+
+                    // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
+                    // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
+                    indices.push_back(vertexIndex);
+                }
+            }
+
+            vertexInfo.second.indices = indices;
+            vertexListOfOBB.push_back(vertexInfo);
+            indiceIndexOfOBB = indices.size();
+
+            // マテリアル情報元のノード取得
+            FbxNode* node = fbxMesh->GetNode();
+            if (node == 0)
+            {
+                continue;
+            }
+            // OBBのためローカル座標・角度取得
+            localTransition = node->LclTranslation.Get();
+            XMFLOAT3 lPos;
+            lPos.x = (float)localTransition.mData[0];
+            lPos.y = (float)localTransition.mData[1];
+            lPos.z = (float)localTransition.mData[2];
+            localPosAndRotOfOBB[name].first = lPos;
+            localRotation = node->LclRotation.Get();
+            XMFLOAT3 lRot;
+            lRot.x = (float)localRotation.mData[0];
+            lRot.y = (float)localRotation.mData[1];
+            lRot.z = (float)localRotation.mData[2];
+            localPosAndRotOfOBB[name].second = lRot;
+
+            continue;
+        }
+
         // 頂点座標情報のリストを生成
-        //std::vector<std::vector<float>> vertexInfoList;
         for (int i = 0; i < fbxMesh->GetControlPointsCount(); i++)
         {
             // 頂点座標を読み込んで設定

@@ -51,7 +51,6 @@ private:
 
 	BoundingOrientedBox collidedOBB;
 	void CreateSpherePoints(const XMFLOAT3& pt, float Radius);
-	XMFLOAT3 CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8]);
 	std::pair<XMVECTOR, XMVECTOR> CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points, XMFLOAT3 boxCenter);
 	void StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index);
 

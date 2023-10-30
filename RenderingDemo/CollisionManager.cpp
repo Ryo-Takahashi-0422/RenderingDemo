@@ -11,12 +11,11 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 // TODO : 1. シェーダーを分けて、ボーンマトリックスとの乗算をなくす&エッジのみ着色したボックスとして表示する、2. 8頂点の位置を正す 3. 複数のメッシュ(障害物)とキャラクターメッシュを判別して処理出来るようにする
 void CollisionManager::Init()
 {
-	auto vertmap1 = resourceManager[0]->GetIndiceAndVertexInfo();
-	boxes.resize(vertmap1.size());
+	auto vertmap1 = resourceManager[0]->/*GetIndiceAndVertexInfo()*/GetIndiceAndVertexInfoOfOBB();
 	auto it = vertmap1.begin();
 	std::map<std::string, std::vector<XMFLOAT3>> vertMaps;
 	for (int i = 0; i < vertmap1.size(); ++i)
-	{
+	{	
 		for (int j = 0; j < it->second.vertices.size(); ++j)
 		{
 			// オブジェクトが原点からオフセットしている場合、コライダーがx軸に対して対称の位置に配置される。これを調整してモデル描画の位置をコライダーと同位置に変えている。
@@ -26,82 +25,54 @@ void CollisionManager::Init()
 		it++;
 	}
 
+	boxes.resize(vertMaps.size());
 	// オブジェクトの頂点情報からそれぞれのOBBを生成する
 	auto itVertMap = vertMaps.begin();
 
-	//★xyz max,min test BattleField.fbxの壁のcenterがNanになる。原因は頂点数？最小データでOBB作成したい
-	std::map<std::string, std::vector<float>> xContainer, yContainer, zContainer;
-	int containerSize = vertMaps.begin()->second.size();
-	for (int i = 0; i < vertMaps.size(); ++i)
-	{
-		for (int j = 0; j < itVertMap->second.size(); ++j)
-		{
-			xContainer[itVertMap->first].push_back(itVertMap->second[j].x);
-			yContainer[itVertMap->first].push_back(itVertMap->second[j].y);
-			zContainer[itVertMap->first].push_back(itVertMap->second[j].z);
-		}
-		++itVertMap;
-	}
-
+	// fbxモデルのxyzローカル回転・平行移動行列群を取得
+	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrixOfOBB();
 	std::map<std::string, std::vector<XMFLOAT3>> boxPoints;
 	itVertMap = vertMaps.begin();
 	//std::vector<float> xMax, xMin, yMax, yMin, zMax, zMin;
 	for (int i = 0; i < vertMaps.size(); ++i)
 	{
-		auto xMax = *std::max_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
-		auto xMin = *std::min_element(xContainer[itVertMap->first].begin(), xContainer[itVertMap->first].end());
-		auto yMax = *std::max_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
-		auto yMin = *std::min_element(yContainer[itVertMap->first].begin(), yContainer[itVertMap->first].end());
-		auto zMax = *std::max_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
-		auto zMin = *std::min_element(zContainer[itVertMap->first].begin(), zContainer[itVertMap->first].end());
+		XMVECTOR CenterOfMass = XMVectorZero();
+		int totalCount = 0;
+		// Compute the center of mass and inertia tensor of the points.
+		for (auto& point : itVertMap->second)
+		{
+			CenterOfMass = XMVectorAdd(CenterOfMass, XMLoadFloat3(&point));
+			++totalCount;
+		}
 
-		XMFLOAT3 xMaxYMaxZmax = { xMax ,yMax ,zMax };
-		XMFLOAT3 xMaxYMinZmax = { xMax ,yMin ,zMax };
-		XMFLOAT3 xMaxYMaxZmin = { xMax ,yMax ,zMin };
-		XMFLOAT3 xMaxYMinZmin = { xMax ,yMin ,zMin };
+		CenterOfMass = XMVectorMultiply(CenterOfMass, XMVectorReciprocal(XMVectorReplicate(float(totalCount))));
 
-		XMFLOAT3 xMinYMaxZmax = { xMin ,yMax ,zMax };
-		XMFLOAT3 xMinYMinZmax = { xMin ,yMin ,zMax };
-		XMFLOAT3 xMinYMaxZmin = { xMin ,yMax ,zMin };
-		XMFLOAT3 xMinYMinZmin = { xMin ,yMin ,zMin };
-
-		boxPoints[itVertMap->first].push_back(xMaxYMaxZmax);
-		boxPoints[itVertMap->first].push_back(xMaxYMinZmax);
-		boxPoints[itVertMap->first].push_back(xMaxYMaxZmin);
-		boxPoints[itVertMap->first].push_back(xMaxYMinZmin);
-		boxPoints[itVertMap->first].push_back(xMinYMaxZmax);
-		boxPoints[itVertMap->first].push_back(xMinYMinZmax);
-		boxPoints[itVertMap->first].push_back(xMinYMaxZmin);
-		boxPoints[itVertMap->first].push_back(xMinYMinZmin);
+		// OBBの頂点を逆回転させて回転無しの状態にする。
+		for (auto& point : itVertMap->second)
+		{
+			//XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
+			XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
+			point.z *= -1;
+			boxPoints[itVertMap->first].push_back(point);
+		}
 
 		++itVertMap;
 	}
 
 	auto itBoxPoints = boxPoints.begin();
-	for (int i = 0; i < vertmap1.size(); ++i)
+	for (int i = 0; i < vertMaps.size(); ++i)
 	{
 		BoundingOrientedBox::CreateFromPoints(boxes[i], itBoxPoints->second.size(), itBoxPoints->second.data(), (size_t)sizeof(XMFLOAT3));
 		++itBoxPoints;
 	}
-	//★///
 
-	//itVertMap = vertMaps.begin();
-	//for (int i = 0; i < vertmap1.size(); ++i)
-	//{
-	//	BoundingOrientedBox::CreateFromPoints(boxes[i], itVertMap->second.size(), itVertMap->second.data(), (size_t)sizeof(XMFLOAT3));
-	//	++itVertMap;
-	//}
-
-	// fbxモデルのxyzローカル回転・平行移動行列群を取得
-	auto localTransitionAndRotation = resourceManager[0]->GetLocalMatrix();
-	//output1.resize(8 * vertMaps.size());
 	oBBVertices.resize(vertMaps.size());
-
+	itVertMap = vertMaps.begin();
 	// 各OBBをクォータニオンにより回転させ、Extentsを調整し、その頂点群を描画目的で格納していく
 	for (int i = 0; i < vertMaps.size(); ++i)
 	{
 		// fbxモデルのxyzローカル回転・平行移動行列からクォータニオン生成
-		XMVECTOR quaternion = XMQuaternionRotationMatrix(localTransitionAndRotation[i]);
+		XMVECTOR quaternion = XMQuaternionRotationMatrix(localTransitionAndRotation[itVertMap->first]);
 
 		// OBBの頂点を回転させる。クォータニオンなのでOBB中心点に基づき姿勢が変化する。ワールド空間原点を中心とした回転ではないことに注意。
 		XMFLOAT4 orientation;
@@ -109,18 +80,9 @@ void CollisionManager::Init()
 		orientation.y = -quaternion.m128_f32[1];
 		orientation.z = quaternion.m128_f32[2];
 		orientation.w = quaternion.m128_f32[3];
-		boxes[i].Orientation = orientation;
-		// ExtentsはY軸回転により変化する→signθ+cosθ　これによりOBBが肥大化するため調整する。現状はY軸変化のみ対応しているので、Y軸長さをコピーして対応する。
-		auto yLen = boxes[i].Extents.y;
-		//boxes[i].Extents.x = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
-		//boxes[i].Extents.z = yLen; //★★★要修正 BattleField壁など長方形OBBの形が崩れる原因。ただし、現状はOBBが正六面体であることを前提とした衝突実装になっており、これをコメントアウトすると「壁だけ」衝突時にバグる...岩は問題無しに見える...
-		
-		//★Extentsを調整した結果、boxesは問題ないがBattleFieldは角めり込み発生する。無しの方向でいくか...
-		//float adjustExtents = abs(localTransitionAndRotation[i].r[0].m128_f32[0]) + abs(localTransitionAndRotation[i].r[0].m128_f32[2]);
-		//boxes[i].Extents.x /= adjustExtents;
-		//boxes[i].Extents.z /= adjustExtents;
-
 		boxes[i].GetCorners(oBBVertices[i].pos);
+
+		++itVertMap;
 	}
 	// メッシュ描画に対してx軸対称の位置に配置されるコライダーを調整したが、元に戻して描画位置と同じ位置にコライダーを描画させる。(コライダー位置には影響無いことに注意)
 	for (int i = 0; i < vertMaps.size(); ++i)
@@ -130,7 +92,6 @@ void CollisionManager::Init()
 			oBBVertices[i].pos[j].z *= -1;
 		}
 	}
-
 
 	// キャラクター用のスフィアコライダー生成
 	auto vetmap2 = resourceManager[1]->GetIndiceAndVertexInfo();
@@ -179,44 +140,44 @@ void CollisionManager::Init()
 	// 1. 各OBBの[0]頂点と他頂点の距離を算出して小さい順に並び変える
 	// 2. [0][1][2],[0][1][3],[0][2][3]を[0]回りのインデックスとして抽出する。
 	// 3. 距離最大のものを除いて、距離の大きな3点は対角線を形成する頂点で、それぞれに対して手順1,2を繰り返す。
-	std::map<int, std::vector<std::pair<float, int>>> res;
-	for (int i = 0; i < oBBVertices.size(); ++i)
-	{
-		for (int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
-		{
-			auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[i].pos[0]), XMLoadFloat3(&oBBVertices[i].pos[j]));
-			std::pair<float, int> pair = {XMVector4Length(v1).m128_f32[0], j};
-			res[i].push_back(pair);
-		}
-		std::sort(res[i].begin(), res[i].end());
-		
-		// ポリゴン1のインデックス
-		oBBIndices[i].push_back(res[i][0].second);
-		oBBIndices[i].push_back(res[i][1].second);
-		oBBIndices[i].push_back(res[i][2].second);
+	//std::map<int, std::vector<std::pair<float, int>>> res;
+	//for (int i = 0; i < oBBVertices.size(); ++i)
+	//{
+	//	for (int j = 0; j < sizeof(oBBVertices[i].pos) / sizeof(XMFLOAT3); ++j)
+	//	{
+	//		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[i].pos[0]), XMLoadFloat3(&oBBVertices[i].pos[j]));
+	//		std::pair<float, int> pair = {XMVector4Length(v1).m128_f32[0], j};
+	//		res[i].push_back(pair);
+	//	}
+	//	std::sort(res[i].begin(), res[i].end());
+	//	
+	//	// ポリゴン1のインデックス
+	//	oBBIndices[i].push_back(res[i][0].second);
+	//	oBBIndices[i].push_back(res[i][1].second);
+	//	oBBIndices[i].push_back(res[i][2].second);
 
-		// ポリゴン2のインデックス
-		oBBIndices[i].push_back(res[i][0].second);
-		oBBIndices[i].push_back(res[i][1].second);
-		oBBIndices[i].push_back(res[i][3].second);
+	//	// ポリゴン2のインデックス
+	//	oBBIndices[i].push_back(res[i][0].second);
+	//	oBBIndices[i].push_back(res[i][1].second);
+	//	oBBIndices[i].push_back(res[i][3].second);
 
-		// ポリゴン3のインデックス
-		oBBIndices[i].push_back(res[i][0].second);
-		oBBIndices[i].push_back(res[i][2].second);
-		oBBIndices[i].push_back(res[i][3].second);
+	//	// ポリゴン3のインデックス
+	//	oBBIndices[i].push_back(res[i][0].second);
+	//	oBBIndices[i].push_back(res[i][2].second);
+	//	oBBIndices[i].push_back(res[i][3].second);
 
-		// 以下ポリゴン4→8まで繰り返し
-		StoreIndiceOfOBB(res, i, 4);
-		StoreIndiceOfOBB(res, i, 5);
-		StoreIndiceOfOBB(res, i, 6);
-	}
+	//	// 以下ポリゴン4→8まで繰り返し
+	//	StoreIndiceOfOBB(res, i, 4);
+	//	StoreIndiceOfOBB(res, i, 5);
+	//	StoreIndiceOfOBB(res, i, 6);
+	//}
 
 	boxIBVs.resize(oBBVertices.size());
 	boxIbBuffs.resize(oBBVertices.size());
 	mappedIdx.resize(oBBVertices.size());
 	for (int i = 0; i < oBBVertices.size(); ++i)
 	{
-		auto indexNum = oBBIndices[i].size();
+		auto indexNum = vertmap1[i].second.indices.size();
 		auto indiceBuffSize = indexNum * sizeof(unsigned int);
 		auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
 		boxIbBuffs[i] = nullptr;
@@ -233,7 +194,7 @@ void CollisionManager::Init()
 
 		mappedIdx[i] = nullptr;
 		result = boxIbBuffs[i]->Map(0, nullptr, (void**)&mappedIdx[i]); // mapping
-		std::copy(std::begin(oBBIndices[i]), std::end(oBBIndices[i]), mappedIdx[i]);
+		std::copy(std::begin(vertmap1[i].second.indices), std::end(vertmap1[i].second.indices), mappedIdx[i]);
 		boxIbBuffs[i]->Unmap(0, nullptr);
 
 		boxIBVs[i].BufferLocation = boxIbBuffs[i]->GetGPUVirtualAddress();
@@ -433,34 +394,34 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	sphereColliderIndices.push_back(17);
 }
 
-void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
-{
-	std::map<int, std::vector<std::pair<float, int>>> res2;
-	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
-	{
-		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
-		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
-		res2[loopCnt].push_back(pair);
-	}
-	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
-
-	// 球体同様に並びの規則性は不明。[0][1][2]のように[0]を先頭に並べるとOBB内にポリゴンが描画されてしまう。
-	// ポリゴン1のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
-
-	// ポリゴン2のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
-
-	// ポリゴン3のインデックス
-	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
-	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
-	
-}
+//void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
+//{
+//	std::map<int, std::vector<std::pair<float, int>>> res2;
+//	for (int j = 0; j < sizeof(oBBVertices[loopCnt].pos) / sizeof(XMFLOAT3); ++j)
+//	{
+//		auto v1 = XMVectorSubtract(XMLoadFloat3(&oBBVertices[loopCnt].pos[res[loopCnt][index].second]), XMLoadFloat3(&oBBVertices[loopCnt].pos[j]));
+//		std::pair<float, int> pair = { XMVector4Length(v1).m128_f32[0], j };
+//		res2[loopCnt].push_back(pair);
+//	}
+//	std::sort(res2[loopCnt].begin(), res2[loopCnt].end());
+//
+//	// 球体同様に並びの規則性は不明。[0][1][2]のように[0]を先頭に並べるとOBB内にポリゴンが描画されてしまう。
+//	// ポリゴン1のインデックス
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+//
+//	// ポリゴン2のインデックス
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][1].second);	
+//
+//	// ポリゴン3のインデックス
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][3].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][0].second);
+//	oBBIndices[loopCnt].push_back(res2[loopCnt][2].second);
+//	
+//}
 
 bool CollisionManager::OBBCollisionCheck()
 {
@@ -471,49 +432,50 @@ bool CollisionManager::OBBCollisionCheck()
 	auto sCenter = bSphere.Center;
 	BoundingOrientedBox targetOBB;
 
-	for (int i = 0; i < boxes.size(); ++i)
-	{
-		float maxExtents = boxes[i].Extents.x;
-		if (maxExtents < boxes[i].Extents.y)
-		{
-			maxExtents = boxes[i].Extents.y;
-		}
-		if (maxExtents < boxes[i].Extents.z)
-		{
-			maxExtents = boxes[i].Extents.z;
-		}
-		auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
-		auto len = XMVector3Length(dist);
-		len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
-		if (len.m128_f32[0] < 0)
-		{
-			isUpperMargin = false;
-			targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
-		}
-	}
-	// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
-	if (isUpperMargin)
-	{
-		return result;
-	}
-
-	// 総当たりの場合
-	//for (auto& box : boxes)
+	// 20231021 TODO 直方体2つの内青いのが認識されない
+	//for (int i = 0; i < boxes.size(); ++i)
 	//{
-	//	if (box.Contains(bSphere) != 0)
+	//	float maxExtents = boxes[i].Extents.x;
+	//	if (maxExtents < boxes[i].Extents.y)
 	//	{
-	//		result = false;
-	//		collidedOBB = box;
-	//		break;
+	//		maxExtents = boxes[i].Extents.y;
+	//	}
+	//	if (maxExtents < boxes[i].Extents.z)
+	//	{
+	//		maxExtents = boxes[i].Extents.z;
+	//	}
+	//	auto dist = XMVectorSubtract(XMLoadFloat3(&boxes[i].Center), XMLoadFloat3(&sCenter));
+	//	auto len = XMVector3Length(dist);
+	//	len.m128_f32[0] -= (bSphere.Radius + maxExtents * 2);
+	//	if (len.m128_f32[0] < 0)
+	//	{
+	//		isUpperMargin = false;
+	//		targetOBB = boxes[i]; // マージン以下にまで近づいてきたOBBを格納する
 	//	}
 	//}
+	//// 各OBBとキャラクターコライダーの間にある程度距離がある場合は当たり判定を行わない。
+	//if (isUpperMargin)
+	//{
+	//	return result;
+	//}
 
-	// 総当たりではなくtargetOBBにのみ当たり判定を行う
-	if (targetOBB.Contains(bSphere) != 0)
+	// 総当たりの場合
+	for (auto& box : boxes)
 	{
-		result = false;
-		collidedOBB = targetOBB;
+		if (box.Contains(bSphere) != 0)
+		{
+			result = false;
+			collidedOBB = box;
+			break;
+		}
 	}
+
+	//// 総当たりではなくtargetOBBにのみ当たり判定を行う
+	//if (targetOBB.Contains(bSphere) != 0)
+	//{
+	//	result = false;
+	//	collidedOBB = targetOBB;
+	//}
 
 	return result;
 }
@@ -579,65 +541,213 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		XMVECTOR dotPlane5Sphere = XMPlaneDotCoord(plane5, sphereVec);
 		XMVECTOR dotPlane6Sphere = XMPlaneDotCoord(plane6, sphereVec);
 
-		// 面滑らせ実装
-		std::vector<std::pair<float, int>> distances;
-		distances.resize(8);
-		for (int i = 0; i < 8; ++i)
+		int collisionPlaneCount = 0;
+		std::vector<std::pair<float, int>> collidedPlanes;
+		if (dotPlane1Sphere.m128_f32[0] > 0)
 		{
-			distances[i].first = 1000.0f;
-			distances[i].second = 0;
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane1Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 1;
+			++collisionPlaneCount;
 		}
-		// キャラクターのコライダー中心に対して、障害物ボックスコライダーからの距離を計算して、近いものを4つ選出する。これらが衝突面を構成する点となる。
+		if (dotPlane2Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane2Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 2;
+			++collisionPlaneCount;
+		}
+		if (dotPlane3Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane3Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 3;
+			++collisionPlaneCount;
+		}
+		if (dotPlane4Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane4Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 4;
+			++collisionPlaneCount;
+		}
+		if (dotPlane5Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane5Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 5;
+			++collisionPlaneCount;
+		}
+		if (dotPlane6Sphere.m128_f32[0] > 0)
+		{
+			collidedPlanes.resize(collisionPlaneCount + 1);
+			collidedPlanes[collisionPlaneCount].first = dotPlane6Sphere.m128_f32[0];
+			collidedPlanes[collisionPlaneCount].second = 6;
+			++collisionPlaneCount;
+		}
 
-		for (int h = 0; h < 8; ++h)
-		{
-			float distance = powf(sCenter.x - boxVertexPos[h].x, 2.0f) + powf(sCenter.y - boxVertexPos[h].y, 2.0f) + powf(sCenter.z - boxVertexPos[h].z, 2.0f);
-			for (int i = 0; i < 8; ++i)
-			{
-				if (distance < distances[i].first)
-				{
-					distances[i].first = distance;
-					distances[i].second = h;
-					std::sort(distances.rbegin(), distances.rend());
-					break;
-				}
-			}
-		}
-		std::sort(distances.begin(), distances.end()); // 距離の降順になっているので昇順にする
-		// 選出した最も近い3点のXYZ座標を抽出する。
-		float epsilon = 0.00005f;
-		auto it = distances.begin();
 		std::vector<XMFLOAT3> boxPoint4Cal;
-		boxPoint4Cal.push_back(boxVertexPos[it->second]); // 最初の頂点を格納してイテレータを進める
-		++it;
-		for (int i = 0; i < 2; ++i)
+		std::vector<XMFLOAT3> boxPoint4NextPlaneCal;
+		// not corner collision && collided a plane
+		if (collisionPlaneCount == 1 && collidedPlanes[0].first > 0)
 		{
-			// 衝突面の中心では各頂点までの距離が重複する可能性があるため、最初の頂点に基づき座標の差で二つ目以降を求めていく
-			float x = abs(boxPoint4Cal[0].x) - abs(boxVertexPos[it->second].x);
-			float y = abs(boxPoint4Cal[0].y) - abs(boxVertexPos[it->second].y);
-			float z = abs(boxPoint4Cal[0].z) - abs(boxVertexPos[it->second].z);
-			if (abs(x) < epsilon && abs(z) < epsilon && abs(y) > epsilon)
+			// plane1 points
+			if (collidedPlanes[0].second == 1)
 			{
-				boxPoint4Cal.push_back(boxVertexPos[it->second]);
-				// 3つ目の頂点を格納する。3つ目のイテレータまでに要素が決定するためi = 1で処理終了する。
-				if (i == 0)
-				{
-					++it;
-					boxPoint4Cal.push_back(boxVertexPos[it->second]);
-				}
-				else if (i == 1)
-				{
-					--it;
-					boxPoint4Cal.push_back(boxVertexPos[it->second]);
-				}
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
 			}
-			++it;
+			// plane2 points
+			else if (collidedPlanes[0].second == 2)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+			}
+			// plane3 points
+			else if (collidedPlanes[0].second == 3)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane4 points
+			else if (collidedPlanes[0].second == 4)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+			}
+			// plane5 points
+			else if (collidedPlanes[0].second == 5)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane6 points
+			else if (collidedPlanes[0].second == 6)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
 		}
-		// ★★★BattleFieldの壁のような横長直方体では、上記のようなキャラクターとの距離では面を正しく算出出来ない。例えば横長面にぶつかっているとき、側面の構成点が算出されてしまう。
-		
-		// 2点目もしくは3点目から4点目を決定する
-		auto fourthPoint = CalculateForthPoint(boxPoint4Cal, boxVertexPos);
-		boxPoint4Cal.push_back(fourthPoint);
+
+		// 2つの場合内積から割合計算できないか試す
+		else if (collisionPlaneCount == 2 && collidedPlanes[0].first > 0 && collidedPlanes[1].first > 0)
+		{
+			// 内積の値が大きいものから計算するため降順に並び変える
+			std::sort(collidedPlanes.rbegin(), collidedPlanes.rend());
+
+			// 衝突面1
+			// plane1 points
+			if (collidedPlanes[0].second == 1)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+			}
+			// plane2 points
+			else if (collidedPlanes[0].second == 2)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+			}
+			// plane3 points
+			else if (collidedPlanes[0].second == 3)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[0]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane4 points
+			else if (collidedPlanes[0].second == 4)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[1]);
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+			}
+			// plane5 points
+			else if (collidedPlanes[0].second == 5)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[2]);
+				boxPoint4Cal.push_back(boxVertexPos[3]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+			// plane6 points
+			else if (collidedPlanes[0].second == 6)
+			{
+				boxPoint4Cal.push_back(boxVertexPos[4]);
+				boxPoint4Cal.push_back(boxVertexPos[5]);
+				boxPoint4Cal.push_back(boxVertexPos[6]);
+				boxPoint4Cal.push_back(boxVertexPos[7]);
+			}
+
+			// 衝突面2(隣面)
+			// plane1 points
+			if (collidedPlanes[1].second == 1)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[0]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[1]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[2]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[3]);
+			}
+			// plane2 points
+			else if (collidedPlanes[1].second == 2)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[0]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[1]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[4]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[5]);
+			}
+			// plane3 points
+			else if (collidedPlanes[1].second == 3)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[0]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[3]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[4]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[7]);
+			}
+			// plane4 points
+			else if (collidedPlanes[1].second == 4)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[1]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[2]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[5]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[6]);
+			}
+			// plane5 points
+			else if (collidedPlanes[1].second == 5)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[2]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[3]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[6]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[7]);
+			}
+			// plane6 points
+			else if (collidedPlanes[1].second == 6)
+			{
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[4]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[5]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[6]);
+				boxPoint4NextPlaneCal.push_back(boxVertexPos[7]);
+			}
+		}
+
 		// 法線ベクトルとスライド方向を算出する
 		auto normalAndSlideVector = CalcurateNormalAndSlideVector(boxPoint4Cal, boxCenterPos);
 		auto normal = normalAndSlideVector.first;
@@ -673,61 +783,9 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 			}
 		}
 
-		// キャラクターコライダーが角にぶつかっているか判定する
-		// キャラクターに近いもう片方の面を構成する座標を格納する。こちらは角との衝突判定に使う法線を求めるために利用する。
-		it = distances.begin();
-		std::vector<XMFLOAT3> boxPoint4NextPlaneCal;
-		boxPoint4NextPlaneCal.push_back(boxPoint4Cal[0]); // 最初の要素を格納しておく
-		boxPoint4NextPlaneCal.push_back(boxPoint4Cal[1]); // 二つ目の要素を格納しておく
-		// 3つ目の要素を抽出する。	
-		it += 4; // distancesの上位4番目まで、もしくは上位1,2,5,6位が選定された状態。どちらか分からないので一旦上位5番目と予想される要素に基づき値を調べていく				
-		// 角ではbox4Calの頂点とかぶるので対処する
-		float x1 = abs(boxPoint4Cal[2].x) - abs(boxVertexPos[it->second].x);
-		float z1 = abs(boxPoint4Cal[2].z) - abs(boxVertexPos[it->second].z);
-
-		float x2 = abs(boxPoint4Cal[3].x) - abs(boxVertexPos[it->second].x);
-		float z2 = abs(boxPoint4Cal[3].z) - abs(boxVertexPos[it->second].z);
-
-		// distancesのitretorは[4]つまり5番目に近い頂点を指している状態。ただし、角に衝突した時は5番目に近いとは限らず4番目に近い頂点の可能性がある。
-		// そこで、[5]を指すことで3番目に近い線を構成する片方の頂点を確実に選定することが可能。この頂点に基づき4つ目の頂点を計算する。
-		if (abs(x1) < epsilon && abs(z1) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
-		{
-			++it;
-			boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-		}
-
-		else if (abs(x2) < epsilon && abs(z2) < epsilon) // 既にbox4Calに上位5番目と推測される要素が格納されている場合は実際の上位5か6番目である[6]を利用する。
-		{
-			++it;
-			boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-		}
-		else // box4Calに上位5番目と推測される要素が格納されていない場合はこのまま格納する
-		{
-			boxPoint4NextPlaneCal.push_back(boxVertexPos[it->second]);
-		}
-
-		// 2点目もしくは3点目から4点目を決定する
-		fourthPoint = CalculateForthPoint(boxPoint4NextPlaneCal, boxVertexPos);
-		boxPoint4NextPlaneCal.push_back(fourthPoint);
-		// 法線ベクトルとスライド方向を算出する
-		auto normalAndSlideVectorOfNextPlane = CalcurateNormalAndSlideVector(boxPoint4NextPlaneCal, boxCenterPos);
-		auto normalOfNextPlane = normalAndSlideVectorOfNextPlane.first;
-
 		auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), boxCenterVec); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
 		centerToCenter = XMVector3Normalize(centerToCenter);
-		auto dot1 = XMVector3Dot(centerToCenter, normal);
-		auto dot2 = XMVector3Dot(centerToCenter, normalOfNextPlane); // 0.5以上のときは角と衝突している
 
-		//// ★平面作成
-		//XMVECTOR p1 = XMLoadFloat3(&boxPoint4Cal[0]);
-		//auto plane1 = /*XMPlaneFromPoints(XMLoadFloat3(&boxPoint4Cal[0]), XMLoadFloat3(&boxPoint4Cal[1]), XMLoadFloat3(&boxPoint4Cal[2]));*/XMPlaneFromPointNormal(p1, normal);
-		//XMVECTOR p2 = XMLoadFloat3(&boxPoint4NextPlaneCal[0]);
-		//auto plane2 =/* XMPlaneFromPoints(XMLoadFloat3(&boxPoint4NextPlaneCal[0]), XMLoadFloat3(&boxPoint4NextPlaneCal[1]), XMLoadFloat3(&boxPoint4NextPlaneCal[2]));*/ XMPlaneFromPointNormal(p2, normalOfNextPlane);
-		//XMVECTOR charaC = XMLoadFloat3(&bSphere.Center);
-		////charaC = XMVectorSubtract(charaC, XMLoadFloat3(&collidedOBB.Center));
-
-		//printf("p1 : %f\n", XMPlaneDotCoord(plane1, charaC).m128_f32[0]);
-		//printf("p2 : %f\n", XMPlaneDotCoord(plane2, charaC).m128_f32[0]);
 		printf("%f\n", dotPlane1Sphere.m128_f32[0]);
 		printf("%f\n", dotPlane2Sphere.m128_f32[0]);
 		printf("%f\n", dotPlane3Sphere.m128_f32[0]);
@@ -737,7 +795,7 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		printf("\n");
 
 		// 角に接触していない場合
-		if (dot2.m128_f32[0] < 0.5f)
+		if (collidedPlanes.size() == 1)
 		{
 			// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
 			for (int i = 0; i < boxes.size(); ++i)
@@ -759,12 +817,17 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		}
 
 		// 角に接触している場合
-		else if (dot2.m128_f32[0] >= 0.5f)
+		else if (collidedPlanes.size() == 2)
 		{
+			// もう一方の面の法線ベクトルとスライド方向を算出する
+			auto normalAndSlideVectorOfNextPlane = CalcurateNormalAndSlideVector(boxPoint4NextPlaneCal, boxCenterPos);
+			auto normalOfNextPlane = normalAndSlideVectorOfNextPlane.first;
+
 			// 衝突面の法線方向と隣面の法線方向の合成ベクトルを利用して、角から弾かれるようにしてコライダー同士の交差を防ぐ
 			// ガタついた動きになるのがネック
-			float normalWeight = 1.0f - dot2.m128_f32[0];
-			float nextNormalWeight = dot2.m128_f32[0];
+			float totalWeight = collidedPlanes[0].first + collidedPlanes[1].first;
+			float normalWeight = /*1.0f - dot2.m128_f32[0]*/collidedPlanes[0].first / totalWeight;
+			float nextNormalWeight = /*dot2.m128_f32[0]*/collidedPlanes[1].first / totalWeight;
 			normal *= normalWeight;
 			normalOfNextPlane *= nextNormalWeight;
 			XMVECTOR slideCol;
@@ -799,47 +862,6 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		}
 	}
 	
-}
-
-XMFLOAT3 CollisionManager::CalculateForthPoint(std::vector<XMFLOAT3> storedPoints, XMFLOAT3 boxPoints[8])
-{
-	float epsilon = 0.00005f;
-	float xVal = abs(storedPoints[0].x) - abs(storedPoints[1].x);
-	float yVal = abs(storedPoints[0].y) - abs(storedPoints[1].y);
-	float zVal = abs(storedPoints[0].z) - abs(storedPoints[1].z);
-	XMFLOAT3 result;
-
-	// 3点目から4点目を決定する
-	if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-	{
-		for (int i = 0; i < 8; ++i)
-		{
-			float xVal = abs(storedPoints[2].x) - abs(boxPoints[i].x);
-			float yVal = abs(storedPoints[2].y) - abs(boxPoints[i].y);
-			float zVal = abs(storedPoints[2].z) - abs(boxPoints[i].z);
-			if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-			{
-				result = boxPoints[i];
-			}
-		}
-	}
-
-	// 2点目から4点目を決定する
-	else
-	{
-		for (int i = 0; i < 8; ++i)
-		{
-			float xVal = abs(storedPoints[1].x) - abs(boxPoints[i].x);
-			float yVal = abs(storedPoints[1].y) - abs(boxPoints[i].y);
-			float zVal = abs(storedPoints[1].z) - abs(boxPoints[i].z);
-			if (abs(xVal) < epsilon && abs(zVal) < epsilon && abs(yVal) > epsilon)
-			{
-				result = boxPoints[i];
-			}
-		}
-	}
-
-	return result;
 }
 
 std::pair<XMVECTOR, XMVECTOR> CollisionManager::CalcurateNormalAndSlideVector(std::vector<XMFLOAT3> points, XMFLOAT3 boxCenter)

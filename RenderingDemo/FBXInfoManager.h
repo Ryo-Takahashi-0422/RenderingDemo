@@ -101,12 +101,16 @@ private:
 	FbxDouble3 localTransition; // モデルのローカルX,Y,Z座標(blenderで適用した場合は取得不可能)
 	FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfMesh; // メッシュ毎のローカル座標・回転
+	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfOBB; // OBB毎のローカル座標・回転
+
+	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;
 
 public:
 	//Get Singleton Instance
 	static FBXInfoManager& Instance();
 	int Init(std::string _modelPath);
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfo() { return finalVertexDrawOrder; };
+	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturenameInfo; };
 	std::map<int, std::map<int, float>> GetIndexWithBonesNumAndWeight() { return indexWithBonesNumAndWeight; };
@@ -115,4 +119,5 @@ public:
 	FbxDouble3 GetLocalTransition() { return localTransition; };
 	FbxDouble3 GetLocalRotation() { return localRotation; };
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfMesh() { return localPosAndRotOfMesh; };
+	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfOBB() { return localPosAndRotOfOBB; };
 };
