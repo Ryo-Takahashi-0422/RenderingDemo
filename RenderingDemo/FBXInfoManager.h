@@ -98,8 +98,8 @@ private:
 	int testCnt = 0;
 	bool isBonesInitialPostureMatrixFilled = false;
 
-	FbxDouble3 localTransition; // モデルのローカルX,Y,Z座標(blenderで適用した場合は取得不可能)
-	FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
+	//FbxDouble3 localTransition; // モデルのローカルX,Y,Z座標(blenderで適用した場合は取得不可能)
+	//FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfMesh; // メッシュ毎のローカル座標・回転
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfOBB; // OBB毎のローカル座標・回転
 
@@ -113,11 +113,11 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 	std::vector<std::pair<std::string, PhongInfo>> GetPhongMaterialParamertInfo() { return finalPhongMaterialOrder; };
 	std::vector<std::pair<std::string, std::string>> GetMaterialAndTexturePath() { return materialAndTexturenameInfo; };
-	std::map<int, std::map<int, float>> GetIndexWithBonesNumAndWeight() { return indexWithBonesNumAndWeight; };
+	//std::map<int, std::map<int, float>> GetIndexWithBonesNumAndWeight() { return indexWithBonesNumAndWeight; };
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
 	std::map<int, XMMATRIX> GetBonesInitialPostureMatrix() { return bonesInitialPostureMatrix; };
-	FbxDouble3 GetLocalTransition() { return localTransition; };
-	FbxDouble3 GetLocalRotation() { return localRotation; };
+	//FbxDouble3 GetLocalTransition() { return localTransition; };
+	//FbxDouble3 GetLocalRotation() { return localRotation; };
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfMesh() { return localPosAndRotOfMesh; };
 	std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfOBB() { return localPosAndRotOfOBB; };
 };

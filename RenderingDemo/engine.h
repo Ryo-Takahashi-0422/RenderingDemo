@@ -24,6 +24,7 @@
 #include <array>
 #include <ReadData.h>
 #include <stdlib.h>
+#include <fstream>
 
 //eigen
 #define _USE_MATH_DEFINES

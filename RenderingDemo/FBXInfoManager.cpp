@@ -43,6 +43,43 @@ int FBXInfoManager::Init(std::string _modelPath)
     // Scene解析
     ReadFBXFile();
 
+    int finalVertexInfoSize = 0;
+    unsigned int meshNameSize = 0;
+    struct meshName
+    {
+        char* name;
+    };
+    std::vector</*std::string*/meshName> meshNames;
+    int verticesSize;
+    int indiceSize;
+    if (modelPath == "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+    {
+        const char* fileName = "C:\\Users\\RyoTaka\\Desktop\\InputTest.txt";
+
+        auto fp = fopen(fileName, "rb");
+        if (fp == nullptr) {
+            //エラー処理
+            assert(0);
+            return ERROR_FILE_NOT_FOUND;
+        }
+
+        
+        fread(&finalVertexInfoSize, sizeof(finalVertexInfoSize), 1, fp);
+        meshNames.resize(finalVertexInfoSize);
+        for (int i = 0; i < meshNames.size(); ++i)
+        {
+            fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
+            char* tempName = (char*)calloc(32, sizeof(char));
+            fread(tempName, meshNameSize, 1, fp);
+            meshNames[i].name = tempName;
+            //finalVertexDrawOrder[i].first = tempName;
+
+            fread(&verticesSize, sizeof(verticesSize), 1, fp);
+            fread(&indiceSize, sizeof(indiceSize), 1, fp);
+        }
+       
+    }
+
     auto it = indexWithBonesNumAndWeight.begin();
     int meshIndex = 0;
     int vertexIndex = 0;
@@ -120,6 +157,8 @@ void FBXInfoManager::ReadFBXFile()
 
         // OBBの処理
         int indiceIndexOfOBB = 0;
+        FbxDouble3 localTransition; // モデルのローカルX,Y,Z座標(blenderで適用した場合は取得不可能)
+        FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
         if (targetName == "OBB")
         {
             // 頂点情報の処理
@@ -292,22 +331,25 @@ void FBXInfoManager::ReadFBXFile()
         // Align meshes in the order in which they are read.
         // When drawing the vertices of a divided mesh, if the index of another mesh interrupts the drawing, the drawing will fail.
         // Also, if there are multiple meshes, such as stages, they should be unified.Otherwise, the local coordinates of each mesh will be used for drawing, resulting in wrapped meshes.
-        finalVertexDrawOrder.resize(nameCnt + 1);
-        finalVertexDrawOrder.at(nameCnt).first = name;
-        finalVertexDrawOrder.at(nameCnt).second.vertices = vertices;
-        finalVertexDrawOrder.at(nameCnt).second.indices = indices;
-
-        // 接空間処理
-        int iTangentCnt = fbxMesh->GetElementTangentCount();
-        if (iTangentCnt != 0)
+        if (modelPath != "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
         {
-            for (int i = 0; i < finalVertexDrawOrder.at(nameCnt).second.indices.size(); ++i)
+            finalVertexDrawOrder.resize(nameCnt + 1);
+            finalVertexDrawOrder.at(nameCnt).first = name;
+            finalVertexDrawOrder.at(nameCnt).second.vertices = vertices;
+            finalVertexDrawOrder.at(nameCnt).second.indices = indices;
+
+            // 接空間処理
+            int iTangentCnt = fbxMesh->GetElementTangentCount();
+            if (iTangentCnt != 0)
             {
-                ProcessTangent(fbxMesh, name, nameCnt, finalVertexDrawOrder.at(nameCnt).second.indices[i] - meshVertIndexStart);
-                ++testCnt;
+                for (int i = 0; i < finalVertexDrawOrder.at(nameCnt).second.indices.size(); ++i)
+                {
+                    ProcessTangent(fbxMesh, name, nameCnt, finalVertexDrawOrder.at(nameCnt).second.indices[i] - meshVertIndexStart);
+                    ++testCnt;
+                }
             }
+            testCnt = 0;
         }
-        testCnt = 0;
 
         // 前回読み込んだメッシュのインデックス番号の内、最大値を抽出する
         auto iter = std::max_element(indices.begin(), indices.end());
