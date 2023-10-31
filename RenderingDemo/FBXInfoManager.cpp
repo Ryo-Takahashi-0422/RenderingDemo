@@ -76,6 +76,18 @@ int FBXInfoManager::Init(std::string _modelPath)
 
             fread(&verticesSize, sizeof(verticesSize), 1, fp);
             fread(&indiceSize, sizeof(indiceSize), 1, fp);
+
+            std::vector<VertexInfo> tempVertexInfo;
+            FBXVertex tempVertex = {};
+            unsigned int tempIndex = 0;
+            tempVertexInfo.resize(1);
+            // vertexì«Ç›çûÇ›
+            for (int j = 0; j < verticesSize; ++j)
+            {
+                fread(&tempVertex, sizeof(tempVertex), 1, fp);
+                tempVertexInfo[0].vertices.push_back(tempVertex);
+            }
+            int ii = 0;
         }
        
     }
