@@ -66,6 +66,7 @@ int FBXInfoManager::Init(std::string _modelPath)
         
         fread(&finalVertexInfoSize, sizeof(finalVertexInfoSize), 1, fp);
         meshNames.resize(finalVertexInfoSize);
+        finalVertexDrawOrder.resize(meshNames.size());
         for (int i = 0; i < meshNames.size(); ++i)
         {
             fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
@@ -81,12 +82,25 @@ int FBXInfoManager::Init(std::string _modelPath)
             FBXVertex tempVertex = {};
             unsigned int tempIndex = 0;
             tempVertexInfo.resize(1);
+
             // vertex“Ç‚Ýž‚Ý
             for (int j = 0; j < verticesSize; ++j)
             {
                 fread(&tempVertex, sizeof(tempVertex), 1, fp);
                 tempVertexInfo[0].vertices.push_back(tempVertex);
             }
+
+            // indices“Ç‚Ýž‚Ý
+            for (int j = 0; j < indiceSize; ++j)
+            {
+                fread(&tempIndex, sizeof(tempIndex), 1, fp);
+                tempVertexInfo[0].indices.push_back(tempIndex);
+            }
+
+            finalVertexDrawOrder[i].first = tempName;
+            finalVertexDrawOrder[i].second.vertices = tempVertexInfo[0].vertices;
+            finalVertexDrawOrder[i].second.indices = tempVertexInfo[0].indices;
+
             int ii = 0;
         }
        
