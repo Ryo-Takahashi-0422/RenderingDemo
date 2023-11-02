@@ -164,7 +164,35 @@ int FBXInfoManager::Init(std::string _modelPath)
             localPosAndRotOfMesh[tempName].second = tempRot;
         }
        
+        // animationNameAndBoneNameWithTranslationMatrix読み込み
+        int animationNameAndBoneNameWithTranslationMatrixSize = 0;
+        fread(&animationNameAndBoneNameWithTranslationMatrixSize, sizeof(animationNameAndBoneNameWithTranslationMatrixSize), 1, fp);
+        unsigned int animationNameSize = 0;
+        for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrixSize; ++i)
+        {
+            fread(&animationNameSize, sizeof(animationNameSize), 1, fp);
+            char* tempAnimationName = (char*)calloc(32, sizeof(char));
+            fread(tempAnimationName, animationNameSize, 1, fp);
 
+            // ボーン数格納
+            int boneNum = 0;
+            fread(&boneNum, sizeof(boneNum), 1, fp);
+
+            // フレーム数格納
+            int frameNum = 0;
+            fread(&frameNum, sizeof(frameNum), 1, fp);
+
+            for (int j = 0; j < boneNum; ++j)
+            {
+                for (int k = 0; k < frameNum; ++k)
+                {
+                    XMMATRIX matrix;
+                    fread(&matrix, sizeof(matrix), 1, fp);
+
+                    animationNameAndBoneNameWithTranslationMatrix[tempAnimationName][j][k] = matrix;
+                }
+            }
+        }
         //// vertexListOfOBB読み込み処理
         //int vertexListOfOBBSize = 0;
         //unsigned int oBBNameSize = 0;
@@ -696,48 +724,48 @@ void FBXInfoManager::ReadFBXFile()
                         bonesInitialPostureMatrix[cluster_index].r[3] = v3;
 
 
-                        FbxNode* linked_node = cluster->GetLink();
-                        FbxArray< FbxString* > takeNameAry;   // 文字列格納配列
-                        scene->FillAnimStackNameArray/*FillTakeNameArray*/(takeNameAry);  // テイク名取得
-                        int numTake = takeNameAry.GetCount();     // テイク数
-                        FbxTime start;
-                        FbxTime stop;
+                        //FbxNode* linked_node = cluster->GetLink();
+                        //FbxArray< FbxString* > takeNameAry;   // 文字列格納配列
+                        //scene->FillAnimStackNameArray/*FillTakeNameArray*/(takeNameAry);  // テイク名取得
+                        //int numTake = takeNameAry.GetCount();     // テイク数
+                        //FbxTime start;
+                        //FbxTime stop;
 
-                        // "Take" is Skin name and Animation name set like "Armature|Walking", "Armature|Punching", etc.
-                        for (int i = 0; i < numTake; ++i)
-                        {
-                            // 複数アニメーション情報切り替え
-                            FbxAnimStack* pStack = scene->GetSrcObject<FbxAnimStack>(i);
-                            scene->SetCurrentAnimationStack(pStack);
+                        //// "Take" is Skin name and Animation name set like "Armature|Walking", "Armature|Punching", etc.
+                        //for (int i = 0; i < numTake; ++i)
+                        //{
+                        //    // 複数アニメーション情報切り替え
+                        //    FbxAnimStack* pStack = scene->GetSrcObject<FbxAnimStack>(i);
+                        //    scene->SetCurrentAnimationStack(pStack);
 
-                            // テイク名からテイク情報を取得
-                            FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
-                            if (currentTakeInfo)
-                            {
-                                start = currentTakeInfo->mLocalTimeSpan.GetStart();
-                                stop = currentTakeInfo->mLocalTimeSpan.GetStop();
+                        //    // テイク名からテイク情報を取得
+                        //    FbxTakeInfo* currentTakeInfo = scene->GetTakeInfo(*(takeNameAry[i]));
+                        //    if (currentTakeInfo)
+                        //    {
+                        //        start = currentTakeInfo->mLocalTimeSpan.GetStart();
+                        //        stop = currentTakeInfo->mLocalTimeSpan.GetStop();
 
-                                // 1フレーム時間（period）で割ればフレーム数になる
-                                int startFrame = (int)(start.Get() / period.Get());
-                                int stopFrame = (int)(stop.Get() / period.Get());
-                                for (int j = startFrame; j < stopFrame; ++j)
-                                {
-                                    FbxMatrix mat;
-                                    FbxTime time = start + period * j;
-                                    mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
+                        //        // 1フレーム時間（period）で割ればフレーム数になる
+                        //        int startFrame = (int)(start.Get() / period.Get());
+                        //        int stopFrame = (int)(stop.Get() / period.Get());
+                        //        for (int j = startFrame; j < stopFrame; ++j)
+                        //        {
+                        //            FbxMatrix mat;
+                        //            FbxTime time = start + period * j;
+                        //            mat = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(linked_node, time);
 
-                                    XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
-                                    XMVECTOR v1 = { mat[1].mData[0] ,mat[1].mData[1] ,mat[1].mData[2] ,mat[1].mData[3] };
-                                    XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
-                                    XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
+                        //            XMVECTOR v0 = { mat[0].mData[0] ,mat[0].mData[1] ,mat[0].mData[2] ,mat[0].mData[3] };
+                        //            XMVECTOR v1 = { mat[1].mData[0] ,mat[1].mData[1] ,mat[1].mData[2] ,mat[1].mData[3] };
+                        //            XMVECTOR v2 = { mat[2].mData[0] ,mat[2].mData[1] ,mat[2].mData[2] ,mat[2].mData[3] };
+                        //            XMVECTOR v3 = { mat[3].mData[0] ,mat[3].mData[1] ,mat[3].mData[2] ,mat[3].mData[3] };
 
-                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[0] = v0;
-                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[1] = v1;
-                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[2] = v2;
-                                    animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[3] = v3;
-                                }
-                            }
-                        }
+                        //            animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[0] = v0;
+                        //            animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[1] = v1;
+                        //            animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[2] = v2;
+                        //            animationNameAndBoneNameWithTranslationMatrix[(std::string)currentTakeInfo->mImportName][cluster_index][j].r[3] = v3;
+                        //        }
+                        //    }
+                        //}
                     }
                 }
                 isBonesInitialPostureMatrixFilled = true;
