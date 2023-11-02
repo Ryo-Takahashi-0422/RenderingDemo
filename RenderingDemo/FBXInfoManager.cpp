@@ -43,15 +43,11 @@ int FBXInfoManager::Init(std::string _modelPath)
     // Scene解析
     ReadFBXFile();
 
-    int finalVertexInfoSize = 0;
-    unsigned int meshNameSize = 0;
     struct meshName
     {
         char* name;
     };
-    std::vector</*std::string*/meshName> meshNames;
-    int verticesSize;
-    int indiceSize;
+
     if (modelPath == "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
     {
         const char* fileName = "C:\\Users\\RyoTaka\\Desktop\\InputTest.txt";
@@ -63,7 +59,13 @@ int FBXInfoManager::Init(std::string _modelPath)
             return ERROR_FILE_NOT_FOUND;
         }
 
-        
+        // finalVertexInfo読み込み処理
+        int finalVertexInfoSize = 0;
+        unsigned int meshNameSize = 0;
+        std::vector<meshName> meshNames;
+        int verticesSize;
+        int indiceSize;
+
         fread(&finalVertexInfoSize, sizeof(finalVertexInfoSize), 1, fp);
         meshNames.resize(finalVertexInfoSize);
         finalVertexDrawOrder.resize(meshNames.size());
@@ -100,10 +102,71 @@ int FBXInfoManager::Init(std::string _modelPath)
             finalVertexDrawOrder[i].first = tempName;
             finalVertexDrawOrder[i].second.vertices = tempVertexInfo[0].vertices;
             finalVertexDrawOrder[i].second.indices = tempVertexInfo[0].indices;
-
-            int ii = 0;
         }
-       
+
+        int finalPhongMaterialOrderSize = 0;
+        fread(&finalPhongMaterialOrderSize, sizeof(finalPhongMaterialOrderSize), 1, fp);
+        meshNames.clear();
+        meshNames.resize(finalPhongMaterialOrderSize);
+        finalPhongMaterialOrder.resize(finalPhongMaterialOrderSize);
+
+        for (int i = 0; i < meshNames.size(); ++i)
+        {
+            fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
+            char* tempName = (char*)calloc(32, sizeof(char));
+            fread(tempName, meshNameSize, 1, fp);
+            meshNames[i].name = tempName;
+
+            PhongInfo tempPhongInfo;
+            fread(&tempPhongInfo, sizeof(tempPhongInfo), 1, fp);
+
+            finalPhongMaterialOrder[i].first = tempName;
+            finalPhongMaterialOrder[i].second = tempPhongInfo;
+        }
+
+        //// vertexListOfOBB読み込み処理
+        //int vertexListOfOBBSize = 0;
+        //unsigned int oBBNameSize = 0;
+        //std::vector<meshName> oBBNames;
+        //int oBBVerticesSize;
+        //int oBBIndiceSize;
+        //fread(&vertexListOfOBBSize, sizeof(vertexListOfOBBSize), 1, fp);
+        //oBBNames.resize(vertexListOfOBBSize);
+        //vertexListOfOBB.resize(oBBNames.size());
+        //for (int i = 0; i < oBBNames.size(); ++i)
+        //{
+        //    fread(&oBBNameSize, sizeof(oBBNameSize), 1, fp);
+        //    char* tempName = (char*)calloc(32, sizeof(char));
+        //    fread(tempName, oBBNameSize, 1, fp);
+        //    oBBNames[i].name = tempName;
+        //    //finalVertexDrawOrder[i].first = tempName;
+
+        //    fread(&oBBVerticesSize, sizeof(oBBVerticesSize), 1, fp);
+        //    fread(&oBBIndiceSize, sizeof(oBBIndiceSize), 1, fp);
+
+        //    std::vector<VertexInfo> tempVertexInfo;
+        //    FBXVertex tempVertex = {};
+        //    unsigned int tempIndex = 0;
+        //    tempVertexInfo.resize(1);
+
+        //    // vertex読み込み
+        //    for (int j = 0; j < oBBVerticesSize; ++j)
+        //    {
+        //        fread(&tempVertex, sizeof(tempVertex), 1, fp);
+        //        tempVertexInfo[0].vertices.push_back(tempVertex);
+        //    }
+
+        //    // indices読み込み
+        //    for (int j = 0; j < oBBIndiceSize; ++j)
+        //    {
+        //        fread(&tempIndex, sizeof(tempIndex), 1, fp);
+        //        tempVertexInfo[0].indices.push_back(tempIndex);
+        //    }
+
+        //    vertexListOfOBB[i].first = tempName;
+        //    vertexListOfOBB[i].second.vertices = tempVertexInfo[0].vertices;
+        //    vertexListOfOBB[i].second.indices = tempVertexInfo[0].indices;
+        //}       
     }
 
     auto it = indexWithBonesNumAndWeight.begin();
@@ -459,45 +522,48 @@ void FBXInfoManager::ReadFBXFile()
             }
             else if (type == "FbxSurfacePhong") {
 
-                // Phongにダウンキャスト
-                FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
+                if (modelPath != "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+                {
+                    // Phongにダウンキャスト
+                    FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
 
-                // copy and order material data
-                finalPhongMaterialOrder.resize(nameCnt + 1);
-                finalPhongMaterialOrder.at(nameCnt).first = name;
+                    // copy and order material data
+                    finalPhongMaterialOrder.resize(nameCnt + 1);
+                    finalPhongMaterialOrder.at(nameCnt).first = name;
 
-                // Diffuse
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[0] = (float)phong->Diffuse.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[1] = (float)phong->Diffuse.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.diffuse[2] = (float)phong->Diffuse.Get().mData[2];
+                    // Diffuse
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[0] = (float)phong->Diffuse.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[1] = (float)phong->Diffuse.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.diffuse[2] = (float)phong->Diffuse.Get().mData[2];
 
-                // Ambient
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[0] = (float)phong->Ambient.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[1] = (float)phong->Ambient.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.ambient[2] = (float)phong->Ambient.Get().mData[2];
+                    // Ambient
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[0] = (float)phong->Ambient.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[1] = (float)phong->Ambient.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.ambient[2] = (float)phong->Ambient.Get().mData[2];
 
-                // emissive
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[0] = (float)phong->Emissive.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[1] = (float)phong->Emissive.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.emissive[2] = (float)phong->Emissive.Get().mData[2];
+                    // emissive
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[0] = (float)phong->Emissive.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[1] = (float)phong->Emissive.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.emissive[2] = (float)phong->Emissive.Get().mData[2];
 
-                // bump
-                finalPhongMaterialOrder.at(nameCnt).second.bump[0] = (float)phong->Bump.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.bump[1] = (float)phong->Bump.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.bump[2] = (float)phong->Bump.Get().mData[2];
+                    // bump
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[0] = (float)phong->Bump.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[1] = (float)phong->Bump.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.bump[2] = (float)phong->Bump.Get().mData[2];
 
-                // specular
-                finalPhongMaterialOrder.at(nameCnt).second.specular[0] = (float)phong->Specular.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.specular[1] = (float)phong->Specular.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.specular[2] = (float)phong->Specular.Get().mData[2];
+                    // specular
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[0] = (float)phong->Specular.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[1] = (float)phong->Specular.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.specular[2] = (float)phong->Specular.Get().mData[2];
 
-                // reflectivity
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = (float)phong->Reflection.Get().mData[0];
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = (float)phong->Reflection.Get().mData[1];
-                finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = (float)phong->Reflection.Get().mData[2];
+                    // reflectivity
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[0] = (float)phong->Reflection.Get().mData[0];
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[1] = (float)phong->Reflection.Get().mData[1];
+                    finalPhongMaterialOrder.at(nameCnt).second.reflection[2] = (float)phong->Reflection.Get().mData[2];
 
-                // shiness
-                finalPhongMaterialOrder.at(nameCnt).second.transparency = (float)phong->TransparencyFactor.Get();
+                    // shiness
+                    finalPhongMaterialOrder.at(nameCnt).second.transparency = (float)phong->TransparencyFactor.Get();
+                }
             }
         }
 
