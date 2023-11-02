@@ -48,7 +48,7 @@ int FBXInfoManager::Init(std::string _modelPath)
         char* name;
     };
 
-    if (modelPath == "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+    if (modelPath == "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx")//"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
     {
         const char* fileName = "C:\\Users\\RyoTaka\\Desktop\\InputTest.txt";
 
@@ -104,12 +104,12 @@ int FBXInfoManager::Init(std::string _modelPath)
             finalVertexDrawOrder[i].second.indices = tempVertexInfo[0].indices;
         }
 
+        // finalPhongMAterialInfo読み込み
         int finalPhongMaterialOrderSize = 0;
         fread(&finalPhongMaterialOrderSize, sizeof(finalPhongMaterialOrderSize), 1, fp);
         meshNames.clear();
         meshNames.resize(finalPhongMaterialOrderSize);
         finalPhongMaterialOrder.resize(finalPhongMaterialOrderSize);
-
         for (int i = 0; i < meshNames.size(); ++i)
         {
             fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
@@ -122,6 +122,26 @@ int FBXInfoManager::Init(std::string _modelPath)
 
             finalPhongMaterialOrder[i].first = tempName;
             finalPhongMaterialOrder[i].second = tempPhongInfo;
+        }
+
+        // materialAndTexturenameInfo読み込み
+        int materialAndTexturenameInfoSize = 0;
+        fread(&materialAndTexturenameInfoSize, sizeof(materialAndTexturenameInfoSize), 1, fp);
+        materialAndTexturenameInfo.resize(materialAndTexturenameInfoSize);
+        int materialNameSize = 0;
+        int texturePathSize = 0;
+        for (int i = 0; i < materialAndTexturenameInfo.size(); ++i)
+        {
+            fread(&materialNameSize, sizeof(materialNameSize), 1, fp);
+            char* tempMaterialName = (char*)calloc(32, sizeof(char));
+            fread(tempMaterialName, materialNameSize, 1, fp);
+
+            fread(&texturePathSize, sizeof(texturePathSize), 1, fp);
+            char* tempTexturePath = (char*)calloc(256, sizeof(char));
+            fread(tempTexturePath, texturePathSize, 1, fp);
+
+            materialAndTexturenameInfo[i].first = tempMaterialName;
+            materialAndTexturenameInfo[i].second = tempTexturePath;
         }
 
         //// vertexListOfOBB読み込み処理
@@ -420,7 +440,7 @@ void FBXInfoManager::ReadFBXFile()
         // Align meshes in the order in which they are read.
         // When drawing the vertices of a divided mesh, if the index of another mesh interrupts the drawing, the drawing will fail.
         // Also, if there are multiple meshes, such as stages, they should be unified.Otherwise, the local coordinates of each mesh will be used for drawing, resulting in wrapped meshes.
-        if (modelPath != "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+        if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
         {
             finalVertexDrawOrder.resize(nameCnt + 1);
             finalVertexDrawOrder.at(nameCnt).first = name;
@@ -522,7 +542,7 @@ void FBXInfoManager::ReadFBXFile()
             }
             else if (type == "FbxSurfacePhong") {
 
-                if (modelPath != "C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+                if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
                 {
                     // Phongにダウンキャスト
                     FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
@@ -567,38 +587,39 @@ void FBXInfoManager::ReadFBXFile()
             }
         }
 
-
-        // Get texture infomation
-        for (auto type : textureType)
+        if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
         {
-            // ディフューズプロパティを検索
-            FbxProperty property = material->FindProperty(/*FbxSurfaceMaterial::sDiffuse*/type);
+            // Get texture infomation
+            for (auto type : textureType)
+            {
+                // ディフューズプロパティを検索
+                FbxProperty property = material->FindProperty(/*FbxSurfaceMaterial::sDiffuse*/type);
 
-            // プロパティが持っているレイヤードテクスチャの枚数をチェック
-            int layerNum = property.GetSrcObjectCount<FbxLayeredTexture>();
+                // プロパティが持っているレイヤードテクスチャの枚数をチェック
+                int layerNum = property.GetSrcObjectCount<FbxLayeredTexture>();
 
-            // レイヤードテクスチャが無ければ通常テクスチャ
-            if (layerNum == 0) {
-                // 通常テクスチャの枚数をチェック
-                int numGeneralTexture = property.GetSrcObjectCount<FbxFileTexture>();
+                // レイヤードテクスチャが無ければ通常テクスチャ
+                if (layerNum == 0) {
+                    // 通常テクスチャの枚数をチェック
+                    int numGeneralTexture = property.GetSrcObjectCount<FbxFileTexture>();
 
-                // 各テクスチャについてテクスチャ情報をゲット
-                for (int i = 0; i < numGeneralTexture; ++i) {
-                    // i番目のテクスチャオブジェクト取得
-                    FbxFileTexture* texture = /*FbxCast<FbxFileTexture>*/property.GetSrcObject<FbxFileTexture>(i);
+                    // 各テクスチャについてテクスチャ情報をゲット
+                    for (int i = 0; i < numGeneralTexture; ++i) {
+                        // i番目のテクスチャオブジェクト取得
+                        FbxFileTexture* texture = /*FbxCast<FbxFileTexture>*/property.GetSrcObject<FbxFileTexture>(i);
 
-                    // テクスチャファイルパスを取得（フルパス）
-                    const char* filePath = texture->GetFileName();
+                        // テクスチャファイルパスを取得（フルパス）
+                        const char* filePath = texture->GetFileName();
 
-                    materialAndTexturenameInfo.resize(textureNumCnt);
-                    std::pair<std::string, std::string> pair = { name, filePath };
-                    materialAndTexturenameInfo.push_back(pair);
-                    ++textureNumCnt;
+                        materialAndTexturenameInfo.resize(textureNumCnt);
+                        std::pair<std::string, std::string> pair = { name, filePath };
+                        materialAndTexturenameInfo.push_back(pair);
+                        ++textureNumCnt;
 
+                    }
                 }
             }
         }
-
 
         // Get bone pos and animation matrix
         // スキンの数を取得
