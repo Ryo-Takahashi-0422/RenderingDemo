@@ -48,7 +48,7 @@ int FBXInfoManager::Init(std::string _modelPath)
         char* name;
     };
 
-    if (modelPath == "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx")//"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx")
+    if (modelPath == testTargetPath)
     {
         const char* fileName = "C:\\Users\\RyoTaka\\Desktop\\InputTest.txt";
 
@@ -143,6 +143,27 @@ int FBXInfoManager::Init(std::string _modelPath)
             materialAndTexturenameInfo[i].first = tempMaterialName;
             materialAndTexturenameInfo[i].second = tempTexturePath;
         }
+
+        // localPosAndRotOfMesh読み込み
+        int localPosAndRotOfMeshSize = 0;
+        fread(&localPosAndRotOfMeshSize, sizeof(localPosAndRotOfMeshSize), 1, fp);
+        meshNames.clear();
+        meshNames.resize(localPosAndRotOfMeshSize);
+        for (int i = 0; i < meshNames.size(); ++i)
+        {
+            fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
+            char* tempName = (char*)calloc(32, sizeof(char));
+            fread(tempName, meshNameSize, 1, fp);
+            meshNames[i].name = tempName;
+
+            XMFLOAT3 tempPos, tempRot;
+            fread(&tempPos, sizeof(tempPos), 1, fp);
+            fread(&tempRot, sizeof(tempRot), 1, fp);
+
+            localPosAndRotOfMesh[tempName].first = tempPos;
+            localPosAndRotOfMesh[tempName].second = tempRot;
+        }
+       
 
         //// vertexListOfOBB読み込み処理
         //int vertexListOfOBBSize = 0;
@@ -440,7 +461,7 @@ void FBXInfoManager::ReadFBXFile()
         // Align meshes in the order in which they are read.
         // When drawing the vertices of a divided mesh, if the index of another mesh interrupts the drawing, the drawing will fail.
         // Also, if there are multiple meshes, such as stages, they should be unified.Otherwise, the local coordinates of each mesh will be used for drawing, resulting in wrapped meshes.
-        if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
+        if (modelPath != testTargetPath)
         {
             finalVertexDrawOrder.resize(nameCnt + 1);
             finalVertexDrawOrder.at(nameCnt).first = name;
@@ -473,20 +494,22 @@ void FBXInfoManager::ReadFBXFile()
             continue;
         }
 
-        // OBBのためローカル座標・角度取得
-        localTransition = node->LclTranslation.Get();
-        XMFLOAT3 lPos;
-        lPos.x = (float)localTransition.mData[0];
-        lPos.y = (float)localTransition.mData[1];
-        lPos.z = (float)localTransition.mData[2];
-        localPosAndRotOfMesh[name].first = lPos;
-        localRotation = node->LclRotation.Get();
-        XMFLOAT3 lRot;
-        lRot.x = (float)localRotation.mData[0];
-        lRot.y = (float)localRotation.mData[1];
-        lRot.z = (float)localRotation.mData[2];
-        localPosAndRotOfMesh[name].second = lRot;
-
+        if (modelPath != testTargetPath)
+        {
+            // OBBのためローカル座標・角度取得
+            localTransition = node->LclTranslation.Get();
+            XMFLOAT3 lPos;
+            lPos.x = (float)localTransition.mData[0];
+            lPos.y = (float)localTransition.mData[1];
+            lPos.z = (float)localTransition.mData[2];
+            localPosAndRotOfMesh[name].first = lPos;
+            localRotation = node->LclRotation.Get();
+            XMFLOAT3 lRot;
+            lRot.x = (float)localRotation.mData[0];
+            lRot.y = (float)localRotation.mData[1];
+            lRot.z = (float)localRotation.mData[2];
+            localPosAndRotOfMesh[name].second = lRot;
+        }
 
         // マテリアルの数をチェック
         int materialNum = node->GetMaterialCount();
@@ -542,7 +565,7 @@ void FBXInfoManager::ReadFBXFile()
             }
             else if (type == "FbxSurfacePhong") {
 
-                if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
+                if (modelPath != testTargetPath)
                 {
                     // Phongにダウンキャスト
                     FbxSurfacePhong* phong = (FbxSurfacePhong*)material;
@@ -587,7 +610,7 @@ void FBXInfoManager::ReadFBXFile()
             }
         }
 
-        if (modelPath != "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/)
+        if (modelPath != testTargetPath)
         {
             // Get texture infomation
             for (auto type : textureType)
