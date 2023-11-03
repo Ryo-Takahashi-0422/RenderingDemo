@@ -105,7 +105,7 @@ private:
 
 	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;
 
-	std::string testTargetPath = "C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"/*"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx"*/;
+	std::string testTargetPath = /*"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx"*/"C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_Test.fbx";
 
 public:
 	//Get Singleton Instance

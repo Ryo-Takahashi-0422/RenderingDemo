@@ -208,49 +208,49 @@ int FBXInfoManager::Init(std::string _modelPath)
             bonesInitialPostureMatrix[boneNum] = matrix;
         }
 
-        //// vertexListOfOBB読み込み処理
-        //int vertexListOfOBBSize = 0;
-        //unsigned int oBBNameSize = 0;
+        // vertexListOfOBB読み込み処理
+        int vertexListOfOBBSize = 0;
+        unsigned int oBBNameSize = 0;
         //std::vector<meshName> oBBNames;
-        //int oBBVerticesSize;
-        //int oBBIndiceSize;
-        //fread(&vertexListOfOBBSize, sizeof(vertexListOfOBBSize), 1, fp);
+        int oBBVerticesNum;
+        int oBBIndiceNum;
+        fread(&vertexListOfOBBSize, sizeof(vertexListOfOBBSize), 1, fp);
         //oBBNames.resize(vertexListOfOBBSize);
-        //vertexListOfOBB.resize(oBBNames.size());
-        //for (int i = 0; i < oBBNames.size(); ++i)
-        //{
-        //    fread(&oBBNameSize, sizeof(oBBNameSize), 1, fp);
-        //    char* tempName = (char*)calloc(32, sizeof(char));
-        //    fread(tempName, oBBNameSize, 1, fp);
-        //    oBBNames[i].name = tempName;
-        //    //finalVertexDrawOrder[i].first = tempName;
+        vertexListOfOBB.resize(vertexListOfOBBSize);
+        for (int i = 0; i < vertexListOfOBBSize; ++i)
+        {
+            fread(&oBBNameSize, sizeof(oBBNameSize), 1, fp);
+            char* tempName = (char*)calloc(32, sizeof(char));
+            fread(tempName, oBBNameSize, 1, fp);
+            //oBBNames[i].name = tempName;
+            //finalVertexDrawOrder[i].first = tempName;
 
-        //    fread(&oBBVerticesSize, sizeof(oBBVerticesSize), 1, fp);
-        //    fread(&oBBIndiceSize, sizeof(oBBIndiceSize), 1, fp);
+            fread(&oBBVerticesNum, sizeof(oBBVerticesNum), 1, fp);
+            fread(&oBBIndiceNum, sizeof(oBBIndiceNum), 1, fp);
 
-        //    std::vector<VertexInfo> tempVertexInfo;
-        //    FBXVertex tempVertex = {};
-        //    unsigned int tempIndex = 0;
-        //    tempVertexInfo.resize(1);
+            std::vector<VertexInfo> tempVertexInfo;
+            FBXVertex tempVertex = {};
+            unsigned int tempIndex = 0;
+            tempVertexInfo.resize(1);
 
-        //    // vertex読み込み
-        //    for (int j = 0; j < oBBVerticesSize; ++j)
-        //    {
-        //        fread(&tempVertex, sizeof(tempVertex), 1, fp);
-        //        tempVertexInfo[0].vertices.push_back(tempVertex);
-        //    }
+            // vertex読み込み
+            for (int j = 0; j < oBBVerticesNum; ++j)
+            {
+                fread(&tempVertex, sizeof(tempVertex), 1, fp);
+                tempVertexInfo[0].vertices.push_back(tempVertex);
+            }
 
-        //    // indices読み込み
-        //    for (int j = 0; j < oBBIndiceSize; ++j)
-        //    {
-        //        fread(&tempIndex, sizeof(tempIndex), 1, fp);
-        //        tempVertexInfo[0].indices.push_back(tempIndex);
-        //    }
+            // indices読み込み
+            for (int j = 0; j < oBBIndiceNum; ++j)
+            {
+                fread(&tempIndex, sizeof(tempIndex), 1, fp);
+                tempVertexInfo[0].indices.push_back(tempIndex);
+            }
 
-        //    vertexListOfOBB[i].first = tempName;
-        //    vertexListOfOBB[i].second.vertices = tempVertexInfo[0].vertices;
-        //    vertexListOfOBB[i].second.indices = tempVertexInfo[0].indices;
-        //}       
+            vertexListOfOBB[i].first = tempName;
+            vertexListOfOBB[i].second.vertices = tempVertexInfo[0].vertices;
+            vertexListOfOBB[i].second.indices = tempVertexInfo[0].indices;
+        }       
     }
 
     auto it = indexWithBonesNumAndWeight.begin();
@@ -334,43 +334,43 @@ void FBXInfoManager::ReadFBXFile()
         FbxDouble3 localRotation; // モデルのローカルX,Y,Z回転角度(blenderで角度適用した場合は取得不可能)
         if (targetName == "OBB")
         {
-            // 頂点情報の処理
-            int controlPointCount = fbxMesh->GetControlPointsCount();
-            VertexInfo vertex;
-            for (int i = 0; i < controlPointCount; i++)
-            {
-                // 頂点座標を読み込んで設定
-                auto point = fbxMesh->GetControlPointAt(i);                
-                vertex.vertices.resize(controlPointCount);
-                vertex.vertices[i].pos.x = point[0];
-                vertex.vertices[i].pos.y = point[1];
-                vertex.vertices[i].pos.z = point[2];
-            }
-            std::pair<std::string, VertexInfo> vertexInfo;
-            vertexInfo.first = name;
-            vertexInfo.second = vertex;
-            
+            //// 頂点情報の処理
+            //int controlPointCount = fbxMesh->GetControlPointsCount();
+            //VertexInfo vertex;
+            //for (int i = 0; i < controlPointCount; i++)
+            //{
+            //    // 頂点座標を読み込んで設定
+            //    auto point = fbxMesh->GetControlPointAt(i);                
+            //    vertex.vertices.resize(controlPointCount);
+            //    vertex.vertices[i].pos.x = point[0];
+            //    vertex.vertices[i].pos.y = point[1];
+            //    vertex.vertices[i].pos.z = point[2];
+            //}
+            //std::pair<std::string, VertexInfo> vertexInfo;
+            //vertexInfo.first = name;
+            //vertexInfo.second = vertex;
+            //
 
-            // インテックス情報の処理
-            std::vector<unsigned int> indices;
-            std::vector<std::array<int, 2>> oldNewIndexPairList;
-            for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
-            {
-                for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
-                {
-                    // インデックス座標
-                    auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
-                    vertexIndex += indiceIndexOfOBB;
+            //// インテックス情報の処理
+            //std::vector<unsigned int> indices;
+            //std::vector<std::array<int, 2>> oldNewIndexPairList;
+            //for (int polIndex = 0; polIndex < fbxMesh->GetPolygonCount(); polIndex++) // ポリゴン毎のループ
+            //{
+            //    for (int polVertexIndex = 0; polVertexIndex < fbxMesh->GetPolygonSize(polIndex); polVertexIndex++) // 頂点毎のループ
+            //    {
+            //        // インデックス座標
+            //        auto vertexIndex = fbxMesh->GetPolygonVertex(polIndex, polVertexIndex);
+            //        vertexIndex += indiceIndexOfOBB;
 
-                    // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
-                    // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
-                    indices.push_back(vertexIndex);
-                }
-            }
+            //        // インデックス座標を設定。分割されたメッシュのインデックスは、何もしないと番号が0から振り直される。一方、インデックスはメッシュが分割されていようが単一のものだろうが通し番号なので、
+            //        // メッシュを分割する場合は一つ前に読み込んだメッシュのインデックス番号の内、「最大の値 + 1」したものを追加する必要がある。
+            //        indices.push_back(vertexIndex);
+            //    }
+            //}
 
-            vertexInfo.second.indices = indices;
-            vertexListOfOBB.push_back(vertexInfo);
-            indiceIndexOfOBB = indices.size();
+            //vertexInfo.second.indices = indices;
+            //vertexListOfOBB.push_back(vertexInfo);
+            //indiceIndexOfOBB = indices.size();
 
             // マテリアル情報元のノード取得
             FbxNode* node = fbxMesh->GetNode();
