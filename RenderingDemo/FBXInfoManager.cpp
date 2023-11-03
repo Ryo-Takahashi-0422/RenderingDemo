@@ -250,7 +250,27 @@ int FBXInfoManager::Init(std::string _modelPath)
             vertexListOfOBB[i].first = tempName;
             vertexListOfOBB[i].second.vertices = tempVertexInfo[0].vertices;
             vertexListOfOBB[i].second.indices = tempVertexInfo[0].indices;
-        }       
+        }
+
+        // localPosAndRotOfOBB読み込み
+        int localPosAndRotOfOBBSize = 0;
+        fread(&localPosAndRotOfOBBSize, sizeof(localPosAndRotOfOBBSize), 1, fp);
+        meshNames.clear();
+        meshNames.resize(localPosAndRotOfOBBSize);
+        for (int i = 0; i < meshNames.size(); ++i)
+        {
+            fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
+            char* tempName = (char*)calloc(32, sizeof(char));
+            fread(tempName, meshNameSize, 1, fp);
+            meshNames[i].name = tempName;
+
+            XMFLOAT3 tempPos, tempRot;
+            fread(&tempPos, sizeof(tempPos), 1, fp);
+            fread(&tempRot, sizeof(tempRot), 1, fp);
+
+            localPosAndRotOfOBB[tempName].first = tempPos;
+            localPosAndRotOfOBB[tempName].second = tempRot;
+        }
     }
 
     auto it = indexWithBonesNumAndWeight.begin();
@@ -372,25 +392,25 @@ void FBXInfoManager::ReadFBXFile()
             //vertexListOfOBB.push_back(vertexInfo);
             //indiceIndexOfOBB = indices.size();
 
-            // マテリアル情報元のノード取得
-            FbxNode* node = fbxMesh->GetNode();
-            if (node == 0)
-            {
-                continue;
-            }
-            // OBBのためローカル座標・角度取得
-            localTransition = node->LclTranslation.Get();
-            XMFLOAT3 lPos;
-            lPos.x = (float)localTransition.mData[0];
-            lPos.y = (float)localTransition.mData[1];
-            lPos.z = (float)localTransition.mData[2];
-            localPosAndRotOfOBB[name].first = lPos;
-            localRotation = node->LclRotation.Get();
-            XMFLOAT3 lRot;
-            lRot.x = (float)localRotation.mData[0];
-            lRot.y = (float)localRotation.mData[1];
-            lRot.z = (float)localRotation.mData[2];
-            localPosAndRotOfOBB[name].second = lRot;
+            //// マテリアル情報元のノード取得
+            //FbxNode* node = fbxMesh->GetNode();
+            //if (node == 0)
+            //{
+            //    continue;
+            //}
+            //// OBBのためローカル座標・角度取得
+            //localTransition = node->LclTranslation.Get();
+            //XMFLOAT3 lPos;
+            //lPos.x = (float)localTransition.mData[0];
+            //lPos.y = (float)localTransition.mData[1];
+            //lPos.z = (float)localTransition.mData[2];
+            //localPosAndRotOfOBB[name].first = lPos;
+            //localRotation = node->LclRotation.Get();
+            //XMFLOAT3 lRot;
+            //lRot.x = (float)localRotation.mData[0];
+            //lRot.y = (float)localRotation.mData[1];
+            //lRot.z = (float)localRotation.mData[2];
+            //localPosAndRotOfOBB[name].second = lRot;
 
             continue;
         }
