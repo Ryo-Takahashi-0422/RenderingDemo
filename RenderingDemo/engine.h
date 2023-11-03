@@ -24,6 +24,7 @@
 #include <array>
 #include <ReadData.h>
 #include <stdlib.h>
+#include <fstream>
 
 //eigen
 #define _USE_MATH_DEFINES
@@ -45,13 +46,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <SpriteFont.h> // 文字列表示に必要
 #include <ResourceUploadBatch.h> // DirectXTK関連のリソース使用に必要
 #pragma comment(lib, "DirectXTK12.lib")
-
-// FBX SDK
-#include <fbxsdk.h>
-//#pragma comment(lib, "libfbxsdk.lib")
-#pragma comment(lib, "libfbxsdk-md.lib")
-#pragma comment(lib, "libxml2-md.lib")
-#pragma comment(lib, "zlib-md.lib")
 
 //#include <AppD3DX12.h>
 #include <InputLayoutBase.h>
