@@ -174,7 +174,8 @@ private:
 	bool inputRight = false;
 	void AllKeyBoolFalse();
 
-	double forwardSpeed = -0.05;
+	/*double forwardSpeed = -0.05;*/
+	double forwardSpeed = -0.5;
 	double turnSpeed = 20;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();

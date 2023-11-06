@@ -38,7 +38,14 @@ float4 FBXPS(Output input) : SV_TARGET
     //return transparentmap.Sample(smp, input.uv);
     //return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1); // Ziggrat‚Å‚àƒ‰ƒO‚ª‚È‚¢I‚Ç‚¤‚â‚çSample‚ğ—˜—p‚µ‚Ä‚¢‚écol‚ânormal‚ªŒ´ˆö‚ç‚µ‚¢
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
-    return renderingResultOfNormalMapAndDiffuseMap/* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    if(col.x !=0)
+    {
+        return renderingResultOfNormalMapAndDiffuseMap /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    }
+    else
+    {
+        return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
+    }
     return input.norm;
     return float4(input.uv, 1, 1);
 	return float4(0.0f, 0.0f, 1.0f, 1.0f);

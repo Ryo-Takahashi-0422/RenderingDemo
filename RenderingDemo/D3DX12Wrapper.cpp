@@ -119,9 +119,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	strModelNum = strModelPath.size();
 
 	// SetRootSignatureBaseクラスのインスタンス化
-	setRootSignature = new SetRootSignature;
-
-	
+	setRootSignature = new SetRootSignature;	
 
 	// SettingShaderCompileクラスのインスタンス化
 	settingShaderCompile = new SettingShaderCompile;
@@ -354,14 +352,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleField.txt");
 
 	// 3 texture model
-	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Ziggrat.txt");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\ancient\\ziggurat_test2.fbx");
-	 
+	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Ziggrat.txt");
+
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\InputTest.txt");
+
 	// 4 textures model
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\NewConnan\\NewConnan2.fbx");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\NewConnan_ZDir.fbx");
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\batllefield\\BattleField_fixed.fbx");
 	
 	resourceManager.resize(modelPath.size());
 
