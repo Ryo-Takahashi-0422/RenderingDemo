@@ -12,6 +12,12 @@ float4 FBXPS(Output input) : SV_TARGET
     float brightMin = 0.3f;
     float brightEmpha = 2.5f;
     
+    // タイリング対応
+    int uvX = abs(input.uv.x);
+    int uvY = abs(input.uv.y);
+    input.uv.x = abs(input.uv.x) - uvX;
+    input.uv.y = abs(input.uv.y) - uvY;
+        
     float3 normCol = normalmap.Sample(smp, input.uv);
     //return float4(normCol, 1);
     float3 normVec = normCol * 2.0f - 1.0f;
@@ -26,27 +32,17 @@ float4 FBXPS(Output input) : SV_TARGET
     bright = saturate(bright * brightEmpha);
     
     float4 col = colormap.Sample(smp, input.uv);
+    if (col.a == 0) discard; // アルファ値が0なら透過させる
     
     //return col;
-    //return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
-    //return float4(bright, bright, bright, 1);
-    
-    //return float4(bright * col.x, bright * col.y, bright * col.z, 1);
-    //return normalmap.Sample(smp, input.uv);
-    //return specularmap.Sample(smp, input.uv);
-    //return metalmap.Sample(smp, input.uv);
-    //return transparentmap.Sample(smp, input.uv);
-    //return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1); // Ziggratでもラグがない！どうやらSampleを利用しているcolやnormalが原因らしい
+
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
-    if(col.x !=0)
-    {
-        return renderingResultOfNormalMapAndDiffuseMap /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
-    }
-    else
-    {
-        return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
-    }
-    return input.norm;
-    return float4(input.uv, 1, 1);
-	return float4(0.0f, 0.0f, 1.0f, 1.0f);
+    //if(col.x !=0)
+    //{
+    return renderingResultOfNormalMapAndDiffuseMap /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    //}
+    //else
+    //{
+    //    return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
+    //}
 }

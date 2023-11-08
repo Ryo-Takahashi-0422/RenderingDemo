@@ -6,7 +6,7 @@ private:
 
 	std::array<std::string, 3> strModelPath;
 	int strModelNum = 0;
-	std::string strMotionPath = "";//"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\model\\Motion\\squat2.vmd";
+	//std::string strMotionPath = "";//"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\model\\Motion\\squat2.vmd";
 	ComPtr<ID3D12Device> _dev = nullptr;
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
@@ -34,10 +34,10 @@ private:
 	//std::vector<MappingExecuter*> mappingExecuter;
 	//std::vector<ViewCreator*> viewCreator;
 
-	std::vector<DirectX::TexMetadata*> metaData;
-	std::vector<DirectX::Image*> img;
-	std::vector<DirectX::TexMetadata*> toonMetaData;
-	std::vector<DirectX::Image*> toonImg;
+	//std::vector<DirectX::TexMetadata*> metaData;
+	//std::vector<DirectX::Image*> img;
+	//std::vector<DirectX::TexMetadata*> toonMetaData;
+	//std::vector<DirectX::Image*> toonImg;
 
 	// シングルトンなのでコンストラクタ、コピーコンストラクタ、代入演算子はprivateにする
 	// コンストラクタ
@@ -58,15 +58,15 @@ private:
 	PrepareRenderingWindow* prepareRenderingWindow = nullptr;	
 	TextureLoader* textureLoader = nullptr;
 
-	std::map<int, std::vector<DirectX::XMMATRIX>*> boneMatrices;
+	//std::map<int, std::vector<DirectX::XMMATRIX>*> boneMatrices;
 	//std::map<int, std::map<std::string, BoneNode>> bNodeTable;
-	unsigned int _duration; // アニメーションの最大フレーム番号
+	//unsigned int _duration; // アニメーションの最大フレーム番号
 
 	//void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
 	//void UpdateVMDMotion(std::map<std::string, BoneNode> bNodeTable, 
 		//std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
 
-	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	//float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	// ﾏﾙﾁﾊﾟｽ関連
 	PeraGraphicsPipelineSetting* peraGPLSetting = nullptr;
@@ -74,10 +74,10 @@ private:
 	PeraPolygon* peraPolygon = nullptr;
 	PeraSetRootSignature* peraSetRootSignature = nullptr;
 	PeraShaderCompile* peraShaderCompile = nullptr;
-	PeraGraphicsPipelineSetting* bufferGPLSetting = nullptr;
-	PeraSetRootSignature* bufferSetRootSignature = nullptr;
+	//PeraGraphicsPipelineSetting* bufferGPLSetting = nullptr;
+	//PeraSetRootSignature* bufferSetRootSignature = nullptr;
 
-	BufferShaderCompile* bufferShaderCompile = nullptr;
+	//BufferShaderCompile* bufferShaderCompile = nullptr;
 
 	// ライトマップ関連
 	LightMapGraphicsPipelineSetting* lightMapGPLSetting = nullptr;
@@ -85,8 +85,8 @@ private:
 	LightMapShaderCompile* lightMapShaderCompile = nullptr;
 	ComPtr<ID3D10Blob> _lightMapVSBlob = nullptr; // ライトマップ用頂点シェーダーオブジェクト格納用
 	ComPtr<ID3D10Blob> _lightMapPSBlob = nullptr; // ライトマップ用ピクセルシェーダーオブジェクト格納用
-	XMFLOAT4 _planeNormalVec;
-	XMFLOAT3 lightVec;
+	//XMFLOAT4 _planeNormalVec;
+	//XMFLOAT3 lightVec;
 	
 	// bloom	
 	PeraGraphicsPipelineSetting* bloomGPLSetting = nullptr;
@@ -113,10 +113,10 @@ private:
 	void SetSSAOSwitch();
 	void SetBloomColor();
 
-	DirectX::XMVECTOR light;
-	DirectX::XMVECTOR eyePos;
-	DirectX::XMVECTOR targetPos;
-	DirectX::XMVECTOR upVec;
+	//DirectX::XMVECTOR light;
+	//DirectX::XMVECTOR eyePos;
+	//DirectX::XMVECTOR targetPos;
+	//DirectX::XMVECTOR upVec;
 
 	// Effekseer
 	EffekseerRenderer::RendererRef _efkRenderer = nullptr; // effect renderer
@@ -159,10 +159,10 @@ private:
 	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
 	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
-	XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
+	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
-	ComPtr<ID3D12Resource> backBufferResource = nullptr;
+	//ComPtr<ID3D12Resource> backBufferResource = nullptr;
 	Input* input = nullptr;
 	std::vector< std::string> modelPath;
 	std::pair<std::string, int> idleMotionDataNameAndMaxFrame;
@@ -175,7 +175,7 @@ private:
 	void AllKeyBoolFalse();
 
 	/*double forwardSpeed = -0.05;*/
-	double forwardSpeed = -0.5;
+	double forwardSpeed = -0.026/* * 15*/;
 	double turnSpeed = 20;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();

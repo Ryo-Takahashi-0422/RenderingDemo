@@ -236,7 +236,7 @@ HRESULT ResourceManager::Init()
 	if (animationNameAndBoneNameWithTranslationMatrix.size() != 0)
 	{
 		isAnimationModel = true;
-	}	
+	}
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -314,7 +314,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 1.5, 2);
+	XMFLOAT3 eye(0, 1.5, 2.3);
 	XMFLOAT3 target(0, 1.5, 0);
 	//XMFLOAT3 eye(0, 100, /*0.01*/10);
 	//XMFLOAT3 target(0, 10, 0);
@@ -524,7 +524,10 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 
 void ResourceManager::ClearReference()
 {
-	_dev->Release();
+	_fbxInfoManager = nullptr;
+	delete _fbxInfoManager;
+	delete textureLoader;
+	_prepareRenderingWindow = nullptr;
 	delete _prepareRenderingWindow;
 }
 
@@ -553,5 +556,4 @@ void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrame
 	{
 		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix[motionName][i][frameNo] * invIdentify);
 	}
-	
 }

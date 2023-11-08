@@ -63,6 +63,8 @@ Output FBXVS
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
     output.norm = mul(world, norm);
     //output.vnormal = mul(view, output.norm);
+    
+    // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
     output.uv = uv;
     //output.ray = normalize(pos.xyz - eye);
     //output.instNo = instNo;

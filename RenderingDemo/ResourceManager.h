@@ -70,8 +70,6 @@ private:
 	std::vector<unsigned int> textureImgPixelValue;
 	ScratchImage scratchImg = {};
 
-	void ClearReference();
-
 	DWORD _startTime; // アニメーション開始時のミリ秒
 	DWORD elapsedTime; // 経過ミリ秒
 	unsigned int frameNo; // 現在のフレームNo
@@ -128,5 +126,7 @@ public:
 	std::map<std::string, XMMATRIX> GetLocalMatrixOfOBB() { return localMatrix4OBB; }; // メッシュ毎のローカル座標・回転を取得可能
 
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
+
+	void ClearReference();
 };
 

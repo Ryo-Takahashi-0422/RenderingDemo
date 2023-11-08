@@ -236,5 +236,6 @@ int FBXInfoManager::Init(std::string _modelPath)
         localPosAndRotOfOBB[tempName].second = tempRot;
     }
     
+    fclose(fp);
     return 0;
 }

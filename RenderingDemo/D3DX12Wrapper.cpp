@@ -130,6 +130,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	// GraphicsPipelineSettingクラスのインスタンス化
 	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
+	delete vertexInputLayout;
 
 	// レンダリングウィンドウ設定
 	prepareRenderingWindow = new PrepareRenderingWindow;
@@ -176,6 +177,14 @@ bool D3DX12Wrapper::PrepareRendering() {
 	collisionRootSignature = new CollisionRootSignature;
 	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
 	collisionShaderCompile = new CollisionShaderCompile;
+	delete peraLayout;
+
+
+
+
+	////デバイス取得
+	//auto hdc = GetDC(prepareRenderingWindow->GetHWND());
+	//auto rate = GetDeviceCaps(hdc, VREFRESH);
 
 	return true;
 }
@@ -354,7 +363,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// 3 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Ziggrat.txt");
 
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\InputTest.txt");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\InputTest.bin");
 
 	// 4 textures model
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");
@@ -560,6 +569,11 @@ bool D3DX12Wrapper::ResourceInit() {
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
 //	
+	for (auto& reManager : resourceManager)
+	{
+		reManager->ClearReference();
+	}
+
 	return true;
 }
 
@@ -638,8 +652,51 @@ void D3DX12Wrapper::Run() {
 	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 	
+
+	const float MIN_FREAM_TIME = 1.0f / 60;
+	float fps = 0;
+	float frameTime = 0;
+	LARGE_INTEGER timeStart;
+	LARGE_INTEGER timeEnd;
+	LARGE_INTEGER timeFreq;
+	// メインループに入る前に精度を取得しておく
+	if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時は未対応
+		return;
+	}
+	// 1度取得しておく(初回計算用)
+	QueryPerformanceCounter(&timeStart);
+
+	std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
+	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
+	{
+		indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfoOfRenderingMesh();
+	}
+
 	while (true)
 	{
+
+		// 今の時間を取得
+		QueryPerformanceCounter(&timeEnd);
+		// (今の時間 - 前フレームの時間) / 周波数 = 経過時間(秒単位)
+		frameTime = static_cast<float>(timeEnd.QuadPart - timeStart.QuadPart) / static_cast<float>(timeFreq.QuadPart);
+
+		if (frameTime < MIN_FREAM_TIME) { // 時間に余裕がある場合
+		// ミリ秒に変換
+			DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);
+
+			timeBeginPeriod(1); // 分解能を上げる(Sleep精度向上)
+			Sleep(sleepTime);
+			timeEndPeriod(1);   // 戻す
+
+			continue;
+		}
+
+		timeStart = timeEnd; // 入れ替え
+
+
+
+
+
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -721,8 +778,8 @@ void D3DX12Wrapper::Run() {
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
 
-	delete bufferGPLSetting;
-	delete bufferShaderCompile;
+	//delete bufferGPLSetting;
+	//delete bufferShaderCompile;
 	
 	delete lightMapGPLSetting;	
 	delete lightMapShaderCompile;
@@ -744,7 +801,7 @@ void D3DX12Wrapper::Run() {
 	delete aoGPLSetting;
 
 	delete peraGPLSetting;
-	delete peraLayout;
+
 	delete peraPolygon;
 	delete peraShaderCompile;	
 
@@ -886,25 +943,25 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		for (int i = 0; i < indiceContainer.size(); ++i)
 		{
 			_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-			mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
-			mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
-			mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
-			mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
-			mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
-			mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
-			mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
-			mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
-			mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
-			mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
-			mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
-			mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
-			mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
-			mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
-			mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
-			mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
-			mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
-			mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
-			mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
+			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
+			//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
+			//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
+			//mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
+			//mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
+			//mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
+			//mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
+			//mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
+			//mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
+			//mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
+			//mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
+			//mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
+			//mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
+			//mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
+			//mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
+			//mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
+			//mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
+			//mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
+			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
 			if (matTexSize > 0) {
 				while (itMaterialAndTextureName->first == itPhonsInfos->first)
@@ -939,7 +996,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			textureTableStartIndex = 2; // init
 		}
 
-		DrawCollider(fbxIndex, buffSize);
+		//DrawCollider(fbxIndex, buffSize);
 	}
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
 	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
