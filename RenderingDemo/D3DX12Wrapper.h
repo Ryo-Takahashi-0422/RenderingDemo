@@ -181,6 +181,19 @@ private:
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
 	void DrawFBX(UINT buffSize);
+	// DrawFBX用データ
+	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
+	std::vector<D3D12_INDEX_BUFFER_VIEW*> ibViews;
+	std::vector<ComPtr<ID3D12DescriptorHeap>> srvHeapAddresses;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> dHandles;
+	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer;
+	std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> itIndiceFirsts;
+	std::vector<std::vector<std::pair<std::string, PhongInfo>>> phongInfos;
+	std::vector<std::vector<std::pair<std::string, PhongInfo>>::iterator> itPhonsInfos;
+	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
+	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
+	std::vector<int> matTexSizes;	
+
 	void DrawCollider(int modelNum, UINT buffSize);
 
 	//★★★コライダーdebug用

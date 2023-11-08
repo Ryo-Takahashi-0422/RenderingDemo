@@ -653,7 +653,7 @@ void D3DX12Wrapper::Run() {
 	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 	
 
-	const float MIN_FREAM_TIME = 1.0f / 60;
+	const float MIN_FREAM_TIME = 1.0f / 120;
 	float fps = 0;
 	float frameTime = 0;
 	LARGE_INTEGER timeStart;
@@ -666,10 +666,37 @@ void D3DX12Wrapper::Run() {
 	// 1度取得しておく(初回計算用)
 	QueryPerformanceCounter(&timeStart);
 
-	std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
+	//std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
 	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 	{
-		indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfoOfRenderingMesh();
+		auto vbView = resourceManager[fbxIndex]->GetVbView();
+		vbViews.push_back(vbView);
+
+		auto ibView = resourceManager[fbxIndex]->GetIbView();
+		ibViews.push_back(ibView);
+
+		auto srvHeapAddress = resourceManager[fbxIndex]->GetSRVHeap();
+		srvHeapAddresses.push_back(srvHeapAddress);
+
+		auto dHandle = resourceManager[fbxIndex]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+		dHandles.push_back(dHandle);
+
+		auto container = resourceManager[fbxIndex]->GetIndiceAndVertexInfoOfRenderingMesh();
+		indiceContainer.push_back(container);
+		auto itIndice = indiceContainer[fbxIndex].begin();
+		itIndiceFirsts.push_back(itIndice);
+
+		auto phongInfo = resourceManager[fbxIndex]->GetPhongMaterialParamertInfo();
+		phongInfos.push_back(phongInfo);
+		auto itPhonsInfo = phongInfos[fbxIndex].begin();
+		itPhonsInfos.push_back(itPhonsInfo);
+
+		auto materialAndTexturename = resourceManager[fbxIndex]->GetMaterialAndTexturePath();
+		materialAndTexturenameInfo.push_back(materialAndTexturename);
+		auto itMaterialAndTextureName = materialAndTexturenameInfo[fbxIndex].begin();
+		itMaterialAndTextureNames.push_back(itMaterialAndTextureName);
+		int matTexSize = materialAndTexturenameInfo[fbxIndex].size();
+		matTexSizes.push_back(matTexSize);
 	}
 
 	while (true)
@@ -911,36 +938,34 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
 		//頂点バッファーのCPU記述子ハンドルを設定
-		_cmdList->IASetVertexBuffers(0, 1, resourceManager[fbxIndex]->GetVbView());
+		_cmdList->IASetVertexBuffers(0, 1, vbViews[fbxIndex]);
 
 		//★インデックスバッファーのビューを設定
-		_cmdList->IASetIndexBuffer(resourceManager[fbxIndex]->GetIbView());
+		_cmdList->IASetIndexBuffer(ibViews[fbxIndex]);
 
 		//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
-		_cmdList->SetDescriptorHeaps(1, resourceManager[fbxIndex]->GetSRVHeap().GetAddressOf());
+		_cmdList->SetDescriptorHeaps(1, srvHeapAddresses[fbxIndex].GetAddressOf());
 
-		auto dHandle = resourceManager[fbxIndex]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+		auto dHandle = dHandles[fbxIndex];
 		_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 		dHandle.ptr += buffSize * 2;
 		//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
 		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
-		auto indiceContainer = resourceManager[fbxIndex]->GetIndiceAndVertexInfoOfRenderingMesh();
-		auto itIndiceFirst = indiceContainer.begin();
+		auto itIndiceFirst = itIndiceFirsts[fbxIndex];
 		int ofst = 0;
 
-		auto phongInfos = resourceManager[fbxIndex]->GetPhongMaterialParamertInfo();
-		auto itPhonsInfos = phongInfos.begin();
-		auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
-		auto materialAndTexturenameInfo = resourceManager[fbxIndex]->GetMaterialAndTexturePath();
-		auto itMaterialAndTextureName = materialAndTexturenameInfo.begin();
+		auto itPhonsInfo = itPhonsInfos[fbxIndex];
+		//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
+
+		auto itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
 		int itMATCnt = 0;
-		int matTexSize = materialAndTexturenameInfo.size();
+		int matTexSize = matTexSizes[fbxIndex];
 		D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
-		tHandle.ptr += buffSize * indiceContainer.size();
+		tHandle.ptr += buffSize * indiceContainer[fbxIndex].size();
 		int textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
-		for (int i = 0; i < indiceContainer.size(); ++i)
+		for (int i = 0; i < indiceContainer[fbxIndex].size(); ++i)
 		{
 			_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
@@ -964,7 +989,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
 			if (matTexSize > 0) {
-				while (itMaterialAndTextureName->first == itPhonsInfos->first)
+				while (itMaterialAndTextureName->first == itPhonsInfo->first)
 				{
 					//printf("%s\n", itMaterialAndTextureName->first.c_str());
 					_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
@@ -991,7 +1016,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			dHandle.ptr += buffSize;
 			ofst += itIndiceFirst->second.indices.size();
 			++itIndiceFirst;
-			++itPhonsInfos;
+			++itPhonsInfo;
 
 			textureTableStartIndex = 2; // init
 		}
