@@ -176,11 +176,11 @@ private:
 
 	/*double forwardSpeed = -0.05;*/
 	double forwardSpeed = -0.026/* * 15*/;
-	double turnSpeed = 20;
+	double turnSpeed = 5;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
-	void DrawFBX(UINT buffSize);
+	void DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 	// DrawFBX用データ
 	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
 	std::vector<D3D12_INDEX_BUFFER_VIEW*> ibViews;

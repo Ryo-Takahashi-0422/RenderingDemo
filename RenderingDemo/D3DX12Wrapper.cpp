@@ -630,7 +630,7 @@ void D3DX12Wrapper::Run() {
 	Matrix3d leftSpinEigen;
 	Vector3d axis;
 	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(M_PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
 	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -641,7 +641,7 @@ void D3DX12Wrapper::Run() {
 	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-M_PI*0.03f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(-M_PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
 	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -665,9 +665,10 @@ void D3DX12Wrapper::Run() {
 	}
 	// 1度取得しておく(初回計算用)
 	QueryPerformanceCounter(&timeStart);
+	short modelPathSize = modelPath.size();
 
 	//std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
-	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
+	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
 	{
 		auto vbView = resourceManager[fbxIndex]->GetVbView();
 		vbViews.push_back(vbView);
@@ -698,6 +699,11 @@ void D3DX12Wrapper::Run() {
 		int matTexSize = materialAndTexturenameInfo[fbxIndex].size();
 		matTexSizes.push_back(matTexSize);
 	}
+
+	HANDLE event; // fnece用イベント
+	// DrawFBXで利用する
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 
 	while (true)
 	{
@@ -764,7 +770,7 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 				
-		DrawFBX(cbv_srv_Size);
+		DrawFBX(modelPathSize, cbv_srv_Size, dsvh, handle);
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
@@ -782,7 +788,7 @@ void D3DX12Wrapper::Run() {
 
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
-			auto event = CreateEvent(nullptr, false, false, nullptr);
+			event = CreateEvent(nullptr, false, false, nullptr);
 			_fence->SetEventOnCompletion(_fenceVal, event);
 			//イベント発生待ち
 			WaitForSingleObject(event, INFINITE);
@@ -847,7 +853,7 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 	inputRight = false;
 }
 
-void D3DX12Wrapper::DrawFBX(UINT buffSize)
+void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 {
 	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
 	D3D12_RESOURCE_BARRIER BarrierDesc = {};
@@ -867,8 +873,8 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer());
 
 
-	auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+	//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+	//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 
 	_cmdList->OMSetRenderTargets(1, &handle, false, &dsvh);
 	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
@@ -879,7 +885,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 	_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
 
 	int lastSRVSetNum = 0;
-	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
+	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
 	{
 		_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
 		_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());
@@ -954,6 +960,7 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 		auto itIndiceFirst = itIndiceFirsts[fbxIndex];
+		short indiceContainerSize = indiceContainer[fbxIndex].size();
 		int ofst = 0;
 
 		auto itPhonsInfo = itPhonsInfos[fbxIndex];
@@ -963,11 +970,12 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 		int itMATCnt = 0;
 		int matTexSize = matTexSizes[fbxIndex];
 		D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
-		tHandle.ptr += buffSize * indiceContainer[fbxIndex].size();
+		tHandle.ptr += buffSize * indiceContainerSize;
 		int textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
-		for (int i = 0; i < indiceContainer[fbxIndex].size(); ++i)
+		size_t indiceSize = 0;
+		for (int i = 0; i < indiceContainerSize; ++i)
 		{
-			_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+			//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
 			//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
 			//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
@@ -1012,9 +1020,10 @@ void D3DX12Wrapper::DrawFBX(UINT buffSize)
 			//	}
 			//}
 			
-			_cmdList->DrawIndexedInstanced(itIndiceFirst->second.indices.size(), 1, ofst, 0, 0);
+			indiceSize = itIndiceFirst->second.indices.size();
+			_cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
 			dHandle.ptr += buffSize;
-			ofst += itIndiceFirst->second.indices.size();
+			ofst += indiceSize;
 			++itIndiceFirst;
 			++itPhonsInfo;
 
