@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include<tchar.h>
 //#ifdef _DEBUG
-#include <pix3.h>
+//#include <pix3.h>
 #include <iostream>
 //#endif // _DEBUG
 #include <vector>

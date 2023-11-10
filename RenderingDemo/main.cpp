@@ -1,14 +1,14 @@
 #include <stdafx.h>
 #include"D3DX12Wrapper.h"
-
-#ifdef _DEBUG
-int main() {
-	PIXLoadLatestWinPixGpuCapturerLibrary();
-#else
 #include<Windows.h>
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-
-#endif
+//#ifdef _DEBUG
+int main() {
+	//PIXLoadLatestWinPixGpuCapturerLibrary();
+//#else
+//#include<Windows.h>
+//int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+//
+//#endif
 
 	auto& wrapper = D3DX12Wrapper::Instance();
 
