@@ -549,7 +549,7 @@ void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrame
 	}
 
 	//animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
-	XMVECTOR det;
+	//XMVECTOR det;
 
 	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
 	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix[motionName].size(); ++i)

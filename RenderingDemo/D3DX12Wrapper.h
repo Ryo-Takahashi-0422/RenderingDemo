@@ -196,6 +196,13 @@ private:
 
 	void DrawCollider(int modelNum, UINT buffSize);
 
+	// 描画パイプラインに共通して必要なデータ。事前にポインタ取得しておく。
+	const D3D12_VIEWPORT* viewPort = nullptr;
+	const D3D12_RECT* rect = nullptr;
+
+	// DrawBackBufferで利用する
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+
 	//★★★コライダーdebug用
 	int debugNum = 2;
 

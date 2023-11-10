@@ -700,6 +700,9 @@ void D3DX12Wrapper::Run() {
 		matTexSizes.push_back(matTexSize);
 	}
 
+	viewPort = prepareRenderingWindow->GetViewPortPointer();
+	rect = prepareRenderingWindow->GetRectPointer();
+
 	HANDLE event; // fnece用イベント
 	// DrawFBXで利用する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
@@ -869,8 +872,8 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 	// モデル描画
 	/*_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
 	/*_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
-	_cmdList->RSSetViewports(1, prepareRenderingWindow->GetViewPortPointer());
-	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer());
+	_cmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
+	_cmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
 
 
 	//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
@@ -997,15 +1000,18 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
 			if (matTexSize > 0) {
+				std::string currentMeshName = itMaterialAndTextureName->first;
 				while (itMaterialAndTextureName->first == itPhonsInfo->first)
 				{
-					//printf("%s\n", itMaterialAndTextureName->first.c_str());
 					_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
 					tHandle.ptr += buffSize;
 					++textureTableStartIndex;
 					++itMATCnt;
-					//++lastSRVSetNum;
-					if (itMATCnt == matTexSize) break;
+
+					if (itMATCnt == matTexSize)
+					{
+						break;
+					}
 					++itMaterialAndTextureName;
 
 				}
@@ -1560,8 +1566,8 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	auto bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 	
-	_cmdList->RSSetViewports(1, prepareRenderingWindow->GetViewPortPointer()); // 実は重要
-	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer()); // 実は重要
+	_cmdList->RSSetViewports(1, viewPort); // 実は重要
+	_cmdList->RSSetScissorRects(1, rect); // 実は重要
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -1579,7 +1585,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
 	//_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
-	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	//float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 	_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
