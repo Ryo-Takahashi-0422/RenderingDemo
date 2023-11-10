@@ -213,7 +213,7 @@ HRESULT ResourceManager::Init()
 	materialAndTexturePath = _fbxInfoManager->GetMaterialAndTexturePath();
 	auto textureNum = materialAndTexturePath.size();
 	auto iter = materialAndTexturePath.begin();
-	int  texNum = materialAndTexturePath.size();
+	int texNum = materialAndTexturePath.size();
 	textureUploadBuff.resize(texNum);
 	textureReadBuff.resize(texNum);
 	textureMetaData.resize(texNum);
@@ -221,7 +221,7 @@ HRESULT ResourceManager::Init()
 	textureImgPixelValue.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
-	mappedImgContainer.resize(mappingSize);
+	mappedImgContainer.resize(texNum);
 	for (int i = 0; i < materialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
@@ -236,7 +236,7 @@ HRESULT ResourceManager::Init()
 	if (animationNameAndBoneNameWithTranslationMatrix.size() != 0)
 	{
 		isAnimationModel = true;
-	}	
+	}
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -314,10 +314,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 1.5, 2);
+	XMFLOAT3 eye(0, 1.5, 2.3);
 	XMFLOAT3 target(0, 1.5, 0);
-	//XMFLOAT3 eye(0, 10, /*0.01*/10);
-	//XMFLOAT3 target(0, 1.5, 0);
+	//XMFLOAT3 eye(0, 100, /*0.01*/10);
+	//XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
 	auto viewMat = XMMatrixLookAtLH
 	(
@@ -354,8 +354,8 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	auto phongHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto phongResdesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(PhongInfo)/* * phongInfos.size()*/ + 0xff) & ~0xff);
 
-	materialParamBuffContainer.resize(mappingSize);
-	mappedPhoneContainer.resize(mappingSize);
+	materialParamBuffContainer.resize(phongInfos.size());
+	mappedPhoneContainer.resize(phongInfos.size());
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		//materialParamBuffContainer[i] = nullptr;
@@ -383,7 +383,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 31; // 1:Matrix(world, view, proj), 2:rendering result, 3:material paramerers * 29, 
+	srvHeapDesc.NumDescriptors = 2 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2:rendering result(1), 3:phongInfosサイズ(読み込むモデルにより変動), 4:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -444,10 +444,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		textureSRVDesc.Format = textureReadBuff[i]->GetDesc().Format;
 
 		// Temporary : Accessoriesのcolor以外のjpegがSRGBになっている。Photoshop導入して変更出来るようにするまでこのまま。
-		if (i == 1 || i == 2 || i == 3)
-		{
-			textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		}
+		//if (i == 1 || i == 2 || i == 3)
+		//{
+		//	textureSRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		//}
 
 
 		_dev->CreateShaderResourceView
@@ -524,7 +524,10 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 
 void ResourceManager::ClearReference()
 {
-	_dev->Release();
+	_fbxInfoManager = nullptr;
+	delete _fbxInfoManager;
+	delete textureLoader;
+	_prepareRenderingWindow = nullptr;
 	delete _prepareRenderingWindow;
 }
 
@@ -546,12 +549,11 @@ void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrame
 	}
 
 	//animationNameAndBoneNameWithTranslationMatrix = _fbxInfoManager->GetAnimationNameAndBoneNameWithTranslationMatrix();
-	XMVECTOR det;
+	//XMVECTOR det;
 
 	// 初期姿勢の逆行列と、フレーム毎姿勢行列にX軸反転行列を掛けたものを乗算して、アニメーションさせる
 	for (int i = 0; i < animationNameAndBoneNameWithTranslationMatrix[motionName].size(); ++i)
 	{
 		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix[motionName][i][frameNo] * invIdentify);
 	}
-	
 }
