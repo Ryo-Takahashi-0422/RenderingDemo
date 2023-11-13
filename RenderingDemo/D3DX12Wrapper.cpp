@@ -666,6 +666,7 @@ void D3DX12Wrapper::Run() {
 	// 1度取得しておく(初回計算用)
 	QueryPerformanceCounter(&timeStart);
 	short modelPathSize = modelPath.size();
+	DWORD sleepTime;
 
 	//std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
 	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
@@ -707,6 +708,12 @@ void D3DX12Wrapper::Run() {
 	// DrawFBXで利用する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+	fBXPipeline = gPLSetting->GetPipelineState().Get();
+	fBXRootsignature = setRootSignature->GetRootSignature().Get();
+
+	// DrawBackBufferで利用する
+	bBRootsignature = peraSetRootSignature->GetRootSignature().Get();
+	bBPipeline = peraGPLSetting->GetPipelineState().Get();
 
 	while (true)
 	{
@@ -718,7 +725,7 @@ void D3DX12Wrapper::Run() {
 
 		if (frameTime < MIN_FREAM_TIME) { // 時間に余裕がある場合
 		// ミリ秒に変換
-			DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);
+			sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);
 
 			timeBeginPeriod(1); // 分解能を上げる(Sleep精度向上)
 			Sleep(sleepTime);
@@ -732,7 +739,7 @@ void D3DX12Wrapper::Run() {
 
 
 
-
+		// ★処理を無くすとかなり軽くなる
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -847,6 +854,8 @@ void D3DX12Wrapper::Run() {
 	//delete lightMapRootSignature;
 	//delete setRootSignature;
 	//delete peraSetRootSignature;
+
+	delete fBXPipeline;
 }
 
 void D3DX12Wrapper::AllKeyBoolFalse()
@@ -859,15 +868,15 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 {
 	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
-	D3D12_RESOURCE_BARRIER BarrierDesc = {};
-	BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	BarrierDesc.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
-	BarrierDesc.Transition.Subresource = 0;
-	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	//D3D12_RESOURCE_BARRIER BarrierDesc = {};
+	barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+	barrierDescFBX.Transition.Subresource = 0;
+	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
-	_cmdList->ResourceBarrier(1, &BarrierDesc);
+	_cmdList->ResourceBarrier(1, &barrierDescFBX);
 
 	// モデル描画
 	/*_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
@@ -890,8 +899,8 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 	int lastSRVSetNum = 0;
 	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
 	{
-		_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());
-		_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());
+		_cmdList->SetGraphicsRootSignature(fBXRootsignature);
+		_cmdList->SetPipelineState(fBXPipeline);
 
 		// キー入力処理。当たり判定処理も含める。
 		if (input->CheckKey(DIK_W)) inputW = true;
@@ -962,21 +971,21 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 
 		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
-		auto itIndiceFirst = itIndiceFirsts[fbxIndex];
-		short indiceContainerSize = indiceContainer[fbxIndex].size();
-		int ofst = 0;
+		itIndiceFirst = itIndiceFirsts[fbxIndex];
+		indiceContainerSize = indiceContainer[fbxIndex].size();
+		ofst = 0;
 
-		auto itPhonsInfo = itPhonsInfos[fbxIndex];
+		itPhonsInfo = itPhonsInfos[fbxIndex];
 		//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
 
-		auto itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
-		int itMATCnt = 0;
-		int matTexSize = matTexSizes[fbxIndex];
-		D3D12_GPU_DESCRIPTOR_HANDLE tHandle = dHandle;
+		itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
+		itMATCnt = 0;
+		matTexSize = matTexSizes[fbxIndex];
+		tHandle = dHandle;
 		tHandle.ptr += buffSize * indiceContainerSize;
-		int textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
-		size_t indiceSize = 0;
-		for (int i = 0; i < indiceContainerSize; ++i)
+		textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
+		indiceSize = 0;
+		for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
 		{
 			//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
@@ -1000,7 +1009,8 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
 
 			if (matTexSize > 0) {
-				std::string currentMeshName = itMaterialAndTextureName->first;
+				//std::string currentMeshName = itMaterialAndTextureName->first;
+				// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
 				while (itMaterialAndTextureName->first == itPhonsInfo->first)
 				{
 					_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
@@ -1026,7 +1036,7 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 			//	}
 			//}
 			
-			indiceSize = itIndiceFirst->second.indices.size();
+			indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
 			_cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
 			dHandle.ptr += buffSize;
 			ofst += indiceSize;
@@ -1036,7 +1046,7 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 			textureTableStartIndex = 2; // init
 		}
 
-		//DrawCollider(fbxIndex, buffSize);
+		DrawCollider(fbxIndex, buffSize);
 	}
 	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
 	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
@@ -1065,9 +1075,9 @@ void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRI
 
 
 	// color
-	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	_cmdList->ResourceBarrier(1, &BarrierDesc);
+	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	_cmdList->ResourceBarrier(1, &barrierDescFBX);
 
 }
 
@@ -1564,14 +1574,14 @@ void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
 void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 {
 
-	auto bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
+	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 	
 	_cmdList->RSSetViewports(1, viewPort); // 実は重要
 	_cmdList->RSSetScissorRects(1, rect); // 実は重要
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
-	D3D12_RESOURCE_BARRIER barrierDesc4BackBuffer = CD3DX12_RESOURCE_BARRIER::Transition
+	barrierDesc4BackBuffer = CD3DX12_RESOURCE_BARRIER::Transition
 	(
 		_backBuffers[bbIdx].Get(),
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -1580,7 +1590,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
 	// only bufferHeapCreator[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart() is initialized as backbuffer
-	auto rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	_cmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
 	//_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
@@ -1589,13 +1599,13 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
-	_cmdList->SetGraphicsRootSignature(peraSetRootSignature->GetRootSignature().Get());
+	_cmdList->SetGraphicsRootSignature(bBRootsignature);
 	_cmdList->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
-	auto gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
 	_cmdList->SetGraphicsRootDescriptorTable(0, gHandle);
-	_cmdList->SetPipelineState(peraGPLSetting->GetPipelineState().Get());
+	_cmdList->SetPipelineState(bBPipeline);
 
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	_cmdList->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());

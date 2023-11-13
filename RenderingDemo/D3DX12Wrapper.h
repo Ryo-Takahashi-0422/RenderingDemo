@@ -182,17 +182,30 @@ private:
 	double sneakCorrectNum = 0.049;
 	void DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 	// DrawFBX用データ
+	ID3D12RootSignature* fBXRootsignature = nullptr;
+	ID3D12PipelineState* fBXPipeline = nullptr;
 	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
 	std::vector<D3D12_INDEX_BUFFER_VIEW*> ibViews;
 	std::vector<ComPtr<ID3D12DescriptorHeap>> srvHeapAddresses;
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> dHandles;
-	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer;
+	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer; // ★静的データ構造であるstd::arrayへの置き換えは可能か？	
 	std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> itIndiceFirsts;
+	std::vector<std::pair<std::string, VertexInfo>>::iterator itIndiceFirst;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>> phongInfos;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>::iterator> itPhonsInfos;
+	std::vector<std::pair<std::string, PhongInfo>>::iterator itPhonsInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
-	std::vector<int> matTexSizes;	
+	std::vector<std::pair<std::string, std::string>>::iterator itMaterialAndTextureName;
+	std::vector<int> matTexSizes;
+	int ofst = 0;
+	short indiceContainerSize = 0;
+	int itMATCnt = 0;
+	int matTexSize = 0;
+	int textureTableStartIndex = 0;
+	size_t indiceSize = 0;
+	D3D12_GPU_DESCRIPTOR_HANDLE tHandle;
+	D3D12_RESOURCE_BARRIER barrierDescFBX = {};
 
 	void DrawCollider(int modelNum, UINT buffSize);
 
@@ -201,6 +214,12 @@ private:
 	const D3D12_RECT* rect = nullptr;
 
 	// DrawBackBufferで利用する
+	UINT bbIdx;
+	ID3D12RootSignature* bBRootsignature = nullptr;
+	ID3D12PipelineState* bBPipeline = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHeapPointer;
+	D3D12_GPU_DESCRIPTOR_HANDLE gHandle;
+	D3D12_RESOURCE_BARRIER barrierDesc4BackBuffer = {};
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 
 	//★★★コライダーdebug用
