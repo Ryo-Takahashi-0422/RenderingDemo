@@ -184,6 +184,7 @@ private:
 	// Synchronization objects.
 	HANDLE m_workerBeginRenderFrame[2];
 	HANDLE m_workerFinishedRenderFrame[2];
+	HANDLE m_workerSyncronize[2];
 	void LoadContexts();
 	void threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> cmList*/);
 	void DrawFBXMulti();

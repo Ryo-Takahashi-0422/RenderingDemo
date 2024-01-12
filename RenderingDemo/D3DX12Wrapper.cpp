@@ -1165,11 +1165,11 @@ void D3DX12Wrapper::LoadContexts()
 			FALSE,
 			NULL);
 
-		//m_workerFinishShadowPass[i] = CreateEvent(
-		//	NULL,
-		//	FALSE,
-		//	FALSE,
-		//	NULL);
+		m_workerSyncronize[i] = CreateEvent(
+			NULL,
+			FALSE,
+			FALSE,
+			NULL);
 
 		m_threadParameters[i].threadIndex = i;
 
@@ -1401,7 +1401,17 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				textureTableStartIndex = 2; // init
 
 			}
-
+			SetEvent(m_workerSyncronize[num]); // end drawing.
+			//WaitForMultipleObjects(threadNum, m_workerSyncronize, TRUE, INFINITE);
+			if (num == 0)
+			{
+				WaitForSingleObject(m_workerSyncronize[1], INFINITE);
+			}
+			else if(num==1)				
+			{
+				WaitForSingleObject(m_workerSyncronize[0], INFINITE);
+			}
+			
 			//DrawCollider(fbxIndex);
 		}
 
