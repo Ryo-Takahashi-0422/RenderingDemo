@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include<tchar.h>
 //#ifdef _DEBUG
-//#include <pix3.h>
+#include <pix3.h>
 #include <iostream>
 //#endif // _DEBUG
 #include <vector>
@@ -25,6 +25,7 @@
 #include <ReadData.h>
 #include <stdlib.h>
 #include <fstream>
+//#include <thread>
 
 //eigen
 #define _USE_MATH_DEFINES

@@ -18,11 +18,11 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 
 using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata*, ScratchImage&)>;
+D3DX12Wrapper* D3DX12Wrapper::instance = nullptr;
 
-D3DX12Wrapper& D3DX12Wrapper::Instance()
+D3DX12Wrapper::D3DX12Wrapper()
 {
-	static D3DX12Wrapper instance;
-	return instance;
+	instance = this;	
 };
 
 // 後処理
@@ -294,6 +294,7 @@ bool D3DX12Wrapper::PipelineInit(){
 //初期化処理７：コマンドアロケーターを作成
 			//コマンドアロケーター生成>>コマンドリスト作成
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator.ReleaseAndGetAddressOf()));
+	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator2.ReleaseAndGetAddressOf()));
 	if (result != S_OK) return false;
 
 	return true;
@@ -369,6 +370,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");
 	
 	resourceManager.resize(modelPath.size());
+	FBXInfoManager fbxInfoManager;
 
 	for (int i = 0; i < modelPath.size(); ++i)
 	{
@@ -429,6 +431,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	//}
 	
 // 初期化処理2：シェーダーコンパイル設定
+    
+	ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
+	ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
+	ComPtr<ID3D10Blob> _vsMBlob = nullptr; // ﾏﾙﾁﾊﾟｽ用頂点シェーダーオブジェクト格納用
+	ComPtr<ID3D10Blob> _psMBlob = nullptr; // ﾏﾙﾁﾊﾟｽ用頂点ピクセルシェーダーオブジェクト格納用
+	ComPtr<ID3D10Blob> _vsBackbufferBlob = nullptr; // 表示用頂点シェーダーオブジェクト格納用
+	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
 	// _vsBlobと_psBlobにｼｪｰﾀﾞｰｺﾝﾊﾟｲﾙ設定を割り当てる。それぞれﾌｧｲﾙﾊﾟｽを保持するが読み込み失敗したらnullptrが返ってくる。
 	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob);
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
@@ -498,7 +507,9 @@ bool D3DX12Wrapper::ResourceInit() {
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
-
+	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator2.Get(), nullptr, IID_PPV_ARGS(_cmdList2.ReleaseAndGetAddressOf()));
+	m_batchSubmit[0] = _cmdList.Get();
+	m_batchSubmit[1] = _cmdList2.Get();
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 	//cmdList->Close();
 
@@ -579,7 +590,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 void D3DX12Wrapper::Run() {
 	MSG msg = {};
-	auto cbv_srv_Size = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	cbv_srv_Size = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
@@ -624,7 +635,6 @@ void D3DX12Wrapper::Run() {
 	XMVECTOR det;
 	rightSpinMatrix = XMMatrixInverse(&det, leftSpinMatrix);//XMMatrixRotationY(turnSpeed);
 	//box2 = collisionManager->GetBoundingSpherePointer();
-	auto idn = leftSpinMatrix * rightSpinMatrix;
 
 	//★eigen test
 	Matrix3d leftSpinEigen;
@@ -665,11 +675,11 @@ void D3DX12Wrapper::Run() {
 	}
 	// 1度取得しておく(初回計算用)
 	QueryPerformanceCounter(&timeStart);
-	short modelPathSize = modelPath.size();
+	modelPathSize = modelPath.size();
 	DWORD sleepTime;
 
 	//std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
-	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
+	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex) // ★ムーブセマンティクスによりポインタ所有権の移行を試す→Optimized C++ P215 空vectorとresourceManagerのswapでメモリ開放試す
 	{
 		auto vbView = resourceManager[fbxIndex]->GetVbView();
 		vbViews.push_back(vbView);
@@ -706,14 +716,23 @@ void D3DX12Wrapper::Run() {
 
 	HANDLE event; // fnece用イベント
 	// DrawFBXで利用する
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+	dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+	handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 	fBXPipeline = gPLSetting->GetPipelineState().Get();
 	fBXRootsignature = setRootSignature->GetRootSignature().Get();
 
 	// DrawBackBufferで利用する
 	bBRootsignature = peraSetRootSignature->GetRootSignature().Get();
 	bBPipeline = peraGPLSetting->GetPipelineState().Get();
+
+	ID3D12CommandList* m_cmdLists[2];
+	int listNum = 0;
+	for (auto& cList : m_batchSubmit)
+	{
+		m_cmdLists[listNum] = cList.Get();
+	}
+
+	LoadContexts();
 
 	while (true)
 	{
@@ -780,16 +799,45 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 				
-		DrawFBX(modelPathSize, cbv_srv_Size, dsvh, handle);
+		//DrawFBXMulti();
+		barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+		barrierDescFBX.Transition.Subresource = 0;
+		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
+		_cmdList->ResourceBarrier(1, &barrierDescFBX);
+
+		for (int i = 0; i < threadNum; i++)
+		{
+			SetEvent(m_workerBeginRenderFrame[i]); // Tell each worker to start drawing.
+		}
+		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE);
+			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
+			// WaitForSingleObject(m_workerFinishedRenderFrame[1], INFINITE);
+
+		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		_cmdList2->ResourceBarrier(1, &barrierDescFBX);
+		//WaitForSingleObject(m_workerFinishedRenderFrame[0], INFINITE);
+
+		//_cmdList->ResourceBarrier(1, &barrierDescFBX);
+		//_cmdList2->ResourceBarrier(1, &barrierDescFBX);
+
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
 		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 		_cmdList->Close();
+		_cmdList2->Close();
 
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get() };
 		_cmdQueue->ExecuteCommandLists(1, cmdLists);
+
+		ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
+		_cmdQueue->ExecuteCommandLists(1, cmdLists2);
 
 		//ID3D12FenceのSignalはCPU側のフェンスで即時実行
 		//ID3D12CommandQueueのSignalはGPU側のフェンスで
@@ -808,6 +856,8 @@ void D3DX12Wrapper::Run() {
 
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する		
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);//コマンドリストを、新しいコマンドリストが作成されたかのように初期状態にリセット
+		_cmdAllocator2->Reset();
+		_cmdList2->Reset(_cmdAllocator2.Get(), nullptr);
 	
 		//// update by imgui
 		//SetFov();
@@ -865,224 +915,532 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 	inputRight = false;
 }
 
-void D3DX12Wrapper::DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+
+//void D3DX12Wrapper::DrawFBX()
+//{
+//	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
+//	//D3D12_RESOURCE_BARRIER BarrierDesc = {};
+//	barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+//	barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+//	barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+//	barrierDescFBX.Transition.Subresource = 0;
+//	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+//	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+//	//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
+//	_cmdList->ResourceBarrier(1, &barrierDescFBX);
+//
+//	// モデル描画
+//	/*_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
+//	/*_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
+//	_cmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
+//	_cmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
+//
+//
+//	//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+//	//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+//
+//	_cmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
+//	_cmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+//
+//	//画面クリア
+//	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+//
+//	_cmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
+//
+//	int lastSRVSetNum = 0;
+//	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
+//	{
+//		_cmdList->SetGraphicsRootSignature(fBXRootsignature);
+//		_cmdList->SetPipelineState(fBXPipeline);
+//
+//		// キー入力処理。当たり判定処理も含める。
+//		if (input->CheckKey(DIK_W)) inputW = true;
+//		if (input->CheckKey(DIK_LEFT)) inputLeft = true;
+//		if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+//
+//		if (resourceManager[fbxIndex]->GetIsAnimationModel())
+//		{
+//			// start character with idle animation
+//			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+//
+//			// ★Switch化できないか？
+//			// W Key
+//			if (inputW)
+//			{
+//				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+//			}
+//
+//			// Left Key
+//			if (inputLeft)
+//			{
+//				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+//			}
+//
+//			// Right Key
+//			if (inputRight)
+//			{
+//				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+//			}
+//
+//
+//		}
+//
+//		// ★Switch化できないか？
+//		// Left Key
+//		if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
+//		{
+//			resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
+//			connanDirection *= rightSpinMatrix;
+//		}
+//
+//		// Right Key
+//		if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
+//		{
+//			resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
+//			connanDirection *= leftSpinMatrix;
+//		}
+//
+//		// W Key
+//		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
+//		{
+//			// 当たり判定処理
+//			collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);
+//		}
+//
+//		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
+//		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+//
+//		//頂点バッファーのCPU記述子ハンドルを設定
+//		_cmdList->IASetVertexBuffers(0, 1, vbViews[fbxIndex]);
+//
+//		//★インデックスバッファーのビューを設定
+//		_cmdList->IASetIndexBuffer(ibViews[fbxIndex]);
+//
+//		//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
+//		_cmdList->SetDescriptorHeaps(1, srvHeapAddresses[fbxIndex].GetAddressOf());
+//
+//		auto dHandle = dHandles[fbxIndex];
+//		_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
+//		dHandle.ptr += cbv_srv_Size * 2;
+//		//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+//
+//		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
+//
+//		itIndiceFirst = itIndiceFirsts[fbxIndex];
+//		int indiceContainerSize = indiceContainer[fbxIndex].size();
+//		ofst = 0;
+//
+//		itPhonsInfo = itPhonsInfos[fbxIndex];
+//		//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
+//
+//		itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
+//		itMATCnt = 0;
+//		matTexSize = matTexSizes[fbxIndex];
+//		tHandle = dHandle;
+//		tHandle.ptr += cbv_srv_Size * indiceContainerSize;
+//		textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
+//		indiceSize = 0;
+//		for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
+//		{
+//			//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+//			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
+//			//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
+//			//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
+//			//mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
+//			//mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
+//			//mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
+//			//mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
+//			//mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
+//			//mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
+//			//mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
+//			//mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
+//			//mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
+//			//mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
+//			//mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
+//			//mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
+//			//mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
+//			//mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
+//			//mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
+//			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
+//
+//			if (matTexSize > 0) {
+//				//std::string currentMeshName = itMaterialAndTextureName->first;
+//				// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
+//				while (itMaterialAndTextureName->first == itPhonsInfo->first)
+//				{
+//					_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
+//					tHandle.ptr += cbv_srv_Size;
+//					++textureTableStartIndex;
+//					++itMATCnt;
+//
+//					if (itMATCnt == matTexSize)
+//					{
+//						break;
+//					}
+//					++itMaterialAndTextureName;
+//
+//				}
+//			}
+//
+//			//else
+//			//{
+//			//	for (int j = textureTableStartIndex; j < 4 + textureTableStartIndex; ++j)
+//			//	{
+//			//		_cmdList->SetGraphicsRootDescriptorTable(j, tHandle); // index of texture
+//			//		tHandle.ptr += buffSize;
+//			//	}
+//			//}
+//
+//			indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
+//			_cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
+//			dHandle.ptr += cbv_srv_Size;
+//			ofst += indiceSize;
+//			++itIndiceFirst;
+//			++itPhonsInfo;
+//
+//			textureTableStartIndex = 2; // init
+//		}
+//
+//		DrawCollider(fbxIndex);
+//	}
+//	
+//	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
+//	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
+//	//auto materialHandle = bufferHeapCreator[i]->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+//	//auto inc = buffSize;
+//	//auto materialHInc = inc * 5; // 行列cbv + (material cbv+テクスチャsrv+sph srv+spa srv+toon srv)
+//	//materialHandle.ptr += inc; // この処理の直前に行列用CBVをｺﾏﾝﾄﾞﾘｽﾄにセットしたため
+//	//unsigned int idxOffset = 0;
+//
+//	//// (たぶん)DrawIndexedInstancedによる描画の前にSRVからのテクスチャ取得を終えていないとデータがシェーダーに通らない
+//	//// なお、このパスでのデプスも描画と同時に渡しているが参照出来ないのは、リソース状態がdepth_writeのままだからと思われる
+//	//_cmdList->SetGraphicsRootDescriptorTable(2, materialHandle); // デプスマップ格納
+//	//materialHandle.ptr += inc;
+//	//_cmdList->SetGraphicsRootDescriptorTable(3, materialHandle); // ライトマップ格納
+//	//materialHandle.ptr += inc;
+//
+//	//for (auto m : pmdMaterialInfo[i]->materials)
+//	//{
+//	//	_cmdList->SetGraphicsRootDescriptorTable(1, materialHandle);
+//	//	//インデックス付きインスタンス化されたプリミティブを描画
+//	//	_cmdList->DrawIndexedInstanced(m.indiceNum, 2, idxOffset, 0, 0); // instanceid 0:通常、1:影
+//
+//	//	materialHandle.ptr += materialHInc;
+//	//	idxOffset += m.indiceNum;
+//	//}
+//
+//
+//	// color
+//	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+//	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+//	_cmdList->ResourceBarrier(1, &barrierDescFBX);
+//}
+
+// Initialize threads and events.
+void D3DX12Wrapper::LoadContexts()
 {
-	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
-	//D3D12_RESOURCE_BARRIER BarrierDesc = {};
-	barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
-	barrierDescFBX.Transition.Subresource = 0;
-	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
-	_cmdList->ResourceBarrier(1, &barrierDescFBX);
-
-	// モデル描画
-	/*_cmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
-	/*_cmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
-	_cmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
-	_cmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
-
-
-	//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-
-	_cmdList->OMSetRenderTargets(1, &handle, false, &dsvh);
-	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
-
-	//画面クリア
-	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-	_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
-
-	int lastSRVSetNum = 0;
-	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
+	struct threadwrapper
 	{
-		_cmdList->SetGraphicsRootSignature(fBXRootsignature);
-		_cmdList->SetPipelineState(fBXPipeline);
-
-		// キー入力処理。当たり判定処理も含める。
-		if (input->CheckKey(DIK_W)) inputW = true;
-		if (input->CheckKey(DIK_LEFT)) inputLeft = true;
-		if (input->CheckKey(DIK_RIGHT)) inputRight = true;
-
-		if (resourceManager[fbxIndex]->GetIsAnimationModel())
+		static unsigned int WINAPI thunk(LPVOID lpParameter) // LPVOID : 型指定のない、32ビットポインタ
 		{
-			// start character with idle animation
-			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+			ThreadParameter* parameter = reinterpret_cast<ThreadParameter*>(lpParameter);
+			instance->threadWorkTest(parameter->threadIndex);
 
-			// Left Key
-			if (inputLeft)
-			{
-				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			}
-
-			// Right Key
-			if (inputRight)
-			{
-				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			}
-
-			// W Key
-			if (inputW)
-			{
-				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			}
+			return 0;
 		}
+	};
 
-		// Left Key
-		if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
-		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
-			connanDirection *= rightSpinMatrix;
-		}
+	for (int i = 0; i < threadNum; i++)
+	{
+		// 以下三つはCreateEventWによるイベント作成 https://learn.microsoft.com/ja-jp/windows/win32/api/synchapi/nf-synchapi-createeventw
+		m_workerBeginRenderFrame[i] = CreateEvent(
+			NULL,
+			FALSE,
+			FALSE,
+			NULL);
 
-		// Right Key
-		if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
-		{
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
-			connanDirection *= leftSpinMatrix;
-		}
+		m_workerFinishedRenderFrame[i] = CreateEvent(
+			NULL,
+			FALSE,
+			FALSE,
+			NULL);
 
-		// W Key
-		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
-		{
-			// 当たり判定処理
-			collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);
-		}
+		//m_workerFinishShadowPass[i] = CreateEvent(
+		//	NULL,
+		//	FALSE,
+		//	FALSE,
+		//	NULL);
 
-		//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
-		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+		m_threadParameters[i].threadIndex = i;
 
-		//頂点バッファーのCPU記述子ハンドルを設定
-		_cmdList->IASetVertexBuffers(0, 1, vbViews[fbxIndex]);
+		// スレッド作成
+		m_threadHandles[i] = reinterpret_cast<HANDLE>(_beginthreadex(
+			nullptr, // //SECURITY_ATTRIBUTES 構造体へのポインタ またはNULL
+			0, //スタックサイズ。0でもよい
+			threadwrapper::thunk, // スレッド関数のアドレス
+			reinterpret_cast<LPVOID>(&m_threadParameters[i]), // //スレッド関数に渡す引数、またはNULL このケースでは事前に代入したスレッド番号を格納したm_threadHandles[i]のアドレス。LPVOID lpParameterとして扱われる。
+			0, // //0(すぐ実行) またはCREATE_SUSPENDED(一時停止)
+			nullptr)); // //スレッド識別子。NULLでも可。
 
-		//★インデックスバッファーのビューを設定
-		_cmdList->IASetIndexBuffer(ibViews[fbxIndex]);
+		assert(m_workerBeginRenderFrame[i] != NULL);
+		//assert(m_workerFinishedRenderFrame[i] != NULL);
+		//assert(m_threadHandles[i] != NULL);
 
-		//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
-		_cmdList->SetDescriptorHeaps(1, srvHeapAddresses[fbxIndex].GetAddressOf());
-
-		auto dHandle = dHandles[fbxIndex];
-		_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-		dHandle.ptr += buffSize * 2;
-		//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-
-		//_cmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
-
-		itIndiceFirst = itIndiceFirsts[fbxIndex];
-		indiceContainerSize = indiceContainer[fbxIndex].size();
-		ofst = 0;
-
-		itPhonsInfo = itPhonsInfos[fbxIndex];
-		//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
-
-		itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
-		itMATCnt = 0;
-		matTexSize = matTexSizes[fbxIndex];
-		tHandle = dHandle;
-		tHandle.ptr += buffSize * indiceContainerSize;
-		textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
-		indiceSize = 0;
-		for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
-		{
-			//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-			//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
-			//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
-			//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
-			//mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
-			//mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
-			//mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
-			//mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
-			//mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
-			//mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
-			//mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
-			//mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
-			//mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
-			//mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
-			//mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
-			//mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
-			//mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
-			//mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
-			//mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
-			//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
-
-			if (matTexSize > 0) {
-				//std::string currentMeshName = itMaterialAndTextureName->first;
-				// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
-				while (itMaterialAndTextureName->first == itPhonsInfo->first)
-				{
-					_cmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
-					tHandle.ptr += buffSize;
-					++textureTableStartIndex;
-					++itMATCnt;
-
-					if (itMATCnt == matTexSize)
-					{
-						break;
-					}
-					++itMaterialAndTextureName;
-
-				}
-			}
-
-			//else
-			//{
-			//	for (int j = textureTableStartIndex; j < 4 + textureTableStartIndex; ++j)
-			//	{
-			//		_cmdList->SetGraphicsRootDescriptorTable(j, tHandle); // index of texture
-			//		tHandle.ptr += buffSize;
-			//	}
-			//}
-			
-			indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
-			_cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
-			dHandle.ptr += buffSize;
-			ofst += indiceSize;
-			++itIndiceFirst;
-			++itPhonsInfo;
-
-			textureTableStartIndex = 2; // init
-		}
-
-		DrawCollider(fbxIndex, buffSize);
 	}
-	//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
-	//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
-	//auto materialHandle = bufferHeapCreator[i]->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	//auto inc = buffSize;
-	//auto materialHInc = inc * 5; // 行列cbv + (material cbv+テクスチャsrv+sph srv+spa srv+toon srv)
-	//materialHandle.ptr += inc; // この処理の直前に行列用CBVをｺﾏﾝﾄﾞﾘｽﾄにセットしたため
-	//unsigned int idxOffset = 0;
+}
 
-	//// (たぶん)DrawIndexedInstancedによる描画の前にSRVからのテクスチャ取得を終えていないとデータがシェーダーに通らない
-	//// なお、このパスでのデプスも描画と同時に渡しているが参照出来ないのは、リソース状態がdepth_writeのままだからと思われる
-	//_cmdList->SetGraphicsRootDescriptorTable(2, materialHandle); // デプスマップ格納
-	//materialHandle.ptr += inc;
-	//_cmdList->SetGraphicsRootDescriptorTable(3, materialHandle); // ライトマップ格納
-	//materialHandle.ptr += inc;
+void D3DX12Wrapper::DrawFBXMulti()
+{
+	//int fbxIndexs = modelPathSize;
+	//std::thread T0,T1;
 
-	//for (auto m : pmdMaterialInfo[i]->materials)
-	//{
-	//	_cmdList->SetGraphicsRootDescriptorTable(1, materialHandle);
-	//	//インデックス付きインスタンス化されたプリミティブを描画
-	//	_cmdList->DrawIndexedInstanced(m.indiceNum, 2, idxOffset, 0, 0); // instanceid 0:通常、1:影
+	//T0 = std::thread([this] { this->threadWorkTest(0); });
+	//
+	//T1 = std::thread([this] { this->threadWorkTest(1); });
+	////for (int num = 0; num < fbxIndexs; num++)
+	////{
 
-	//	materialHandle.ptr += materialHInc;
-	//	idxOffset += m.indiceNum;
-	//}
+	////}
+	//T0.join();
+	//T1.join();
 
-
-	// color
-	barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	_cmdList->ResourceBarrier(1, &barrierDescFBX);
 
 }
 
+void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> cmList*/)
+{
+	while (num >= 0 && num < threadNum)
+	{
+		WaitForSingleObject(m_workerBeginRenderFrame[num], INFINITE);
+		//int fbxIndex = num;
+		auto localCmdList = m_batchSubmit[num];
 
-void D3DX12Wrapper::DrawCollider(int modelNum, UINT buffSize)
+		//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
+		//D3D12_RESOURCE_BARRIER BarrierDesc = {};
+		//barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		//barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		//barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+		//barrierDescFBX.Transition.Subresource = 0;
+		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		////リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
+		//localCmdList->ResourceBarrier(1, &barrierDescFBX);
+
+		// モデル描画
+		/*localCmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
+		/*localCmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
+		localCmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
+		localCmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
+
+
+		//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+		//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+
+		localCmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
+		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+
+		//画面クリア
+		float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
+
+		int lastSRVSetNum = 0;
+		for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
+		{
+			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
+			localCmdList->SetPipelineState(fBXPipeline);
+
+			// キー入力処理。当たり判定処理も含める。
+			if (input->CheckKey(DIK_W)) inputW = true;
+			if (input->CheckKey(DIK_LEFT)) inputLeft = true;
+			if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+
+			if (resourceManager[fbxIndex]->GetIsAnimationModel())
+			{
+				// start character with idle animation
+				resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+
+				// ★Switch化できないか？
+				// W Key
+				if (inputW)
+				{
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				}
+
+				// Left Key
+				if (inputLeft)
+				{
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				}
+
+				// Right Key
+				if (inputRight)
+				{
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				}
+
+
+			}
+
+			// ★Switch化できないか？
+			// Left Key
+			if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
+			{
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
+				connanDirection *= rightSpinMatrix;
+			}
+
+			// Right Key
+			if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
+			{
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
+				connanDirection *= leftSpinMatrix;
+			}
+
+			// W Key
+			if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
+			{
+				// 当たり判定処理
+				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex);
+			}
+
+			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
+			localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
+
+			//頂点バッファーのCPU記述子ハンドルを設定
+			localCmdList->IASetVertexBuffers(0, 1, vbViews[fbxIndex]);
+
+			//★インデックスバッファーのビューを設定
+			localCmdList->IASetIndexBuffer(ibViews[fbxIndex]);
+
+			//ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
+			localCmdList->SetDescriptorHeaps(1, srvHeapAddresses[fbxIndex].GetAddressOf());
+
+			auto dHandle = dHandles[fbxIndex];
+			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
+			dHandle.ptr += cbv_srv_Size * 2;
+
+			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+
+			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
+
+			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
+			int indiceContainerSize = indiceContainer[fbxIndex].size();
+			auto ofst = 0;
+
+			auto itPhonsInfo = itPhonsInfos[fbxIndex];
+
+			//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
+
+			auto itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
+			//itMATCnt = /*0*/num;
+			auto matTexSize = matTexSizes[fbxIndex];
+			auto tHandle = dHandle;
+			tHandle.ptr += cbv_srv_Size * indiceContainerSize ;
+			auto textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
+			auto indiceSize = 0;
+			int itMATCnt = 0;
+			for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
+			{
+				//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+				//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
+				//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
+				//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
+				//mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
+				//mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
+				//mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
+				//mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
+				//mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
+				//mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
+				//mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
+				//mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
+				//mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
+				//mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
+				//mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
+				//mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
+				//mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
+				//mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
+				//mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
+				//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
+
+				if (matTexSize > 0) {
+					//std::string currentMeshName = itMaterialAndTextureName->first;
+					// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
+					while (itMaterialAndTextureName->first == itPhonsInfo->first)
+					{
+						localCmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
+						tHandle.ptr += cbv_srv_Size;
+						++textureTableStartIndex;
+						++itMATCnt;
+
+						if (itMATCnt == matTexSize)
+						{
+							break;
+						}
+						++itMaterialAndTextureName/*itMaterialAndTextureName += 2*/;
+
+					}
+				}
+
+				//else
+				//{
+				//	for (int j = textureTableStartIndex; j < 4 + textureTableStartIndex; ++j)
+				//	{
+				//		localCmdList->SetGraphicsRootDescriptorTable(j, tHandle); // index of texture
+				//		tHandle.ptr += buffSize;
+				//	}
+				//}
+
+				indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
+				localCmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
+				dHandle.ptr += cbv_srv_Size;
+				ofst += indiceSize;
+				++itIndiceFirst;
+				++itPhonsInfo;
+
+				textureTableStartIndex = 2; // init
+
+			}
+
+			//DrawCollider(fbxIndex);
+		}
+
+		//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
+		//// CBV:1つ(matrix)、SRV:4つ(colortex, graytex, spa, sph)が対象。SetRootSignature.cpp参照。
+		//auto materialHandle = bufferHeapCreator[i]->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+		//auto inc = buffSize;
+		//auto materialHInc = inc * 5; // 行列cbv + (material cbv+テクスチャsrv+sph srv+spa srv+toon srv)
+		//materialHandle.ptr += inc; // この処理の直前に行列用CBVをｺﾏﾝﾄﾞﾘｽﾄにセットしたため
+		//unsigned int idxOffset = 0;
+
+		//// (たぶん)DrawIndexedInstancedによる描画の前にSRVからのテクスチャ取得を終えていないとデータがシェーダーに通らない
+		//// なお、このパスでのデプスも描画と同時に渡しているが参照出来ないのは、リソース状態がdepth_writeのままだからと思われる
+		//localCmdList->SetGraphicsRootDescriptorTable(2, materialHandle); // デプスマップ格納
+		//materialHandle.ptr += inc;
+		//localCmdList->SetGraphicsRootDescriptorTable(3, materialHandle); // ライトマップ格納
+		//materialHandle.ptr += inc;
+
+		//for (auto m : pmdMaterialInfo[i]->materials)
+		//{
+		//	localCmdList->SetGraphicsRootDescriptorTable(1, materialHandle);
+		//	//インデックス付きインスタンス化されたプリミティブを描画
+		//	localCmdList->DrawIndexedInstanced(m.indiceNum, 2, idxOffset, 0, 0); // instanceid 0:通常、1:影
+
+		//	materialHandle.ptr += materialHInc;
+		//	idxOffset += m.indiceNum;
+		//}
+
+
+		// color
+		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		//localCmdList->ResourceBarrier(1, &barrierDescFBX);
+
+		SetEvent(m_workerFinishedRenderFrame[num]); // end drawing.
+	}
+}
+
+void D3DX12Wrapper::DrawCollider(int modelNum)
 {
 
 	// モデル描画
@@ -1576,8 +1934,8 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 	
-	_cmdList->RSSetViewports(1, viewPort); // 実は重要
-	_cmdList->RSSetScissorRects(1, rect); // 実は重要
+	_cmdList2->RSSetViewports(1, viewPort); // 実は重要
+	_cmdList2->RSSetScissorRects(1, rect); // 実は重要
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -1587,30 +1945,30 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
-	_cmdList->ResourceBarrier(1, &barrierDesc4BackBuffer);
+	_cmdList2->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
 	// only bufferHeapCreator[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart() is initialized as backbuffer
 	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	_cmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
-	//_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+	_cmdList2->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
+	//_cmdList2->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 	//float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	_cmdList2->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
-	_cmdList->SetGraphicsRootSignature(bBRootsignature);
-	_cmdList->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList2->SetGraphicsRootSignature(bBRootsignature);
+	_cmdList2->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
 	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
-	_cmdList->SetGraphicsRootDescriptorTable(0, gHandle);
-	_cmdList->SetPipelineState(bBPipeline);
+	_cmdList2->SetGraphicsRootDescriptorTable(0, gHandle);
+	_cmdList2->SetPipelineState(bBPipeline);
 
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	_cmdList->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());
+	_cmdList2->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	_cmdList2->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());
 
-	_cmdList->DrawInstanced(4, 1, 0, 0);
+	_cmdList2->DrawInstanced(4, 1, 0, 0);
 
 	// after all of drawings, DirectXTK drawing is able to be valid.
 	//DrawSpriteFont();
@@ -1618,7 +1976,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄから元に戻す
 	barrierDesc4BackBuffer.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrierDesc4BackBuffer.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	_cmdList->ResourceBarrier(1, &barrierDesc4BackBuffer);
+	_cmdList2->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
 	//for (int i = 0; i < strModelNum; ++i)
 	//{
