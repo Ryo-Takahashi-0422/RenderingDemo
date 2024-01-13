@@ -1384,25 +1384,25 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
 			{
 				//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-				//mappedPhong[i]->diffuse[0] = itPhonsInfos->second.diffuse[0];
-				//mappedPhong[i]->diffuse[1] = itPhonsInfos->second.diffuse[1];
-				//mappedPhong[i]->diffuse[2] = itPhonsInfos->second.diffuse[2];
-				//mappedPhong[i]->ambient[0] = itPhonsInfos->second.ambient[0];
-				//mappedPhong[i]->ambient[1] = itPhonsInfos->second.ambient[1];
-				//mappedPhong[i]->ambient[2] = itPhonsInfos->second.ambient[2];
-				//mappedPhong[i]->emissive[0] = itPhonsInfos->second.emissive[0];
-				//mappedPhong[i]->emissive[1] = itPhonsInfos->second.emissive[1];
-				//mappedPhong[i]->emissive[2] = itPhonsInfos->second.emissive[2];
-				//mappedPhong[i]->bump[0] = itPhonsInfos->second.bump[0];
-				//mappedPhong[i]->bump[1] = itPhonsInfos->second.bump[1];
-				//mappedPhong[i]->bump[2] = itPhonsInfos->second.bump[2];
-				//mappedPhong[i]->specular[0] = itPhonsInfos->second.specular[0];
-				//mappedPhong[i]->specular[1] = itPhonsInfos->second.specular[1];
-				//mappedPhong[i]->specular[2] = itPhonsInfos->second.specular[2];
-				//mappedPhong[i]->reflection[0] = itPhonsInfos->second.reflection[0];
-				//mappedPhong[i]->reflection[1] = itPhonsInfos->second.reflection[1];
-				//mappedPhong[i]->reflection[2] = itPhonsInfos->second.reflection[2];
-				//mappedPhong[i]->transparency = itPhonsInfos->second.transparency;
+				//mappedPhong[i]->diffuse[0] = itPhonsInfo->second.diffuse[0];
+				//mappedPhong[i]->diffuse[1] = itPhonsInfo->second.diffuse[1];
+				//mappedPhong[i]->diffuse[2] = itPhonsInfo->second.diffuse[2];
+				//mappedPhong[i]->ambient[0] = itPhonsInfo->second.ambient[0];
+				//mappedPhong[i]->ambient[1] = itPhonsInfo->second.ambient[1];
+				//mappedPhong[i]->ambient[2] = itPhonsInfo->second.ambient[2];
+				//mappedPhong[i]->emissive[0] = itPhonsInfo->second.emissive[0];
+				//mappedPhong[i]->emissive[1] = itPhonsInfo->second.emissive[1];
+				//mappedPhong[i]->emissive[2] = itPhonsInfo->second.emissive[2];
+				//mappedPhong[i]->bump[0] = itPhonsInfo->second.bump[0];
+				//mappedPhong[i]->bump[1] = itPhonsInfo->second.bump[1];
+				//mappedPhong[i]->bump[2] = itPhonsInfo->second.bump[2];
+				//mappedPhong[i]->specular[0] = itPhonsInfo->second.specular[0];
+				//mappedPhong[i]->specular[1] = itPhonsInfo->second.specular[1];
+				//mappedPhong[i]->specular[2] = itPhonsInfo->second.specular[2];
+				//mappedPhong[i]->reflection[0] = itPhonsInfo->second.reflection[0];
+				//mappedPhong[i]->reflection[1] = itPhonsInfo->second.reflection[1];
+				//mappedPhong[i]->reflection[2] = itPhonsInfo->second.reflection[2];
+				//mappedPhong[i]->transparency = itPhonsInfo->second.transparency;
 
 				if (matTexSize > 0) {
 					//std::string currentMeshName = itMaterialAndTextureName->first;
@@ -1453,7 +1453,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			//	WaitForSingleObject(m_workerSyncronize[0], INFINITE);
 			//}
 			
-			//DrawCollider(fbxIndex);
+			if (num == 0)
+			{
+				DrawCollider(fbxIndex);
+			}
 		}
 
 		//// マテリアルのディスクリプタヒープをルートシグネチャのテーブルにバインドしていく
