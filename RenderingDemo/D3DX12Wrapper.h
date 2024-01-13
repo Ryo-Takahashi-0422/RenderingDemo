@@ -12,8 +12,10 @@ private:
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator2 = nullptr;
+	ComPtr<ID3D12CommandAllocator> _cmdAllocator3 = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> _cmdList2 = nullptr;
+	ComPtr<ID3D12GraphicsCommandList> _cmdList3 = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> m_batchSubmit[2];
 	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
 	ComPtr<ID3D12Fence> _fence = nullptr;

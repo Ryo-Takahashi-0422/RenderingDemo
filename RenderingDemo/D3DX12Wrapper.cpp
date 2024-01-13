@@ -295,6 +295,7 @@ bool D3DX12Wrapper::PipelineInit(){
 			//コマンドアロケーター生成>>コマンドリスト作成
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator.ReleaseAndGetAddressOf()));
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator2.ReleaseAndGetAddressOf()));
+	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(_cmdAllocator3.ReleaseAndGetAddressOf()));
 	if (result != S_OK) return false;
 
 	return true;
@@ -508,6 +509,7 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator2.Get(), nullptr, IID_PPV_ARGS(_cmdList2.ReleaseAndGetAddressOf()));
+	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator3.Get(), nullptr, IID_PPV_ARGS(_cmdList3.ReleaseAndGetAddressOf()));
 	m_batchSubmit[0] = _cmdList.Get();
 	m_batchSubmit[1] = _cmdList2.Get();
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
@@ -816,6 +818,10 @@ void D3DX12Wrapper::Run() {
 		//WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE);
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
+		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
+		auto localCmdList = m_batchSubmit[bbIdx];
+		localCmdList->Close();
+
 
 		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
@@ -827,14 +833,11 @@ void D3DX12Wrapper::Run() {
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
-		auto localCmdList = m_batchSubmit[bbIdx];
-		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
-		localCmdList->Close();
-		//_cmdList2->Close();
+		_cmdList3->Close();
 
 		//コマンドキューの実行
-		ID3D12CommandList* cmdLists[] = { localCmdList.Get() };
-		_cmdQueue->ExecuteCommandLists(1, cmdLists);
+		ID3D12CommandList* cmdLists[] = { localCmdList.Get(), _cmdList3.Get() };
+		_cmdQueue->ExecuteCommandLists(2, cmdLists);
 
 		//ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
 		//_cmdQueue->ExecuteCommandLists(1, cmdLists2);
@@ -864,6 +867,8 @@ void D3DX12Wrapper::Run() {
 			_cmdAllocator2->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 			localCmdList->Reset(_cmdAllocator2.Get(), nullptr);
 		}
+
+		_cmdList3->Reset(_cmdAllocator3.Get(), nullptr);
 		//_cmdList->Reset(_cmdAllocator.Get(), nullptr);//コマンドリストを、新しいコマンドリストが作成されたかのように初期状態にリセット
 		//_cmdAllocator2->Reset();
 		
@@ -877,7 +882,8 @@ void D3DX12Wrapper::Run() {
 		//フリップしてレンダリングされたイメージをユーザーに表示
 		_swapChain->Present(1, 0);	
 		bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
-		
+		// ★★★交互にワーカースレッドに処理をさせるのではなく、一つ先のフレームも並列で処理させるようにしたい。
+
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
 
@@ -1954,10 +1960,10 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 {
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
-	auto localCmdList = m_batchSubmit[bbIdx];
+	//auto localCmdList = m_batchSubmit[bbIdx];
 
-	localCmdList->RSSetViewports(1, viewPort); // 実は重要
-	localCmdList->RSSetScissorRects(1, rect); // 実は重要
+	_cmdList3->RSSetViewports(1, viewPort); // 実は重要
+	_cmdList3->RSSetScissorRects(1, rect); // 実は重要
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -1967,30 +1973,30 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
-	localCmdList->ResourceBarrier(1, &barrierDesc4BackBuffer);
+	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
 	// only bufferHeapCreator[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart() is initialized as backbuffer
 	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	localCmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
-	//localCmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+	_cmdList3->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
+	//_cmdList3->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 	//float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	localCmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	_cmdList3->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
-	localCmdList->SetGraphicsRootSignature(bBRootsignature);
-	localCmdList->SetDescriptorHeaps(1, resourceManager[bbIdx]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
+	_cmdList3->SetDescriptorHeaps(1, resourceManager[bbIdx]->GetSRVHeap().GetAddressOf());
 
 	gHandle = resourceManager[bbIdx]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
-	localCmdList->SetGraphicsRootDescriptorTable(0, gHandle);
-	localCmdList->SetPipelineState(bBPipeline);
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle);
+	_cmdList3->SetPipelineState(bBPipeline);
 
-	localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	localCmdList->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());
+	_cmdList3->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	_cmdList3->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());
 
-	localCmdList->DrawInstanced(4, 1, 0, 0);
+	_cmdList3->DrawInstanced(4, 1, 0, 0);
 
 	// after all of drawings, DirectXTK drawing is able to be valid.
 	//DrawSpriteFont();
@@ -1998,7 +2004,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄから元に戻す
 	barrierDesc4BackBuffer.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrierDesc4BackBuffer.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	localCmdList->ResourceBarrier(1, &barrierDesc4BackBuffer);
+	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
 	//for (int i = 0; i < strModelNum; ++i)
 	//{
