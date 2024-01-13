@@ -193,8 +193,8 @@ private:
 	void DrawFBX();
 	// DrawFBX用データ
 	UINT cbv_srv_Size;
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleFBX;
+	//D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX;
+	//D3D12_CPU_DESCRIPTOR_HANDLE handleFBX;
 	ID3D12RootSignature* fBXRootsignature = nullptr;
 	ID3D12PipelineState* fBXPipeline = nullptr;
 	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;

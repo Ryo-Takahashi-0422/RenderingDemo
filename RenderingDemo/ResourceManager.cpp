@@ -268,6 +268,17 @@ HRESULT ResourceManager::CreateRTV()
 	);
 	if (result != S_OK) return result;
 
+	result = _dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&depthClearValue,
+		IID_PPV_ARGS(renderingBuff2.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
 	// create RTV
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -282,11 +293,22 @@ HRESULT ResourceManager::CreateRTV()
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
+	auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
 	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
 	(
 		renderingBuff.Get(),//レンダーターゲットを表す ID3D12Resource オブジェクトへのポインター
 		&rtvDesc,//レンダー ターゲット ビューを記述する D3D12_RENDER_TARGET_VIEW_DESC 構造体へのポインター。
-		rtvHeap->GetCPUDescriptorHandleForHeapStart()//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+		handle//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+	);
+
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
+	(
+		renderingBuff2.Get(),//レンダーターゲットを表す ID3D12Resource オブジェクトへのポインター
+		&rtvDesc,//レンダー ターゲット ビューを記述する D3D12_RENDER_TARGET_VIEW_DESC 構造体へのポインター。
+		handle//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
 	);
 
 	return S_OK;
@@ -383,7 +405,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 2 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2:rendering result(1), 3:phongInfosサイズ(読み込むモデルにより変動), 4:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 3 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:phongInfosサイズ(読み込むモデルにより変動), 5:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -411,6 +433,14 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	_dev->CreateShaderResourceView
 	(
 		renderingBuff.Get(),
+		&srvDesc,
+		handle
+	);
+
+	handle.ptr += inc; // ★★★これを追加したらテクスチャバグ発生
+	_dev->CreateShaderResourceView
+	(
+		renderingBuff2.Get(),
 		&srvDesc,
 		handle
 	);

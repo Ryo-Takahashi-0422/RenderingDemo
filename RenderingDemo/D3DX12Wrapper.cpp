@@ -811,18 +811,18 @@ void D3DX12Wrapper::Run() {
 		////リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
 		//_cmdList->ResourceBarrier(1, &barrierDescFBX);
 
-		//for (int i = 0; i < threadNum; i++)
-		//{
-		SetEvent(m_workerBeginRenderFrame[bbIdx]);
-		//}
-		//WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE);
+		for (int i = 0; i < threadNum; i++)
+		{
+			SetEvent(m_workerBeginRenderFrame[i]);
+		}
+		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
-		WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
+		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
-		auto localCmdList = m_batchSubmit[bbIdx];
-		localCmdList->Close();
-
-
+		//auto localCmdList = m_batchSubmit[bbIdx];
+		//localCmdList->Close();
+		//_cmdList->Close();
+		//_cmdList2->Close();
 		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		//_cmdList2->ResourceBarrier(1, &barrierDescFBX);
@@ -836,8 +836,8 @@ void D3DX12Wrapper::Run() {
 		_cmdList3->Close();
 
 		//コマンドキューの実行
-		ID3D12CommandList* cmdLists[] = { localCmdList.Get(), _cmdList3.Get() };
-		_cmdQueue->ExecuteCommandLists(2, cmdLists);
+		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
+		_cmdQueue->ExecuteCommandLists(3, cmdLists);
 
 		//ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
 		//_cmdQueue->ExecuteCommandLists(1, cmdLists2);
@@ -857,17 +857,18 @@ void D3DX12Wrapper::Run() {
 			CloseHandle(event);
 		}
 
-		if (bbIdx == 0)
-		{
-			_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
-			localCmdList->Reset(_cmdAllocator.Get(), nullptr);
-		}
-		else
-		{
-			_cmdAllocator2->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
-			localCmdList->Reset(_cmdAllocator2.Get(), nullptr);
-		}
+		//if (bbIdx == 0)
+		//{
+		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
+		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
+		//}
+		//else
+		//{
+		_cmdAllocator2->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
+		_cmdList2->Reset(_cmdAllocator2.Get(), nullptr);
+		//}
 
+		_cmdAllocator3->Reset();
 		_cmdList3->Reset(_cmdAllocator3.Get(), nullptr);
 		//_cmdList->Reset(_cmdAllocator.Get(), nullptr);//コマンドリストを、新しいコマンドリストが作成されたかのように初期状態にリセット
 		//_cmdAllocator2->Reset();
@@ -1232,10 +1233,18 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		auto localCmdList = m_batchSubmit[num];
 
 		//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
+		D3D12_RESOURCE_BARRIER barrierDescFBX = {};
 		D3D12_RESOURCE_BARRIER BarrierDesc = {};
 		barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrierDescFBX.Transition.pResource = resourceManager[num]->GetRenderingBuff().Get();
+		if (num == 0)
+		{
+			barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+		}
+		else if (num == 1)
+		{
+			barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff2().Get();
+		}
 		barrierDescFBX.Transition.Subresource = 0;
 		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -1248,8 +1257,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
 		localCmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
 
-		dsvhFBX = resourceManager[num]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		handleFBX = resourceManager[num]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+		auto dsvhFBX = resourceManager[num]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+		handleFBX.ptr += num * 32;
 		//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
 		//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 
@@ -1257,12 +1267,26 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 		//画面クリア
-		float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		float clearColor[4];
+		if (num == 0)
+		{
+			clearColor[0] = 1.0f;
+			clearColor[1] = 1.0f;
+			clearColor[2] = 1.0f;
+			clearColor[3] = 1.0f;
+		}
+		else if (num == 1)
+		{
+			clearColor[0] = 0.0f;
+			clearColor[1] = 0.0f;
+			clearColor[2] = 0.0f;
+			clearColor[3] = 0.0f;
+		}
 
 		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
 
 		int lastSRVSetNum = 0;
-		for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex)
+		for (int fbxIndex = num; fbxIndex <= num; ++fbxIndex)
 		{
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
 			localCmdList->SetPipelineState(fBXPipeline);
@@ -1335,7 +1359,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 2;
+			dHandle.ptr += cbv_srv_Size * 3;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -1418,7 +1442,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				textureTableStartIndex = 2; // init
 
 			}
-			SetEvent(m_workerSyncronize[num]); // end drawing.
+			//SetEvent(m_workerSyncronize[num]); // end drawing.
 			//WaitForMultipleObjects(threadNum, m_workerSyncronize, TRUE, INFINITE);
 			//if (num == 0)
 			//{
@@ -1462,6 +1486,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		localCmdList->ResourceBarrier(1, &barrierDescFBX);
+
+		localCmdList->Close();
 
 		SetEvent(m_workerFinishedRenderFrame[num]); // end drawing.
 	}
@@ -1986,11 +2012,20 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
-	_cmdList3->SetDescriptorHeaps(1, resourceManager[bbIdx]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
-	gHandle = resourceManager[bbIdx]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle);
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle);
+
+	//_cmdList3->SetDescriptorHeaps(1, resourceManager[1]->GetSRVHeap().GetAddressOf());
+	//auto gHandle2 = resourceManager[1]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	//gHandle2.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle2);
+
 	_cmdList3->SetPipelineState(bBPipeline);
 
 	_cmdList3->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

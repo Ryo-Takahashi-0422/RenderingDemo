@@ -33,6 +33,7 @@ private:
 	ComPtr<ID3D12Resource> idxBuff = nullptr; // index mapped buffer
 	ComPtr<ID3D12Resource> depthBuff = nullptr; // depth buffer
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
+	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
 	
 	const int mappingSize = 32; // mapping size
@@ -96,6 +97,7 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap() { return dsvHeap; };
 	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; };
+	ComPtr<ID3D12Resource> GetRenderingBuff2() { return renderingBuff2; };
 	std::vector<ComPtr<ID3D12Resource>> GetTextureUploadBuff() { return textureUploadBuff; };
 	std::vector<ComPtr<ID3D12Resource>> GetTextureReadBuff() { return textureReadBuff; };
 	std::vector<DirectX::TexMetadata*> GetTextureMetaData() { return textureMetaData; };
