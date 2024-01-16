@@ -178,9 +178,6 @@
     <ClCompile Include="PeraSetRootSignature.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="PeraShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="PMDActor.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
@@ -236,9 +233,6 @@
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
     <ClCompile Include="CollisionRootSignature.cpp">
-      <Filter>ソース ファイル\Rebuild</Filter>
-    </ClCompile>
-    <ClCompile Include="CollisionShaderCompile.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -321,9 +315,6 @@
     <ClInclude Include="PeraSetRootSignature.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
-    <ClInclude Include="PeraShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="PMDActor.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
@@ -385,9 +376,6 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="CollisionRootSignature.h">
-      <Filter>ヘッダー ファイル\Rebuild</Filter>
-    </ClInclude>
-    <ClInclude Include="CollisionShaderCompile.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

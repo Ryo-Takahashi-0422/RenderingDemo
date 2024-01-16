@@ -311,7 +311,6 @@
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
-    <ClCompile Include="CollisionShaderCompile.cpp" />
     <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="BloomShaderCompile.cpp" />
     <ClCompile Include="BufferHeapCreator.cpp" />
@@ -330,7 +329,6 @@
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
     <ClCompile Include="PeraSetRootSignature.cpp" />
-    <ClCompile Include="PeraShaderCompile.cpp" />
     <ClCompile Include="PMDActor.cpp" />
     <ClCompile Include="PMDMaterialInfo.cpp" />
     <ClCompile Include="PrepareRenderingWindow.cpp" />
@@ -366,7 +364,6 @@
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />
-    <ClInclude Include="CollisionShaderCompile.h" />
     <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="BloomShaderCompile.h" />
     <ClInclude Include="BufferHeapCreator.h" />
@@ -385,7 +382,6 @@
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />
     <ClInclude Include="PeraSetRootSignature.h" />
-    <ClInclude Include="PeraShaderCompile.h" />
     <ClInclude Include="PMDActor.h" />
     <ClInclude Include="PMDMaterialInfo.h" />
     <ClInclude Include="PrepareRenderingWindow.h" />

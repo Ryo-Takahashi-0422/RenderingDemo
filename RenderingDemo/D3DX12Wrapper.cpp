@@ -153,7 +153,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraGPLSetting = new PeraGraphicsPipelineSetting(peraLayout/*vertexInputLayout*/); //TODO PeraLayout,VertexInputLayoutｸﾗｽの基底クラスを作ってそれに対応させる
 	peraPolygon = new PeraPolygon;
 	peraSetRootSignature = new PeraSetRootSignature;
-	peraShaderCompile = new PeraShaderCompile;
+	peraShaderCompile = new SettingShaderCompile;
 	//bufferGPLSetting = new PeraGraphicsPipelineSetting(peraLayout/*vertexInputLayout*/);
 	//bufferSetRootSignature = new PeraSetRootSignature;
 	//bufferShaderCompile = new BufferShaderCompile;
@@ -176,7 +176,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	// Collision
 	collisionRootSignature = new CollisionRootSignature;
 	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
-	collisionShaderCompile = new CollisionShaderCompile;
+	collisionShaderCompile = new SettingShaderCompile;
 	delete peraLayout;
 
 
@@ -440,21 +440,27 @@ bool D3DX12Wrapper::ResourceInit() {
 	ComPtr<ID3D10Blob> _vsBackbufferBlob = nullptr; // 表示用頂点シェーダーオブジェクト格納用
 	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
 	// _vsBlobと_psBlobにｼｪｰﾀﾞｰｺﾝﾊﾟｲﾙ設定を割り当てる。それぞれﾌｧｲﾙﾊﾟｽを保持するが読み込み失敗したらnullptrが返ってくる。
-	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob);
+	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob, 
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl", "FBXVS", 
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl", "FBXPS");
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
 	delete settingShaderCompile;
 
 	// ﾏﾙﾁﾊﾟｽ1枚目用
-	auto mBlobs = peraShaderCompile->SetPeraShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob);
+	auto mBlobs = peraShaderCompile->SetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraVertex.hlsl", "vs",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraPixel.hlsl", "ps");
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
 	delete peraShaderCompile;
 
 	// コライダー用
-	auto colliderBlobs = collisionShaderCompile->SetPeraShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
+	auto colliderBlobs = collisionShaderCompile->SetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionVertexShader.hlsl", "vs",
+		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionPixelShader.hlsl", "ps");
 	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
 	_vsCollisionBlob = colliderBlobs.first;
 	_psCollisionBlob = colliderBlobs.second;

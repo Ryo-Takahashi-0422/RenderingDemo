@@ -68,7 +68,7 @@ private:
 	PeraLayout* peraLayout = nullptr;
 	PeraPolygon* peraPolygon = nullptr;
 	PeraSetRootSignature* peraSetRootSignature = nullptr;
-	PeraShaderCompile* peraShaderCompile = nullptr;
+	/*PeraShaderCompile*/SettingShaderCompile* peraShaderCompile = nullptr;
 	//PeraGraphicsPipelineSetting* bufferGPLSetting = nullptr;
 	//PeraSetRootSignature* bufferSetRootSignature = nullptr;
 
@@ -149,7 +149,7 @@ private:
 	CollisionManager* collisionManager = nullptr;
 	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
 	CollisionRootSignature* collisionRootSignature = nullptr;
-	CollisionShaderCompile* collisionShaderCompile = nullptr;
+	SettingShaderCompile* collisionShaderCompile = nullptr;
 	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
 	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
 	//BoundingSphere* characterBSphere = nullptr;

@@ -72,7 +72,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 
 #include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
 #include <PeraLayout.h>
-#include <PeraShaderCompile.h>
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
 #include <BufferShaderCompile.h>
@@ -95,4 +94,3 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <CollisionManager.h>
 #include <CollisionRootSignature.h>
 #include <ColliderGraphicsPipelineSetting.h>
-#include <CollisionShaderCompile.h>

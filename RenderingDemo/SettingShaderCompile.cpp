@@ -2,14 +2,14 @@
 #include <SettingShaderCompile.h>
 
 std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShaderCompile
-(SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+(SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob, LPCWSTR vsPath, LPCSTR vsEntryPoint, LPCWSTR psPath, LPCSTR psEntryPoint)
 {
 	result = D3DCompileFromFile
 	(
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl",
+		/*L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl"*/vsPath,
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"FBXVS",
+		/*"FBXVS"*/vsEntryPoint,
 		"vs_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
@@ -19,10 +19,10 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShade
 	
 	result = D3DCompileFromFile
 	(
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl",
+		/*L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl"*/psPath,
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"FBXPS",
+		/*"FBXPS"*/psEntryPoint,
 		"ps_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
