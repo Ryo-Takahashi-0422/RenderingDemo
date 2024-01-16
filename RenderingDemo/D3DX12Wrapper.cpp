@@ -127,7 +127,6 @@ bool D3DX12Wrapper::PrepareRendering() {
 	// VertexInputLayoutクラスのインスタンス化
 	vertexInputLayout = new VertexInputLayout;
 
-
 	// GraphicsPipelineSettingクラスのインスタンス化
 	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
 	delete vertexInputLayout;
@@ -178,9 +177,6 @@ bool D3DX12Wrapper::PrepareRendering() {
 	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
 	collisionShaderCompile = new SettingShaderCompile;
 	delete peraLayout;
-
-
-
 
 	////デバイス取得
 	//auto hdc = GetDC(prepareRenderingWindow->GetHWND());
@@ -348,16 +344,6 @@ void D3DX12Wrapper::EffekseerInit()
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
 	
-	// connan, zig   zigを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
-	// connan, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
-	// zig, battlefield   battlefieldを先に読み込むと問題ないが、後で読み込むとD3D12_GPU_DESCRIPTOR_HANDLEの読み取りエラーが発生する。
-	// battlefield, battlefieldは〇、NewConnan,NewConnanは〇
-	// ★テクスチャをDrawFBXでSetGraphicsRootDescriptorTableでバインドしているが、別のメッシュを描画する場合にSetDescriptorHeapsでそのメッシュのSRVに切り替えるが、
-	// そのメッシュに利用しているテクスチャ枚数が前回描画したメッシュのテクスチャ枚数より少ないと、SetGraphicsRootDescriptorTableによるバインドの上書き(されていると仮定)が
-	// 行われず前回のバインドメモリが残ってしまい、#554 DescriptorHeap Invalidエラーが発生している模様。テクスチャのバインドをコメントアウトでエラー消失すること、
-	// エラーメッセージ(現在バインドされているDescriptorheapが現在設定されているものと異なる的な)から推測した。
-	// 現状の回避策は、読み込むモデルをテクスチャの少ない順にすることに限られる。
-	
 
 	// 0 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleField.txt");
@@ -519,20 +505,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	m_batchSubmit[0] = _cmdList.Get();
 	m_batchSubmit[1] = _cmdList2.Get();
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
-	//cmdList->Close();
 
 // 初期化処理7：各バッファーを作成して頂点情報を読み込み
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	
-	////頂点バッファーの作成(リソースと暗黙的なヒープの作成) 
-	//result = bufferHeapCreator[i]->CreateBufferOfVertex(_dev);
 
-	////インデックスバッファーを作成(リソースと暗黙的なヒープの作成)
-	//result = bufferHeapCreator[i]->CreateBufferOfIndex(_dev);
-
-	////デプスバッファーを作成
-	//result = bufferHeapCreator[i]->CreateBufferOfDepthAndLightMap(_dev);
 
 	
 	//ファイル形式毎のテクスチャロード処理
@@ -563,10 +538,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	//viewCreator[i]->CreateSRV4Multipasses(_dev);
 
 // 初期化処理9：フェンスの生成
-	//	ID3D12Fence* _fence = nullptr;
-	//	UINT64 _fenceVal = 0;
-	//	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
-
 // 初期化処理10：イベントハンドルの作成
 // 初期化処理11：GPUの処理完了待ち
 
@@ -807,16 +778,6 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 				
-		//DrawFBXMulti();
-		//barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		//barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		//barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
-		//barrierDescFBX.Transition.Subresource = 0;
-		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		////リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
-		//_cmdList->ResourceBarrier(1, &barrierDescFBX);
-
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);
@@ -824,18 +785,6 @@ void D3DX12Wrapper::Run() {
 		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
-		//コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
-		//auto localCmdList = m_batchSubmit[bbIdx];
-		//localCmdList->Close();
-		//_cmdList->Close();
-		//_cmdList2->Close();
-		//barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		//barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		//_cmdList2->ResourceBarrier(1, &barrierDescFBX);
-		//WaitForSingleObject(m_workerFinishedRenderFrame[0], INFINITE);
-
-		//_cmdList->ResourceBarrier(1, &barrierDescFBX);
-		//_cmdList2->ResourceBarrier(1, &barrierDescFBX);
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
@@ -863,16 +812,11 @@ void D3DX12Wrapper::Run() {
 			CloseHandle(event);
 		}
 
-		//if (bbIdx == 0)
-		//{
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
-		//}
-		//else
-		//{
+
 		_cmdAllocator2->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 		_cmdList2->Reset(_cmdAllocator2.Get(), nullptr);
-		//}
 
 		_cmdAllocator3->Reset();
 		_cmdList3->Reset(_cmdAllocator3.Get(), nullptr);
