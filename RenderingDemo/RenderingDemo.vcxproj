@@ -325,6 +325,8 @@
     <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
+    <ClCompile Include="SkyLUT.cpp" />
+    <ClCompile Include="Transmittance.cpp" />
     <ClCompile Include="PeraGraphicsPipelineSetting.cpp" />
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
@@ -378,6 +380,8 @@
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
+    <ClInclude Include="SkyLUT.h" />
+    <ClInclude Include="Transmittance.h" />
     <ClInclude Include="PeraGraphicsPipelineSetting.h" />
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />

@@ -425,7 +425,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	ComPtr<ID3D10Blob> _psMBlob = nullptr; // ﾏﾙﾁﾊﾟｽ用頂点ピクセルシェーダーオブジェクト格納用
 	ComPtr<ID3D10Blob> _vsBackbufferBlob = nullptr; // 表示用頂点シェーダーオブジェクト格納用
 	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
-	// _vsBlobと_psBlobにｼｪｰﾀﾞｰｺﾝﾊﾟｲﾙ設定を割り当てる。それぞれﾌｧｲﾙﾊﾟｽを保持するが読み込み失敗したらnullptrが返ってくる。
+
+	// FBXモデル描画用のシェーダーセッティング
 	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob, 
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl", "FBXVS", 
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl", "FBXPS");
@@ -434,7 +435,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psBlob = blobs.second;	
 	delete settingShaderCompile;
 
-	// ﾏﾙﾁﾊﾟｽ1枚目用
+	// バックバッファ描画用
 	auto mBlobs = peraShaderCompile->SetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraVertex.hlsl", "vs",
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraPixel.hlsl", "ps");
@@ -443,7 +444,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psMBlob = mBlobs.second;
 	delete peraShaderCompile;
 
-	// コライダー用
+	// コライダー描画用
 	auto colliderBlobs = collisionShaderCompile->SetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionVertexShader.hlsl", "vs",
 		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionPixelShader.hlsl", "ps");

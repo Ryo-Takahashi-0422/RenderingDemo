@@ -34,6 +34,12 @@
     <Filter Include="Shader\Rebuild">
       <UniqueIdentifier>{a015630c-d72f-4c02-aea4-2b836c3a9e1c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Sky">
+      <UniqueIdentifier>{a68e5e57-6f90-40e2-8027-1cc4b952645c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Sky">
+      <UniqueIdentifier>{2ebe14f5-b580-4d85-a124-b1db13bfb4b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli">
@@ -235,6 +241,12 @@
     <ClCompile Include="CollisionRootSignature.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
+    <ClCompile Include="Transmittance.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyLUT.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -377,6 +389,12 @@
     </ClInclude>
     <ClInclude Include="CollisionRootSignature.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="Transmittance.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyLUT.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
