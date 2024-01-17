@@ -247,6 +247,9 @@
     <ClCompile Include="SkyLUT.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
+    <ClCompile Include="ParticipatingMedia.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -394,6 +397,9 @@
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
     <ClInclude Include="SkyLUT.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticipatingMedia.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>

@@ -96,5 +96,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ColliderGraphicsPipelineSetting.h>
 
 // Sky
+#include <ParticipatingMedia.h>
 #include <Transmittance.h>
 #include <SkyLUT.h>
+

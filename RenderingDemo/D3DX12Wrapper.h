@@ -242,7 +242,7 @@ private:
 
 
 public:
-	// コンストラクタ
+
 	D3DX12Wrapper();
 
 	///Applicationのシングルトンインスタンスを得る
