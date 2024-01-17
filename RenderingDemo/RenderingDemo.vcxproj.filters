@@ -40,6 +40,9 @@
     <Filter Include="ソース ファイル\Sky">
       <UniqueIdentifier>{2ebe14f5-b580-4d85-a124-b1db13bfb4b8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader\Sky">
+      <UniqueIdentifier>{0d9d0e50-c830-4318-a4ce-6402505c2609}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli">
@@ -103,6 +106,12 @@
     </FxCompile>
     <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyLUT.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="RaySphereIntersection.hlsl">
+      <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

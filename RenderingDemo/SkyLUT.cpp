@@ -20,6 +20,7 @@ void SkyLUT::Init()
 {
     CreateRootSignature();
     ShaderCompile();
+    SetInputLayout();
     CreateGraphicPipeline();
     RenderingSet();
     ParticipatingMediaSet();
@@ -42,7 +43,7 @@ HRESULT SkyLUT::CreateRootSignature()
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 11;
+    rootSignatureDesc.NumParameters = 1;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;

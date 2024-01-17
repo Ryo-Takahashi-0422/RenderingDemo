@@ -75,7 +75,14 @@ private:
     ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
     ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
 
+    struct calculateConstants
+    {
+        //float 
+
+    };
+
 public:
+    SkyLUT();
     SkyLUT(ID3D12Device* dev);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);

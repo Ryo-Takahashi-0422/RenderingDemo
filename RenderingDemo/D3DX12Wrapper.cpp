@@ -565,6 +565,11 @@ bool D3DX12Wrapper::ResourceInit() {
 		reManager->ClearReference();
 	}
 
+	// SkyLUT
+	skyLUT = new SkyLUT(_dev.Get());
+	calculatedParticipatingMedia = participatingMedia.calculateUnit();
+	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
+
 	return true;
 }
 
