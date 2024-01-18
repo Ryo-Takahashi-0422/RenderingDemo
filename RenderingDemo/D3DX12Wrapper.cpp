@@ -569,6 +569,17 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUT = new SkyLUT(_dev.Get());
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
+	skyLUTBuffer.eyePos[0] = 0;
+	skyLUTBuffer.eyePos[1] = 0;
+	skyLUTBuffer.eyePos[2] = 0;
+	skyLUTBuffer.stepCnt = 32;
+	skyLUTBuffer.sunDirection[0] = 0;
+	skyLUTBuffer.sunDirection[1] = 0;
+	skyLUTBuffer.sunDirection[2] = 0;
+	skyLUTBuffer.sunIntensity[0] = 1.0f;
+	skyLUTBuffer.sunIntensity[1] = 1.0f;
+	skyLUTBuffer.sunIntensity[2] = 1.0f;
+	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 	return true;
 }

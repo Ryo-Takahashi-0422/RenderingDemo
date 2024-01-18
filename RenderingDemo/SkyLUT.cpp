@@ -3,7 +3,7 @@
 
 
 SkyLUT::SkyLUT(ID3D12Device* _dev) :
-    _dev(_dev), shader(nullptr), pipelineState(nullptr), srvHeap(nullptr), mediaHeap(nullptr), renderingResource(nullptr), participatingMedaiResource(nullptr),
+    _dev(_dev), shader(nullptr), pipelineState(nullptr), srvHeap(nullptr), mediaHeap(nullptr), renderingResource(nullptr), participatingMediaResource(nullptr),
     data(nullptr), _cmdAllocator(nullptr), _cmdList(nullptr)
 {
     Init();
@@ -23,7 +23,7 @@ void SkyLUT::Init()
     SetInputLayout();
     CreateGraphicPipeline();
     RenderingSet();
-    ParticipatingMediaSet();
+    InitParticipatingMedia();
 }
 
 // ルートシグネチャ設定
@@ -178,30 +178,21 @@ HRESULT SkyLUT::CreateGraphicPipeline()
     }
 
     desc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-
     desc.RasterizerState.MultisampleEnable = false;
     desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
     desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     desc.RasterizerState.DepthClipEnable = true;
-
     desc.BlendState.AlphaToCoverageEnable = false;
     desc.BlendState.IndependentBlendEnable = false;
-
     desc.BlendState.RenderTarget[0] = renderTargetDesc;
     desc.InputLayout.pInputElementDescs = inputLayout;
-
     desc.InputLayout.NumElements = _countof(inputLayout);
-
     desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-
     desc.NumRenderTargets = 1;
     desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model
-
     desc.SampleDesc.Count = 1; //1サンプル/ピクセル
     desc.SampleDesc.Quality = 0;
-
     desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE/*D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT*/;
-
     desc.DepthStencilState.DepthEnable = true;
     desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
     desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; // ソースデータがコピー先データより小さい場合書き込む
@@ -221,7 +212,7 @@ void SkyLUT::RenderingSet()
     CreateRenderingSRV();
 }
 
-// ヒープの生成
+// RenderingTarget用ヒープの生成
 HRESULT SkyLUT::CreateRenderingHeap()
 {
     //今回はテストとしてリソースは1つとして作成
@@ -235,7 +226,7 @@ HRESULT SkyLUT::CreateRenderingHeap()
     return hr;
 }
 
-// リソースの生成
+// RenderingTarget用リソースの生成
 HRESULT SkyLUT::CreateRenderingResource()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -265,7 +256,7 @@ HRESULT SkyLUT::CreateRenderingResource()
 	if (result != S_OK) return result;
 }
 
-// RTVの作成
+// RenderingTarget用RTVの作成
 void SkyLUT::CreateRenderingRTV()
 {
     // create RTV
@@ -292,7 +283,7 @@ void SkyLUT::CreateRenderingRTV()
     );
 }
 
-// SRVの生成
+// RenderingTarget用SRVの生成
 void SkyLUT::CreateRenderingSRV()
 {
     auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -312,24 +303,18 @@ void SkyLUT::CreateRenderingSRV()
     );
 }
 
-
-// 外部からの関与媒質設定
-void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
-{
-    m_Media = media;
-}
-
 // 関与媒質の設定
-void SkyLUT::ParticipatingMediaSet()
+void SkyLUT::InitParticipatingMedia()
 {
     CreateParticipatingResource();
-    CreateParticipatingMediaHeap();
+    CreateParticipatingMediaHeapAndView();
     MappingParticipatingMedia();
 }
 
 // 関与媒質用リソースの生成
 HRESULT SkyLUT::CreateParticipatingResource()
 {
+    // ParticipatingMedia用
     auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     auto desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(ParticipatingMedia) + 0xff) & ~0xff);
 
@@ -340,22 +325,30 @@ HRESULT SkyLUT::CreateParticipatingResource()
         &desc,
         D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
         nullptr,
-        IID_PPV_ARGS(participatingMedaiResource.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(participatingMediaResource.ReleaseAndGetAddressOf())
+    );
+    if (result != S_OK) return result;
+
+    // SkyLUTBuffer用
+    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SkyLUTBuffer) + 0xff) & ~0xff);
+    result = _dev->CreateCommittedResource
+    (
+        &prop,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+        nullptr,
+        IID_PPV_ARGS(skyLUTBufferResource.ReleaseAndGetAddressOf())
     );
     if (result != S_OK) return result;
 }
 
-// 関与媒質用ヒープの生成
-HRESULT SkyLUT::CreateParticipatingMediaHeap()
+// 関与媒質用ヒープ・ビューの生成
+HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
 {
-    // create view
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    cbvDesc.BufferLocation = participatingMedaiResource->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = participatingMedaiResource->GetDesc().Width;
-
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 1;
+    heapDesc.NumDescriptors = 2; // ParticipatingMedia, SkyLUTBuffer
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
@@ -364,11 +357,24 @@ HRESULT SkyLUT::CreateParticipatingMediaHeap()
 
     auto handle = mediaHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    //  1:Matrix(world, view, proj)
 
+    // ParticipatingMedia用view
+    D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
+    pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
+    pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
     _dev->CreateConstantBufferView
     (
-        &cbvDesc,
+        &pMediaCbvDesc,
+        handle
+    );
+
+    // SkyLUTBuffer用view
+    D3D12_CONSTANT_BUFFER_VIEW_DESC SkyLUTCbvDesc = {};
+    SkyLUTCbvDesc.BufferLocation = skyLUTBufferResource->GetGPUVirtualAddress();
+    SkyLUTCbvDesc.SizeInBytes = skyLUTBufferResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
+    (
+        &SkyLUTCbvDesc,
         handle
     );
 }
@@ -376,7 +382,23 @@ HRESULT SkyLUT::CreateParticipatingMediaHeap()
 // 関与媒質用定数のマッピング
 void SkyLUT::MappingParticipatingMedia()
 {
-    participatingMedaiResource->Map(0, nullptr, (void**)&m_Media);
+    // ParticipatingMedia
+    participatingMediaResource->Map(0, nullptr, (void**)&m_Media);
+
+    // SkyLUTBuffer
+    skyLUTBufferResource->Map(0, nullptr, (void**)&m_SkyLUT);
+}
+
+// 外部からの関与媒質設定
+void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
+{
+    m_Media = media;
+}
+
+// 外部からのSkyLUTBuffer設定
+void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
+{
+    m_SkyLUT = buffer;
 }
 
 // コマンドの生成

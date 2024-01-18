@@ -1,8 +1,17 @@
 #pragma once
 
+struct SkyLUTBuffer
+{
+    float eyePos[3];
+    float sunDirection[3]; // 
+    float stepCnt;
+    float sunIntensity[3];
+};
+
 class SkyLUT
 {
 private:
+
     // 初期化
     void Init();
 
@@ -28,16 +37,18 @@ private:
     void CreateRenderingSRV();
 
     // 関与媒質の設定
-    void ParticipatingMediaSet();
+    void InitParticipatingMedia();
     // 関与媒質用リソースの生成
     HRESULT CreateParticipatingResource();
-    // 関与媒質用ヒープの生成
-    HRESULT CreateParticipatingMediaHeap();
+    ComPtr<ID3D12Resource> participatingMediaResource;
+    ComPtr<ID3D12Resource> skyLUTBufferResource;
+    // 関与媒質用ヒープ・ビューの生成
+    HRESULT CreateParticipatingMediaHeapAndView();
     // 関与媒質用定数のマッピング
     void MappingParticipatingMedia();
     // マッピング先
     ParticipatingMedia m_Media;
-
+    SkyLUTBuffer m_SkyLUT;
     // コマンドの生成
     HRESULT CreateCommand();
 
@@ -60,7 +71,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> mediaHeap;
     // リソース
     ComPtr<ID3D12Resource> renderingResource;
-    ComPtr<ID3D12Resource> participatingMedaiResource;
+    
     // 送受信用データ
     void* data;
     // コマンドアロケータ
@@ -75,17 +86,14 @@ private:
     ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
     ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
 
-    struct calculateConstants
-    {
-        //float 
 
-    };
 
 public:
     SkyLUT();
     SkyLUT(ID3D12Device* dev);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
+    void SetSkyLUTBuffer(SkyLUTBuffer buffer);
 
     // 実行
     void Execution(ID3D12CommandQueue* cmdQueue);

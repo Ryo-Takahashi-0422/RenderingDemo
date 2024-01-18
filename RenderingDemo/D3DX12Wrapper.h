@@ -240,6 +240,7 @@ private:
 	SkyLUT* skyLUT = nullptr;
 	ParticipatingMedia participatingMedia;
 	ParticipatingMedia calculatedParticipatingMedia;
+	SkyLUTBuffer skyLUTBuffer;
 
 	//★★★コライダーdebug用
 	int debugNum = 2;
