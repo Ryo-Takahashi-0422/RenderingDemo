@@ -1,3 +1,5 @@
+#include "Defines.hlsli"
+
 cbuffer AtmosBuffer : register(b0)
 {
     float3 rayleighScattering;
@@ -14,16 +16,16 @@ cbuffer AtmosBuffer : register(b0)
     float atmosphereRadius;
 };
 
-void GetSigmaS(float h, out float sigmaS)
+float3 GetSigmaS(float h)
 {
     float3 rayleighSigmaS = rayleighScattering * exp(-h / altitudeOfRayleigh);
     float mieSigmaS = mieScattering * exp(-h / altitudeOfMie);
 
-    sigmaS = rayleighSigmaS + mieSigmaS;
-
+    float3 sigmaS = rayleighSigmaS + mieSigmaS;
+    return sigmaS;
 }
 
-void GetSigmaT(float h, out float sigmaT)
+float3 GetSigmaT(float h)
 {
     float3 rayleighSigmaT = rayleighScattering * exp(-h / altitudeOfRayleigh);
     float mieSigmaT = (mieScattering + mieAbsorption) * exp(-h / altitudeOfMie);
@@ -31,6 +33,18 @@ void GetSigmaT(float h, out float sigmaT)
     float ozoneDistribution = max(0.0f, 1.0f - abs(h - altitudeOfOzone) / halfWidthOfOzone);
     float ozoneSigmaT = ozoneAbsorption * ozoneDistribution;
     
-    sigmaT = rayleighSigmaT + mieSigmaT + ozoneSigmaT;
+    float3 sigmaT = rayleighSigmaT + mieSigmaT + ozoneSigmaT;
+    return sigmaT;
+}
+
+float CalculatePhaseFunctiuon(float theta)
+{
+    float phaseRayleigh = 3 * (1 + cos(theta) * cos(theta));
+    
+    float g = asymmetryParameter;
+    float m = 1 + g * g - 2 * g * cos(theta);
+    float phaseMie = (1 - g * g) / (4 * PI * m * sqrt(m));
+
+    return phaseRayleigh + phaseMie;
 
 }

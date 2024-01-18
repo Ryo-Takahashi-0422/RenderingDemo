@@ -63,6 +63,15 @@
     <None Include="CollisionHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="AtmosphericModel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="RaySphereIntersection.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="Defines.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -108,9 +117,6 @@
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="SkyLUT.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="RaySphereIntersection.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
