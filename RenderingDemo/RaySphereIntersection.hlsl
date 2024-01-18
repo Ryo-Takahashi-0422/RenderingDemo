@@ -10,7 +10,27 @@ bool hasIntersectionWithCircle(float2 o, float2 d, float r)
     float c = dot(o, o) - r * r;
     
     float discriminant = b * b - 4 * a * c;
-    return discriminant >= 0 && c < 0; // ‰ð‚Íˆê‚ÂˆÈã‘¶Ý‚µAŠŽ‚Âdir‚Ìæ‚ÅŒð·‚·‚éê‡
+    if (discriminant < 0)
+        return false;
+    
+    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
+    float t2 = c / t1;
+    
+    if (t1 > t2)
+    {
+        float tmp = t1;
+        t1 = t2;
+        t2 = tmp;
+    }
+    
+    if (t1 < 0)
+    {
+        t1 = t2; // if t0 is negative, let's use t1 instead
+        if (t1 < 0)
+            return false; // both t0 and t1 are negative
+    }
+    
+    return true;
 }
 
 bool DiscriminateIntersectionWithCircle(float2 o, float2 d, float r, out float t)
@@ -23,7 +43,23 @@ bool DiscriminateIntersectionWithCircle(float2 o, float2 d, float r, out float t
     if (discriminant < 0) 
         return false;
     
-    t = -b + sqrt(discriminant) / (2 * a);
+    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
+    float t2 = c / t1;
     
-    return c < 0; // ‰ð‚Íˆê‚ÂˆÈã‘¶Ý‚µAŠŽ‚Âdir‚Ìæ‚ÅŒð·‚·‚éê‡
+    if (t1 > t2)
+    {
+        float tmp = t1;
+        t1 = t2;
+        t2 = tmp;
+    }
+    
+    if (t1 < 0)
+    {
+        t1 = t2; // if t0 is negative, let's use t1 instead
+        if (t1 < 0)
+            return false; // both t0 and t1 are negative
+    }
+
+    t = t1;
+    return true;
 }
