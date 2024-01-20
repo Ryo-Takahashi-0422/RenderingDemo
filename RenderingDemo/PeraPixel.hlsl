@@ -20,9 +20,6 @@ float3 tonemap(float3 input)
 
 float4 ps(Output input) : SV_TARGET
 {
-    float4 sponza = tex.Sample(smp, input.uv);
-    float4 connan = tex2.Sample(smp, input.uv);
-    
     float sponzaDepth = sponzaDepthmap.Sample(smp, input.uv);
     float connanDepth = connanDepthmap.Sample(smp, input.uv);
     
@@ -36,11 +33,6 @@ float4 ps(Output input) : SV_TARGET
         result = tex2.Sample(smp, input.uv);
     }
     
-    //float4 cut = connan * 100;
-    //sponza -= cut;
-    //sponza = saturate(sponza);
-    
-    //float4 result = sponza + connan;
     float3 col = result;
     col = tonemap(col);    
     col = saturate(pow(col, 1 / 2.2));
