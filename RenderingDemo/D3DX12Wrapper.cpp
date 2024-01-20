@@ -1201,9 +1201,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
 		D3D12_RESOURCE_BARRIER barrierDescFBX = {};
-		D3D12_RESOURCE_BARRIER BarrierDesc = {};
 		barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
 		if (num == 0)
 		{
 			barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
@@ -1217,7 +1217,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
 		localCmdList->ResourceBarrier(1, &barrierDescFBX);
-
+		
 		// モデル描画
 		/*localCmdList->SetPipelineState(gPLSetting->GetPipelineState().Get());*/
 		/*localCmdList->SetGraphicsRootSignature(setRootSignature->GetRootSignature().Get());*/
@@ -1225,8 +1225,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
 
 		auto dsvhFBX = resourceManager[num]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-		handleFBX.ptr += num * 32;
+		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		handleFBX.ptr += num * inc;
 		//auto dsvh = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
 		//D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 
@@ -1326,7 +1328,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 3;
+			dHandle.ptr += cbv_srv_Size * 5;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -1456,7 +1458,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		localCmdList->ResourceBarrier(1, &barrierDescFBX);
-
 		localCmdList->Close();
 
 		SetEvent(m_workerFinishedRenderFrame[num]); // end drawing.
@@ -1971,6 +1972,22 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	);
 	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
+	// 各モデルのデブスマップを読み込み可能状態に変更する
+	D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		resourceManager[0]->GetDepthBuff().Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+	D3D12_RESOURCE_BARRIER barrierDesc4DepthMap2 = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		resourceManager[0]->GetDepthBuff2().Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
+	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
+
 	// only bufferHeapCreator[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart() is initialized as backbuffer
 	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -2011,6 +2028,14 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	barrierDesc4BackBuffer.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
+	// 各デブスマップを深度書き込み可能状態に変更する
+	barrierDesc4DepthMap.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrierDesc4DepthMap.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	barrierDesc4DepthMap2.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrierDesc4DepthMap2.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
+	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
+	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
 	//for (int i = 0; i < strModelNum; ++i)
 	//{
 	//	// デプスマップ用バッファの状態を書き込み可能に戻す

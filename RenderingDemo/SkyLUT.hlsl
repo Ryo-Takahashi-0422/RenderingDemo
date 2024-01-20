@@ -2,7 +2,7 @@
 #include "AtmosphericModel.hlsl"
 #include "Defines.hlsli"
 
-cbuffer SkyKUTBuffer : register(b0)
+cbuffer SkyKUTBuffer : register(b1)
 {
     float3 eyePos;
     float3 sunDirection; // 

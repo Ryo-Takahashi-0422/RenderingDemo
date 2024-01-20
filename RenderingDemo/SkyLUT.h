@@ -56,8 +56,8 @@ private:
     ComPtr<ID3D12Device> _dev;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[11] = {};
-    D3D12_ROOT_PARAMETER rootParam[11] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
+    D3D12_ROOT_PARAMETER rootParam[1] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D12RootSignature> rootSignature = nullptr;
