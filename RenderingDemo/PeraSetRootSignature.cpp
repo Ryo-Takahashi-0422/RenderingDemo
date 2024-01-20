@@ -9,19 +9,34 @@ HRESULT PeraSetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
 	//サンプラーのスロット設定
+	//descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // multipassBuff1用
+	//descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // multipassBuff2用
+	//descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // effect用
+	//descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2); // normalMapReadBuff用
+	//descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3); // depthBuff4DepthMap用
+	//descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4); // lightmap用
+	//descTableRange[6].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // シーン行列用
+	//descTableRange[7].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5); // マルチターゲット法線用
+	//descTableRange[8].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6); // bloom
+	//descTableRange[9].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7); // shirinked bloom
+	//descTableRange[10].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8); // shirinked Model
+	//descTableRange[11].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9); // AO
+	//descTableRange[12].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10); // imgui
+	//descTableRange[13].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // imgui PostSetting
+
 	descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // multipassBuff1用
 	descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // multipassBuff2用
-	descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // effect用
-	descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2); // normalMapReadBuff用
-	descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3); // depthBuff4DepthMap用
-	descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4); // lightmap用
+	descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2); // effect用
+	descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3); // normalMapReadBuff用
+	descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4); // depthBuff4DepthMap用
+	descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5); // lightmap用
 	descTableRange[6].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // シーン行列用
-	descTableRange[7].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5); // マルチターゲット法線用
-	descTableRange[8].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6); // bloom
-	descTableRange[9].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7); // shirinked bloom
-	descTableRange[10].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8); // shirinked Model
-	descTableRange[11].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9); // AO
-	descTableRange[12].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10); // imgui
+	descTableRange[7].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6); // マルチターゲット法線用
+	descTableRange[8].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7); // bloom
+	descTableRange[9].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8); // shirinked bloom
+	descTableRange[10].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9); // shirinked Model
+	descTableRange[11].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10); // AO
+	descTableRange[12].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11); // imgui
 	descTableRange[13].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // imgui PostSetting
 
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;

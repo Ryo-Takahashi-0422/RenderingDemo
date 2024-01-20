@@ -1224,7 +1224,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->RSSetViewports(1, /*prepareRenderingWindow->GetViewPortPointer()*/viewPort);
 		localCmdList->RSSetScissorRects(1, /*prepareRenderingWindow->GetRectPointer()*/rect);
 
-		auto dsvhFBX = resourceManager[num]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
+		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
 		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -2003,10 +2004,16 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle);
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
 	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle);
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
 
 	//_cmdList3->SetDescriptorHeaps(1, resourceManager[1]->GetSRVHeap().GetAddressOf());
 	//auto gHandle2 = resourceManager[1]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
