@@ -156,7 +156,7 @@
     <None Include="BasicShaderHeader.hlsli" />
     <None Include="BufferHeader.hlsli" />
     <None Include="CollisionHeaderShader.hlsli" />
-    <None Include="Defines.hlsli" />
+    <None Include="Definition.hlsli" />
     <None Include="FBXHeaderShader.hlsli" />
     <None Include="PeraHeader.hlsli" />
   </ItemGroup>
@@ -315,6 +315,16 @@
       </ShaderModel>
       <FileType>Document</FileType>
     </None>
+    <FxCompile Include="ShadowFactor.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="SkyLUT.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
@@ -353,7 +363,7 @@
     <ClCompile Include="MappingExecuter.cpp" />
     <ClCompile Include="ParticipatingMedia.cpp" />
     <ClCompile Include="SkyLUT.cpp" />
-    <ClCompile Include="Transmittance.cpp" />
+    <ClCompile Include="ShadowFactor.cpp" />
     <ClCompile Include="PeraGraphicsPipelineSetting.cpp" />
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
@@ -409,7 +419,7 @@
     <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="ParticipatingMedia.h" />
     <ClInclude Include="SkyLUT.h" />
-    <ClInclude Include="Transmittance.h" />
+    <ClInclude Include="ShadowFactor.h" />
     <ClInclude Include="PeraGraphicsPipelineSetting.h" />
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />

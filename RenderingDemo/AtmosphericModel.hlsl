@@ -1,4 +1,4 @@
-#include "Defines.hlsli"
+#include "Definition.hlsli"
 
 cbuffer AtmosBuffer : register(b0)
 {

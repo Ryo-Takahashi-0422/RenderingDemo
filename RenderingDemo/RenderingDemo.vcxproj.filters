@@ -69,7 +69,7 @@
     <None Include="RaySphereIntersection.hlsl">
       <Filter>Shader\Sky</Filter>
     </None>
-    <None Include="Defines.hlsli">
+    <None Include="Definition.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
@@ -117,6 +117,9 @@
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="SkyLUT.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowFactor.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
@@ -256,7 +259,7 @@
     <ClCompile Include="CollisionRootSignature.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
-    <ClCompile Include="Transmittance.cpp">
+    <ClCompile Include="ShadowFactor.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
     <ClCompile Include="SkyLUT.cpp">
@@ -408,7 +411,7 @@
     <ClInclude Include="CollisionRootSignature.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
-    <ClInclude Include="Transmittance.h">
+    <ClInclude Include="ShadowFactor.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
     <ClInclude Include="SkyLUT.h">

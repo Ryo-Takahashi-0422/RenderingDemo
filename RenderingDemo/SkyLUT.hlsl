@@ -1,6 +1,6 @@
 #include "RaySphereIntersection.hlsl"
 #include "AtmosphericModel.hlsl"
-#include "Defines.hlsli"
+#include "Definition.hlsli"
 
 cbuffer SkyKUTBuffer : register(b1)
 {
@@ -38,18 +38,19 @@ void rayMarching(out float3 scattering, out float3 sumSigmaT, float currentT, fl
 
     float sigmaS = GetSigmaS(h);
     float sigmaT = GetSigmaT(h);
-    float transmittanceFromRayToEye = sigmaT * (nextT - currentT); // T(c,x)
+    float deltaSigmaT = sigmaT * (nextT - currentT); // T(c,x)
+    float transmittanceFromRayToEye = exp(-(sumSigmaT + deltaSigmaT));
 
     if (hasIntersectionWithSphere(pos, sunDirection, atmosphereRadius))
     {
         float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
-        // p(v,li)ŒvŽZ
+        float angleBetweenSunlightAndRay = dot(sunDirection, -dir);
         // S(x,li)ŒvŽZ
         
         scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */;
     }
 
-    sumSigmaT += sigmaT;
+    sumSigmaT += deltaSigmaT;
 }
 
 float4 ps_Main(vsOutput input) : SV_TARGET

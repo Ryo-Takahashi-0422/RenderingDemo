@@ -97,6 +97,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 
 // Sky
 #include <ParticipatingMedia.h>
-#include <Transmittance.h>
+#include <ShadowFactor.h>
 #include <SkyLUT.h>
 

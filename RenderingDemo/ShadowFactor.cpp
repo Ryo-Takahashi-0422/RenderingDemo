@@ -1,5 +1,5 @@
 #include <stdafx.h>
-#include <Transmittance.h>
+#include <ShadowFactor.h>
 
 // 確認用配列
 std::vector<float>test(256, 0);
