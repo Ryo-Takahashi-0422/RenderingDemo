@@ -10,7 +10,6 @@ Camera::Camera()
 		instance = this;
 	}
 	world = angle = view = proj = XMMatrixIdentity();
-	//prepareRenderingWindow = _prepareRenderingWindow;
 }
 
 Camera::~Camera()
@@ -46,4 +45,28 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 		1.0, // ニア―クリップ
 		3000.0 // ファークリップ
 	);
+}
+
+void Camera::CalculateFrustum()
+{
+	invView = XMMatrixInverse(nullptr, view);
+	invProj = XMMatrixInverse(nullptr, proj);
+
+	auto invVP = XMMatrixMultiply(invView, invProj);
+
+	auto topLeftNearTransformed = XMVector4Transform(topLeftNear, invVP);
+	auto topLeftFarTransformed = XMVector4Transform(topLeftFar, invVP);
+	frustum.topLeft = XMVectorSubtract(topLeftFarTransformed, topLeftNearTransformed);
+
+	auto topRightNearTransformed = XMVector4Transform(topRightNear, invVP);
+	auto topRightFarTransformed = XMVector4Transform(topRightFar, invVP);
+	frustum.topRight = XMVectorSubtract(topRightFarTransformed, topRightNearTransformed);
+
+	auto bottomLeftNearTransformed = XMVector4Transform(BottomLeftNear, invVP);
+	auto bottomLeftFarTransformed = XMVector4Transform(BottomLeftFar, invVP);
+	frustum.bottomLeft = XMVectorSubtract(bottomLeftFarTransformed, bottomLeftNearTransformed);
+
+	auto bottomRightNearTransformed = XMVector4Transform(BottomRightNear, invVP);
+	auto bottomRightFarTransformed = XMVector4Transform(BottomRightFar, invVP);
+	frustum.bottomRight = XMVectorSubtract(bottomRightFarTransformed, bottomRightNearTransformed);
 }

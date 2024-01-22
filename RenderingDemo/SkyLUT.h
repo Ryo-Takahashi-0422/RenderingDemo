@@ -2,10 +2,10 @@
 
 struct SkyLUTBuffer
 {
-    float eyePos[3];
-    float sunDirection[3]; // 
+    XMFLOAT3 eyePos;
+    XMFLOAT3 sunDirection; // 
     float stepCnt;
-    float sunIntensity[3];
+    XMFLOAT3 sunIntensity;
 };
 
 class SkyLUT
