@@ -4,10 +4,10 @@
 
 #define STEP_CNT 500
 
-RWTexture2D<float4> shadowFactor;
+RWTexture2D<float4> shadowFactor; // UAVオブジェクト
 
 [numthreads(16, 16, 1)]
-void main( uint3 DTid : SV_DispatchThreadID )
+void cs_main( uint3 DTid : SV_DispatchThreadID )
 {
     // レイの高度(u 0～100km)と、レイ方向を90°とした時に太陽がどの角度にあるか(v -PI/2 ～ PI/2)をベースに、S(x,li) = Vis(li) * T(x,x+tatmoli)の結果をLUTにする
     

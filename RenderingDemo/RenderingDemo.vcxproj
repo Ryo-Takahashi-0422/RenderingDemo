@@ -324,6 +324,7 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
     </FxCompile>
     <FxCompile Include="SkyLUT.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
@@ -383,6 +384,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Sun.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="TextureTransporter.cpp" />
     <ClCompile Include="Utility.cpp" />
@@ -436,6 +438,7 @@
     <ClInclude Include="SettingImgui.h" />
     <ClInclude Include="SettingShaderCompile.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Sun.h" />
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="TextureTransporter.h" />
     <ClInclude Include="Utility.h" />

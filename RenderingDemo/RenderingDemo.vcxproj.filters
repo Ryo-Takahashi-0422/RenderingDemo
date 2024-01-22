@@ -271,6 +271,9 @@
     <ClCompile Include="Camera.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
+    <ClCompile Include="Sun.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -425,6 +428,9 @@
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="Sun.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

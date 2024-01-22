@@ -568,7 +568,10 @@ bool D3DX12Wrapper::ResourceInit() {
 		reManager->ClearReference();
 	}
 
-	// SkyLUT
+	// Sky設定
+	sun = new Sun;
+	sun->Init();
+
 	skyLUT = new SkyLUT(_dev.Get());
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
@@ -576,13 +579,16 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
 	skyLUTBuffer.eyePos.z = camera->GetWorld().r[3].m128_f32[2];
 	skyLUTBuffer.stepCnt = 32;
-	skyLUTBuffer.sunDirection.x = 0.0f;
-	skyLUTBuffer.sunDirection.y = 1.0f;
-	skyLUTBuffer.sunDirection.z = 0.0f;
+	skyLUTBuffer.sunDirection.x = sun->GetDirection().x;
+	skyLUTBuffer.sunDirection.y = sun->GetDirection().y;
+	skyLUTBuffer.sunDirection.z = sun->GetDirection().z;
 	skyLUTBuffer.sunIntensity.x = 1.0f;
 	skyLUTBuffer.sunIntensity.y = 1.0f;
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
+
+	shadowFactor = new ShadowFactor(_dev.Get());
+	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 
 	camera->CalculateFrustum();
 
@@ -811,7 +817,7 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 		_cmdList3->Close();
-		camera->CalculateFrustum();
+
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
 		_cmdQueue->ExecuteCommandLists(3, cmdLists);

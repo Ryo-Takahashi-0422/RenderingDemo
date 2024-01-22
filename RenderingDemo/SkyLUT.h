@@ -60,6 +60,9 @@ private:
     D3D12_ROOT_PARAMETER rootParam[1] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
+    ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
+    ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
+    ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     // シェーダー情報
     ComPtr<ID3DBlob> shader;
@@ -81,12 +84,6 @@ private:
 
     UINT64 width = 64;
     UINT64 height = 64;
-
-    ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
-    ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
-    ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
-
-
 
 public:
     SkyLUT();

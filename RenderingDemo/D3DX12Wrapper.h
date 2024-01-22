@@ -237,11 +237,13 @@ private:
 	D3D12_RESOURCE_BARRIER barrierDesc4BackBuffer = {};
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 
-	// Sky
+	// Sky関連
 	SkyLUT* skyLUT = nullptr;
+	ShadowFactor* shadowFactor = nullptr;
 	ParticipatingMedia participatingMedia;
 	ParticipatingMedia calculatedParticipatingMedia;
 	SkyLUTBuffer skyLUTBuffer;
+	Sun* sun;	
 
 	//★★★コライダーdebug用
 	int debugNum = 2;

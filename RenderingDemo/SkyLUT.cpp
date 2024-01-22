@@ -256,7 +256,7 @@ HRESULT SkyLUT::CreateRenderingResource()
 	if (result != S_OK) return result;
 }
 
-// RenderingTarget—pRTV‚Ìì¬
+// RenderingTarget—pRTV‚Ìì¬ šššShaderResourceView‚Ì‚İ‚Å—Ç‚¢‚©‚à
 void SkyLUT::CreateRenderingRTV()
 {
     // create RTV
