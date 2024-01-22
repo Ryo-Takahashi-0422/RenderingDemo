@@ -53,7 +53,7 @@ void rayMarching(out float3 scattering, out float3 sumSigmaT, float currentT, fl
     sumSigmaT += deltaSigmaT;
 }
 
-float4 ps_Main(vsOutput input) : SV_TARGET
+float4 ps_main(vsOutput input) : SV_TARGET
 {
     float phi = input.texCoord.x * PI; // 0~2PI
     float theta = (input.texCoord.y - 1.0f) * 0.5f * PI; // -PI/2 ~ PI/2 
@@ -69,7 +69,7 @@ float4 ps_Main(vsOutput input) : SV_TARGET
         DiscriminateIntersectionWithCircle(cameraPos2D, twoDimDir, atmosphereRadius, endT);
     }    
     
-    // 球面座標でレイーマチングする。
+    // 球面座標でレイマーチング
     float3 cameraPos3D = (0, eyePos.y + groundRadius, 0);
     float3 dir = (cosTheta * cosPhi, sinTheta, cosTheta * sinPhi); // スクリーン座標を球面座標に変換する。レイ方向は解像度 / 360°確保出来る。
     float3 scattering = (0, 0, 0);

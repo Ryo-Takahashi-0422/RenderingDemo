@@ -3,7 +3,7 @@
 
 
 SkyLUT::SkyLUT(ID3D12Device* _dev) :
-    _dev(_dev), shader(nullptr), pipelineState(nullptr), srvHeap(nullptr), mediaHeap(nullptr), renderingResource(nullptr), participatingMediaResource(nullptr),
+    _dev(_dev), shader(nullptr), pipelineState(nullptr), srvHeap(nullptr), skyLUTHeap(nullptr), renderingResource(nullptr), participatingMediaResource(nullptr),
     data(nullptr), _cmdAllocator(nullptr), _cmdList(nullptr)
 {
     Init();
@@ -352,10 +352,10 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
-    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mediaHeap.GetAddressOf()));
+    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(skyLUTHeap.GetAddressOf()));
     if (result != S_OK) return result;
 
-    auto handle = mediaHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = skyLUTHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // ParticipatingMedia—pview

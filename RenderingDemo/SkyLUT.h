@@ -68,7 +68,7 @@ private:
     // ヒープ
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
     ComPtr<ID3D12DescriptorHeap> srvHeap;
-    ComPtr<ID3D12DescriptorHeap> mediaHeap;
+    ComPtr<ID3D12DescriptorHeap> skyLUTHeap;
     // リソース
     ComPtr<ID3D12Resource> renderingResource;
     
