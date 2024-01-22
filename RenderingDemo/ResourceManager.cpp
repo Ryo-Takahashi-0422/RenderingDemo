@@ -11,10 +11,22 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 	invIdentify.r[0].m128_f32[0] *= -1;
 }
 
+ResourceManager::~ResourceManager()
+{
+	delete _fbxInfoManager;
+	delete _prepareRenderingWindow;
+	delete textureLoader;
+	delete m_Camera;
 
-HRESULT ResourceManager::Init()
+	delete mappedVertPos;
+	delete mappedIdx;
+	delete mappedMatrix;
+}
+
+HRESULT ResourceManager::Init(Camera* _camera)
 {
 	HRESULT result = E_FAIL;
+	m_Camera = _camera;
 
 	// OBBの頂点群およびローカル回転成分・平行移動成分を取得する
 	vertexListOfOBB = _fbxInfoManager->GetIndiceAndVertexInfoOfOBB();
@@ -352,38 +364,12 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
 	);
 	if (result != S_OK) return result;
-		
-	auto worldMat = XMMatrixIdentity();
-	auto angle = XMMatrixRotationY(M_PI);
-	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
-
-	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 1.5, 2.3);
-	XMFLOAT3 target(0, 1.5, 0);
-	//XMFLOAT3 eye(0, 100, /*0.01*/10);
-	//XMFLOAT3 target(0, 10, 0);
-	XMFLOAT3 up(0, 1, 0);
-	auto viewMat = XMMatrixLookAtLH
-	(
-		XMLoadFloat3(&eye),
-		XMLoadFloat3(&target),
-		XMLoadFloat3(&up)
-	);
-	
-	//プロジェクション(射影)行列の生成・乗算
-	auto projMat = XMMatrixPerspectiveFovLH
-	(
-		XM_PIDIV2, // 画角90°
-		static_cast<float>(_prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(_prepareRenderingWindow->GetWindowWidth()),
-		1.0, // ニア―クリップ
-		3000.0 // ファークリップ
-	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
 	
-	mappedMatrix->world = worldMat;
-	mappedMatrix->view = viewMat;
-	mappedMatrix->proj = projMat;
+	mappedMatrix->world = m_Camera->GetWorld();
+	mappedMatrix->view = m_Camera->GetView();
+	mappedMatrix->proj = m_Camera->GetProj();
     
 	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
 	XMVECTOR det;

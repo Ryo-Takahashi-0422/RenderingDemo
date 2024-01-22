@@ -344,6 +344,7 @@
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="AOGraphicsPipelineSetting.cpp" />
     <ClCompile Include="AOShaderCompile.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
@@ -400,6 +401,7 @@
     <ClInclude Include="..\imgui\imstb_truetype.h" />
     <ClInclude Include="AOGraphicsPipelineSetting.h" />
     <ClInclude Include="AOShaderCompile.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />

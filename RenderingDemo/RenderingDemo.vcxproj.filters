@@ -268,6 +268,9 @@
     <ClCompile Include="ParticipatingMedia.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -419,6 +422,9 @@
     </ClInclude>
     <ClInclude Include="ParticipatingMedia.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

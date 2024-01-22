@@ -359,6 +359,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager.resize(modelPath.size());
 	FBXInfoManager fbxInfoManager;
 
+	Camera::Camera(/*prepareRenderingWindow*/);
+	camera = Camera::GetInstance();
+	camera->Init(prepareRenderingWindow);
+
 	for (int i = 0; i < modelPath.size(); ++i)
 	{
 		// FBXInfoManager Instance
@@ -367,7 +371,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 		// FBX resource creation
 		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
-		resourceManager[i]->Init();
+		resourceManager[i]->Init(camera);
 	}
 
 	// TextureTransporterクラスのインスタンス化
@@ -636,7 +640,7 @@ void D3DX12Wrapper::Run() {
 	Matrix3d leftSpinEigen;
 	Vector3d axis;
 	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(M_PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(/*M_PI*/PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
 	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -647,7 +651,7 @@ void D3DX12Wrapper::Run() {
 	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-M_PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(-/*M_PI*/PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
 	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);

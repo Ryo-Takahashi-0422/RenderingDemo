@@ -155,6 +155,7 @@ private:
 	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
 	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
+	Camera* camera = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	//ComPtr<ID3D12Resource> backBufferResource = nullptr;

@@ -24,6 +24,7 @@ private:
 	FBXInfoManager* _fbxInfoManager = nullptr;
 	PrepareRenderingWindow* _prepareRenderingWindow = nullptr;
 	TextureLoader* textureLoader = nullptr;
+	Camera* m_Camera = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap = nullptr; // 深度ステンシルビュー用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
@@ -89,11 +90,12 @@ private:
 	//std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfMesh; // メッシュ毎のローカル座標・回転
 	std::vector<XMMATRIX> localMatrix; // メッシュ毎のローカル座標・回転
 	std::map<std::string, XMMATRIX> localMatrix4OBB; // OBB毎のローカル座標・回転
-	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;
+	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;	
 
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
-	HRESULT Init();
+	~ResourceManager();
+	HRESULT Init(Camera* _camera);
 	ComPtr<ID3D12DescriptorHeap> GetRTVHeap() { return rtvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap() { return dsvHeap; };

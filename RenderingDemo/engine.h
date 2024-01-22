@@ -1,5 +1,6 @@
 #pragma once
 #define NOMINMAX
+#define PI 3.14159265
 
 #include <DirectXTex.h>
 #include <Windows.h>
@@ -87,6 +88,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <SettingImgui.h>
 
 // Rebuild
+#include <Camera.h>
 #include <FBXInfoManager.h>
 #include <ResourceManager.h>
 #include <TextureTransporter.h>
