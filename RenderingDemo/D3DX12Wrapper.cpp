@@ -359,7 +359,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager.resize(modelPath.size());
 	FBXInfoManager fbxInfoManager;
 
-	Camera::Camera(/*prepareRenderingWindow*/);
 	camera = Camera::GetInstance();
 	camera->Init(prepareRenderingWindow);
 
@@ -584,6 +583,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.y = 1.0f;
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
+
+	camera->CalculateFrustum();
 
 	return true;
 }
@@ -810,7 +811,7 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 		_cmdList3->Close();
-
+		camera->CalculateFrustum();
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
 		_cmdQueue->ExecuteCommandLists(3, cmdLists);
@@ -877,7 +878,7 @@ void D3DX12Wrapper::Run() {
 	delete gPLSetting;
 
 	
-	delete prepareRenderingWindow;
+	//delete prepareRenderingWindow;
 	delete aoShaderCompile;
 	delete aoGPLSetting;
 

@@ -57,16 +57,20 @@ void Camera::CalculateFrustum()
 	auto topLeftNearTransformed = XMVector4Transform(topLeftNear, invVP);
 	auto topLeftFarTransformed = XMVector4Transform(topLeftFar, invVP);
 	frustum.topLeft = XMVectorSubtract(topLeftFarTransformed, topLeftNearTransformed);
+	frustum.topLeft = XMVector4Normalize(frustum.topLeft);
 
 	auto topRightNearTransformed = XMVector4Transform(topRightNear, invVP);
 	auto topRightFarTransformed = XMVector4Transform(topRightFar, invVP);
 	frustum.topRight = XMVectorSubtract(topRightFarTransformed, topRightNearTransformed);
+	frustum.topRight = XMVector4Normalize(frustum.topRight);
 
 	auto bottomLeftNearTransformed = XMVector4Transform(BottomLeftNear, invVP);
 	auto bottomLeftFarTransformed = XMVector4Transform(BottomLeftFar, invVP);
 	frustum.bottomLeft = XMVectorSubtract(bottomLeftFarTransformed, bottomLeftNearTransformed);
+	frustum.bottomLeft = XMVector4Normalize(frustum.bottomLeft);
 
 	auto bottomRightNearTransformed = XMVector4Transform(BottomRightNear, invVP);
 	auto bottomRightFarTransformed = XMVector4Transform(BottomRightFar, invVP);
 	frustum.bottomRight = XMVectorSubtract(bottomRightFarTransformed, bottomRightNearTransformed);
+	frustum.bottomRight = XMVector4Normalize(frustum.bottomRight);
 }

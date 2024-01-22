@@ -11,6 +11,7 @@ int main() {
 //#endif
 
 	D3DX12Wrapper::D3DX12Wrapper();
+	Camera::Camera();
 	auto wrapper = D3DX12Wrapper::GetInstance();
 
 	//auto result =wrapper.D3DX12DeviceInit();

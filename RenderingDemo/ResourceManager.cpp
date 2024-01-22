@@ -13,9 +13,6 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 
 ResourceManager::~ResourceManager()
 {
-	delete _fbxInfoManager;
-	delete _prepareRenderingWindow;
-	delete textureLoader;
 	delete m_Camera;
 
 	delete mappedVertPos;
@@ -271,6 +268,13 @@ HRESULT ResourceManager::Init(Camera* _camera)
 	{
 		isAnimationModel = true;
 	}
+
+	_fbxInfoManager = nullptr;
+	delete _fbxInfoManager;
+	_prepareRenderingWindow = nullptr;
+	delete _prepareRenderingWindow;
+	textureLoader = nullptr;
+	delete textureLoader;
 }
 
 HRESULT ResourceManager::CreateRTV()
