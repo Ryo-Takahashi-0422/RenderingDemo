@@ -587,8 +587,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
-	shadowFactor = new ShadowFactor(_dev.Get());
+	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
+	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 	camera->CalculateFrustum();
 

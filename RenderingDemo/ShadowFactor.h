@@ -19,7 +19,7 @@ private:
     // 関与媒質リソースの生成
     HRESULT CreateParticipatingMediaResource();
     // 出力用テクスチャリソースの生成
-    HRESULT CreateOutputTextureResource();
+    HRESULT CreateTextureResource();
     // ビューの生成
     void CreateView();
     // リソースのマップ
@@ -27,12 +27,14 @@ private:
     // 初期化
     void Init();
     // コマンドの生成
-    HRESULT CreateCommand();
+    //HRESULT CreateCommand();
     // 関与媒質マッピング先
     ParticipatingMedia m_Media;
 
     // デバイス
     ID3D12Device* _dev = nullptr;
+    // フェンス
+    ComPtr<ID3D12Fence> fence = nullptr;
     // コンピュート用ルートシグネチャ
     ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     // シェーダー情報
@@ -44,21 +46,22 @@ private:
     // リソース
     ComPtr<ID3D12Resource> participatingMediaResource = nullptr;
     ComPtr<ID3D12Resource> outputTextureResource = nullptr;
+    ComPtr<ID3D12Resource> copyTextureResource = nullptr;
     // 送受信用データ
     void* data = nullptr;
     // コマンドアロケータ
-    ID3D12CommandAllocator* _cmdAllocator = nullptr;
+    ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
     // コマンドリスト
-    ID3D12GraphicsCommandList* _cmdList = nullptr;
+    ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 
     ComPtr<ID3D11Texture2D> texture = nullptr;
 
 public:
-    ShadowFactor(ID3D12Device* dev);
+    ShadowFactor(ID3D12Device* dev, ID3D12Fence* _fence);
     ~ShadowFactor();
     void SetParticipatingMedia(ParticipatingMedia media);
 
     // 実行
-    void Execution(ID3D12CommandQueue* cmdQueue);
+    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
 
 };

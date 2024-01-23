@@ -4,10 +4,10 @@
 // 確認用配列
 std::vector<float>test(256, 0);
 
-ShadowFactor::ShadowFactor(ID3D12Device* _dev) : _dev(_dev)
+ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev), fence(_fence)
 {
     Init();
-    CreateCommand();
+    //CreateCommand();
 }
 ShadowFactor::~ShadowFactor()
 {
@@ -23,7 +23,7 @@ void ShadowFactor::Init()
     CreatePipeline();
     CreateHeap();
     CreateParticipatingMediaResource();
-    CreateOutputTextureResource();
+    CreateTextureResource();
     CreateView();
     Mapping();
 }
@@ -140,7 +140,7 @@ HRESULT ShadowFactor::CreateHeap()
     D3D12_DESCRIPTOR_HEAP_DESC desc{};
     desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     desc.NodeMask = 0;
-    desc.NumDescriptors = 3;
+    desc.NumDescriptors = 3; // CBV, UAV, SRV
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     auto result = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap));
@@ -167,11 +167,11 @@ HRESULT ShadowFactor::CreateParticipatingMediaResource()
 }
 
 // 出力用テクスチャリソースの生成
-HRESULT ShadowFactor::CreateOutputTextureResource()
+HRESULT ShadowFactor::CreateTextureResource()
 {
     CD3DX12_HEAP_PROPERTIES prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-    //サイズは定数バッファと同じように指定
+    //Compute Shader出力用
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -183,9 +183,29 @@ HRESULT ShadowFactor::CreateOutputTextureResource()
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     
-    auto result = _dev->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &textureDesc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr,
-        IID_PPV_ARGS(&outputTextureResource));
+    auto result = _dev->CreateCommittedResource
+    (
+        &prop,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(&outputTextureResource)
+    );
+    if (result != S_OK) return result;
+
+    // Compute Shaderが出力したテクスチャをコピーして、SRVとして扱うためのリソース
+    //textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    result = _dev->CreateCommittedResource
+    (
+        &prop,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(&copyTextureResource)
+    );
+
     return result;
 }
 
@@ -220,7 +240,19 @@ void ShadowFactor::CreateView()
         handle
     );
 
-    // ★UAVをテクスチャとしてSampleするためにSRVも作る必要あり
+    handle.ptr += inc;
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        copyTextureResource.Get(),
+        &srvDesc,
+        handle
+    );
 }
 
 // リソースのマップ
@@ -231,22 +263,9 @@ HRESULT ShadowFactor::Mapping()
     return result;
 }
 
-// コマンドの生成
-HRESULT ShadowFactor::CreateCommand()
-{
-    auto result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
-        IID_PPV_ARGS(&_cmdAllocator));
-    result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, _cmdAllocator, nullptr,
-        IID_PPV_ARGS(&_cmdList));
-    return result;
-}
-
 // 実行
-void ShadowFactor::Execution(ID3D12CommandQueue* queue)
+void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
 {
-    //コマンドのリセット
-    _cmdAllocator->Reset();
-    _cmdList->Reset(_cmdAllocator, nullptr);
     //それぞれのセット
     _cmdList->SetComputeRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipeLine);
@@ -255,21 +274,59 @@ void ShadowFactor::Execution(ID3D12CommandQueue* queue)
     auto handle = heap->GetGPUDescriptorHandleForHeapStart();
     _cmdList->SetComputeRootDescriptorTable(0, handle);
 
-    //コンピュートシェーダーの実行(今回は256個のスレッドグループを指定)
-    _cmdList->Dispatch(test.size(), 1, 1);
+    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetComputeRootDescriptorTable(1, handle);
+
+    _cmdList->Dispatch(16, 16, 1);
+
+    // 出力用
+    auto barrierDescOfOutputTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        outputTextureResource.Get(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COPY_SOURCE
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfOutputTexture);
+
+     // コピー用
+    auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        copyTextureResource.Get(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COPY_DEST
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+    _cmdList->CopyResource(copyTextureResource.Get(), outputTextureResource.Get());
 
     _cmdList->Close();
 
     //コマンドの実行
     ID3D12CommandList* executeList[] = { _cmdList };
-    queue->ExecuteCommandLists(1, executeList);
+    _cmdQueue->ExecuteCommandLists(1, executeList);
 
-    
+    UINT64 _fenceVal = 0;
+    HANDLE event; // fnece用イベント
     //-----ここでID3D12Fenceの待機をさせる-----
-    
+    _cmdQueue->Signal(fence.Get(), ++_fenceVal);
 
+    while (fence->GetCompletedValue() != _fenceVal)
+    {
+        event = CreateEvent(nullptr, false, false, nullptr);
+        fence->SetEventOnCompletion(_fenceVal, event);
+        //イベント発生待ち
+        WaitForSingleObject(event, INFINITE);
+        //イベントハンドルを閉じる
+        CloseHandle(event);
+    }
+
+    //コマンドのリセット
+    _cmdAllocator->Reset();
+    _cmdList->Reset(_cmdAllocator, nullptr);
     //GPUからデータをもらう
-    test.assign((float*)data, (float*)data + test.size());
+    //test.assign((float*)data, (float*)data + test.size());
+
+    
  }
 
 // 外部からの関与媒質設定
