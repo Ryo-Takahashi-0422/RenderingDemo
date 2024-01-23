@@ -212,18 +212,29 @@ void SkyLUT::RenderingSet()
     CreateRenderingSRV();
 }
 
-// RenderingTarget用ヒープの生成
+// RenderingTarget RTV,SRV用ヒープの生成
 HRESULT SkyLUT::CreateRenderingHeap()
 {
-    //今回はテストとしてリソースは1つとして作成
-    D3D12_DESCRIPTOR_HEAP_DESC desc{};
-    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    desc.NodeMask = 0;
-    desc.NumDescriptors = 1;
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    // create RTV
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.NumDescriptors = 1;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    rtvHeapDesc.NodeMask = 0;
 
-    auto hr = _dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srvHeap));
-    return hr;
+    auto result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
+    if (result != S_OK) 
+        return result;
+
+    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
+    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    srvHeapDesc.NodeMask = 0;
+    srvHeapDesc.NumDescriptors = 1;
+    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&srvHeap));
+    
+    return result;
 }
 
 // RenderingTarget用リソースの生成
@@ -259,21 +270,11 @@ HRESULT SkyLUT::CreateRenderingResource()
 // RenderingTarget用RTVの作成 ★★★ShaderResourceViewのみで良いかも
 void SkyLUT::CreateRenderingRTV()
 {
-    // create RTV
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 2; // ★★★
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    rtvHeapDesc.NodeMask = 0;
-
-    auto result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
-    if (result != S_OK) return;
+    auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-    auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;    
 
     _dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
     (
@@ -287,7 +288,6 @@ void SkyLUT::CreateRenderingRTV()
 void SkyLUT::CreateRenderingSRV()
 {
     auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
-    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -348,7 +348,7 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 2; // ParticipatingMedia, SkyLUTBuffer
+    heapDesc.NumDescriptors = 2; // CBV of ParticipatingMedia, SkyLUTBuffer
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
@@ -367,6 +367,8 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
         &pMediaCbvDesc,
         handle
     );
+
+    handle.ptr += inc;
 
     // SkyLUTBuffer用view
     D3D12_CONSTANT_BUFFER_VIEW_DESC SkyLUTCbvDesc = {};
