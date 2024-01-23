@@ -14,6 +14,7 @@ struct ParticipatingMedia
 
 	float groundRadius = 6360.0f;
 	float atomosphereRadius = 6460.0f;
+	//float pad = 0;
 
 	ParticipatingMedia calculateUnit();
 };

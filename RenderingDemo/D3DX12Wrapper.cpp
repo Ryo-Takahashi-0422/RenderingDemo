@@ -568,6 +568,9 @@ bool D3DX12Wrapper::ResourceInit() {
 		reManager->ClearReference();
 	}
 
+	viewPort = prepareRenderingWindow->GetViewPortPointer();
+	rect = prepareRenderingWindow->GetRectPointer();
+
 	// Sky設定
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 
@@ -591,7 +594,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.y = 1.0f;
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
-	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal);
+	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal, viewPort, rect);
 
 	camera->CalculateFrustum();
 
@@ -721,8 +724,8 @@ void D3DX12Wrapper::Run() {
 		matTexSizes.push_back(matTexSize);
 	}
 
-	viewPort = prepareRenderingWindow->GetViewPortPointer();
-	rect = prepareRenderingWindow->GetRectPointer();
+	//viewPort = prepareRenderingWindow->GetViewPortPointer();
+	//rect = prepareRenderingWindow->GetRectPointer();
 
 	HANDLE event; // fnece用イベント
 	// DrawFBXで利用する
@@ -808,7 +811,7 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-				
+		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);
@@ -1974,8 +1977,8 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 	//auto localCmdList = m_batchSubmit[bbIdx];
 
-	_cmdList3->RSSetViewports(1, viewPort); // 実は重要
-	_cmdList3->RSSetScissorRects(1, rect); // 実は重要
+	_cmdList3->RSSetViewports(1, viewPort);
+	_cmdList3->RSSetScissorRects(1, rect);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -2014,20 +2017,29 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
-	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, skyLUT->GetSkyLUTRenderingHeap().GetAddressOf());
 
-	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	gHandle.ptr += buffSize;
+	gHandle = skyLUT->GetSkyLUTRenderingHeap()->GetGPUDescriptorHandleForHeapStart();
 	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+	// 元
+	//_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+	//gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+
+
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

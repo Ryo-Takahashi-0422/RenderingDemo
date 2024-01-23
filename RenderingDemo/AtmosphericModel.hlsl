@@ -1,6 +1,6 @@
 #include "Definition.hlsli"
 
-cbuffer AtmosBuffer : register(b0)
+cbuffer ParticipatingMedia : register(b0)
 {
     float3 rayleighScattering;
     float mieScattering;

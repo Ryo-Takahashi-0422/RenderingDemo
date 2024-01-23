@@ -22,7 +22,7 @@ void SkyLUT::Init()
     SetInputLayout();
     CreateGraphicPipeline();
     InitParticipatingMedia();
-    //RenderingSet();   
+    RenderingSet();   
 }
 
 // ルートシグネチャ設定
@@ -35,7 +35,8 @@ HRESULT SkyLUT::CreateRootSignature()
 
     //ディスクリプタテーブルのスロット設定
     descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメーダ
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // SkyLUTBufferパラメーダ
+    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -47,8 +48,13 @@ HRESULT SkyLUT::CreateRootSignature()
     rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
     rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2];
+    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 2;
+    rootSignatureDesc.NumParameters = 3;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -93,7 +99,7 @@ HRESULT SkyLUT::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUT.hlsl",
+        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTPix.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -190,8 +196,8 @@ HRESULT SkyLUT::CreateGraphicPipeline()
     desc.BlendState.AlphaToCoverageEnable = false;
     desc.BlendState.IndependentBlendEnable = false;
     desc.BlendState.RenderTarget[0] = renderTargetDesc;
-    desc.InputLayout.pInputElementDescs = inputLayout;
-    desc.InputLayout.NumElements = _countof(inputLayout);
+    //desc.InputLayout.pInputElementDescs = inputLayout;
+    desc.InputLayout.NumElements = /*_countof(inputLayout)*/0;
     desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     desc.NumRenderTargets = 1;
     desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model
@@ -234,7 +240,7 @@ HRESULT SkyLUT::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc{};
     cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvsrvHeapDesc.NodeMask = 0;
-    cbvsrvHeapDesc.NumDescriptors = 2;
+    cbvsrvHeapDesc.NumDescriptors = 1;
     cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&cbvsrvHeapDesc, IID_PPV_ARGS(cbvsrvHeap.ReleaseAndGetAddressOf()));
@@ -293,19 +299,19 @@ void SkyLUT::CreateRenderingRTV()
 void SkyLUT::CreateRenderingCBVSRV()
 {
     auto handle = cbvsrvHeap->GetCPUDescriptorHandleForHeapStart();
-    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    //auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    // ParticipatingMedia用view
-    D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
-    pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
-    pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
-    _dev->CreateConstantBufferView
-    (
-        &pMediaCbvDesc,
-        handle
-    );
+    //// ParticipatingMedia用view
+    //D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
+    //pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
+    //pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
+    //_dev->CreateConstantBufferView
+    //(
+    //    &pMediaCbvDesc,
+    //    handle
+    //);
 
-    handle.ptr += inc;
+    //handle.ptr += inc;
 
     // ShadowFactor用
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -372,7 +378,7 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
-    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(skyLUTHeap.GetAddressOf()));
+    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(skyLUTHeap.ReleaseAndGetAddressOf()));
     if (result != S_OK) return result;
 
     auto handle = skyLUTHeap->GetCPUDescriptorHandleForHeapStart();
@@ -405,10 +411,10 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
 void SkyLUT::MappingParticipatingMedia()
 {
     // ParticipatingMedia
-    participatingMediaResource->Map(0, nullptr, (void**)&m_Media);
+    auto result = participatingMediaResource->Map(0, nullptr, (void**)&m_Media);
 
     // SkyLUTBuffer
-    skyLUTBufferResource->Map(0, nullptr, (void**)&m_SkyLUT);
+    result = skyLUTBufferResource->Map(0, nullptr, (void**)&m_SkyLUT);
 }
 
 // 外部からの関与媒質設定
@@ -424,41 +430,70 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
 }
 
 // 実行
-void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal)
+void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
+    auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        renderingResource.Get(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    _cmdList->ResourceBarrier(1, &barrierDesc);
 
-    //それぞれのセット
+    _cmdList->RSSetViewports(1, _viewPort);
+    _cmdList->RSSetScissorRects(1, _rect);
+
+    //auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+    //dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+    _cmdList->OMSetRenderTargets(1, &heapHandle, false, nullptr);
+    float clearColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+    _cmdList->ClearRenderTargetView(heapHandle, clearColor, 0, nullptr);
+    //_cmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+
     _cmdList->SetGraphicsRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipelineState.Get());
     _cmdList->SetDescriptorHeaps(1, skyLUTHeap.GetAddressOf());
 
     auto handle = skyLUTHeap->GetGPUDescriptorHandleForHeapStart();
     _cmdList->SetGraphicsRootDescriptorTable(0, handle);
+    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(1, handle);
+
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(4, 1, 0, 0);
 
-    _cmdList->Close();
+    barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        renderingResource.Get(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
+    _cmdList->ResourceBarrier(1, &barrierDesc);
 
-    //コマンドの実行
-    ID3D12CommandList* executeList[] = { _cmdList };
-    _cmdQueue->ExecuteCommandLists(1, executeList);
+    //_cmdList->Close();
 
-    UINT64 fenceVal = _fenceVal;
-    HANDLE event; // fnece用イベント
-    //-----ここでID3D12Fenceの待機をさせる-----
-    _cmdQueue->Signal(fence.Get(), ++fenceVal);
+    ////コマンドの実行
+    //ID3D12CommandList* executeList[] = { _cmdList };
+    //_cmdQueue->ExecuteCommandLists(1, executeList);
 
-    while (fence->GetCompletedValue() != fenceVal)
-    {
-        event = CreateEvent(nullptr, false, false, nullptr);
-        fence->SetEventOnCompletion(fenceVal, event);
-        //イベント発生待ち
-        WaitForSingleObject(event, INFINITE);
-        //イベントハンドルを閉じる
-        CloseHandle(event);
-    }
+    //UINT64 fenceVal = _fenceVal;
+    //HANDLE event; // fnece用イベント
+    ////-----ここでID3D12Fenceの待機をさせる-----
+    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
+
+    //while (fence->GetCompletedValue() != fenceVal)
+    //{
+    //    event = CreateEvent(nullptr, false, false, nullptr);
+    //    fence->SetEventOnCompletion(fenceVal, event);
+    //    //イベント発生待ち
+    //    WaitForSingleObject(event, INFINITE);
+    //    //イベントハンドルを閉じる
+    //    CloseHandle(event);
+    //}
 
     //コマンドのリセット
-    _cmdAllocator->Reset();
-    _cmdList->Reset(_cmdAllocator, nullptr);
+    //_cmdAllocator->Reset();
+    //_cmdList->Reset(_cmdAllocator, nullptr);
 }

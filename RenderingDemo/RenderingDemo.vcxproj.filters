@@ -72,6 +72,9 @@
     <None Include="Definition.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
+    <None Include="SkyLUTHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -120,6 +123,9 @@
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="ShadowFactor.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyLUTPix.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>

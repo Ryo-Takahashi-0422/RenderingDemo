@@ -6,6 +6,7 @@ struct SkyLUTBuffer
     XMFLOAT3 sunDirection; // 
     float stepCnt;
     XMFLOAT3 sunIntensity;
+    //float pad = 0;
 };
 
 class SkyLUT
@@ -56,8 +57,8 @@ private:
     ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
-    D3D12_ROOT_PARAMETER rootParam[2] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
+    D3D12_ROOT_PARAMETER rootParam[3] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -91,7 +92,7 @@ public:
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
-    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal);
+    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
-    ComPtr<ID3D12DescriptorHeap> GetSkyLUTHeap() { return skyLUTHeap; };
+    ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return cbvsrvHeap; };
 };
