@@ -48,8 +48,8 @@ private:
     // 関与媒質用定数のマッピング
     void MappingParticipatingMedia();
     // マッピング先
-    ParticipatingMedia m_Media;
-    SkyLUTBuffer m_SkyLUT;
+    ParticipatingMedia* m_Media = nullptr;
+    SkyLUTBuffer* m_SkyLUT = nullptr;
 
     // デバイス
     ComPtr<ID3D12Device> _dev;

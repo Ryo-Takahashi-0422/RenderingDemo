@@ -11,8 +11,8 @@ ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev)
 }
 ShadowFactor::~ShadowFactor()
 {
-    D3D12_RANGE range{ 0, 1 };
-    participatingMediaResource->Unmap(0, &range);
+    //D3D12_RANGE range{ 0, 1 };
+    //participatingMediaResource->Unmap(0, &range);
 }
 
 // ‰Šú‰»

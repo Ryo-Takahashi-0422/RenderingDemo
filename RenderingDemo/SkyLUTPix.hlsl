@@ -50,7 +50,7 @@ float4 ps_main(vsOutput input) : SV_TARGET
     {
         DiscriminateIntersectionWithCircle(cameraPos2D, twoDimDir, atmosphereRadius, endT);
     }
-    return float4(0.0f,1.0f,0.0f,1.0f);
+    //return float4(0.0f,1.0f,0.0f,1.0f);
     // 球面座標でレイマーチング
     float3 cameraPos3D = (0, eyePos.y + groundRadius, 0);
     float3 dir = (cosTheta * cosPhi, sinTheta, cosTheta * sinPhi); // スクリーン座標を球面座標に変換する。レイ方向は解像度 / 360°確保出来る。

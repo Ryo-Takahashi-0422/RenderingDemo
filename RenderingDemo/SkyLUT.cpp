@@ -6,6 +6,8 @@ SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence) :
     _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr),
     data(nullptr), /*_cmdAllocator(nullptr), _cmdList(nullptr), */fence(_fence)
 {
+    m_Media = new ParticipatingMedia;
+    m_SkyLUT = new SkyLUTBuffer;
     Init();
 }
 
@@ -420,13 +422,14 @@ void SkyLUT::MappingParticipatingMedia()
 // 外部からの関与媒質設定
 void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
 {
-    m_Media = media;
+    m_Media->altitudeOfMie = media.altitudeOfMie;
 }
 
 // 外部からのSkyLUTBuffer設定
 void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
 {
-    m_SkyLUT = buffer;
+    m_SkyLUT->eyePos = buffer.eyePos;
+    m_SkyLUT->stepCnt = buffer.stepCnt; // gpu側のsunDirection.zに値が入る...
 }
 
 // 実行
