@@ -34,7 +34,7 @@ private:
     // RenderingTarget用RTVの生成
     void CreateRenderingRTV();
     // RenderingTarget用SRVの生成
-    void CreateRenderingSRV();
+    void CreateRenderingCBVSRV();
 
     // 関与媒質の設定
     void InitParticipatingMedia();
@@ -49,15 +49,15 @@ private:
     // マッピング先
     ParticipatingMedia m_Media;
     SkyLUTBuffer m_SkyLUT;
-    // コマンドの生成
-    HRESULT CreateCommand();
 
     // デバイス
     ComPtr<ID3D12Device> _dev;
+    // フェンス
+    ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
-    D3D12_ROOT_PARAMETER rootParam[1] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
+    D3D12_ROOT_PARAMETER rootParam[2] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -65,34 +65,33 @@ private:
     ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D12RootSignature> rootSignature = nullptr;
     // シェーダー情報
-    ComPtr<ID3DBlob> shader;
+    //ComPtr<ID3DBlob> shader;
     // コンピュート用パイプライン
     ComPtr<ID3D12PipelineState> pipelineState;
     // ヒープ
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> srvHeap;
-    ComPtr<ID3D12DescriptorHeap> skyLUTHeap;
+    ComPtr<ID3D12DescriptorHeap> cbvsrvHeap = nullptr;
+    ComPtr<ID3D12DescriptorHeap> skyLUTHeap = nullptr;
     // リソース
     ComPtr<ID3D12Resource> renderingResource;
     
     // 送受信用データ
     void* data;
-    // コマンドアロケータ
-    ComPtr<ID3D12CommandAllocator> _cmdAllocator;
-    // コマンドリスト
-    ComPtr<ID3D12GraphicsCommandList> _cmdList;
+    //// コマンドアロケータ
+    //ComPtr<ID3D12CommandAllocator> _cmdAllocator;
+    //// コマンドリスト
+    //ComPtr<ID3D12GraphicsCommandList> _cmdList;
 
     UINT64 width = 64;
     UINT64 height = 64;
 
 public:
     SkyLUT();
-    SkyLUT(ID3D12Device* dev);
+    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
+    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal);
 
-    // 実行
-    void Execution(ID3D12CommandQueue* cmdQueue);
-
+    ComPtr<ID3D12DescriptorHeap> GetSkyLUTHeap() { return skyLUTHeap; };
 };

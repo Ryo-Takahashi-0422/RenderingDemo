@@ -2,17 +2,16 @@
 #include <SkyLUT.h>
 
 
-SkyLUT::SkyLUT(ID3D12Device* _dev) :
-    _dev(_dev), shader(nullptr), pipelineState(nullptr), srvHeap(nullptr), skyLUTHeap(nullptr), renderingResource(nullptr), participatingMediaResource(nullptr),
-    data(nullptr), _cmdAllocator(nullptr), _cmdList(nullptr)
+SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence) :
+    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr),
+    data(nullptr), /*_cmdAllocator(nullptr), _cmdList(nullptr), */fence(_fence)
 {
     Init();
-    CreateCommand();
 }
 
 SkyLUT::~SkyLUT()
 {
-    D3D12_RANGE range{ 0, 1 };
+    //D3D12_RANGE range{ 0, 1 };
 }
 
 // 初期化
@@ -22,8 +21,8 @@ void SkyLUT::Init()
     ShaderCompile();
     SetInputLayout();
     CreateGraphicPipeline();
-    RenderingSet();
     InitParticipatingMedia();
+    //RenderingSet();   
 }
 
 // ルートシグネチャ設定
@@ -35,15 +34,21 @@ HRESULT SkyLUT::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // martix
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメーダ
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[0].DescriptorTable.NumDescriptorRanges = 1; // WVP用
-    rootParam[0].DescriptorTable.pDescriptorRanges = descTableRange;
+    rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 1;
+    rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -193,10 +198,10 @@ HRESULT SkyLUT::CreateGraphicPipeline()
     desc.SampleDesc.Count = 1; //1サンプル/ピクセル
     desc.SampleDesc.Quality = 0;
     desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE/*D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT*/;
-    desc.DepthStencilState.DepthEnable = true;
-    desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
-    desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; // ソースデータがコピー先データより小さい場合書き込む
-    desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    desc.DepthStencilState.DepthEnable = false;
+    //desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
+    //desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; // ソースデータがコピー先データより小さい場合書き込む
+    //desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
     auto result = _dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
 
@@ -209,7 +214,7 @@ void SkyLUT::RenderingSet()
     CreateRenderingHeap();
     CreateRenderingResource();
     CreateRenderingRTV();
-    CreateRenderingSRV();
+    CreateRenderingCBVSRV();
 }
 
 // RenderingTarget RTV,SRV用ヒープの生成
@@ -226,13 +231,13 @@ HRESULT SkyLUT::CreateRenderingHeap()
     if (result != S_OK) 
         return result;
 
-    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 1;
-    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc{};
+    cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvsrvHeapDesc.NodeMask = 0;
+    cbvsrvHeapDesc.NumDescriptors = 2;
+    cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&srvHeap));
+    result = _dev->CreateDescriptorHeap(&cbvsrvHeapDesc, IID_PPV_ARGS(cbvsrvHeap.ReleaseAndGetAddressOf()));
     
     return result;
 }
@@ -267,7 +272,7 @@ HRESULT SkyLUT::CreateRenderingResource()
 	if (result != S_OK) return result;
 }
 
-// RenderingTarget用RTVの作成 ★★★ShaderResourceViewのみで良いかも
+// RenderingTarget用RTVの作成 ★★★表示しないならShaderResourceViewのみで良いかも
 void SkyLUT::CreateRenderingRTV()
 {
     auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -285,10 +290,24 @@ void SkyLUT::CreateRenderingRTV()
 }
 
 // RenderingTarget用SRVの生成
-void SkyLUT::CreateRenderingSRV()
+void SkyLUT::CreateRenderingCBVSRV()
 {
-    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = cbvsrvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+    // ParticipatingMedia用view
+    D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
+    pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
+    pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
+    (
+        &pMediaCbvDesc,
+        handle
+    );
+
+    handle.ptr += inc;
+
+    // ShadowFactor用
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -340,7 +359,8 @@ HRESULT SkyLUT::CreateParticipatingResource()
         nullptr,
         IID_PPV_ARGS(skyLUTBufferResource.ReleaseAndGetAddressOf())
     );
-    if (result != S_OK) return result;
+    
+    return result;
 }
 
 // 関与媒質用ヒープ・ビューの生成
@@ -403,40 +423,42 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
     m_SkyLUT = buffer;
 }
 
-// コマンドの生成
-HRESULT SkyLUT::CreateCommand()
-{
-    auto hr = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE,
-        IID_PPV_ARGS(&_cmdAllocator));
-    hr = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, _cmdAllocator.Get(), nullptr,
-        IID_PPV_ARGS(&_cmdList));
-    return hr;
-}
-
 // 実行
-void SkyLUT::Execution(ID3D12CommandQueue* queue)
+void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal)
 {
-    //コマンドのリセット
-    _cmdAllocator->Reset();
-    _cmdList->Reset(_cmdAllocator.Get(), nullptr);
+
     //それぞれのセット
-    _cmdList->SetComputeRootSignature(rootSignature.Get());
+    _cmdList->SetGraphicsRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipelineState.Get());
-    _cmdList->SetDescriptorHeaps(1, &srvHeap);
+    _cmdList->SetDescriptorHeaps(1, skyLUTHeap.GetAddressOf());
 
-    auto handle = srvHeap->GetGPUDescriptorHandleForHeapStart();
-    _cmdList->SetComputeRootDescriptorTable(0, handle);
-
-    //コンピュートシェーダーの実行(今回は256個のスレッドグループを指定)
-    //_cmdList->Dispatch(test.size(), 1, 1);
+    auto handle = skyLUTHeap->GetGPUDescriptorHandleForHeapStart();
+    _cmdList->SetGraphicsRootDescriptorTable(0, handle);
+    _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    _cmdList->DrawInstanced(4, 1, 0, 0);
 
     _cmdList->Close();
 
     //コマンドの実行
-    ID3D12CommandList* executeList[] = { _cmdList.Get() };
-    queue->ExecuteCommandLists(1, executeList);
+    ID3D12CommandList* executeList[] = { _cmdList };
+    _cmdQueue->ExecuteCommandLists(1, executeList);
 
-
+    UINT64 fenceVal = _fenceVal;
+    HANDLE event; // fnece用イベント
     //-----ここでID3D12Fenceの待機をさせる-----
+    _cmdQueue->Signal(fence.Get(), ++fenceVal);
 
+    while (fence->GetCompletedValue() != fenceVal)
+    {
+        event = CreateEvent(nullptr, false, false, nullptr);
+        fence->SetEventOnCompletion(fenceVal, event);
+        //イベント発生待ち
+        WaitForSingleObject(event, INFINITE);
+        //イベントハンドルを閉じる
+        CloseHandle(event);
+    }
+
+    //コマンドのリセット
+    _cmdAllocator->Reset();
+    _cmdList->Reset(_cmdAllocator, nullptr);
 }

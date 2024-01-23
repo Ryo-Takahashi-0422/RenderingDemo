@@ -264,7 +264,7 @@ HRESULT ShadowFactor::Mapping()
 }
 
 // 実行
-void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
+UINT64 ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
 {
     //それぞれのセット
     _cmdList->SetComputeRootSignature(rootSignature.Get());
@@ -279,7 +279,7 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
 
     _cmdList->Dispatch(16, 16, 1);
 
-    // 出力用
+    // 出力用リソース状態をコピー元状態に設定
     auto barrierDescOfOutputTexture = CD3DX12_RESOURCE_BARRIER::Transition
     (
         outputTextureResource.Get(),
@@ -288,7 +288,7 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfOutputTexture);
 
-     // コピー用
+     // コピー用リソース状態をコピー先状態に設定
     auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
     (
         copyTextureResource.Get(),
@@ -305,28 +305,26 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     ID3D12CommandList* executeList[] = { _cmdList };
     _cmdQueue->ExecuteCommandLists(1, executeList);
 
-    UINT64 _fenceVal = 0;
+    UINT64 fenceVal = 0;
     HANDLE event; // fnece用イベント
     //-----ここでID3D12Fenceの待機をさせる-----
-    _cmdQueue->Signal(fence.Get(), ++_fenceVal);
+    _cmdQueue->Signal(fence.Get(), ++fenceVal);
 
-    while (fence->GetCompletedValue() != _fenceVal)
+    while (fence->GetCompletedValue() != fenceVal)
     {
         event = CreateEvent(nullptr, false, false, nullptr);
-        fence->SetEventOnCompletion(_fenceVal, event);
+        fence->SetEventOnCompletion(fenceVal, event);
         //イベント発生待ち
         WaitForSingleObject(event, INFINITE);
         //イベントハンドルを閉じる
         CloseHandle(event);
     }
 
-    //コマンドのリセット
     _cmdAllocator->Reset();
     _cmdList->Reset(_cmdAllocator, nullptr);
     //GPUからデータをもらう
-    //test.assign((float*)data, (float*)data + test.size());
-
-    
+    //test.assign((float*)data, (float*)data + test.size());    
+    return fenceVal;
  }
 
 // 外部からの関与媒質設定

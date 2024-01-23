@@ -62,6 +62,6 @@ public:
     void SetParticipatingMedia(ParticipatingMedia media);
 
     // é¿çs
-    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
+    UINT64 Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
 
 };

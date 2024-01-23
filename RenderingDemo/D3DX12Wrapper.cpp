@@ -569,11 +569,16 @@ bool D3DX12Wrapper::ResourceInit() {
 	}
 
 	// Sky設定
+	calculatedParticipatingMedia = participatingMedia.calculateUnit();
+
 	sun = new Sun;
 	sun->Init();
 
-	skyLUT = new SkyLUT(_dev.Get());
-	calculatedParticipatingMedia = participatingMedia.calculateUnit();
+	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
+	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
+	auto fenceVal =  shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+
+	skyLUT = new SkyLUT(_dev.Get(), _fence.Get());	
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -586,10 +591,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.y = 1.0f;
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
-
-	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
-	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
-	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal);
 
 	camera->CalculateFrustum();
 
@@ -2026,11 +2028,6 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
-
-	//_cmdList3->SetDescriptorHeaps(1, resourceManager[1]->GetSRVHeap().GetAddressOf());
-	//auto gHandle2 = resourceManager[1]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	//gHandle2.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle2);
 
 	_cmdList3->SetPipelineState(bBPipeline);
 
