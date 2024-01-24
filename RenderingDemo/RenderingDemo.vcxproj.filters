@@ -63,9 +63,6 @@
     <None Include="CollisionHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
-    <None Include="AtmosphericModel.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </None>
     <None Include="RaySphereIntersection.hlsl">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -73,6 +70,9 @@
       <Filter>Shader\Sky</Filter>
     </None>
     <None Include="SkyLUTHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="AtmosphericModel.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>

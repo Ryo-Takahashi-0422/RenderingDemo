@@ -2,10 +2,10 @@
 
 struct ParticipatingMedia
 {
-	float rayleighScattering[3] = { 5.802f,13.558f,33.1f };
+	XMFLOAT3 rayleighScattering = { 5.802f,13.558f,33.1f };
 	float mieScattering = 3.996f ;
 	float mieAbsorption = 4.4f ;
-	float ozoneAbsorption[3] = { 0.650f,1.881f,0.085f };
+	XMFLOAT3 ozoneAbsorption = { 0.650f,1.881f,0.085f };
 	float asymmetryParameter = 0.8f;
 	float altitudeOfRayleigh = 8.0f;
 	float altitudeOfMie = 1.2f;

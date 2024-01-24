@@ -280,7 +280,7 @@ HRESULT SkyLUT::CreateRenderingResource()
 	if (result != S_OK) return result;
 }
 
-// RenderingTarget用RTVの作成 ★★★表示しないならShaderResourceViewのみで良いかも
+// RenderingTarget用RTVの作成
 void SkyLUT::CreateRenderingRTV()
 {
     auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -422,14 +422,27 @@ void SkyLUT::MappingParticipatingMedia()
 // 外部からの関与媒質設定
 void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
 {
+    m_Media->rayleighScattering = media.rayleighScattering;
+    m_Media->mieScattering = media.mieScattering;
+    m_Media->mieAbsorption = media.mieAbsorption;
+    m_Media->ozoneAbsorption = media.ozoneAbsorption;
+    m_Media->asymmetryParameter = media.asymmetryParameter;
+    m_Media->altitudeOfRayleigh = media.altitudeOfRayleigh;
     m_Media->altitudeOfMie = media.altitudeOfMie;
+    m_Media->halfWidthOfOzone = media.halfWidthOfOzone;
+    m_Media->altitudeOfOzone = media.altitudeOfOzone;
+    m_Media->groundRadius = media.groundRadius;
+    m_Media->atomosphereRadius = media.atomosphereRadius;
 }
 
 // 外部からのSkyLUTBuffer設定
 void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
 {
     m_SkyLUT->eyePos = buffer.eyePos;
+    m_SkyLUT->eyePos.y = 800.0f;
+    m_SkyLUT->sunDirection = buffer.sunDirection;
     m_SkyLUT->stepCnt = buffer.stepCnt; // gpu側のsunDirection.zに値が入る...
+    m_SkyLUT->sunIntensity = buffer.sunIntensity;
 }
 
 // 実行

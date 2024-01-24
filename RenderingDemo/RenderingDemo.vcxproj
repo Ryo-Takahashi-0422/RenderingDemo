@@ -152,7 +152,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli" />
-    <None Include="AtmosphericModel.hlsl" />
+    <None Include="AtmosphericModel.hlsli">
+      <FileType>Document</FileType>
+    </None>
     <None Include="BasicShaderHeader.hlsli" />
     <None Include="BufferHeader.hlsli" />
     <None Include="CollisionHeaderShader.hlsli" />

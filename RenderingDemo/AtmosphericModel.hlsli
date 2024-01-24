@@ -18,7 +18,18 @@ cbuffer ParticipatingMedia : register(b0)
 
 float3 GetSigmaS(float h)
 {
-    float3 rayleighSigmaS = rayleighScattering * exp(-h / altitudeOfRayleigh);
+    float dens = exp(-h / altitudeOfRayleigh);
+    
+    
+    
+    float3 m_rayleighScattering;
+    m_rayleighScattering.r = 1.0f;
+    m_rayleighScattering.g = 1.0f;
+    m_rayleighScattering.b = 1.0f;
+    
+    
+    
+    float3 rayleighSigmaS = /*rayleighScattering*/m_rayleighScattering * dens;
     float mieSigmaS = mieScattering * exp(-h / altitudeOfMie);
 
     float3 sigmaS = rayleighSigmaS + mieSigmaS;

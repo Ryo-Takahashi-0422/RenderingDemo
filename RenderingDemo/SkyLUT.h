@@ -2,11 +2,13 @@
 
 struct SkyLUTBuffer
 {
+    //https://learn.microsoft.com/ja-jp/windows/win32/dxmath/pg-xnamath-optimizing XMFLOAT3は4byteアラインメントだが、実質16byteアラインメントされている
     XMFLOAT3 eyePos;
-    XMFLOAT3 sunDirection; // 
+    float pad0;
+    XMFLOAT3 sunDirection;    
     float stepCnt;
     XMFLOAT3 sunIntensity;
-    //float pad = 0;
+
 };
 
 class SkyLUT

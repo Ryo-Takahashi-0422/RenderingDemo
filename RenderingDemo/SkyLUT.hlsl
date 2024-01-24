@@ -28,10 +28,10 @@ vsOutput vs_main(uint vertexID : SV_VertexID)
     // output[2].position = float4(-1, -3, 0, 1);
     output.texCoord = float2((vertexID << 1) & 2, vertexID & 2);
     output.position = float4(output.texCoord * float2(2, -2) + float2(-1, 1), 0.5, 1);
-    output._eyePos = eyePos;
-    output._stepCnt = stepCnt;
-    output._sunDirection = sunDirection;
-    output._sunIntensity = sunIntensity;
+    //output._eyePos = eyePos;
+    //output._stepCnt = stepCnt;
+    //output._sunDirection = sunDirection;
+    //output._sunIntensity = sunIntensity;
     return output;
 }
 
