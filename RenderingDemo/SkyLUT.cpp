@@ -2,8 +2,8 @@
 #include <SkyLUT.h>
 
 
-SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence) :
-    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr),
+SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource) :
+    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorBufferResource(_shadowFactorRsource),
     data(nullptr), /*_cmdAllocator(nullptr), _cmdList(nullptr), */fence(_fence)
 {
     m_Media = new ParticipatingMedia;
@@ -376,7 +376,7 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 2; // CBV of ParticipatingMedia, SkyLUTBuffer
+    heapDesc.NumDescriptors = 3; // CBV of ParticipatingMedia, SkyLUTBuffer
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
@@ -405,6 +405,22 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
     _dev->CreateConstantBufferView
     (
         &SkyLUTCbvDesc,
+        handle
+    );
+
+    handle.ptr += inc;
+
+    // SkyLUTBuffer用view
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        shadowFactorBufferResource.Get(),
+        &srvDesc,
         handle
     );
 }
@@ -476,6 +492,8 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     _cmdList->SetGraphicsRootDescriptorTable(0, handle);
     handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     _cmdList->SetGraphicsRootDescriptorTable(1, handle);
+    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(2, handle);
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(4, 1, 0, 0);
@@ -488,6 +506,14 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
 
+    // ShadowFactor出力のコピー用リソース状態をCompute Shaderで読み書き出来る状態に戻す
+    auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        shadowFactorBufferResource.Get(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
     //_cmdList->Close();
 
     ////コマンドの実行

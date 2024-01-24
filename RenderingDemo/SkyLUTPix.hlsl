@@ -28,9 +28,10 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
     {
         float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
         float angleBetweenSunlightAndRay = PI / 2 - dot(sunDirection, -dir);
+        float3 sf = shadowFactor.Sample(smp, float2(1, 1));
         // S(x,li)ŒvŽZ
         
-        scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */;
+        scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */ * sf;
     }
 
     sumSigmaT += deltaSigmaT;

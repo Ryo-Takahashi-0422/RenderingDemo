@@ -308,12 +308,12 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfOutputTexture);
 
-    // コピー用リソース状態を元の状態に戻す
+    // コピー用リソース状態をSkyLUT.hlslで読み込める状態にする
     barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
     (
         copyTextureResource.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
     //_cmdList->Close();

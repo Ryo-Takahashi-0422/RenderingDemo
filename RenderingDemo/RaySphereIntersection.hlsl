@@ -16,9 +16,7 @@ bool hasIntersectionWithCircle(float2 o, float2 d, float r)
         t1 = t2 = -0.5 * b / a;
     else
     {
-        float q = (b > 0) ?
-            -0.5 * (b + sqrt(discriminant)) :
-            -0.5 * (b - sqrt(discriminant));
+        float q = (b > 0) ? -0.5 * (b + sqrt(discriminant)) : -0.5 * (b - sqrt(discriminant));
         t1 = q / a;
         t2 = c / q;
     }
@@ -55,9 +53,7 @@ bool DiscriminateIntersectionWithCircle(float2 o, float2 d, float r, out float t
         t1 = t2 = -0.5 * b / a;
     else
     {
-        float q = (b > 0) ?
-            -0.5 * (b + sqrt(discriminant)) :
-            -0.5 * (b - sqrt(discriminant));
+        float q = (b > 0) ? -0.5 * (b + sqrt(discriminant)) : -0.5 * (b - sqrt(discriminant));
         t1 = q / a;
         t2 = c / q;
     }
@@ -95,9 +91,7 @@ bool hasIntersectionWithSphere(float3 o, float3 d, float r)
         t1 = t2 = -0.5 * b / a;
     else
     {
-        float q = (b > 0) ?
-            -0.5 * (b + sqrt(discriminant)) :
-            -0.5 * (b - sqrt(discriminant));
+        float q = (b > 0) ? -0.5 * (b + sqrt(discriminant)) : -0.5 * (b - sqrt(discriminant));
         t1 = q / a;
         t2 = c / q;
     }
@@ -134,9 +128,7 @@ bool DiscriminateIntersectionWithSphere(float3 o, float3 d, float r, out float t
         t1 = t2 = -0.5 * b / a;
     else
     {
-        float q = (b > 0) ?
-            -0.5 * (b + sqrt(discriminant)) :
-            -0.5 * (b - sqrt(discriminant));
+        float q = (b > 0) ? -0.5 * (b + sqrt(discriminant)) : -0.5 * (b - sqrt(discriminant));
         t1 = q / a;
         t2 = c / q;
     }

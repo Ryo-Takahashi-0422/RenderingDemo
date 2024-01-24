@@ -45,6 +45,7 @@ private:
     HRESULT CreateParticipatingResource();
     ComPtr<ID3D12Resource> participatingMediaResource;
     ComPtr<ID3D12Resource> skyLUTBufferResource;
+    ComPtr<ID3D12Resource> shadowFactorBufferResource;
     // 関与媒質用ヒープ・ビューの生成
     HRESULT CreateParticipatingMediaHeapAndView();
     // 関与媒質用定数のマッピング
@@ -90,7 +91,7 @@ private:
 
 public:
     SkyLUT();
-    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence);
+    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
