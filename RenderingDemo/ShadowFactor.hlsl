@@ -32,10 +32,6 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
         }
 
     }
-    //else // Vis(li) 太陽が地表に隠れている場合
-    //{
-        
-    //}
     
     float2 end = rayPos + sunDir * t; // レイ→太陽方向へ大気圏終端まで
     float3 sumSigmaT = 0;
@@ -50,6 +46,7 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
     
     sumSigmaT *= (t / STEP_CNT); // ∫σt(x) * |dx|
     float3 transmittance = exp(-sumSigmaT); // e^-(∫σt(x) * |dx|)
+    transmittance.x *= 1.5f; // enhance red color
 
     shadowFactor[DTid.xy] = float4(transmittance, 1); // x:スレッドID xが最小(rayHeight=0)～最大(rayHeight:100) yが最小(sunTheta=-PI/2)～最大(sunTheta:PI/2)の計算結果に対応している。
 

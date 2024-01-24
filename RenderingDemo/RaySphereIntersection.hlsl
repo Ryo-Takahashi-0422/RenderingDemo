@@ -6,13 +6,22 @@ bool hasIntersectionWithCircle(float2 o, float2 d, float r)
     float a = dot(d, d);
     float2 b = 2 * dot(o, d);
     float c = dot(o, o) - r * r;
+    float t1, t2;
     
     float discriminant = b * b - 4 * a * c;
-    if (discriminant < 0)
-        return false;
     
-    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
-    float t2 = c / t1;
+    if (discriminant < 0) 
+        return false;
+    else if (discriminant == 0)
+        t1 = t2 = -0.5 * b / a;
+    else
+    {
+        float q = (b > 0) ?
+            -0.5 * (b + sqrt(discriminant)) :
+            -0.5 * (b - sqrt(discriminant));
+        t1 = q / a;
+        t2 = c / q;
+    }
     
     if (t1 > t2)
     {
@@ -36,13 +45,22 @@ bool DiscriminateIntersectionWithCircle(float2 o, float2 d, float r, out float t
     float a = dot(d, d);
     float2 b = 2 * dot(o, d);
     float c = dot(o, o) - r * r;
+    float t1, t2;
     
     float discriminant = b * b - 4 * a * c;
+    
     if (discriminant < 0) 
         return false;
-    
-    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
-    float t2 = c / t1;
+    else if (discriminant == 0)
+        t1 = t2 = -0.5 * b / a;
+    else
+    {
+        float q = (b > 0) ?
+            -0.5 * (b + sqrt(discriminant)) :
+            -0.5 * (b - sqrt(discriminant));
+        t1 = q / a;
+        t2 = c / q;
+    }
     
     if (t1 > t2)
     {
@@ -65,15 +83,24 @@ bool DiscriminateIntersectionWithCircle(float2 o, float2 d, float r, out float t
 bool hasIntersectionWithSphere(float3 o, float3 d, float r)
 {
     float a = dot(d, d);
-    float3 b = 2 * dot(o, d);
+    float2 b = 2 * dot(o, d);
     float c = dot(o, o) - r * r;
+    float t1, t2;
     
     float discriminant = b * b - 4 * a * c;
-    if (discriminant < 0)
-        return false;
     
-    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
-    float t2 = c / t1;
+    if (discriminant < 0) 
+        return false;
+    else if (discriminant == 0)
+        t1 = t2 = -0.5 * b / a;
+    else
+    {
+        float q = (b > 0) ?
+            -0.5 * (b + sqrt(discriminant)) :
+            -0.5 * (b - sqrt(discriminant));
+        t1 = q / a;
+        t2 = c / q;
+    }
     
     if (t1 > t2)
     {
@@ -95,15 +122,24 @@ bool hasIntersectionWithSphere(float3 o, float3 d, float r)
 bool DiscriminateIntersectionWithSphere(float3 o, float3 d, float r, out float t)
 {
     float a = dot(d, d);
-    float3 b = 2 * dot(o, d);
+    float2 b = 2 * dot(o, d);
     float c = dot(o, o) - r * r;
+    float t1, t2;
     
     float discriminant = b * b - 4 * a * c;
+    
     if (discriminant < 0) 
         return false;
-    
-    float t1 = -b + sign(b) * sqrt(discriminant) / (2 * a);
-    float t2 = c / t1;
+    else if (discriminant == 0)
+        t1 = t2 = -0.5 * b / a;
+    else
+    {
+        float q = (b > 0) ?
+            -0.5 * (b + sqrt(discriminant)) :
+            -0.5 * (b - sqrt(discriminant));
+        t1 = q / a;
+        t2 = c / q;
+    }
     
     if (t1 > t2)
     {
