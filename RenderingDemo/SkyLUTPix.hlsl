@@ -19,15 +19,15 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
     float3 pos = cameraPos + nextT * dir;
     float h = length(pos) - groundRadius;
 
-    float sigmaS = GetSigmaS(h);
-    float sigmaT = GetSigmaT(h);
-    float deltaSigmaT = sigmaT * (nextT - currentT); // T(c,x)
-    float transmittanceFromRayToEye = exp(-(sumSigmaT + deltaSigmaT));
+    float3 sigmaS = GetSigmaS(h);
+    float3 sigmaT = GetSigmaT(h);
+    float3 deltaSigmaT = sigmaT * (nextT - currentT); // T(c,x)
+    float3 transmittanceFromRayToEye = exp(-(sumSigmaT + deltaSigmaT));
 
-    if (hasIntersectionWithSphere(pos, sunDirection, atmosphereRadius))
+    if (hasIntersectionWithSphere(pos, -sunDirection, atmosphereRadius))
     {
         float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
-        float angleBetweenSunlightAndRay = dot(sunDirection, -dir);
+        float angleBetweenSunlightAndRay = PI / 2 - dot(sunDirection, -dir);
         // S(x,li)計算
         
         scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */;
@@ -44,7 +44,9 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float cosTheta = cos(theta);
     float sinTheta = sin(theta);
     float2 twoDimDir = (cosTheta, sinTheta); // 視線方向をxy平面で定義する。空は一様であるため球面座標におけるphi(x→z)は考慮しない。
-    float2 cameraPos2D = (0, eyePos.y + groundRadius);
+    float2 cameraPos2D;
+    cameraPos2D.x = 0;
+    cameraPos2D.y = eyePos.y + groundRadius;
     float endT;
     if (!DiscriminateIntersectionWithCircle(cameraPos2D, twoDimDir, groundRadius, endT))
     {

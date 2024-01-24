@@ -5,7 +5,7 @@
 cbuffer SkyLUTBuffer : register(b1)
 {
     float3 eyePos;
-    float3 sunDirection;
+    float3 sunDirection; // 
     float stepCnt;
     float3 sunIntensity;
 };

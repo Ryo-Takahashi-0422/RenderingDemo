@@ -14,30 +14,36 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
     float width, height;
     shadowFactor.GetDimensions(width, height);
     
-    float rayHeight = lerp(0, atmosphereRadius - groundRadius, DTid.x / width);
-    float2 rayPos = (0, rayHeight + groundRadius);
-    float sunTheta = asin(lerp(-1, 1, DTid.y / height)); // レイを90°方向としたときに、太陽がどの角度にあるか
+    float rayHeight = lerp(0, atmosphereRadius - groundRadius, (DTid.x + 0.5f) / width);
+    float2 rayPos;
+    rayPos.x = 0;
+    rayPos.y = rayHeight + groundRadius;
+    float sunTheta = asin(lerp(-1, 1, (DTid.y + 0.5f) / height)); // レイを90°方向としたときに、太陽がどの角度にあるか
 
     float2 sunDir = (cos(sunTheta), sin(sunTheta));
     float t = 0;
     
-    if (!hasIntersectionWithCircle(rayPos, sunDir, groundRadius)) // Vis(li) 太陽が地表に隠れていない場合
+    if (!DiscriminateIntersectionWithCircle(rayPos, sunDir, groundRadius, t)) // Vis(li) 太陽が地表に隠れていない場合
     {
-        DiscriminateIntersectionWithCircle(rayPos, sunDir, atmosphereRadius, t);
+        if (!DiscriminateIntersectionWithCircle(rayPos, sunDir, atmosphereRadius, t))
+        {
+            shadowFactor[DTid.xy] = float4(0, 0, 0, 1);
+            return;
+        }
+
     }
-    else // Vis(li) 太陽が地表に隠れている場合
-    {
-        shadowFactor[DTid.xy] = float4(0, 0, 0, 1);
-        return;
-    }
+    //else // Vis(li) 太陽が地表に隠れている場合
+    //{
+        
+    //}
     
-    float end = rayPos + sunDir * t; // レイ→太陽方向へ大気圏終端まで
+    float2 end = rayPos + sunDir * t; // レイ→太陽方向へ大気圏終端まで
     float3 sumSigmaT = 0;
     
     for (int i = 0; i < STEP_CNT; ++i)
     {
-        float cuurentRayPos = lerp(rayPos, end, i / STEP_CNT);
-        float h = length(cuurentRayPos) - groundRadius;
+        float2 currentRayPos = lerp(rayPos, end, (i + 0.5) / STEP_CNT);
+        float h = length(currentRayPos) - groundRadius;
         float3 sigmaT = GetSigmaT(h);
         sumSigmaT += sigmaT; // ∫σt(x)
     }

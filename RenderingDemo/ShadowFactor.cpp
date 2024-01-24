@@ -264,7 +264,7 @@ HRESULT ShadowFactor::Mapping()
 }
 
 // 実行
-UINT64 ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
+void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
 {
     //それぞれのセット
     _cmdList->SetComputeRootSignature(rootSignature.Get());
@@ -288,7 +288,7 @@ UINT64 ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAlloc
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfOutputTexture);
 
-     // コピー用リソース状態をコピー先状態に設定
+    // コピー用リソース状態をコピー先状態に設定
     auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
     (
         copyTextureResource.Get(),
@@ -299,36 +299,63 @@ UINT64 ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAlloc
 
     _cmdList->CopyResource(copyTextureResource.Get(), outputTextureResource.Get());
 
-    _cmdList->Close();
+    // 出力用リソース状態を元の状態に戻す
+    barrierDescOfOutputTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        outputTextureResource.Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfOutputTexture);
 
-    //コマンドの実行
-    ID3D12CommandList* executeList[] = { _cmdList };
-    _cmdQueue->ExecuteCommandLists(1, executeList);
+    // コピー用リソース状態を元の状態に戻す
+    barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        copyTextureResource.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+    //_cmdList->Close();
 
-    UINT64 fenceVal = 0;
-    HANDLE event; // fnece用イベント
-    //-----ここでID3D12Fenceの待機をさせる-----
-    _cmdQueue->Signal(fence.Get(), ++fenceVal);
+    ////コマンドの実行
+    //ID3D12CommandList* executeList[] = { _cmdList };
+    //_cmdQueue->ExecuteCommandLists(1, executeList);
 
-    while (fence->GetCompletedValue() != fenceVal)
-    {
-        event = CreateEvent(nullptr, false, false, nullptr);
-        fence->SetEventOnCompletion(fenceVal, event);
-        //イベント発生待ち
-        WaitForSingleObject(event, INFINITE);
-        //イベントハンドルを閉じる
-        CloseHandle(event);
-    }
+    //UINT64 fenceVal = _fenceVal;
+    //HANDLE event; // fnece用イベント
+    ////-----ここでID3D12Fenceの待機をさせる-----
+    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
 
-    _cmdAllocator->Reset();
-    _cmdList->Reset(_cmdAllocator, nullptr);
-    //GPUからデータをもらう
-    //test.assign((float*)data, (float*)data + test.size());    
-    return fenceVal;
+    //while (fence->GetCompletedValue() != fenceVal)
+    //{
+    //    event = CreateEvent(nullptr, false, false, nullptr);
+    //    fence->SetEventOnCompletion(fenceVal, event);
+    //    //イベント発生待ち
+    //    WaitForSingleObject(event, INFINITE);
+    //    //イベントハンドルを閉じる
+    //    CloseHandle(event);
+    //}
+
+    //_cmdAllocator->Reset();
+    //_cmdList->Reset(_cmdAllocator, nullptr);
+    ////GPUからデータをもらう
+    ////test.assign((float*)data, (float*)data + test.size());    
+    //return fenceVal;
  }
 
 // 外部からの関与媒質設定
 void ShadowFactor::SetParticipatingMedia(ParticipatingMedia media)
 {
-    m_Media = media;
+    m_Media->rayleighScattering = media.rayleighScattering;
+    m_Media->mieScattering = media.mieScattering;
+    m_Media->mieAbsorption = media.mieAbsorption;
+    m_Media->ozoneAbsorption = media.ozoneAbsorption;
+    m_Media->asymmetryParameter = media.asymmetryParameter;
+    m_Media->altitudeOfRayleigh = media.altitudeOfRayleigh;
+    m_Media->altitudeOfMie = media.altitudeOfMie;
+    m_Media->halfWidthOfOzone = media.halfWidthOfOzone;
+    m_Media->altitudeOfOzone = media.altitudeOfOzone;
+    m_Media->groundRadius = media.groundRadius;
+    m_Media->atomosphereRadius = media.atomosphereRadius;
 }

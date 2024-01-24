@@ -29,7 +29,7 @@ private:
     // コマンドの生成
     //HRESULT CreateCommand();
     // 関与媒質マッピング先
-    ParticipatingMedia m_Media;
+    ParticipatingMedia* m_Media = nullptr;
 
     // デバイス
     ID3D12Device* _dev = nullptr;
@@ -62,6 +62,6 @@ public:
     void SetParticipatingMedia(ParticipatingMedia media);
 
     // 実行
-    UINT64 Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
+    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
 
 };

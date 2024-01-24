@@ -18,18 +18,7 @@ cbuffer ParticipatingMedia : register(b0)
 
 float3 GetSigmaS(float h)
 {
-    float dens = exp(-h / altitudeOfRayleigh);
-    
-    
-    
-    float3 m_rayleighScattering;
-    m_rayleighScattering.r = 1.0f;
-    m_rayleighScattering.g = 1.0f;
-    m_rayleighScattering.b = 1.0f;
-    
-    
-    
-    float3 rayleighSigmaS = /*rayleighScattering*/m_rayleighScattering * dens;
+    float3 rayleighSigmaS = rayleighScattering * exp(-h / altitudeOfRayleigh);
     float mieSigmaS = mieScattering * exp(-h / altitudeOfMie);
 
     float3 sigmaS = rayleighSigmaS + mieSigmaS;
@@ -42,7 +31,7 @@ float3 GetSigmaT(float h)
     float mieSigmaT = (mieScattering + mieAbsorption) * exp(-h / altitudeOfMie);
     
     float ozoneDistribution = max(0.0f, 1.0f - abs(h - altitudeOfOzone) / halfWidthOfOzone);
-    float ozoneSigmaT = ozoneAbsorption * ozoneDistribution;
+    float3 ozoneSigmaT = ozoneAbsorption * ozoneDistribution;
     
     float3 sigmaT = rayleighSigmaT + mieSigmaT + ozoneSigmaT;
     return sigmaT;

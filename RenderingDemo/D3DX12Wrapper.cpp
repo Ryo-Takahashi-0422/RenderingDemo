@@ -579,7 +579,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
-	auto fenceVal =  shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+	/*auto fenceVal =  shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());*/
 
 	skyLUT = new SkyLUT(_dev.Get(), _fence.Get());	
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
@@ -811,6 +811,7 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
+		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		for (int i = 0; i < threadNum; i++)
 		{
