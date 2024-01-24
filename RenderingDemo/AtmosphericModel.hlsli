@@ -39,7 +39,7 @@ float3 GetSigmaT(float h)
 
 float CalculatePhaseFunctiuon(float theta)
 {
-    float phaseRayleigh = 3 * (1 + cos(theta) * cos(theta));
+    float phaseRayleigh = 3 * (1 + cos(theta) * cos(theta)) / (16 * PI);
     
     float g = asymmetryParameter;
     float m = 1 + g * g - 2 * g * cos(theta);

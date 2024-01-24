@@ -27,8 +27,12 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
     if (hasIntersectionWithSphere(pos, -sunDirection, atmosphereRadius))
     {
         float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
-        float angleBetweenSunlightAndRay = PI / 2 - dot(sunDirection, -dir);
-        float3 sf = shadowFactor.Sample(smp, float2(1, 1));
+        float angleBetweenSunlightAndRay = PI / 2 - acos(dot(-sunDirection, normalize(pos)));
+        
+        float u, v;
+        u = h / (atmosphereRadius - groundRadius);
+        v = (sin(angleBetweenSunlightAndRay) + 1) * 0.5;
+        float3 sf = shadowFactor.Sample(smp, float2(u, v));
         // S(x,li)ŒvŽZ
         
         scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */ * sf;
@@ -38,8 +42,8 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
 }
 float4 ps_main(vsOutput input) : SV_TARGET
 {
-    float phi = input.texCoord.x * PI; // 0~2PI
-    float theta = (input.texCoord.y - 1.0f) * 0.5f * PI; // -PI/2 ~ PI/2 
+    float phi = input.texCoord.x * 2 * PI; // 0~2PI
+    float theta = (input.texCoord.y - 1.0f) * 2 * 0.5f * PI; // -PI/2 ~ PI/2 
     float cosPhi = cos(phi);
     float sinPhi = sin(phi);
     float cosTheta = cos(theta);
@@ -72,8 +76,6 @@ float4 ps_main(vsOutput input) : SV_TARGET
         rayMarching(scattering, sumSigmaT, currentT, nextT, phaseTheta, dir, cameraPos3D);
         currentT += deltaT;
     }
-    
-    //
     
     return float4(scattering * sunIntensity, 1);
 

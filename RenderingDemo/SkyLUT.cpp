@@ -455,7 +455,7 @@ void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
 void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
 {
     m_SkyLUT->eyePos = buffer.eyePos;
-    m_SkyLUT->eyePos.y = 800.0f;
+    m_SkyLUT->eyePos.y = 500.0f;
     m_SkyLUT->sunDirection = buffer.sunDirection;
     m_SkyLUT->stepCnt = buffer.stepCnt; // gpu‘¤‚ÌsunDirection.z‚É’l‚ª“ü‚é...
     m_SkyLUT->sunIntensity = buffer.sunIntensity;
