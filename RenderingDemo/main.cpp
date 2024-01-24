@@ -3,33 +3,35 @@
 #include<Windows.h>
 //#ifdef _DEBUG
 int main() {
-	//PIXLoadLatestWinPixGpuCapturerLibrary();
+	PIXLoadLatestWinPixGpuCapturerLibrary();
 //#else
 //#include<Windows.h>
 //int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //
 //#endif
 
-	auto& wrapper = D3DX12Wrapper::Instance();
+	D3DX12Wrapper::D3DX12Wrapper();
+	Camera::Camera();
+	auto wrapper = D3DX12Wrapper::GetInstance();
 
 	//auto result =wrapper.D3DX12DeviceInit();
 	//if (result == E_FAIL) return 0;
 
-	if (!wrapper.PrepareRendering()) {
+	if (!wrapper->PrepareRendering()) {
 		return -1;
 	}
 	
-	if (!wrapper.PipelineInit()) {
+	if (!wrapper->PipelineInit()) {
 		return -1;
 	}
 
-	if (!wrapper.ResourceInit()) {
+	if (!wrapper->ResourceInit()) {
 		return -1;
 	}
 
 	//wrapper.EffekseerInit();
 	
-	wrapper.Run();
+	wrapper->Run();
 	//app.Terminate();
 	return 0;
 }

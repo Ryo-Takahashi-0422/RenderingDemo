@@ -34,6 +34,15 @@
     <Filter Include="Shader\Rebuild">
       <UniqueIdentifier>{a015630c-d72f-4c02-aea4-2b836c3a9e1c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Sky">
+      <UniqueIdentifier>{a68e5e57-6f90-40e2-8027-1cc4b952645c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Sky">
+      <UniqueIdentifier>{2ebe14f5-b580-4d85-a124-b1db13bfb4b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Sky">
+      <UniqueIdentifier>{0d9d0e50-c830-4318-a4ce-6402505c2609}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli">
@@ -53,6 +62,18 @@
     </None>
     <None Include="CollisionHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
+    </None>
+    <None Include="RaySphereIntersection.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="Definition.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="SkyLUTHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="AtmosphericModel.hlsli">
+      <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +118,15 @@
     </FxCompile>
     <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyLUT.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowFactor.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyLUTPix.hlsl">
+      <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -178,9 +208,6 @@
     <ClCompile Include="PeraSetRootSignature.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="PeraShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="PMDActor.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
@@ -238,8 +265,20 @@
     <ClCompile Include="CollisionRootSignature.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionShaderCompile.cpp">
+    <ClCompile Include="ShadowFactor.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyLUT.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticipatingMedia.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="Sun.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -321,9 +360,6 @@
     <ClInclude Include="PeraSetRootSignature.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
-    <ClInclude Include="PeraShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="PMDActor.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
@@ -387,8 +423,20 @@
     <ClInclude Include="CollisionRootSignature.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
-    <ClInclude Include="CollisionShaderCompile.h">
+    <ClInclude Include="ShadowFactor.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyLUT.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticipatingMedia.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="Sun.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

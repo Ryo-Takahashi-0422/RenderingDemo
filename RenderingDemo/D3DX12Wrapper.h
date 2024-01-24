@@ -3,7 +3,7 @@
 class D3DX12Wrapper
 {
 private:
-
+	static D3DX12Wrapper* instance;
 	std::array<std::string, 3> strModelPath;
 	int strModelNum = 0;
 	//std::string strMotionPath = "";//"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\model\\Motion\\squat2.vmd";
@@ -11,16 +11,13 @@ private:
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
-	ComPtr<ID3D12CommandAllocator> _cmdAllocator4Imgui = nullptr;
+	ComPtr<ID3D12CommandAllocator> _cmdAllocator2 = nullptr;
+	ComPtr<ID3D12CommandAllocator> _cmdAllocator3 = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
-	ComPtr<ID3D12GraphicsCommandList> _cmdList4Imgui = nullptr;
+	ComPtr<ID3D12GraphicsCommandList> _cmdList2 = nullptr;
+	ComPtr<ID3D12GraphicsCommandList> _cmdList3 = nullptr;
+	ComPtr<ID3D12GraphicsCommandList> m_batchSubmit[2];
 	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
-	ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _psBlob = nullptr; // ピクセルシェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _vsMBlob = nullptr; // ﾏﾙﾁﾊﾟｽ用頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _psMBlob = nullptr; // ﾏﾙﾁﾊﾟｽ用頂点ピクセルシェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _vsBackbufferBlob = nullptr; // 表示用頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
 	ComPtr<ID3D12Fence> _fence = nullptr;
 	UINT64 _fenceVal;
 	std::vector<ComPtr<ID3D12Resource>> _backBuffers; // ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧｰ D3D12_RESOURCE_STATE_COMMONに設定するルール。
@@ -39,9 +36,7 @@ private:
 	//std::vector<DirectX::TexMetadata*> toonMetaData;
 	//std::vector<DirectX::Image*> toonImg;
 
-	// シングルトンなのでコンストラクタ、コピーコンストラクタ、代入演算子はprivateにする
-	// コンストラクタ
-	D3DX12Wrapper() {};
+
 
 	// コピーコンストラクタ
 	D3DX12Wrapper(const D3DX12Wrapper& x) { };
@@ -64,7 +59,7 @@ private:
 
 	//void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
 	//void UpdateVMDMotion(std::map<std::string, BoneNode> bNodeTable, 
-		//std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
+	//std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
 
 	//float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -73,7 +68,7 @@ private:
 	PeraLayout* peraLayout = nullptr;
 	PeraPolygon* peraPolygon = nullptr;
 	PeraSetRootSignature* peraSetRootSignature = nullptr;
-	PeraShaderCompile* peraShaderCompile = nullptr;
+	/*PeraShaderCompile*/SettingShaderCompile* peraShaderCompile = nullptr;
 	//PeraGraphicsPipelineSetting* bufferGPLSetting = nullptr;
 	//PeraSetRootSignature* bufferSetRootSignature = nullptr;
 
@@ -149,17 +144,18 @@ private:
 	XMMATRIX projMat;
 
 	// Rebuild
-	FBXInfoManager fbxInfoManager;
-	std::vector<ResourceManager*> resourceManager;// = nullptr;
+	/*FBXInfoManager fbxInfoManager;*/
+	std::vector<ResourceManager*> resourceManager;
 	CollisionManager* collisionManager = nullptr;
 	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
 	CollisionRootSignature* collisionRootSignature = nullptr;
-	CollisionShaderCompile* collisionShaderCompile = nullptr;
+	SettingShaderCompile* collisionShaderCompile = nullptr;
 	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
 	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
 	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
 	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
+	Camera* camera = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
 	//ComPtr<ID3D12Resource> backBufferResource = nullptr;
@@ -180,35 +176,88 @@ private:
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
-	void DrawFBX(short modelPathSize, UINT buffSize, D3D12_CPU_DESCRIPTOR_HANDLE dsvh, D3D12_CPU_DESCRIPTOR_HANDLE handle);
+	// 
+	struct ThreadParameter
+	{
+		int threadIndex;
+	};
+	int threadNum = 2;
+	ThreadParameter m_threadParameters[2];
+	HANDLE m_threadHandles[2];
+	// Synchronization objects.
+	HANDLE m_workerBeginRenderFrame[2];
+	HANDLE m_workerFinishedRenderFrame[2];
+	HANDLE m_workerSyncronize[2];
+	void LoadContexts();
+	void threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> cmList*/);
+	void DrawFBXMulti();
+	void DrawFBX();
 	// DrawFBX用データ
+	UINT cbv_srv_Size;
+	//D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX;
+	//D3D12_CPU_DESCRIPTOR_HANDLE handleFBX;
+	ID3D12RootSignature* fBXRootsignature = nullptr;
+	ID3D12PipelineState* fBXPipeline = nullptr;
 	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
 	std::vector<D3D12_INDEX_BUFFER_VIEW*> ibViews;
 	std::vector<ComPtr<ID3D12DescriptorHeap>> srvHeapAddresses;
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> dHandles;
-	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer;
+	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer; // ★静的データ構造であるstd::arrayへの置き換えは可能か？	
 	std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> itIndiceFirsts;
+	//::vector<std::pair<std::string, VertexInfo>>::iterator itIndiceFirst;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>> phongInfos;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>::iterator> itPhonsInfos;
+	//std::vector<std::pair<std::string, PhongInfo>>::iterator itPhonsInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
-	std::vector<int> matTexSizes;	
+	//std::vector<std::pair<std::string, std::string>>::iterator itMaterialAndTextureName;
+	std::vector<int> matTexSizes;
+	//int ofst = 0;
+	//short indiceContainerSize = 0;
+	//int itMATCnt = 0;
+	//int matTexSize = 0;
+	//int textureTableStartIndex = 0;
+	//size_t indiceSize = 0;
+	//D3D12_GPU_DESCRIPTOR_HANDLE tHandle;
+	D3D12_RESOURCE_BARRIER barrierDescFBX = {};
 
-	void DrawCollider(int modelNum, UINT buffSize);
+	void DrawCollider(int modelNum);
 
-	// 描画パイプラインに共通して必要なデータ。事前にポインタ取得しておく。
+	// 描画パイプラインに共通して必要なデータ
+	short modelPathSize;
 	const D3D12_VIEWPORT* viewPort = nullptr;
 	const D3D12_RECT* rect = nullptr;
 
 	// DrawBackBufferで利用する
+	UINT bbIdx;
+	ID3D12RootSignature* bBRootsignature = nullptr;
+	ID3D12PipelineState* bBPipeline = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHeapPointer;
+	D3D12_GPU_DESCRIPTOR_HANDLE gHandle;
+	D3D12_RESOURCE_BARRIER barrierDesc4BackBuffer = {};
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+
+	// Sky関連
+	SkyLUT* skyLUT = nullptr;
+	ShadowFactor* shadowFactor = nullptr;
+	ParticipatingMedia participatingMedia;
+	ParticipatingMedia calculatedParticipatingMedia;
+	SkyLUTBuffer skyLUTBuffer;
+	Sun* sun;	
 
 	//★★★コライダーdebug用
 	int debugNum = 2;
 
+
+
 public:
+
+	D3DX12Wrapper();
+
 	///Applicationのシングルトンインスタンスを得る
 	static D3DX12Wrapper& Instance();
+
+	static D3DX12Wrapper* GetInstance() { return instance; };
 
 	/// <summary>
 	/// 各種デバイスの作成 

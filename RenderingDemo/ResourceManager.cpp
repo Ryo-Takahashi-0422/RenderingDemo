@@ -11,10 +11,19 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 	invIdentify.r[0].m128_f32[0] *= -1;
 }
 
+ResourceManager::~ResourceManager()
+{
+	delete m_Camera;
 
-HRESULT ResourceManager::Init()
+	delete mappedVertPos;
+	delete mappedIdx;
+	delete mappedMatrix;
+}
+
+HRESULT ResourceManager::Init(Camera* _camera)
 {
 	HRESULT result = E_FAIL;
+	m_Camera = _camera;
 
 	// OBBの頂点群およびローカル回転成分・平行移動成分を取得する
 	vertexListOfOBB = _fbxInfoManager->GetIndiceAndVertexInfoOfOBB();
@@ -160,7 +169,7 @@ HRESULT ResourceManager::Init()
 	// depth DHeap, Resource
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.NumDescriptors = 1; // 深度 + lightmap + AO用
+	dsvHeapDesc.NumDescriptors = 2; // 通常の深度マップ*2
 	result = _dev->CreateDescriptorHeap
 	(
 		&dsvHeapDesc,
@@ -182,6 +191,7 @@ HRESULT ResourceManager::Init()
 	depthClearValue.DepthStencil.Depth = 1.0f;
 	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
 
+	// sponza深度マップ用
 	result = _dev->CreateCommittedResource
 	(
 		&depthHeapProps,
@@ -193,17 +203,38 @@ HRESULT ResourceManager::Init()
 	);
 	if (result != S_OK) return result;
 
+	// connan深度マップ用
+	result = _dev->CreateCommittedResource
+	(
+		&depthHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(depthBuff2.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-	// 深度マップ用
+	auto dsvHandle = dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart();
+	// sponza深度マップ用
 	_dev->CreateDepthStencilView
 	(
 		depthBuff.Get(),
 		&dsvDesc,
-		dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart()
+		dsvHandle
+	);
+
+	// connan深度マップ用
+	dsvHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	_dev->CreateDepthStencilView
+	(
+		depthBuff2.Get(),
+		&dsvDesc,
+		dsvHandle
 	);
 
 	// create rendering buffer and create RTV
@@ -237,6 +268,13 @@ HRESULT ResourceManager::Init()
 	{
 		isAnimationModel = true;
 	}
+
+	_fbxInfoManager = nullptr;
+	delete _fbxInfoManager;
+	_prepareRenderingWindow = nullptr;
+	delete _prepareRenderingWindow;
+	textureLoader = nullptr;
+	delete textureLoader;
 }
 
 HRESULT ResourceManager::CreateRTV()
@@ -268,10 +306,21 @@ HRESULT ResourceManager::CreateRTV()
 	);
 	if (result != S_OK) return result;
 
+	result = _dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&depthClearValue,
+		IID_PPV_ARGS(renderingBuff2.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
 	// create RTV
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.NumDescriptors = 1;
+	rtvHeapDesc.NumDescriptors = 2; // ★★★
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 
@@ -282,11 +331,22 @@ HRESULT ResourceManager::CreateRTV()
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
+	auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
 	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
 	(
 		renderingBuff.Get(),//レンダーターゲットを表す ID3D12Resource オブジェクトへのポインター
 		&rtvDesc,//レンダー ターゲット ビューを記述する D3D12_RENDER_TARGET_VIEW_DESC 構造体へのポインター。
-		rtvHeap->GetCPUDescriptorHandleForHeapStart()//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+		handle//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+	);
+
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
+	(
+		renderingBuff2.Get(),
+		&rtvDesc,
+		handle
 	);
 
 	return S_OK;
@@ -308,38 +368,12 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
 	);
 	if (result != S_OK) return result;
-		
-	auto worldMat = XMMatrixIdentity();
-	auto angle = XMMatrixRotationY(M_PI);
-	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
-
-	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 1.5, 2.3);
-	XMFLOAT3 target(0, 1.5, 0);
-	//XMFLOAT3 eye(0, 100, /*0.01*/10);
-	//XMFLOAT3 target(0, 10, 0);
-	XMFLOAT3 up(0, 1, 0);
-	auto viewMat = XMMatrixLookAtLH
-	(
-		XMLoadFloat3(&eye),
-		XMLoadFloat3(&target),
-		XMLoadFloat3(&up)
-	);
-	
-	//プロジェクション(射影)行列の生成・乗算
-	auto projMat = XMMatrixPerspectiveFovLH
-	(
-		XM_PIDIV2, // 画角90°
-		static_cast<float>(_prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(_prepareRenderingWindow->GetWindowWidth()),
-		1.0, // ニア―クリップ
-		3000.0 // ファークリップ
-	);
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
 	
-	mappedMatrix->world = worldMat;
-	mappedMatrix->view = viewMat;
-	mappedMatrix->proj = projMat;
+	mappedMatrix->world = m_Camera->GetWorld();
+	mappedMatrix->view = m_Camera->GetView();
+	mappedMatrix->proj = m_Camera->GetProj();
     
 	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
 	XMVECTOR det;
@@ -383,7 +417,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 2 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2:rendering result(1), 3:phongInfosサイズ(読み込むモデルにより変動), 4:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 5 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:depth*2, 5:phongInfosサイズ(読み込むモデルにより変動), 6:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -400,7 +434,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	// 2:model rendering result
+	// model rendering result
 	handle.ptr += inc;
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -408,6 +442,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
+	// 2:sponza描画先
 	_dev->CreateShaderResourceView
 	(
 		renderingBuff.Get(),
@@ -415,7 +450,39 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	// 3:Phong Material Parameters
+	// 3:connan描画先
+	handle.ptr += inc; // ★★★これを追加したらテクスチャバグ発生
+	_dev->CreateShaderResourceView
+	(
+		renderingBuff2.Get(),
+		&srvDesc,
+		handle
+	);
+
+	handle.ptr += inc;
+	// 4:sponzaデプスマップ用
+	D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = {};
+	depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	depthSRVDesc.Texture2D.MipLevels = 1;
+	_dev->CreateShaderResourceView
+	(
+		depthBuff.Get(),
+		&depthSRVDesc,
+		handle
+	);
+
+	// 5:connanデプスマップ用
+	handle.ptr += inc;
+	_dev->CreateShaderResourceView
+	(
+		depthBuff2.Get(),
+		&depthSRVDesc,
+		handle
+	);
+
+	// 6-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];
@@ -431,7 +498,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		);		
 	}
 
-	// 4:Texture Read Buffers(n=textureNum)
+	// x-:Texture Read Buffers(n=textureNum)
 	D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
 	textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

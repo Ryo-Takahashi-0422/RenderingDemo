@@ -1,11 +1,12 @@
 #pragma once
 #define NOMINMAX
+#define PI 3.14159265
 
 #include <DirectXTex.h>
 #include <Windows.h>
 #include<tchar.h>
 //#ifdef _DEBUG
-//#include <pix3.h>
+#include <pix3.h>
 #include <iostream>
 //#endif // _DEBUG
 #include <vector>
@@ -25,6 +26,7 @@
 #include <ReadData.h>
 #include <stdlib.h>
 #include <fstream>
+//#include <thread>
 
 //eigen
 #define _USE_MATH_DEFINES
@@ -71,7 +73,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 
 #include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
 #include <PeraLayout.h>
-#include <PeraShaderCompile.h>
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
 #include <BufferShaderCompile.h>
@@ -87,6 +88,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <SettingImgui.h>
 
 // Rebuild
+#include <Camera.h>
 #include <FBXInfoManager.h>
 #include <ResourceManager.h>
 #include <TextureTransporter.h>
@@ -94,4 +96,10 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <CollisionManager.h>
 #include <CollisionRootSignature.h>
 #include <ColliderGraphicsPipelineSetting.h>
-#include <CollisionShaderCompile.h>
+
+// Sky
+#include <ParticipatingMedia.h>
+#include <ShadowFactor.h>
+#include <Sun.h>
+#include <SkyLUT.h>
+

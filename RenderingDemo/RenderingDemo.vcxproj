@@ -152,11 +152,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="AOShaderHeader.hlsli" />
+    <None Include="AtmosphericModel.hlsli">
+      <FileType>Document</FileType>
+    </None>
     <None Include="BasicShaderHeader.hlsli" />
     <None Include="BufferHeader.hlsli" />
     <None Include="CollisionHeaderShader.hlsli" />
+    <None Include="Definition.hlsli" />
     <None Include="FBXHeaderShader.hlsli" />
     <None Include="PeraHeader.hlsli" />
+    <None Include="SkyLUTHeader.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -297,6 +302,49 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableOptimizations>
     </FxCompile>
+    <FxCompile Include="SkyLUTPix.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps_main</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <None Include="RaySphereIntersection.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EnableDebuggingInformation>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ShaderModel>
+      <FileType>Document</FileType>
+    </None>
+    <FxCompile Include="ShadowFactor.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+    </FxCompile>
+    <FxCompile Include="SkyLUT.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vs_main</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp" />
@@ -308,10 +356,10 @@
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="AOGraphicsPipelineSetting.cpp" />
     <ClCompile Include="AOShaderCompile.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
-    <ClCompile Include="CollisionShaderCompile.cpp" />
     <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="BloomShaderCompile.cpp" />
     <ClCompile Include="BufferHeapCreator.cpp" />
@@ -326,11 +374,13 @@
     <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
+    <ClCompile Include="ParticipatingMedia.cpp" />
+    <ClCompile Include="SkyLUT.cpp" />
+    <ClCompile Include="ShadowFactor.cpp" />
     <ClCompile Include="PeraGraphicsPipelineSetting.cpp" />
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
     <ClCompile Include="PeraSetRootSignature.cpp" />
-    <ClCompile Include="PeraShaderCompile.cpp" />
     <ClCompile Include="PMDActor.cpp" />
     <ClCompile Include="PMDMaterialInfo.cpp" />
     <ClCompile Include="PrepareRenderingWindow.cpp" />
@@ -345,6 +395,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Sun.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="TextureTransporter.cpp" />
     <ClCompile Include="Utility.cpp" />
@@ -363,10 +414,10 @@
     <ClInclude Include="..\imgui\imstb_truetype.h" />
     <ClInclude Include="AOGraphicsPipelineSetting.h" />
     <ClInclude Include="AOShaderCompile.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />
-    <ClInclude Include="CollisionShaderCompile.h" />
     <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="BloomShaderCompile.h" />
     <ClInclude Include="BufferHeapCreator.h" />
@@ -381,11 +432,13 @@
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
+    <ClInclude Include="ParticipatingMedia.h" />
+    <ClInclude Include="SkyLUT.h" />
+    <ClInclude Include="ShadowFactor.h" />
     <ClInclude Include="PeraGraphicsPipelineSetting.h" />
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />
     <ClInclude Include="PeraSetRootSignature.h" />
-    <ClInclude Include="PeraShaderCompile.h" />
     <ClInclude Include="PMDActor.h" />
     <ClInclude Include="PMDMaterialInfo.h" />
     <ClInclude Include="PrepareRenderingWindow.h" />
@@ -396,6 +449,7 @@
     <ClInclude Include="SettingImgui.h" />
     <ClInclude Include="SettingShaderCompile.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Sun.h" />
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="TextureTransporter.h" />
     <ClInclude Include="Utility.h" />
