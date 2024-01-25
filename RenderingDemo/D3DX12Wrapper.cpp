@@ -596,6 +596,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal, viewPort, rect);
 
+	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
+	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
+	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
+	
+
 	camera->CalculateFrustum();
 
 	return true;
@@ -811,9 +818,13 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
-		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		
 
-		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
+		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);

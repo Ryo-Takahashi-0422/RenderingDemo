@@ -392,6 +392,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
     <ClCompile Include="ParticipatingMedia.cpp" />
+    <ClCompile Include="Sky.cpp" />
     <ClCompile Include="SkyLUT.cpp" />
     <ClCompile Include="ShadowFactor.cpp" />
     <ClCompile Include="PeraGraphicsPipelineSetting.cpp" />
@@ -450,6 +451,7 @@
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="ParticipatingMedia.h" />
+    <ClInclude Include="Sky.h" />
     <ClInclude Include="SkyLUT.h" />
     <ClInclude Include="ShadowFactor.h" />
     <ClInclude Include="PeraGraphicsPipelineSetting.h" />

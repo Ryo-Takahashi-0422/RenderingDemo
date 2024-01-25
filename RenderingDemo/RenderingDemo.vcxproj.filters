@@ -289,6 +289,9 @@
     <ClCompile Include="Sun.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
+    <ClCompile Include="Sky.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -445,6 +448,9 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="Sun.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Sky.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>

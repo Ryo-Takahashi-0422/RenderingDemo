@@ -238,13 +238,14 @@ private:
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 
 	// Sky関連
+	Sky* sky = nullptr;
 	SkyLUT* skyLUT = nullptr;
 	ShadowFactor* shadowFactor = nullptr;
 	ParticipatingMedia participatingMedia;
 	ParticipatingMedia calculatedParticipatingMedia;
 	SkyLUTBuffer skyLUTBuffer;
-	Sun* sun;	
-
+	Sun* sun = nullptr;	
+	
 	//★★★コライダーdebug用
 	int debugNum = 2;
 
