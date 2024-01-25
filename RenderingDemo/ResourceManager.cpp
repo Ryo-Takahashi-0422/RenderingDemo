@@ -421,6 +421,8 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
+	descriptorNum = srvHeapDesc.NumDescriptors; // Œã•t‚¯‚ÌSkyÝ’è‚Å—˜—p
+
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	if (result != S_OK) return result;
 
@@ -482,8 +484,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	// 6:Sky
-
+	handle.ptr += inc; // sky•ª‹ó‚¯‚Ä‚¨‚­
 
 	// 7-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
@@ -626,4 +627,27 @@ void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrame
 	{
 		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix[motionName][i][frameNo] * invIdentify);
 	}
+}
+
+void ResourceManager::SetSkyAndCreateView(ComPtr<ID3D12Resource> _skyResource)
+{
+	skyBuffer = _skyResource;
+
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	handle.ptr += inc * 5;
+
+	_dev->CreateShaderResourceView
+	(
+		skyBuffer.Get(),
+		&srvDesc,
+		handle
+	);
 }

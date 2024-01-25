@@ -605,7 +605,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
 	
-
+	resourceManager[0]->SetSkyAndCreateView(sky->GetSkyLUTRenderingResource()); // resourceManager[0]のみに格納...
 
 	return true;
 }
@@ -1361,7 +1361,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 5;
+			dHandle.ptr += cbv_srv_Size * 6;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -2055,7 +2055,8 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
 
-
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
 
 	_cmdList3->SetPipelineState(bBPipeline);
 
