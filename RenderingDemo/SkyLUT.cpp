@@ -88,7 +88,7 @@ HRESULT SkyLUT::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUT.hlsl",
+        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -101,7 +101,7 @@ HRESULT SkyLUT::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTPix.hlsl",
+        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -457,7 +457,7 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
     m_SkyLUT->eyePos = buffer.eyePos;
     m_SkyLUT->eyePos.y = 500.0f;
     m_SkyLUT->sunDirection = buffer.sunDirection;
-    m_SkyLUT->stepCnt = buffer.stepCnt; // gpu‘¤‚ÌsunDirection.z‚É’l‚ª“ü‚é...
+    m_SkyLUT->stepCnt = buffer.stepCnt;
     m_SkyLUT->sunIntensity = buffer.sunIntensity;
 }
 

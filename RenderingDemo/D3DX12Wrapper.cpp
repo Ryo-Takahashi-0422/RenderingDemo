@@ -2019,27 +2019,28 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
-	_cmdList3->SetDescriptorHeaps(1, skyLUT->GetSkyLUTRenderingHeap().GetAddressOf());
 
-	gHandle = skyLUT->GetSkyLUTRenderingHeap()->GetGPUDescriptorHandleForHeapStart();
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+
+	//_cmdList3->SetDescriptorHeaps(1, skyLUT->GetSkyLUTRenderingHeap().GetAddressOf());
+	//gHandle = skyLUT->GetSkyLUTRenderingHeap()->GetGPUDescriptorHandleForHeapStart();
+	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
 
 	// 元
-	//_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
-	//gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
 
 
 
