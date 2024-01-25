@@ -601,6 +601,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
 	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
+	sky->SetSceneMatrix(camera->GetWorld());
 	
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
@@ -683,7 +684,21 @@ void D3DX12Wrapper::Run() {
 	rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
 	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-	
+
+	angleUpMatrix = XMMatrixRotationX(turnSpeed);
+	Matrix3d angleUp;
+	Vector3d axisX;
+	axisX << 1, 0, 0;
+	angleUp = AngleAxisd(/*M_PI*/PI * 0.006f, axisX);
+	angleUpMatrix.r[0].m128_f32[0] = angleUp(0, 0);
+	angleUpMatrix.r[0].m128_f32[1] = angleUp(0, 1);
+	angleUpMatrix.r[0].m128_f32[2] = angleUp(0, 2);
+	angleUpMatrix.r[1].m128_f32[0] = angleUp(1, 0);
+	angleUpMatrix.r[1].m128_f32[1] = angleUp(1, 1);
+	angleUpMatrix.r[1].m128_f32[2] = angleUp(1, 2);
+	angleUpMatrix.r[2].m128_f32[0] = angleUp(2, 0);
+	angleUpMatrix.r[2].m128_f32[1] = angleUp(2, 1);
+	angleUpMatrix.r[2].m128_f32[2] = angleUp(2, 2);
 
 	const float MIN_FREAM_TIME = 1.0f / 120;
 	float fps = 0;
@@ -823,8 +838,8 @@ void D3DX12Wrapper::Run() {
 		
 
 
-		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
-		//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 
 		for (int i = 0; i < threadNum; i++)
@@ -929,6 +944,8 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 	inputW = false;
 	inputLeft = false;
 	inputRight = false;
+
+	inputUp = false;
 }
 
 
@@ -1297,6 +1314,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			if (input->CheckKey(DIK_W)) inputW = true;
 			if (input->CheckKey(DIK_LEFT)) inputLeft = true;
 			if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+			if (input->CheckKey(DIK_UP)) inputUp = true;
 
 			if (resourceManager[num]->GetIsAnimationModel())
 			{
@@ -1326,18 +1344,37 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			}
 
 			// šSwitch‰»‚Å‚«‚È‚¢‚©H
-			// Left Key
+			// Left Arrow Key
 			if (inputLeft && !resourceManager[num]->GetIsAnimationModel())
 			{
 				resourceManager[num]->GetMappedMatrix()->world *= rightSpinMatrix;
 				connanDirection *= rightSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(rightSpinMatrix);
+				}
 			}
 
-			// Right Key
+			// Right Arrow Key
 			if (inputRight && !resourceManager[num]->GetIsAnimationModel())
 			{
 				resourceManager[num]->GetMappedMatrix()->world *= leftSpinMatrix;
 				connanDirection *= leftSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(leftSpinMatrix);
+				}
+			}
+
+			// Up Arrow Key
+			if (inputUp && !resourceManager[num]->GetIsAnimationModel())
+			{
+				resourceManager[num]->GetMappedMatrix()->world *= angleUpMatrix;
+				//connanDirection *= leftSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(angleUpMatrix);
+				}
 			}
 
 			// W Key

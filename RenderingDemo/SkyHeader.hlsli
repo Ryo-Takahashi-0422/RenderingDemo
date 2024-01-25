@@ -6,6 +6,11 @@ cbuffer Frustum : register(b0) // Œ»İƒJƒƒ‰‚ª•`‰æ‚µ‚Ä‚¢‚éƒXƒNƒŠ[ƒ“À•W4‹÷‚Ìƒ
     float4 bottomRightFrustum;
 };
 
+cbuffer worldMatrix : register(b1) // ƒL[‰Ÿ‰º‚É‚æ‚éworldÀ•W•Ï‰»
+{
+    matrix world;
+};
+
 SamplerState smp : register(s0);
 Texture2D<float4> SkyLUT : register(t0);
 
@@ -13,4 +18,8 @@ struct vsOutput
 {
     float4 position : SV_POSITION;
     float2 texCoord : TEXCOORD;
+    float3 topLeft : TOPLEFT;
+    float3 topRight : TOPRIGHT;
+    float3 bottomLeft : BOTTOMLEFT;
+    float3 bottomRight : BOTTOMRIGHT;
 };

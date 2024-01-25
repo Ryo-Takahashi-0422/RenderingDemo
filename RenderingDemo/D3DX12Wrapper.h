@@ -168,6 +168,7 @@ private:
 	bool inputW = false;
 	bool inputLeft = false;
 	bool inputRight = false;
+	bool inputUp = false;
 	void AllKeyBoolFalse();
 
 	/*double forwardSpeed = -0.05;*/
@@ -175,6 +176,7 @@ private:
 	double turnSpeed = 5;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
+	XMMATRIX angleUpMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
 	// 
 	struct ThreadParameter

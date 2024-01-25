@@ -6,6 +6,7 @@ Sky::Sky(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource
     _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), skyLUTResource(_skyLUTRsource)
 {
     Init();
+    //scneMatrix = new SceneMatrix;
 }
 
 Sky::~Sky()
@@ -33,8 +34,9 @@ HRESULT Sky::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメーダ
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメータ
     descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
+    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // world matrix
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -46,8 +48,13 @@ HRESULT Sky::CreateRootSignature()
     rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
     rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2];
+    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 2;
+    rootSignatureDesc.NumParameters = 3;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -311,17 +318,17 @@ void Sky::CreateRenderingSRV()
 // レンダリングに必要な材料(frustum, skyLUTテクスチャ)のためのリソース
 void Sky::InitFrustumReosources()
 {
-    CreateFrustumHeap();
-    CreateFrustumResource();
+    CreateSKyHeap();
+    CreateSkyResources();
     CreateSkyView();
-    MappingFrustum();
+    MappingSkyData();
 }
 
-HRESULT Sky::CreateFrustumHeap()
+HRESULT Sky::CreateSKyHeap()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 2; // frustum, skyLut tex
+    heapDesc.NumDescriptors = 3; // frustum, skyLut tex, world matrix
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
@@ -329,7 +336,8 @@ HRESULT Sky::CreateFrustumHeap()
     return result;
 }
 
-HRESULT Sky::CreateFrustumResource()
+// frustumとworld matrix用のリソース作る
+HRESULT Sky::CreateSkyResources()
 {
     // ParticipatingMedia用
     auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -343,6 +351,18 @@ HRESULT Sky::CreateFrustumResource()
         D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
         nullptr,
         IID_PPV_ARGS(frustumResource.ReleaseAndGetAddressOf())
+    );
+    if (result != S_OK) return result;
+
+    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+    result = _dev->CreateCommittedResource
+    (
+        &prop,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+        nullptr,
+        IID_PPV_ARGS(worldMatrixResource.ReleaseAndGetAddressOf())
     );
 
     return result;
@@ -379,13 +399,29 @@ void Sky::CreateSkyView()
         &srvDesc,
         handle
     );
+
+    handle.ptr += inc;
+
+    // world matrix
+    D3D12_CONSTANT_BUFFER_VIEW_DESC worldMatrixCbvDesc = {};
+    worldMatrixCbvDesc.BufferLocation = worldMatrixResource->GetGPUVirtualAddress();
+    worldMatrixCbvDesc.SizeInBytes = worldMatrixResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
+    (
+        &worldMatrixCbvDesc,
+        handle
+    );
 }
 
 // Frustumのマッピング
-HRESULT Sky::MappingFrustum()
+HRESULT Sky::MappingSkyData()
 {
     // ParticipatingMedia
-    return frustumResource->Map(0, nullptr, (void**)&m_Frustum);
+    auto result =  frustumResource->Map(0, nullptr, (void**)&m_Frustum);
+    if (result != S_OK) return result;
+
+    result = worldMatrixResource->Map(0, nullptr, (void**)&scneMatrix);
+    return result;
 }
 
 // 外部からのSkyLUTBuffer設定
@@ -395,6 +431,16 @@ void Sky::SetFrustum(Frustum _frustum)
     m_Frustum->topRight = _frustum.topRight;
     m_Frustum->bottomLeft = _frustum.bottomLeft;
     m_Frustum->bottomRight = _frustum.bottomRight;
+}
+
+void Sky::SetSceneMatrix(XMMATRIX _world)
+{
+    scneMatrix->world = _world;
+}
+
+void Sky::ChangeSceneMatrix(XMMATRIX _world)
+{
+    scneMatrix->world *= _world;
 }
 
 // 実行
@@ -425,9 +471,12 @@ void Sky::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     _cmdList->SetDescriptorHeaps(1, skyHeap.GetAddressOf());
 
     auto handle = skyHeap->GetGPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     _cmdList->SetGraphicsRootDescriptorTable(0, handle); // frustum
-    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
     _cmdList->SetGraphicsRootDescriptorTable(1, handle); // skyLUT
+    handle.ptr += inc;
+    _cmdList->SetGraphicsRootDescriptorTable(2, handle); // world matrix
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(4, 1, 0, 0);

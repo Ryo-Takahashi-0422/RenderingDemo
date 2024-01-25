@@ -28,10 +28,10 @@ class Sky
 
     // Frustum関連
     void InitFrustumReosources();
-    HRESULT CreateFrustumHeap();
-    HRESULT CreateFrustumResource();
+    HRESULT CreateSKyHeap();
+    HRESULT CreateSkyResources();
     void CreateSkyView();
-    HRESULT MappingFrustum();
+    HRESULT MappingSkyData();
 
 
     // デバイス
@@ -40,8 +40,8 @@ class Sky
     ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
-    D3D12_ROOT_PARAMETER rootParam[2] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
+    D3D12_ROOT_PARAMETER rootParam[3] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -60,11 +60,17 @@ class Sky
     ComPtr<ID3D12Resource> renderingResource;
     ComPtr<ID3D12Resource> frustumResource;
     ComPtr<ID3D12Resource> skyLUTResource;
+    ComPtr<ID3D12Resource> worldMatrixResource = nullptr;
 
     float resWidth = 256;
     float resHeight = 256;
 
     Frustum* m_Frustum = nullptr;
+    struct SceneMatrix
+    {
+        XMMATRIX world; // world matrix
+    };
+    SceneMatrix* scneMatrix = nullptr;
 
 public:
     Sky();
@@ -74,6 +80,8 @@ public:
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
     void SetSkyLUTResource();
+    void SetSceneMatrix(XMMATRIX _world);
+    void ChangeSceneMatrix(XMMATRIX _world);
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return rtvHeap; };
     ComPtr<ID3D12Resource> GetSkyLUTRenderingResource() { return renderingResource; };
 };
