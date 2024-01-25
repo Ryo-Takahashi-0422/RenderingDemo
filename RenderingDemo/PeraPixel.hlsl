@@ -1,7 +1,5 @@
 #include "PeraHeader.hlsli"
-
-#ifndef POSTCOLOR_HLSL
-#define POSTCOLOR_HLSL
+#include "Definition.hlsli"
 
 #define POSTCOLOR_A 2.51
 #define POSTCOLOR_B 0.03
@@ -39,5 +37,3 @@ float4 ps(Output input) : SV_TARGET
     
     return float4(col, 1); 
 }
-
-#endif // #ifndef POSTCOLOR_HLSL

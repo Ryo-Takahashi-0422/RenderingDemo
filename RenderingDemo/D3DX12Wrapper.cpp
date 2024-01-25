@@ -602,8 +602,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
 	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
 	
-
 	camera->CalculateFrustum();
+	sky->SetFrustum(camera->GetFrustum());
+	
+
 
 	return true;
 }

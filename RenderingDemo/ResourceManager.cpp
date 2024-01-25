@@ -417,7 +417,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 5 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:depth*2, 5:phongInfosサイズ(読み込むモデルにより変動), 6:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 6 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:depth*2, 5:phongInfosサイズ(読み込むモデルにより変動), 6:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -482,7 +482,10 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	// 6-x:Phong Material Parameters
+	// 6:Sky
+
+
+	// 7-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];
