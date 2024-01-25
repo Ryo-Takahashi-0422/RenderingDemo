@@ -479,7 +479,7 @@ void Sky::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     _cmdList->SetGraphicsRootDescriptorTable(2, handle); // world matrix
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    _cmdList->DrawInstanced(4, 1, 0, 0);
+    _cmdList->DrawInstanced(3, 1, 0, 0);
 
     barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (

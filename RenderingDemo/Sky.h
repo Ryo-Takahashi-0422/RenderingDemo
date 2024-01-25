@@ -62,8 +62,8 @@ class Sky
     ComPtr<ID3D12Resource> skyLUTResource;
     ComPtr<ID3D12Resource> worldMatrixResource = nullptr;
 
-    float resWidth = 256;
-    float resHeight = 256;
+    float resWidth = 512;
+    float resHeight = 512;
 
     Frustum* m_Frustum = nullptr;
     struct SceneMatrix

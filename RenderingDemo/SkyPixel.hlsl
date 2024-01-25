@@ -28,17 +28,28 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float3 bottomLeft = input.bottomLeft;
     float3 bottomRight = input.bottomRight;
       
-    float3 currentPixelVector = normalize(lerp(lerp(topLeft, topRight, input.texCoord.x), lerp(bottomLeft, bottomRight, input.texCoord.x), input.texCoord.y));
-    float theta = asin(currentPixelVector.y);
+    float x = input.texCoord.x;
+    float y = input.texCoord.y;
+    float3 currentPixelDir = 
+    normalize
+    (
+        lerp
+        (
+            lerp(topLeft, topRight, x),
+            lerp(bottomLeft, bottomRight, x),
+            y
+        )
+    );
+    float theta = asin(currentPixelDir.y);
 	
-    float3 phi = atan2(currentPixelVector.z, currentPixelVector.x);
+    float phi = atan2(currentPixelDir.z, currentPixelDir.x);
     
     float u, v;
-    u = (phi / (2 * PI));
+    u = phi / (2 * PI);
     v = (sin(theta) + 1) * 0.5;
     
     float4 col = SkyLUT.Sample(smp, float2(u, v));
-    //col.xyz = tonemap(col.xyz);
+    col.xyz = tonemap(col.xyz);
     
     return col;
 

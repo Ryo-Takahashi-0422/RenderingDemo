@@ -1,19 +1,5 @@
-//#include "RaySphereIntersection.hlsl"
-//#include "AtmosphericModel.hlsl"
-//#include "Definition.hlsli"
-//struct vsOutput
-//{
-//    float4 position : SV_POSITION;
-//    float2 texCoord : TEXCOORD;
-//};
-//cbuffer SkyKUTBuffer : register(b1)
-//{
-//    float3 eyePos;
-//    float3 sunDirection; // 
-//    float stepCnt;
-//    float3 sunIntensity;
-//};
 #include "SkyLUTHeader.hlsli"
+
 void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT, float nextT, float phaseTheta, float3 dir, float3 cameraPos)
 {
     float3 pos = cameraPos + nextT * dir;
@@ -35,7 +21,7 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
         float3 sf = shadowFactor.Sample(smp, float2(u, v));
         // S(x,li)ŒvŽZ
         
-        scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult /* * S(x,li) */ * sf;
+        scattering += (nextT - currentT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf;
     }
 
     sumSigmaT += deltaSigmaT;
@@ -74,9 +60,9 @@ float4 ps_main(vsOutput input) : SV_TARGET
     {
         nextT += deltaT;
         rayMarching(scattering, sumSigmaT, currentT, nextT, phaseTheta, dir, cameraPos3D);
-        currentT += deltaT;
+        currentT = nextT;
     }
     
-    return float4(scattering * sunIntensity, 1);
+    return float4(scattering * sunIntensity * 10, 1);
 
 }
