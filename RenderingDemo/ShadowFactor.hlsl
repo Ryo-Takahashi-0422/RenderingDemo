@@ -15,12 +15,10 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
     shadowFactor.GetDimensions(width, height);
     
     float rayHeight = lerp(0, atmosphereRadius - groundRadius, (DTid.x + 0.5f) / width);
-    float2 rayPos;
-    rayPos.x = 0;
-    rayPos.y = rayHeight + groundRadius;
+    float2 rayPos = float2(0, rayHeight + groundRadius);
     float sunTheta = asin(lerp(-1, 1, (DTid.y + 0.5f) / height)); // レイを90°方向としたときに、太陽がどの角度にあるか
 
-    float2 sunDir = (cos(sunTheta), sin(sunTheta));
+    float2 sunDir = float2(cos(sunTheta), sin(sunTheta));
     float t = 0;
     
     if (!DiscriminateIntersectionWithCircle(rayPos, sunDir, groundRadius, t)) // Vis(li) 太陽が地表に隠れていない場合
@@ -30,11 +28,10 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
             shadowFactor[DTid.xy] = float4(0, 0, 0, 1);
             return;
         }
-
     }
     
     float2 end = rayPos + sunDir * t; // レイ→太陽方向へ大気圏終端まで
-    float3 sumSigmaT = 0;
+    float3 sumSigmaT = float3(0, 0, 0);
     
     for (int i = 0; i < STEP_CNT; ++i)
     {
@@ -46,7 +43,7 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
     
     sumSigmaT *= (t / STEP_CNT); // ∫σt(x) * |dx|
     float3 transmittance = exp(-sumSigmaT); // e^-(∫σt(x) * |dx|)
-    transmittance.x *= 1.5f; // enhance red color
+    //transmittance.x *= 1.5f; // enhance red color
 
     shadowFactor[DTid.xy] = float4(transmittance, 1); // x:スレッドID xが最小(rayHeight=0)～最大(rayHeight:100) yが最小(sunTheta=-PI/2)～最大(sunTheta:PI/2)の計算結果に対応している。
 
