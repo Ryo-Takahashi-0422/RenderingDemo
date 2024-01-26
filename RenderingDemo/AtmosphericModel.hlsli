@@ -39,11 +39,14 @@ float3 GetSigmaT(float h)
 
 float CalculatePhaseFunctiuon(float theta)
 {
-    float phaseRayleigh = 3 * (1 + theta * theta) / (16 * PI);
+    float theta2 = theta * theta;
+    float phaseRayleigh = 3 * (1 + theta2) / (16 * PI);
     
     float g = asymmetryParameter;
-    float m = 1 + g * g - 2 * g * theta;
-    float phaseMie = (1 - g * g) / (4 * PI * m * sqrt(m));
+    float g2 = g * g;
+    float m = 1 + g2 - 2 * g * theta;
+    float phaseMie = 3 / (8 * PI) * (1 - g2) * (1 + theta2) / ((2 + g2) * m * sqrt(m)); // Cornette-Shanks
+    //float phaseMie = (1 - g * g) / (4 * PI * m * sqrt(m)); 別式：ヘニエイグリーンスタイン
 
     return phaseRayleigh + phaseMie;
 

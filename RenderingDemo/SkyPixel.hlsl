@@ -39,9 +39,11 @@ float4 ps_main(vsOutput input) : SV_TARGET
     
     float u, v;
     float theta = asin(currentPixelDir.y);	
-    float phi = clamp(atan2(currentPixelDir.z, currentPixelDir.x) + 2 * PI, 0, 2 * PI);    
-    v = 0.5 + 0.5 * sign(theta) * sqrt(abs(theta) / (PI / 2));
-    u = (phi / (PI) + 1);
+    //float phi = clamp(atan2(currentPixelDir.z, currentPixelDir.x) + 2 * PI, 0, 2 * PI);    
+    //v = 0.5 + 0.5 * sign(theta) * sqrt(abs(theta) / (PI / 2));
+    v = (theta + (0.5 * PI)) / PI;
+    float phi = atan2(currentPixelDir.z, currentPixelDir.x);
+    u = (phi + PI) / (2 * PI);
 
     
     float4 sky = SkyLUT.Sample(smp, float2(u, v));
