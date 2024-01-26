@@ -18,14 +18,14 @@ float3 tonemap(float3 input)
 
 float4 ps(Output input) : SV_TARGET
 {
-    return sky.Sample(smp, input.uv);
+    //return sky.Sample(smp, input.uv);
     float sponzaDepth = sponzaDepthmap.Sample(smp, input.uv);
     float connanDepth = connanDepthmap.Sample(smp, input.uv);
     
     float4 result;
     if (sponzaDepth < connanDepth)
     {
-        result = tex.Sample(smp, input.uv);
+        result = sky.Sample(smp, input.uv); //tex.Sample(smp, input.uv);
     }
     else
     {

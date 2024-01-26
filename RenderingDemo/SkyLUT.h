@@ -86,8 +86,8 @@ private:
     //// コマンドリスト
     //ComPtr<ID3D12GraphicsCommandList> _cmdList;
 
-    UINT64 width = 512;
-    UINT64 height = 512;
+    UINT64 width = 256;
+    UINT64 height = 256;
 
 public:
     SkyLUT();

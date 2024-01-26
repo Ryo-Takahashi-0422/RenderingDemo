@@ -28,8 +28,10 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float3 bottomLeft = input.bottomLeft;
     float3 bottomRight = input.bottomRight;
       
-    float x = input.texCoord.x;
-    float y = input.texCoord.y;
+    //float x = input.texCoord.x;
+    //float y = input.texCoord.y;
+    float x = input.position.x / 255;
+    float y = input.position.y / 255;
     float3 currentPixelDir = 
     normalize
     (
@@ -40,13 +42,13 @@ float4 ps_main(vsOutput input) : SV_TARGET
             y
         )
     );
-    float theta = asin(currentPixelDir.y);
-	
-    float phi = atan2(currentPixelDir.z, currentPixelDir.x);
     
     float u, v;
-    u = phi / (2 * PI);
-    v = (sin(theta) + 1) * 0.5;
+    float theta = asin(currentPixelDir.y);	
+    float phi = clamp(atan2(currentPixelDir.z, currentPixelDir.x) + 2 * PI, 0, 2 * PI);    
+    v = 0.5 + 0.5 * sign(theta) * sqrt(abs(theta) / (PI / 2));
+    u = (phi / (PI) + 1);
+
     
     float4 col = SkyLUT.Sample(smp, float2(u, v));
     col.xyz = tonemap(col.xyz);
