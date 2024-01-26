@@ -37,15 +37,13 @@ float4 ps_main(vsOutput input) : SV_TARGET
     //float theta = (2 * input.texCoord.y - 0.5) * 2 * 0.5f * PI; // -PI/2 ~ PI/2 
 
     float phi = x * 2 * PI; // 0~2PI
-    // thetaは基本球面座標系のθ(y角)で、vmをもう一回掛けて非線形になっている。
-    float theta = (y - 0.5f) * 0.5f * PI; // -PI/2 ~ PI/2 ; // PI / 2 を掛けてy軸の範囲を-PI/2～PI/2に変化させている。 sign：x < 0 ? -1: 1　vm*vmで線形→非線形化している。vm二乗による符号の消失をsign(vm)で残している。
-
-
-    
     float cosPhi = cos(phi);
     float sinPhi = sin(phi);
+
+    float theta = (y - 0.5f) * 0.5f * PI; // -PI/2 ~ PI/2 ; // PI / 2 を掛けてy軸の範囲を-PI/2～PI/2に変化させている。 sign：x < 0 ? -1: 1　vm*vmで線形→非線形化している。vm二乗による符号の消失をsign(vm)で残している。
     float cosTheta = cos(theta);
     float sinTheta = sin(theta);
+    
     float2 twoDimDir = float2(cosTheta, sinTheta); // 視線方向をxy平面で定義する。空は一様であるため球面座標におけるphi(x→z)は考慮しない。
     float2 cameraPos2D = float2(0, eyePos.y + groundRadius);
     float endT;
@@ -53,10 +51,9 @@ float4 ps_main(vsOutput input) : SV_TARGET
     {
         DiscriminateIntersectionWithCircle(cameraPos2D, twoDimDir, atmosphereRadius, endT);
     }
-    //return float4(0.0f,1.0f,0.0f,1.0f);
+
     // 球面座標でレイマーチング
-    float3 cameraPos3D = (0, 0, 0);
-    cameraPos3D.y = eyePos.y + groundRadius;
+    float3 cameraPos3D = float3(0, eyePos.y + groundRadius, 0);
     float3 dir = float3(cosTheta * cosPhi, sinTheta, cosTheta * sinPhi); // スクリーン座標を球面座標に変換する。レイ方向は解像度 / 360°確保出来る。
     float3 scattering = float3(0, 0, 0);
     float3 sumSigmaT = float3(0, 0, 0);
@@ -73,6 +70,6 @@ float4 ps_main(vsOutput input) : SV_TARGET
         currentT = nextT;
     }
     
-    return float4(scattering * sunIntensity , 1);
+    return float4(scattering * sunIntensity * 10, 1);
 
 }

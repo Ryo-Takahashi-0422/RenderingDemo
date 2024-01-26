@@ -33,15 +33,9 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float x = input.position.x / 255;
     float y = input.position.y / 255;
     float3 currentPixelDir = 
-    normalize
-    (
-        lerp
-        (
-            lerp(topLeft, topRight, x),
-            lerp(bottomLeft, bottomRight, x),
-            y
-        )
-    );
+    normalize(
+        lerp(lerp(topLeft, topRight, x),
+             lerp(bottomLeft, bottomRight, x), y));
     
     float u, v;
     float theta = asin(currentPixelDir.y);	
@@ -50,9 +44,9 @@ float4 ps_main(vsOutput input) : SV_TARGET
     u = (phi / (PI) + 1);
 
     
-    float4 col = SkyLUT.Sample(smp, float2(u, v));
-    col.xyz = tonemap(col.xyz);
+    float4 sky = SkyLUT.Sample(smp, float2(u, v));
+    sky.xyz = tonemap(sky.xyz);
     
-    return col;
+    return sky;
 
 }
