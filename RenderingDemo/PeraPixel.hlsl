@@ -1,7 +1,5 @@
 #include "PeraHeader.hlsli"
-
-#ifndef POSTCOLOR_HLSL
-#define POSTCOLOR_HLSL
+#include "Definition.hlsli"
 
 #define POSTCOLOR_A 2.51
 #define POSTCOLOR_B 0.03
@@ -20,13 +18,14 @@ float3 tonemap(float3 input)
 
 float4 ps(Output input) : SV_TARGET
 {
+    //return sky.Sample(smp, input.uv);
     float sponzaDepth = sponzaDepthmap.Sample(smp, input.uv);
     float connanDepth = connanDepthmap.Sample(smp, input.uv);
     
     float4 result;
     if (sponzaDepth < connanDepth)
     {
-        result = tex.Sample(smp, input.uv);
+        result = sky.Sample(smp, input.uv); //tex.Sample(smp, input.uv);
     }
     else
     {
@@ -39,5 +38,3 @@ float4 ps(Output input) : SV_TARGET
     
     return float4(col, 1); 
 }
-
-#endif // #ifndef POSTCOLOR_HLSL

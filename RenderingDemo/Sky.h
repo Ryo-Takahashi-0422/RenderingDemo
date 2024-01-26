@@ -1,20 +1,7 @@
 #pragma once
 
-struct SkyLUTBuffer
+class Sky
 {
-    //https://learn.microsoft.com/ja-jp/windows/win32/dxmath/pg-xnamath-optimizing XMFLOAT3は4byteアラインメントだが、実質16byteアラインメントされている
-    XMFLOAT3 eyePos;
-    float pad0;
-    XMFLOAT3 sunDirection;    
-    float stepCnt;
-    XMFLOAT3 sunIntensity;
-
-};
-
-class SkyLUT
-{
-private:
-
     // 初期化
     void Init();
 
@@ -24,7 +11,7 @@ private:
     HRESULT ShaderCompile();
     //
     void SetInputLayout();
-   /* std::vector<*/D3D12_INPUT_ELEMENT_DESC/*>*/ inputLayout[2];
+    /* std::vector<*/D3D12_INPUT_ELEMENT_DESC/*>*/ inputLayout[2];
     // パイプラインの生成
     HRESULT CreateGraphicPipeline();
 
@@ -37,22 +24,15 @@ private:
     // RenderingTarget用RTVの生成
     void CreateRenderingRTV();
     // RenderingTarget用SRVの生成
-    void CreateRenderingCBVSRV();
+    void CreateRenderingSRV();
 
-    // 関与媒質の設定
-    void InitParticipatingMedia();
-    // 関与媒質用リソースの生成
-    HRESULT CreateParticipatingResource();
-    ComPtr<ID3D12Resource> participatingMediaResource;
-    ComPtr<ID3D12Resource> skyLUTBufferResource;
-    ComPtr<ID3D12Resource> shadowFactorBufferResource;
-    // 関与媒質用ヒープ・ビューの生成
-    HRESULT CreateParticipatingMediaHeapAndView();
-    // 関与媒質用定数のマッピング
-    void MappingParticipatingMedia();
-    // マッピング先
-    ParticipatingMedia* m_Media = nullptr;
-    SkyLUTBuffer* m_SkyLUT = nullptr;
+    // Frustum関連
+    void InitFrustumReosources();
+    HRESULT CreateSKyHeap();
+    HRESULT CreateSkyResources();
+    void CreateSkyView();
+    HRESULT MappingSkyData();
+
 
     // デバイス
     ComPtr<ID3D12Device> _dev;
@@ -74,29 +54,34 @@ private:
     ComPtr<ID3D12PipelineState> pipelineState;
     // ヒープ
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> cbvsrvHeap = nullptr;
-    ComPtr<ID3D12DescriptorHeap> skyLUTHeap = nullptr;
+    ComPtr<ID3D12DescriptorHeap> skyHeap = nullptr;
+    ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr;
     // リソース
     ComPtr<ID3D12Resource> renderingResource;
-    
-    // 送受信用データ
-    void* data;
-    //// コマンドアロケータ
-    //ComPtr<ID3D12CommandAllocator> _cmdAllocator;
-    //// コマンドリスト
-    //ComPtr<ID3D12GraphicsCommandList> _cmdList;
+    ComPtr<ID3D12Resource> frustumResource;
+    ComPtr<ID3D12Resource> skyLUTResource;
+    ComPtr<ID3D12Resource> worldMatrixResource = nullptr;
 
-    UINT64 width = 256;
-    UINT64 height = 256;
+    float resWidth = 256;
+    float resHeight = 256;
+
+    Frustum* m_Frustum = nullptr;
+    struct SceneMatrix
+    {
+        XMMATRIX world; // world matrix
+    };
+    SceneMatrix* scneMatrix = nullptr;
 
 public:
-    SkyLUT();
-    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource);
-    ~SkyLUT();
-    void SetParticipatingMedia(ParticipatingMedia media);
-    void SetSkyLUTBuffer(SkyLUTBuffer buffer);
+    Sky();
+    Sky(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource);
+    ~Sky();
+    void SetFrustum(Frustum _frustum);
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
-    ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return cbvsrvHeap; };
+    void SetSkyLUTResource();
+    void SetSceneMatrix(XMMATRIX _world);
+    void ChangeSceneMatrix(XMMATRIX _world);
+    ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return rtvHeap; };
     ComPtr<ID3D12Resource> GetSkyLUTRenderingResource() { return renderingResource; };
 };

@@ -34,6 +34,7 @@ private:
 	ComPtr<ID3D12Resource> idxBuff = nullptr; // index mapped buffer
 	ComPtr<ID3D12Resource> depthBuff = nullptr; // depth buffer
 	ComPtr<ID3D12Resource> depthBuff2 = nullptr; // depth buffer
+	ComPtr<ID3D12Resource> skyBuffer = nullptr; // Sky描画結果
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
@@ -90,7 +91,9 @@ private:
 	//std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> localPosAndRotOfMesh; // メッシュ毎のローカル座標・回転
 	std::vector<XMMATRIX> localMatrix; // メッシュ毎のローカル座標・回転
 	std::map<std::string, XMMATRIX> localMatrix4OBB; // OBB毎のローカル座標・回転
-	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;	
+	std::vector<std::pair<std::string, VertexInfo>> vertexListOfOBB;
+
+	int descriptorNum;
 
 public:
 	ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, PrepareRenderingWindow* prepareRederingWindow);
@@ -135,5 +138,7 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 
 	void ClearReference();
+	void SetSkyAndCreateView(ComPtr<ID3D12Resource> _skyResource);
+	int GetDescriptorNum() { return descriptorNum; };
 };
 

@@ -168,6 +168,7 @@ private:
 	bool inputW = false;
 	bool inputLeft = false;
 	bool inputRight = false;
+	bool inputUp = false;
 	void AllKeyBoolFalse();
 
 	/*double forwardSpeed = -0.05;*/
@@ -175,6 +176,7 @@ private:
 	double turnSpeed = 5;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
+	XMMATRIX angleUpMatrix = XMMatrixIdentity();
 	double sneakCorrectNum = 0.049;
 	// 
 	struct ThreadParameter
@@ -238,13 +240,14 @@ private:
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 
 	// Sky関連
+	Sky* sky = nullptr;
 	SkyLUT* skyLUT = nullptr;
 	ShadowFactor* shadowFactor = nullptr;
 	ParticipatingMedia participatingMedia;
 	ParticipatingMedia calculatedParticipatingMedia;
 	SkyLUTBuffer skyLUTBuffer;
-	Sun* sun;	
-
+	Sun* sun = nullptr;	
+	
 	//★★★コライダーdebug用
 	int debugNum = 2;
 

@@ -10,6 +10,9 @@ cbuffer SkyLUTBuffer : register(b1)
     float3 sunIntensity;
 };
 
+SamplerState smp : register(s0); // No.0 sampler
+Texture2D<float3> shadowFactor : register(t0);
+
 struct vsOutput
 {
     float4 position : SV_POSITION;

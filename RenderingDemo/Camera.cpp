@@ -49,28 +49,40 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 
 void Camera::CalculateFrustum()
 {
-	invView = XMMatrixInverse(nullptr, view);
-	invProj = XMMatrixInverse(nullptr, proj);
+	//invView = XMMatrixInverse(nullptr, view);
+	//invProj = XMMatrixInverse(nullptr, proj);
 
-	auto invVP = XMMatrixMultiply(invView, invProj);
+	auto vp = XMMatrixMultiply(view, proj);
+	auto invVP = XMMatrixInverse(nullptr, vp);/*XMMatrixMultiply(invView, invProj)*/;
+	
+	auto topLeftN = XMVector4Transform(topLeftNear, invVP);
+	topLeftN /= topLeftN.m128_f32[3];
+	auto topLeftF = XMVector4Transform(topLeftFar, invVP);
+	topLeftF /= topLeftF.m128_f32[3];
 
-	auto topLeftNearTransformed = XMVector4Transform(topLeftNear, invVP);
-	auto topLeftFarTransformed = XMVector4Transform(topLeftFar, invVP);
-	frustum.topLeft = XMVectorSubtract(topLeftFarTransformed, topLeftNearTransformed);
-	frustum.topLeft = XMVector4Normalize(frustum.topLeft);
+	frustum.topLeft = XMVector4Normalize(XMVectorSubtract(topLeftF, topLeftN));
 
-	auto topRightNearTransformed = XMVector4Transform(topRightNear, invVP);
-	auto topRightFarTransformed = XMVector4Transform(topRightFar, invVP);
-	frustum.topRight = XMVectorSubtract(topRightFarTransformed, topRightNearTransformed);
-	frustum.topRight = XMVector4Normalize(frustum.topRight);
 
-	auto bottomLeftNearTransformed = XMVector4Transform(BottomLeftNear, invVP);
-	auto bottomLeftFarTransformed = XMVector4Transform(BottomLeftFar, invVP);
-	frustum.bottomLeft = XMVectorSubtract(bottomLeftFarTransformed, bottomLeftNearTransformed);
-	frustum.bottomLeft = XMVector4Normalize(frustum.bottomLeft);
+	auto topRightN = XMVector4Transform(topRightNear, invVP);
+	topRightN /= topRightN.m128_f32[3];
+	auto topRightF = XMVector4Transform(topRightFar, invVP);
+	topRightF /= topRightF.m128_f32[3];
 
-	auto bottomRightNearTransformed = XMVector4Transform(BottomRightNear, invVP);
-	auto bottomRightFarTransformed = XMVector4Transform(BottomRightFar, invVP);
-	frustum.bottomRight = XMVectorSubtract(bottomRightFarTransformed, bottomRightNearTransformed);
-	frustum.bottomRight = XMVector4Normalize(frustum.bottomRight);
+	frustum.topRight = XMVector4Normalize(XMVectorSubtract(topRightF, topRightN));
+
+
+	auto bottomLeftN = XMVector4Transform(BottomLeftNear, invVP);
+	bottomLeftN /= bottomLeftN.m128_f32[3];
+	auto bottomLeftF = XMVector4Transform(BottomLeftFar, invVP);
+	bottomLeftF /= bottomLeftF.m128_f32[3];
+
+	frustum.bottomLeft = XMVector4Normalize(XMVectorSubtract(bottomLeftF, bottomLeftN));
+
+
+	auto bottomRightN = XMVector4Transform(BottomRightNear, invVP);
+	bottomRightN /= bottomRightN.m128_f32[3];
+	auto bottomRightF = XMVector4Transform(BottomRightFar, invVP);
+	bottomRightF /= bottomRightF.m128_f32[3];
+
+	frustum.bottomRight = XMVector4Normalize(XMVectorSubtract(bottomRightF, bottomRightN));
 }

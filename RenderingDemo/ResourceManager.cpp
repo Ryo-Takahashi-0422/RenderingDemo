@@ -417,9 +417,11 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 5 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:depth*2, 5:phongInfosサイズ(読み込むモデルにより変動), 6:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 6 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4:depth*2, 5:phongInfosサイズ(読み込むモデルにより変動), 6:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
+
+	descriptorNum = srvHeapDesc.NumDescriptors; // 後付けのSky設定で利用
 
 	result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	if (result != S_OK) return result;
@@ -482,7 +484,9 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	// 6-x:Phong Material Parameters
+	handle.ptr += inc; // sky分空けておく
+
+	// 7-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];
@@ -623,4 +627,27 @@ void ResourceManager::MotionUpdate(std::string motionName, unsigned int maxFrame
 	{
 		mappedMatrix->bones[i] = invBonesInitialPostureMatrixMap[i] * (animationNameAndBoneNameWithTranslationMatrix[motionName][i][frameNo] * invIdentify);
 	}
+}
+
+void ResourceManager::SetSkyAndCreateView(ComPtr<ID3D12Resource> _skyResource)
+{
+	skyBuffer = _skyResource;
+
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	handle.ptr += inc * 5;
+
+	_dev->CreateShaderResourceView
+	(
+		skyBuffer.Get(),
+		&srvDesc,
+		handle
+	);
 }

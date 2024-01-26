@@ -75,6 +75,9 @@
     <None Include="AtmosphericModel.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
+    <None Include="SkyHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -119,13 +122,19 @@
     <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="SkyLUT.hlsl">
+    <FxCompile Include="SkyLUTVertex.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="ShadowFactor.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
-    <FxCompile Include="SkyLUTPix.hlsl">
+    <FxCompile Include="SkyLUTPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
@@ -278,6 +287,9 @@
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
     <ClCompile Include="Sun.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="Sky.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
   </ItemGroup>
@@ -436,6 +448,9 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="Sun.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Sky.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>

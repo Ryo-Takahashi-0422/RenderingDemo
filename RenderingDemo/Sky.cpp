@@ -1,44 +1,42 @@
 #include <stdafx.h>
-#include <SkyLUT.h>
+#include <Sky.h>
 
 
-SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource) :
-    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorBufferResource(_shadowFactorRsource),
-    data(nullptr), /*_cmdAllocator(nullptr), _cmdList(nullptr), */fence(_fence)
+Sky::Sky(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource) :
+    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), skyLUTResource(_skyLUTRsource)
 {
-    m_Media = new ParticipatingMedia;
-    m_SkyLUT = new SkyLUTBuffer;
     Init();
+    //scneMatrix = new SceneMatrix;
 }
 
-SkyLUT::~SkyLUT()
+Sky::~Sky()
 {
     //D3D12_RANGE range{ 0, 1 };
 }
 
 // 初期化
-void SkyLUT::Init()
+void Sky::Init()
 {
     CreateRootSignature();
     ShaderCompile();
     SetInputLayout();
     CreateGraphicPipeline();
-    InitParticipatingMedia();
-    RenderingSet();   
+    RenderingSet();
+    InitFrustumReosources();
 }
 
 // ルートシグネチャ設定
-HRESULT SkyLUT::CreateRootSignature()
-{    
+HRESULT Sky::CreateRootSignature()
+{
     //サンプラー作成
     stSamplerDesc[0].Init(0);
     stSamplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメーダ
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // SkyLUTBufferパラメーダ
-    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメータ
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
+    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // world matrix
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -84,11 +82,11 @@ HRESULT SkyLUT::CreateRootSignature()
 }
 
 //  シェーダー設定
-HRESULT SkyLUT::ShaderCompile()
+HRESULT Sky::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTVertex.hlsl",
+        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -101,7 +99,7 @@ HRESULT SkyLUT::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTPixel.hlsl",
+        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -139,11 +137,11 @@ HRESULT SkyLUT::ShaderCompile()
 }
 
 // 
-void SkyLUT::SetInputLayout()
+void Sky::SetInputLayout()
 {
     // 座標
     inputLayout[0] =
-    {        
+    {
         "POSITION",
         0, // 同じセマンティクスに対するインデックス
         DXGI_FORMAT_R32G32B32_FLOAT,
@@ -151,7 +149,7 @@ void SkyLUT::SetInputLayout()
         D3D12_APPEND_ALIGNED_ELEMENT,
         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
         0 // 一度に描画するインスタンス数
-        
+
     };
 
     // UV
@@ -163,12 +161,12 @@ void SkyLUT::SetInputLayout()
         0, // スロットインデックス
         D3D12_APPEND_ALIGNED_ELEMENT,
         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-        0        
+        0
     };
 }
 
 // パイプラインの生成
-HRESULT SkyLUT::CreateGraphicPipeline()
+HRESULT Sky::CreateGraphicPipeline()
 {
     D3D12_RENDER_TARGET_BLEND_DESC renderTargetDesc = {};
     renderTargetDesc.BlendEnable = false;//ブレンドを有効にするか無効にするか
@@ -217,16 +215,16 @@ HRESULT SkyLUT::CreateGraphicPipeline()
 }
 
 // RenderingTarget設定
-void SkyLUT::RenderingSet()
+void Sky::RenderingSet()
 {
     CreateRenderingHeap();
     CreateRenderingResource();
     CreateRenderingRTV();
-    CreateRenderingCBVSRV();
+    CreateRenderingSRV();
 }
 
 // RenderingTarget RTV,SRV用ヒープの生成
-HRESULT SkyLUT::CreateRenderingHeap()
+HRESULT Sky::CreateRenderingHeap()
 {
     // RTV用
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
@@ -236,7 +234,7 @@ HRESULT SkyLUT::CreateRenderingHeap()
     rtvHeapDesc.NodeMask = 0;
 
     auto result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.ReleaseAndGetAddressOf()));
-    if (result != S_OK) 
+    if (result != S_OK)
         return result;
 
     // SRV用
@@ -246,77 +244,63 @@ HRESULT SkyLUT::CreateRenderingHeap()
     srvHeapDesc.NumDescriptors = 1;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(cbvsrvHeap.ReleaseAndGetAddressOf()));
-    
+    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
+
     return result;
 }
 
 // RenderingTarget用リソースの生成
-HRESULT SkyLUT::CreateRenderingResource()
+HRESULT Sky::CreateRenderingResource()
 {
-	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
-	D3D12_RESOURCE_DESC resDesc = {};
-	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resDesc.Width = width;
-	resDesc.Height = height;
-	resDesc.DepthOrArraySize = 1;
-	resDesc.MipLevels = 1;
-	resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	resDesc.SampleDesc.Count = 1;
-	resDesc.SampleDesc.Quality = 0;
-	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+    auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
+    D3D12_RESOURCE_DESC resDesc = {};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resDesc.Width = resWidth;
+    resDesc.Height = resHeight;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.SampleDesc.Quality = 0;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
-	auto result = _dev->CreateCommittedResource
-	(
-		&heapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&resDesc,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		&depthClearValue,
-		IID_PPV_ARGS(renderingResource.ReleaseAndGetAddressOf())
-	);
-	if (result != S_OK) return result;
+    auto result = _dev->CreateCommittedResource
+    (
+        &heapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        &depthClearValue,
+        IID_PPV_ARGS(renderingResource.ReleaseAndGetAddressOf())
+    );
+    if (result != S_OK) return result;
 }
 
 // RenderingTarget用RTVの作成
-void SkyLUT::CreateRenderingRTV()
+void Sky::CreateRenderingRTV()
 {
     auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;    
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-    _dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
+    _dev->CreateRenderTargetView
     (
-        renderingResource.Get(),//レンダーターゲットを表す ID3D12Resource オブジェクトへのポインター
-        &rtvDesc,//レンダー ターゲット ビューを記述する D3D12_RENDER_TARGET_VIEW_DESC 構造体へのポインター。
-        handle//新しく作成されたレンダーターゲットビューが存在する宛先を表す CPU 記述子ハンドル(ヒープ上のアドレス)
+        renderingResource.Get(),
+        &rtvDesc,
+        handle
     );
 }
 
 // RenderingTarget用SRVの生成
-void SkyLUT::CreateRenderingCBVSRV()
+void Sky::CreateRenderingSRV()
 {
-    auto handle = cbvsrvHeap->GetCPUDescriptorHandleForHeapStart();
-    //auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 
-    //// ParticipatingMedia用view
-    //D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
-    //pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
-    //pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
-    //_dev->CreateConstantBufferView
-    //(
-    //    &pMediaCbvDesc,
-    //    handle
-    //);
-
-    //handle.ptr += inc;
-
-    // ShadowFactor用
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -331,20 +315,33 @@ void SkyLUT::CreateRenderingCBVSRV()
     );
 }
 
-// 関与媒質の設定
-void SkyLUT::InitParticipatingMedia()
+// レンダリングに必要な材料(frustum, skyLUTテクスチャ)のためのリソース
+void Sky::InitFrustumReosources()
 {
-    CreateParticipatingResource();
-    CreateParticipatingMediaHeapAndView();
-    MappingParticipatingMedia();
+    CreateSKyHeap();
+    CreateSkyResources();
+    CreateSkyView();
+    MappingSkyData();
 }
 
-// 関与媒質用リソースの生成
-HRESULT SkyLUT::CreateParticipatingResource()
+HRESULT Sky::CreateSKyHeap()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
+    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    heapDesc.NumDescriptors = 3; // frustum, skyLut tex, world matrix
+    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    heapDesc.NodeMask = 0;
+
+    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(skyHeap.ReleaseAndGetAddressOf()));
+    return result;
+}
+
+// frustumとworld matrix用のリソース作る
+HRESULT Sky::CreateSkyResources()
 {
     // ParticipatingMedia用
     auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(ParticipatingMedia) + 0xff) & ~0xff);
+    auto desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(Frustum) + 0xff) & ~0xff);
 
     auto result = _dev->CreateCommittedResource
     (
@@ -353,12 +350,11 @@ HRESULT SkyLUT::CreateParticipatingResource()
         &desc,
         D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
         nullptr,
-        IID_PPV_ARGS(participatingMediaResource.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(frustumResource.ReleaseAndGetAddressOf())
     );
     if (result != S_OK) return result;
 
-    // SkyLUTBuffer用
-    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SkyLUTBuffer) + 0xff) & ~0xff);
+    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
     result = _dev->CreateCommittedResource
     (
         &prop,
@@ -366,104 +362,89 @@ HRESULT SkyLUT::CreateParticipatingResource()
         &desc,
         D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
         nullptr,
-        IID_PPV_ARGS(skyLUTBufferResource.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(worldMatrixResource.ReleaseAndGetAddressOf())
     );
-    
+
     return result;
 }
 
-// 関与媒質用ヒープ・ビューの生成
-HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
+// Frustum用CBV,SRVの生成
+void Sky::CreateSkyView()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
-    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 3; // CBV of ParticipatingMedia, SkyLUTBuffer
-    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    heapDesc.NodeMask = 0;
-
-    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(skyLUTHeap.ReleaseAndGetAddressOf()));
-    if (result != S_OK) return result;
-
-    auto handle = skyLUTHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = skyHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    // ParticipatingMedia用view
-    D3D12_CONSTANT_BUFFER_VIEW_DESC pMediaCbvDesc = {};
-    pMediaCbvDesc.BufferLocation = participatingMediaResource->GetGPUVirtualAddress();
-    pMediaCbvDesc.SizeInBytes = participatingMediaResource->GetDesc().Width;
+    // frustum用view
+    D3D12_CONSTANT_BUFFER_VIEW_DESC frustumCbvDesc = {};
+    frustumCbvDesc.BufferLocation = frustumResource->GetGPUVirtualAddress();
+    frustumCbvDesc.SizeInBytes = frustumResource->GetDesc().Width;
     _dev->CreateConstantBufferView
     (
-        &pMediaCbvDesc,
+        &frustumCbvDesc,
         handle
     );
 
     handle.ptr += inc;
 
-    // SkyLUTBuffer用view
-    D3D12_CONSTANT_BUFFER_VIEW_DESC SkyLUTCbvDesc = {};
-    SkyLUTCbvDesc.BufferLocation = skyLUTBufferResource->GetGPUVirtualAddress();
-    SkyLUTCbvDesc.SizeInBytes = skyLUTBufferResource->GetDesc().Width;
-    _dev->CreateConstantBufferView
-    (
-        &SkyLUTCbvDesc,
-        handle
-    );
-
-    handle.ptr += inc;
-
-    // SkyLUTBuffer用view
+    // SkyLUT用view
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // DXGI_FORMAT_R32G32B32A32_FLOATにしたいが...
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     _dev->CreateShaderResourceView
     (
-        shadowFactorBufferResource.Get(),
+        skyLUTResource.Get(),
         &srvDesc,
+        handle
+    );
+
+    handle.ptr += inc;
+
+    // world matrix
+    D3D12_CONSTANT_BUFFER_VIEW_DESC worldMatrixCbvDesc = {};
+    worldMatrixCbvDesc.BufferLocation = worldMatrixResource->GetGPUVirtualAddress();
+    worldMatrixCbvDesc.SizeInBytes = worldMatrixResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
+    (
+        &worldMatrixCbvDesc,
         handle
     );
 }
 
-// 関与媒質用定数のマッピング
-void SkyLUT::MappingParticipatingMedia()
+// Frustumのマッピング
+HRESULT Sky::MappingSkyData()
 {
     // ParticipatingMedia
-    auto result = participatingMediaResource->Map(0, nullptr, (void**)&m_Media);
+    auto result =  frustumResource->Map(0, nullptr, (void**)&m_Frustum);
+    if (result != S_OK) return result;
 
-    // SkyLUTBuffer
-    result = skyLUTBufferResource->Map(0, nullptr, (void**)&m_SkyLUT);
-}
-
-// 外部からの関与媒質設定
-void SkyLUT::SetParticipatingMedia(ParticipatingMedia media)
-{
-    m_Media->rayleighScattering = media.rayleighScattering;
-    m_Media->mieScattering = media.mieScattering;
-    m_Media->mieAbsorption = media.mieAbsorption;
-    m_Media->ozoneAbsorption = media.ozoneAbsorption;
-    m_Media->asymmetryParameter = media.asymmetryParameter;
-    m_Media->altitudeOfRayleigh = media.altitudeOfRayleigh;
-    m_Media->altitudeOfMie = media.altitudeOfMie;
-    m_Media->halfWidthOfOzone = media.halfWidthOfOzone;
-    m_Media->altitudeOfOzone = media.altitudeOfOzone;
-    m_Media->groundRadius = media.groundRadius;
-    m_Media->atomosphereRadius = media.atomosphereRadius;
+    result = worldMatrixResource->Map(0, nullptr, (void**)&scneMatrix);
+    return result;
 }
 
 // 外部からのSkyLUTBuffer設定
-void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
+void Sky::SetFrustum(Frustum _frustum)
 {
-    m_SkyLUT->eyePos = buffer.eyePos;
-    m_SkyLUT->eyePos.y = 600.0f;
-    m_SkyLUT->sunDirection = buffer.sunDirection;
-    m_SkyLUT->stepCnt = buffer.stepCnt;
-    m_SkyLUT->sunIntensity = buffer.sunIntensity;
+    m_Frustum->topLeft = _frustum.topLeft;
+    m_Frustum->topRight = _frustum.topRight;
+    m_Frustum->bottomLeft = _frustum.bottomLeft;
+    m_Frustum->bottomRight = _frustum.bottomRight;
+}
+
+void Sky::SetSceneMatrix(XMMATRIX _world)
+{
+    scneMatrix->world = _world;
+}
+
+void Sky::ChangeSceneMatrix(XMMATRIX _world)
+{
+    scneMatrix->world *= _world;
 }
 
 // 実行
-void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void Sky::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -487,17 +468,18 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
 
     _cmdList->SetGraphicsRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipelineState.Get());
-    _cmdList->SetDescriptorHeaps(1, skyLUTHeap.GetAddressOf());
+    _cmdList->SetDescriptorHeaps(1, skyHeap.GetAddressOf());
 
-    auto handle = skyLUTHeap->GetGPUDescriptorHandleForHeapStart();
-    _cmdList->SetGraphicsRootDescriptorTable(0, handle);
-    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    _cmdList->SetGraphicsRootDescriptorTable(1, handle);
-    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    _cmdList->SetGraphicsRootDescriptorTable(2, handle);
+    auto handle = skyHeap->GetGPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(0, handle); // frustum
+    handle.ptr += inc;
+    _cmdList->SetGraphicsRootDescriptorTable(1, handle); // skyLUT
+    handle.ptr += inc;
+    _cmdList->SetGraphicsRootDescriptorTable(2, handle); // world matrix
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    _cmdList->DrawInstanced(4, 1, 0, 0);
+    _cmdList->DrawInstanced(3, 1, 0, 0);
 
     barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -506,37 +488,4 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
-
-    // ShadowFactor出力のコピー用リソース状態をCompute Shaderで読み書き出来る状態に戻す
-    auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        shadowFactorBufferResource.Get(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-    );
-    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-    //_cmdList->Close();
-
-    ////コマンドの実行
-    //ID3D12CommandList* executeList[] = { _cmdList };
-    //_cmdQueue->ExecuteCommandLists(1, executeList);
-
-    //UINT64 fenceVal = _fenceVal;
-    //HANDLE event; // fnece用イベント
-    ////-----ここでID3D12Fenceの待機をさせる-----
-    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
-
-    //while (fence->GetCompletedValue() != fenceVal)
-    //{
-    //    event = CreateEvent(nullptr, false, false, nullptr);
-    //    fence->SetEventOnCompletion(fenceVal, event);
-    //    //イベント発生待ち
-    //    WaitForSingleObject(event, INFINITE);
-    //    //イベントハンドルを閉じる
-    //    CloseHandle(event);
-    //}
-
-    //コマンドのリセット
-    //_cmdAllocator->Reset();
-    //_cmdList->Reset(_cmdAllocator, nullptr);
 }

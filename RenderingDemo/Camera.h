@@ -21,7 +21,7 @@ private:
 	XMVECTOR topLeftNear = { -1.0f, 1.0f, 0.0f, 1.0f };
 	XMVECTOR topLeftFar = { -1.0f, 1.0f, 0.1f, 1.0f };
 
-	XMVECTOR topRightNear = { 1.0f, 1.0f, 0.0f };
+	XMVECTOR topRightNear = { 1.0f, 1.0f, 0.0f, 1.0f };
 	XMVECTOR topRightFar = { 1.0f, 1.0f, 0.1f, 1.0f };
 
 	XMVECTOR BottomLeftNear = { -1.0f, -1.0f, 0.0f, 1.0f };

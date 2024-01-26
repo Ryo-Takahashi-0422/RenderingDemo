@@ -579,9 +579,9 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
-	/*auto fenceVal =  shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());*/
+	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
 
-	skyLUT = new SkyLUT(_dev.Get(), _fence.Get());	
+	skyLUT = new SkyLUT(_dev.Get(), _fence.Get(), shadowFactorResource.Get());
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -596,7 +596,17 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal, viewPort, rect);
 
+	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
+	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
+	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
+	sky->SetSceneMatrix(camera->GetWorld());
+	
 	camera->CalculateFrustum();
+	sky->SetFrustum(camera->GetFrustum());
+	
+	resourceManager[0]->SetSkyAndCreateView(sky->GetSkyLUTRenderingResource()); // resourceManager[0]のみに格納...
 
 	return true;
 }
@@ -674,7 +684,21 @@ void D3DX12Wrapper::Run() {
 	rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
 	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-	
+
+	angleUpMatrix = XMMatrixRotationX(turnSpeed);
+	Matrix3d angleUp;
+	Vector3d axisX;
+	axisX << 1, 0, 0;
+	angleUp = AngleAxisd(/*M_PI*/PI * 0.006f, axisX);
+	angleUpMatrix.r[0].m128_f32[0] = angleUp(0, 0);
+	angleUpMatrix.r[0].m128_f32[1] = angleUp(0, 1);
+	angleUpMatrix.r[0].m128_f32[2] = angleUp(0, 2);
+	angleUpMatrix.r[1].m128_f32[0] = angleUp(1, 0);
+	angleUpMatrix.r[1].m128_f32[1] = angleUp(1, 1);
+	angleUpMatrix.r[1].m128_f32[2] = angleUp(1, 2);
+	angleUpMatrix.r[2].m128_f32[0] = angleUp(2, 0);
+	angleUpMatrix.r[2].m128_f32[1] = angleUp(2, 1);
+	angleUpMatrix.r[2].m128_f32[2] = angleUp(2, 2);
 
 	const float MIN_FREAM_TIME = 1.0f / 120;
 	float fps = 0;
@@ -811,8 +835,13 @@ void D3DX12Wrapper::Run() {
 		//SetFoVSwitch();
 		//SetSSAOSwitch();
 		//SetBloomColor();
+		
+
+
 		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);
@@ -915,6 +944,8 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 	inputW = false;
 	inputLeft = false;
 	inputRight = false;
+
+	inputUp = false;
 }
 
 
@@ -1283,6 +1314,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			if (input->CheckKey(DIK_W)) inputW = true;
 			if (input->CheckKey(DIK_LEFT)) inputLeft = true;
 			if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+			if (input->CheckKey(DIK_UP)) inputUp = true;
 
 			if (resourceManager[num]->GetIsAnimationModel())
 			{
@@ -1312,18 +1344,37 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			}
 
 			// ★Switch化できないか？
-			// Left Key
+			// Left Arrow Key
 			if (inputLeft && !resourceManager[num]->GetIsAnimationModel())
 			{
 				resourceManager[num]->GetMappedMatrix()->world *= rightSpinMatrix;
 				connanDirection *= rightSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(rightSpinMatrix);
+				}
 			}
 
-			// Right Key
+			// Right Arrow Key
 			if (inputRight && !resourceManager[num]->GetIsAnimationModel())
 			{
 				resourceManager[num]->GetMappedMatrix()->world *= leftSpinMatrix;
 				connanDirection *= leftSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(leftSpinMatrix);
+				}
+			}
+
+			// Up Arrow Key
+			if (inputUp && !resourceManager[num]->GetIsAnimationModel())
+			{
+				resourceManager[num]->GetMappedMatrix()->world *= angleUpMatrix;
+				//connanDirection *= leftSpinMatrix;
+				if (num == 0)
+				{
+					sky->ChangeSceneMatrix(angleUpMatrix);
+				}
 			}
 
 			// W Key
@@ -1347,7 +1398,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 5;
+			dHandle.ptr += cbv_srv_Size * 6;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -2018,29 +2069,31 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
-	_cmdList3->SetDescriptorHeaps(1, skyLUT->GetSkyLUTRenderingHeap().GetAddressOf());
 
-	gHandle = skyLUT->GetSkyLUTRenderingHeap()->GetGPUDescriptorHandleForHeapStart();
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+
+	//_cmdList3->SetDescriptorHeaps(1, skyLUT->GetSkyLUTRenderingHeap().GetAddressOf());
+	//gHandle = skyLUT->GetSkyLUTRenderingHeap()->GetGPUDescriptorHandleForHeapStart();
+	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
 
 	// 元
-	//_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
 
-	//gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
 
-	//gHandle.ptr += buffSize;
-	//_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
 
-
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

@@ -60,7 +60,7 @@ public:
     ShadowFactor(ID3D12Device* dev, ID3D12Fence* _fence);
     ~ShadowFactor();
     void SetParticipatingMedia(ParticipatingMedia media);
-
+    ComPtr<ID3D12Resource> GetShadowFactorTextureResource() { return copyTextureResource; };
     // é¿çs
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
 
