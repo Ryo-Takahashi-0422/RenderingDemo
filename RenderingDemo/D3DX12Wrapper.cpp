@@ -822,18 +822,18 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
-		// skyの解像度に変更がある場合
-		if (settingImgui->GetIsSkyResolutionChanged())
-		{
-			sky->ChangeSceneResolution(settingImgui->GetSkyResX(), settingImgui->GetSkyResY());
-		}
-
 		// skyLUTの解像度に変更がある場合の処理
 		if (settingImgui->GetIsSkyLUTResolutionChanged())
 		{
 			skyLUT->ChangeSkyLUTResolution(settingImgui->GetSkyLUTResX(), settingImgui->GetSkyLUTResY());
-			skyLUT->RecreatreSource();
 			sky->ChangeSkyLUTResourceAndView(skyLUT->GetSkyLUTRenderingResource().Get());
+		}
+
+		// skyの解像度に変更がある場合
+		if (settingImgui->GetIsSkyResolutionChanged())
+		{
+			sky->ChangeSceneResolution(settingImgui->GetSkyResX(), settingImgui->GetSkyResY());
+			resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 		}
 
 		//for (int i = 0; i < strModelNum; ++i)
@@ -882,7 +882,7 @@ void D3DX12Wrapper::Run() {
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
 		_cmdQueue->ExecuteCommandLists(3, cmdLists);
-		printf("%d\n", _fence->GetCompletedValue());
+
 		//ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
 		//_cmdQueue->ExecuteCommandLists(1, cmdLists2);
 

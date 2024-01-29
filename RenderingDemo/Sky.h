@@ -74,6 +74,8 @@ class Sky
     };
     SceneInfo* scneMatrix = nullptr;
 
+    void RecreatreSource();
+
 public:
     Sky();
     Sky(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource);
@@ -81,11 +83,11 @@ public:
     void SetFrustum(Frustum _frustum);
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
-    void ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource);
+    void ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource); // skyLUTの解像度に変更がある場合はそのリソースから作り変えているため、参照先のリソースを新たに設定して且つviewも設定し直す
     void SetSceneInfo(XMMATRIX _world);
     
     void ChangeSceneMatrix(XMMATRIX _world);
-    void ChangeSceneResolution(int width, int height);
+    void ChangeSceneResolution(int _width, int _height);
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return rtvHeap; };
     ComPtr<ID3D12Resource> GetSkyLUTRenderingResource() { return renderingResource; };
 };

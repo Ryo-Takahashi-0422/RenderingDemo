@@ -89,7 +89,8 @@ private:
 
     UINT64 width = 1024;
     UINT64 height = 1024;
-    bool isChangedRes = false;
+
+    void RecreatreSource();
 
 public:
     SkyLUT();
@@ -99,8 +100,7 @@ public:
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
     void SetSkyLUTResolution();
     void ChangeSkyLUTResolution(int _width, int _height);
-    bool IsChangedRes() { return isChangedRes; };
-    void RecreatreSource();
+    
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return cbvsrvHeap; };

@@ -85,11 +85,11 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isSkyResChanged = false;
 
-		if (ImGui::InputInt2("Sky Resolution X", &skyResX))
+		if (ImGui::SliderInt("Sky Resolution X", &skyResX, 1, 1024))
 		{
 			isSkyResChanged = true;
 		}
-		if (ImGui::InputInt2("Sky Resolution Y", &skyResY))
+		if (ImGui::SliderInt("Sky Resolution Y", &skyResY, 1, 1024))
 		{
 			isSkyResChanged = true;
 		}

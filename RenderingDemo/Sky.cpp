@@ -440,6 +440,7 @@ void Sky::SetSceneInfo(XMMATRIX _world)
     scneMatrix->height = height;
 }
 
+// skyLUTの解像度に変更がある場合はそのリソースから作り変えているため、参照先のリソースを新たに設定して且つviewも設定し直す
 void Sky::ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource)
 {
     skyLUTResource = _skyLUTRsource;
@@ -467,10 +468,27 @@ void Sky::ChangeSceneMatrix(XMMATRIX _world)
     scneMatrix->world *= _world;
 }
 
-void Sky::ChangeSceneResolution(int width, int height)
+void Sky::ChangeSceneResolution(int _width, int _height)
 {
     scneMatrix->width = width;
     scneMatrix->height = height;
+
+    width = _width;
+    height = _height;
+
+    RecreatreSource();
+}
+
+void Sky::RecreatreSource()
+{
+    renderingResource->Release();
+    renderingResource = nullptr;
+    rtvHeap->Release();
+    rtvHeap = nullptr;
+    srvHeap->Release();
+    srvHeap = nullptr;
+
+    RenderingSet();
 }
 
 // 実行

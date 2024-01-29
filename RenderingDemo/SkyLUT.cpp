@@ -478,7 +478,8 @@ void SkyLUT::ChangeSkyLUTResolution(int _width, int _height)
     
     width = _width;
     height = _height;
-    isChangedRes = true;
+
+    RecreatreSource();
 }
 
 void SkyLUT::RecreatreSource()
@@ -491,8 +492,6 @@ void SkyLUT::RecreatreSource()
     cbvsrvHeap = nullptr;
 
     RenderingSet();
-    
-    isChangedRes = false;
 }
 
 // é¿çs
