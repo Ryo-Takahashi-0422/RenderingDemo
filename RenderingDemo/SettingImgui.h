@@ -39,6 +39,13 @@ private:
 	float sunAngleX = 0.0f;
 	float sunAngleY = 60.0f;
 
+	int skyResX = 1024;
+	int skyResY = 1024;
+	bool isSkyResChanged = false;
+
+	int skyLUTResX = 1024;
+	int skyLUTResY = 1024;
+	bool isSkyLUTResChanged = false;
 
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
@@ -57,7 +64,19 @@ public:
 	bool GetEffectOnOffBool() { return isEffectOn; };
 	size_t GetPostSettingSize() { return sizeof(PostSetting); };
 
+	// sun
 	float GetSunAngleX() { return sunAngleX; };
 	float GetSunAngleY() { return sunAngleY; };
+
+	// sky
+	bool GetIsSkyResolutionChanged() { return isSkyResChanged; };
+	int GetSkyResX() { return skyResX; };
+	int GetSkyResY() { return skyResY; };
+
+	// skyLUT
+	bool GetIsSkyLUTResolutionChanged() { return isSkyLUTResChanged; };
+	int GetSkyLUTResX() { return skyLUTResX; };
+	int GetSkyLUTResY() { return skyLUTResY; };
+
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

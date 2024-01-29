@@ -2,9 +2,9 @@
 #include <SkyLUT.h>
 
 
-SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource) :
+SkyLUT::SkyLUT(ID3D12Device* _dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource) :
     _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorBufferResource(_shadowFactorRsource),
-    data(nullptr), /*_cmdAllocator(nullptr), _cmdList(nullptr), */fence(_fence)
+    data(nullptr)//, /*_cmdAllocator(nullptr), _cmdList(nullptr), *//*fence(_fence)*/
 {
     m_Media = new ParticipatingMedia;
     m_SkyLUT = new SkyLUTBuffer;
@@ -461,8 +461,38 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
     m_SkyLUT->stepCnt = buffer.stepCnt;
     m_SkyLUT->sunIntensity = buffer.sunIntensity;
 
+    //m_SkyLUT->width = width;
+    //m_SkyLUT->height = height;
+}
+
+void SkyLUT::SetSkyLUTResolution()
+{
     m_SkyLUT->width = width;
     m_SkyLUT->height = height;
+}
+
+void SkyLUT::ChangeSkyLUTResolution(int _width, int _height)
+{
+    m_SkyLUT->width = _width;
+    m_SkyLUT->height = _height;
+    
+    width = _width;
+    height = _height;
+    isChangedRes = true;
+}
+
+void SkyLUT::RecreatreSource()
+{
+    renderingResource.Get()->Release();
+    renderingResource = nullptr;
+    rtvHeap.Get()->Release();
+    rtvHeap = nullptr;
+    cbvsrvHeap.Get()->Release();
+    cbvsrvHeap = nullptr;
+
+    RenderingSet();
+    
+    isChangedRes = false;
 }
 
 // é¿çs

@@ -433,16 +433,44 @@ void Sky::SetFrustum(Frustum _frustum)
     m_Frustum->bottomRight = _frustum.bottomRight;
 }
 
-void Sky::SetSceneMatrix(XMMATRIX _world)
+void Sky::SetSceneInfo(XMMATRIX _world)
 {
     scneMatrix->world = _world;
     scneMatrix->width = width;
     scneMatrix->height = height;
 }
 
+void Sky::ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource)
+{
+    skyLUTResource = _skyLUTRsource;
+    auto handle = skyHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
+
+    // SkyLUTópview
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // DXGI_FORMAT_R32G32B32A32_FLOATÇ…ÇµÇΩÇ¢Ç™...
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        skyLUTResource.Get(),
+        &srvDesc,
+        handle
+    );
+}
+
 void Sky::ChangeSceneMatrix(XMMATRIX _world)
 {
     scneMatrix->world *= _world;
+}
+
+void Sky::ChangeSceneResolution(int width, int height)
+{
+    scneMatrix->width = width;
+    scneMatrix->height = height;
 }
 
 // é¿çs

@@ -80,6 +80,38 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
+
+	if (ImGui::TreeNode("Sky"))
+	{
+		isSkyResChanged = false;
+
+		if (ImGui::InputInt2("Sky Resolution X", &skyResX))
+		{
+			isSkyResChanged = true;
+		}
+		if (ImGui::InputInt2("Sky Resolution Y", &skyResY))
+		{
+			isSkyResChanged = true;
+		}
+		
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Sky LUT"))
+	{
+		isSkyLUTResChanged = false;
+
+		if (ImGui::InputInt("SkyLUT Resolution X", &skyLUTResX))
+		{
+			isSkyLUTResChanged = true;
+		}
+		if (ImGui::SliderInt("SkyLUT Resolution Y", &skyLUTResY, 1, 1024))
+		{
+			isSkyLUTResChanged = true;
+		}
+
+		ImGui::TreePop();
+	}
 	//static bool blnFoV = false;
 	//ImGui::Checkbox("Field of View on/off", &blnFoV);
 	//isFoV = blnFoV;

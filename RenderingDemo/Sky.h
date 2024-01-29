@@ -81,9 +81,11 @@ public:
     void SetFrustum(Frustum _frustum);
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
-    void SetSkyLUTResource();
-    void SetSceneMatrix(XMMATRIX _world);
+    void ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource);
+    void SetSceneInfo(XMMATRIX _world);
+    
     void ChangeSceneMatrix(XMMATRIX _world);
+    void ChangeSceneResolution(int width, int height);
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return rtvHeap; };
     ComPtr<ID3D12Resource> GetSkyLUTRenderingResource() { return renderingResource; };
 };

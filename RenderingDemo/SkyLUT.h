@@ -58,7 +58,7 @@ private:
     // デバイス
     ComPtr<ID3D12Device> _dev;
     // フェンス
-    ComPtr<ID3D12Fence> fence = nullptr;
+    //ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
     CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
@@ -89,13 +89,18 @@ private:
 
     UINT64 width = 1024;
     UINT64 height = 1024;
+    bool isChangedRes = false;
 
 public:
     SkyLUT();
-    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource);
+    SkyLUT(ID3D12Device* dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
+    void SetSkyLUTResolution();
+    void ChangeSkyLUTResolution(int _width, int _height);
+    bool IsChangedRes() { return isChangedRes; };
+    void RecreatreSource();
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return cbvsrvHeap; };

@@ -581,7 +581,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
 
-	skyLUT = new SkyLUT(_dev.Get(), _fence.Get(), shadowFactorResource.Get());
+	skyLUT = new SkyLUT(_dev.Get()/*, _fence.Get()*/, shadowFactorResource.Get());
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -594,14 +594,14 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.y = 1.0f;
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
-	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), fenceVal, viewPort, rect);
+	skyLUT->SetSkyLUTResolution();
 
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 
 	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
 	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
-	sky->SetSceneMatrix(camera->GetWorld());
+	sky->SetSceneInfo(camera->GetWorld());
 	
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
@@ -777,7 +777,7 @@ void D3DX12Wrapper::Run() {
 	XMFLOAT3 sunDir;
 	while (true)
 	{
-
+		
 		// 今の時間を取得
 		QueryPerformanceCounter(&timeEnd);
 		// (今の時間 - 前フレームの時間) / 周波数 = 経過時間(秒単位)
@@ -822,6 +822,20 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
+		// skyの解像度に変更がある場合
+		if (settingImgui->GetIsSkyResolutionChanged())
+		{
+			sky->ChangeSceneResolution(settingImgui->GetSkyResX(), settingImgui->GetSkyResY());
+		}
+
+		// skyLUTの解像度に変更がある場合の処理
+		if (settingImgui->GetIsSkyLUTResolutionChanged())
+		{
+			skyLUT->ChangeSkyLUTResolution(settingImgui->GetSkyLUTResX(), settingImgui->GetSkyLUTResY());
+			skyLUT->RecreatreSource();
+			sky->ChangeSkyLUTResourceAndView(skyLUT->GetSkyLUTRenderingResource().Get());
+		}
+
 		//for (int i = 0; i < strModelNum; ++i)
 		//{
 		//	DrawLightMap(i, cbv_srv_Size); // draw lightmap
@@ -852,7 +866,7 @@ void D3DX12Wrapper::Run() {
 		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-
+		
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);
@@ -864,11 +878,11 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 		_cmdList3->Close();
-
+		
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
 		_cmdQueue->ExecuteCommandLists(3, cmdLists);
-
+		printf("%d\n", _fence->GetCompletedValue());
 		//ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
 		//_cmdQueue->ExecuteCommandLists(1, cmdLists2);
 
@@ -879,6 +893,7 @@ void D3DX12Wrapper::Run() {
 
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
+			
 			event = CreateEvent(nullptr, false, false, nullptr);
 			_fence->SetEventOnCompletion(_fenceVal, event);
 			//イベント発生待ち
@@ -909,6 +924,8 @@ void D3DX12Wrapper::Run() {
 		_swapChain->Present(1, 0);	
 		bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 		// ★★★交互にワーカースレッドに処理をさせるのではなく、一つ先のフレームも並列で処理させるようにしたい。
+
+		
 
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
