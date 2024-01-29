@@ -460,6 +460,9 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
     m_SkyLUT->sunDirection = buffer.sunDirection;
     m_SkyLUT->stepCnt = buffer.stepCnt;
     m_SkyLUT->sunIntensity = buffer.sunIntensity;
+
+    m_SkyLUT->width = width;
+    m_SkyLUT->height = height;
 }
 
 // é¿çs

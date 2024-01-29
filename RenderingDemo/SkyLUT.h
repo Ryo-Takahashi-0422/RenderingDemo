@@ -8,7 +8,8 @@ struct SkyLUTBuffer
     XMFLOAT3 sunDirection;    
     float stepCnt;
     XMFLOAT3 sunIntensity;
-
+    int width;
+    int height;
 };
 
 class SkyLUT
@@ -86,8 +87,8 @@ private:
     //// コマンドリスト
     //ComPtr<ID3D12GraphicsCommandList> _cmdList;
 
-    UINT64 width = 256;
-    UINT64 height = 256;
+    UINT64 width = 1024;
+    UINT64 height = 1024;
 
 public:
     SkyLUT();

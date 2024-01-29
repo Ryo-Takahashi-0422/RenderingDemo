@@ -257,8 +257,8 @@ HRESULT Sky::CreateRenderingResource()
     auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
     D3D12_RESOURCE_DESC resDesc = {};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    resDesc.Width = resWidth;
-    resDesc.Height = resHeight;
+    resDesc.Width = width;
+    resDesc.Height = height;
     resDesc.DepthOrArraySize = 1;
     resDesc.MipLevels = 1;
     resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -354,7 +354,7 @@ HRESULT Sky::CreateSkyResources()
     );
     if (result != S_OK) return result;
 
-    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneInfo) + 0xff) & ~0xff);
     result = _dev->CreateCommittedResource
     (
         &prop,
@@ -436,6 +436,8 @@ void Sky::SetFrustum(Frustum _frustum)
 void Sky::SetSceneMatrix(XMMATRIX _world)
 {
     scneMatrix->world = _world;
+    scneMatrix->width = width;
+    scneMatrix->height = height;
 }
 
 void Sky::ChangeSceneMatrix(XMMATRIX _world)

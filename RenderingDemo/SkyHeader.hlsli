@@ -9,6 +9,8 @@ cbuffer Frustum : register(b0) // Œ»İƒJƒƒ‰‚ª•`‰æ‚µ‚Ä‚¢‚éƒXƒNƒŠ[ƒ“À•W4‹÷‚Ìƒ
 cbuffer worldMatrix : register(b1) // ƒL[‰Ÿ‰º‚É‚æ‚éworldÀ•W•Ï‰»
 {
     matrix world;
+    int width;
+    int height;
 };
 
 SamplerState smp : register(s0);

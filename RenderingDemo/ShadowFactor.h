@@ -3,6 +3,11 @@
 class ShadowFactor
 {
 private:
+    // 解像度関連
+    int res = 1024;
+    int threadIdNum_X = 16;
+    int threadIdNum_Y = 16;
+
     // ルートシグネチャの生成
     HRESULT CreateRootSignature();
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
