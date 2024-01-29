@@ -606,7 +606,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
 	
-	resourceManager[0]->SetSkyAndCreateView(sky->GetSkyLUTRenderingResource()); // resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
+	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
+	resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
+	resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
 
 	return true;
 }
@@ -1407,7 +1409,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 6;
+			dHandle.ptr += cbv_srv_Size * 7;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -2103,6 +2105,9 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

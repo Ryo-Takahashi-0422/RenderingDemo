@@ -36,5 +36,11 @@ float4 ps(Output input) : SV_TARGET
     col = tonemap(col);    
     col = saturate(pow(col, 1 / 2.2));
     
-    return float4(col, 1); 
+    float4 imgui = imguiWindow.Sample(smp, input.uv) / 2;
+    //if(imgui.r != 0)
+    //{
+    //    col = imgui;
+    //}
+    
+    return float4(col, 1) + imgui; 
 }

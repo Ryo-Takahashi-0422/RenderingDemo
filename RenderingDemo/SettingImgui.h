@@ -21,7 +21,7 @@ private:
 
 	HRESULT CreateSRVDHeap(ComPtr<ID3D12Device> _dev);
 	HRESULT CreateRTVDHeap(ComPtr<ID3D12Device> _dev);
-	HRESULT CreateRenderResource(ComPtr<ID3D12Device> _dev);
+	HRESULT CreateRenderResource(ComPtr<ID3D12Device> _dev, int width, int height);
 	void CreateRTV(ComPtr<ID3D12Device> _dev);
 	bool blnResult;
 	float fovValueExp;

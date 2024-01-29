@@ -14,7 +14,7 @@ HRESULT SettingImgui::Init
 {
 	CreateSRVDHeap(_dev);
 	CreateRTVDHeap(_dev);
-	CreateRenderResource(_dev);
+	CreateRenderResource(_dev, pRWindow->GetWindowWidth(), pRWindow->GetWindowHeight());
 	CreateRTV(_dev);
 	
 	// Setup Dear ImGui context
@@ -67,8 +67,8 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	//ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
 	if (ImGui::TreeNode("Sun"))
 	{
-		ImGui::SliderFloat("Sun Angle Y", &sunAngleX, 0, 90);
-		ImGui::SliderFloat("Sun Angle X", &sunAngleY, 0, 360);
+		ImGui::SliderFloat("Sun Angle X", &sunAngleX, 0, 360);
+		ImGui::SliderFloat("Sun Angle Y", &sunAngleY, -5, 90);
 		//ImGui::InputFloat("Sun Intensity", &sunIntensity_);
 		//ImGui::InputFloat("Sun Disk Size", &sunDiskSize_, 0, 0, 8);
 		//if (ImGui::InputInt("Sun Disk Segments", &sunDiskSegments_))
@@ -187,15 +187,15 @@ HRESULT SettingImgui::CreateRTVDHeap(ComPtr<ID3D12Device> _dev)
 	);
 }
 
-HRESULT SettingImgui::CreateRenderResource(ComPtr<ID3D12Device> _dev)
+HRESULT SettingImgui::CreateRenderResource(ComPtr<ID3D12Device> _dev, int width, int height)
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
 	auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
 	D3D12_RESOURCE_DESC resDesc = {};
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resDesc.Width = 720;
-	resDesc.Height = 720;
+	resDesc.Width = width;
+	resDesc.Height = height;
 	resDesc.DepthOrArraySize = 1;
 	resDesc.MipLevels = 1;
 	resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
