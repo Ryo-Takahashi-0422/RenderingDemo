@@ -836,6 +836,7 @@ void D3DX12Wrapper::Run() {
 			resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 		}
 
+
 		//for (int i = 0; i < strModelNum; ++i)
 		//{
 		//	DrawLightMap(i, cbv_srv_Size); // draw lightmap
