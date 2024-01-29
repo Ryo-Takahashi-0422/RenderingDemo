@@ -101,7 +101,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isSkyLUTResChanged = false;
 
-		if (ImGui::InputInt("SkyLUT Resolution X", &skyLUTResX))
+		if (ImGui::SliderInt("SkyLUT Resolution X", &skyLUTResX, 1, 1024))
 		{
 			isSkyLUTResChanged = true;
 		}
