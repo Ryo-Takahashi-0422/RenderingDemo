@@ -316,32 +316,6 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-    //_cmdList->Close();
-
-    ////コマンドの実行
-    //ID3D12CommandList* executeList[] = { _cmdList };
-    //_cmdQueue->ExecuteCommandLists(1, executeList);
-
-    //UINT64 fenceVal = _fenceVal;
-    //HANDLE event; // fnece用イベント
-    ////-----ここでID3D12Fenceの待機をさせる-----
-    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
-
-    //while (fence->GetCompletedValue() != fenceVal)
-    //{
-    //    event = CreateEvent(nullptr, false, false, nullptr);
-    //    fence->SetEventOnCompletion(fenceVal, event);
-    //    //イベント発生待ち
-    //    WaitForSingleObject(event, INFINITE);
-    //    //イベントハンドルを閉じる
-    //    CloseHandle(event);
-    //}
-
-    //_cmdAllocator->Reset();
-    //_cmdList->Reset(_cmdAllocator, nullptr);
-    ////GPUからデータをもらう
-    ////test.assign((float*)data, (float*)data + test.size());    
-    //return fenceVal;
  }
 
 // 外部からの関与媒質設定

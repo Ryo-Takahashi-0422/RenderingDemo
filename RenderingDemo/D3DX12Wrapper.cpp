@@ -545,20 +545,20 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理10：イベントハンドルの作成
 // 初期化処理11：GPUの処理完了待ち
 
-//// Imgui独自の初期設定
-//	settingImgui = new SettingImgui;
-//
-//	if (FAILED(settingImgui->Init(_dev, prepareRenderingWindow)))
-//	{
-//		return false;
-//	}	
-//
-//	for (int i = 0; i < strModelNum; ++i)
-//	{
-//		bufferHeapCreator[i]->CreateBuff4Imgui(_dev, settingImgui->GetPostSettingSize());
-//		viewCreator[i]->CreateCBV4ImguiPostSetting(_dev);
-//		mappingExecuter[i]->MappingPostSetting();
-//	}
+// Imgui独自の初期設定
+	settingImgui = new SettingImgui;
+
+	if (FAILED(settingImgui->Init(_dev, prepareRenderingWindow)))
+	{
+		return false;
+	}	
+
+	//for (int i = 0; i < strModelNum; ++i)
+	//{
+	//	bufferHeapCreator[i]->CreateBuff4Imgui(_dev, settingImgui->GetPostSettingSize());
+	//	viewCreator[i]->CreateCBV4ImguiPostSetting(_dev);
+	//	mappingExecuter[i]->MappingPostSetting();
+	//}
 
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
@@ -771,6 +771,8 @@ void D3DX12Wrapper::Run() {
 
 	LoadContexts();
 	bbIdx = 0;
+
+	XMFLOAT3 sunDir;
 	while (true)
 	{
 
@@ -809,7 +811,14 @@ void D3DX12Wrapper::Run() {
 		}
 
 		//auto k = _swapChain->GetCurrentBackBufferIndex();
-		//settingImgui->DrawDateOfImGUI(_dev, _cmdList, bufferHeapCreator[0]->GetImguiBuff(), bufferHeapCreator[0], k);
+		settingImgui->DrawImGUI(_dev, _cmdList);
+
+		// 太陽の位置を更新
+		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
+		skyLUTBuffer.sunDirection.x = sunDir.x;
+		skyLUTBuffer.sunDirection.y = sunDir.y;
+		skyLUTBuffer.sunDirection.z = sunDir.z;
+		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 		//for (int i = 0; i < strModelNum; ++i)
 		//{

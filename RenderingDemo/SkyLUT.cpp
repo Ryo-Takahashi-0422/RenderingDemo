@@ -515,28 +515,4 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-    //_cmdList->Close();
-
-    ////コマンドの実行
-    //ID3D12CommandList* executeList[] = { _cmdList };
-    //_cmdQueue->ExecuteCommandLists(1, executeList);
-
-    //UINT64 fenceVal = _fenceVal;
-    //HANDLE event; // fnece用イベント
-    ////-----ここでID3D12Fenceの待機をさせる-----
-    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
-
-    //while (fence->GetCompletedValue() != fenceVal)
-    //{
-    //    event = CreateEvent(nullptr, false, false, nullptr);
-    //    fence->SetEventOnCompletion(fenceVal, event);
-    //    //イベント発生待ち
-    //    WaitForSingleObject(event, INFINITE);
-    //    //イベントハンドルを閉じる
-    //    CloseHandle(event);
-    //}
-
-    //コマンドのリセット
-    //_cmdAllocator->Reset();
-    //_cmdList->Reset(_cmdAllocator, nullptr);
 }

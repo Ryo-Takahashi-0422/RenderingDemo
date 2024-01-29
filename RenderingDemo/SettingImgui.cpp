@@ -12,10 +12,10 @@ HRESULT SettingImgui::Init
 	PrepareRenderingWindow* pRWindow
 )
 {
-	CreateSRVDHeap4Imgui(_dev);
-	CreateRTVDHeap4Imgui(_dev);
-	CreateBuff4Imgui(_dev);
-	//CreateRTV4Imgui(_dev);
+	CreateSRVDHeap(_dev);
+	CreateRTVDHeap(_dev);
+	CreateRenderResource(_dev);
+	CreateRTV(_dev);
 	
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -54,12 +54,7 @@ HRESULT SettingImgui::Init
 	return S_OK;
 }
 
-void SettingImgui::DrawDateOfImGUI(
-	ComPtr<ID3D12Device> _dev,
-	ComPtr<ID3D12GraphicsCommandList> _cmdList,
-	ComPtr<ID3D12Resource>/*std::vector<ComPtr<ID3D12Resource>>*/ pResoures,
-	BufferHeapCreator*/*std::vector<BufferHeapCreator*>*/ bufferHeapCreator,
-	UINT backBufferIndex)
+void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCommandList> _cmdList)
 {
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -69,57 +64,73 @@ void SettingImgui::DrawDateOfImGUI(
 	ImGui::SetWindowSize(ImVec2(400, 500), ImGuiCond_::ImGuiCond_FirstUseEver);
 	//ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
 
-	static bool blnFoV = false;
-	ImGui::Checkbox("Field of View on/off", &blnFoV);
-	isFoV = blnFoV;
-
-	static bool blnSSAO = false;
-	ImGui::Checkbox("SSAO on/off", &blnSSAO);
-	isSSAO = blnSSAO;
-
-	static bool blnShadowmap = false;
-	ImGui::Checkbox("Self Shadow on/off", &blnShadowmap);
-	isSelfShadowOn = blnShadowmap;
-
-	static bool blnBloom = false;
-	ImGui::Checkbox("Bloom on/off", &blnBloom);
-	isBloomOn = blnBloom;
-
-	static bool blnEffect = false;
-	ImGui::Checkbox("Effect on/off", &blnEffect);
-	isEffectOn = blnEffect;
-
-	constexpr float pi = 3.141592653589f;
-	static float fov = XM_PIDIV2;
-	ImGui::SliderFloat("Field Of View", &fov, pi / 6.0f, pi * 5.0f / 6.0f);
-	fovValueExp = fov;
-
-	static float lightVec[3] = { -1.0f, 1.0f, -0.5f };
-	// lightVec.x
-	ImGui::SliderFloat("Light Vector.x", &lightVec[0], 1.0f, -1.0f);
-	// lightVec.y
-	ImGui::SliderFloat("Light Vector.y", &lightVec[1], 1.0f, -1.0f);
-	// lightVec.y
-	ImGui::SliderFloat("Light Vector.z", &lightVec[2], 1.0f, -1.0f);
-	for (int i = 0; i < 3; ++i)
+	//ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
+	if (ImGui::TreeNode("Sun"))
 	{
-		lightVecExp[i] = lightVec[i];
+		ImGui::SliderFloat("Sun Angle Y", &sunAngleX, 0, 90);
+		ImGui::SliderFloat("Sun Angle X", &sunAngleY, 0, 360);
+		//ImGui::InputFloat("Sun Intensity", &sunIntensity_);
+		//ImGui::InputFloat("Sun Disk Size", &sunDiskSize_, 0, 0, 8);
+		//if (ImGui::InputInt("Sun Disk Segments", &sunDiskSegments_))
+		//{
+		//	sunDiskSegments_ = (std::max)(sunDiskSegments_, 1);
+		//	sunRenderer_.setSunDiskSegments(sunDiskSegments_);
+		//}
+		//ImGui::ColorEdit3("Sun Color", &sunColor_.x);
+		ImGui::TreePop();
 	}
 
-	static float bgCol[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
-	ImGui::ColorPicker4("BackGround Color", bgCol, ImGuiColorEditFlags_::ImGuiColorEditFlags_PickerHueWheel |
-		ImGuiColorEditFlags_::ImGuiColorEditFlags_AlphaBar);
-	for (int i = 0; i < 4; ++i)
-	{
-		bgColorExp[i] = bgCol[i];
-	}
+	//static bool blnFoV = false;
+	//ImGui::Checkbox("Field of View on/off", &blnFoV);
+	//isFoV = blnFoV;
 
-	static float bloomCol[3] = {};
-	ImGui::ColorPicker3("bloom color", bloomCol/*, ImGuiColorEditFlags_::ImGuiColorEditFlags_InputRGB*/);
-	for (int i = 0; i < 3; ++i)
-	{
-		bloomExp[i] = bloomCol[i];
-	}
+	//static bool blnSSAO = false;
+	//ImGui::Checkbox("SSAO on/off", &blnSSAO);
+	//isSSAO = blnSSAO;
+
+	//static bool blnShadowmap = false;
+	//ImGui::Checkbox("Self Shadow on/off", &blnShadowmap);
+	//isSelfShadowOn = blnShadowmap;
+
+	//static bool blnBloom = false;
+	//ImGui::Checkbox("Bloom on/off", &blnBloom);
+	//isBloomOn = blnBloom;
+
+	//static bool blnEffect = false;
+	//ImGui::Checkbox("Effect on/off", &blnEffect);
+	//isEffectOn = blnEffect;
+
+	//constexpr float pi = 3.141592653589f;
+	//static float fov = XM_PIDIV2;
+	//ImGui::SliderFloat("Field Of View", &fov, pi / 6.0f, pi * 5.0f / 6.0f);
+	//fovValueExp = fov;
+
+	//static float lightVec[3] = { -1.0f, 1.0f, -0.5f };
+	//// lightVec.x
+	//ImGui::SliderFloat("Light Vector.x", &lightVec[0], 1.0f, -1.0f);
+	//// lightVec.y
+	//ImGui::SliderFloat("Light Vector.y", &lightVec[1], 1.0f, -1.0f);
+	//// lightVec.y
+	//ImGui::SliderFloat("Light Vector.z", &lightVec[2], 1.0f, -1.0f);
+	//for (int i = 0; i < 3; ++i)
+	//{
+	//	lightVecExp[i] = lightVec[i];
+	//}
+
+	//static float bgCol[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
+	//ImGui::ColorPicker4("BackGround Color", bgCol, ImGuiColorEditFlags_::ImGuiColorEditFlags_PickerHueWheel |
+	//	ImGuiColorEditFlags_::ImGuiColorEditFlags_AlphaBar);
+	//for (int i = 0; i < 4; ++i)
+	//{
+	//	bgColorExp[i] = bgCol[i];
+	//}
+
+	//static float bloomCol[3] = {};
+	//ImGui::ColorPicker3("bloom color", bloomCol/*, ImGuiColorEditFlags_::ImGuiColorEditFlags_InputRGB*/);
+	//for (int i = 0; i < 3; ++i)
+	//{
+	//	bloomExp[i] = bloomCol[i];
+	//}
 
 	ImGui::End();
 
@@ -128,15 +139,15 @@ void SettingImgui::DrawDateOfImGUI(
 
 	D3D12_RESOURCE_BARRIER barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
 	(
-		pResoures.Get(),
+		renderingResource.Get(),
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
 	_cmdList->ResourceBarrier(1, &barrierDesc);
 
 	//auto cmdList = _cmdList;
-	auto handle = bufferHeapCreator->GetMultipassRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 7;
+	auto handle = imguiRTVHeap->GetCPUDescriptorHandleForHeapStart();
+	//handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 7;
 	const float clear_color_with_alpha[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	_cmdList->ClearRenderTargetView(handle, clear_color_with_alpha, 0, nullptr);
 	_cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
@@ -148,7 +159,7 @@ void SettingImgui::DrawDateOfImGUI(
 	_cmdList->ResourceBarrier(1, &barrierDesc);
 }
 
-HRESULT SettingImgui::CreateSRVDHeap4Imgui(ComPtr<ID3D12Device> _dev)
+HRESULT SettingImgui::CreateSRVDHeap(ComPtr<ID3D12Device> _dev)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -162,7 +173,7 @@ HRESULT SettingImgui::CreateSRVDHeap4Imgui(ComPtr<ID3D12Device> _dev)
 	);
 }
 
-HRESULT SettingImgui::CreateRTVDHeap4Imgui(ComPtr<ID3D12Device> _dev)
+HRESULT SettingImgui::CreateRTVDHeap(ComPtr<ID3D12Device> _dev)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Flags = /*D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE*/D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -176,14 +187,12 @@ HRESULT SettingImgui::CreateRTVDHeap4Imgui(ComPtr<ID3D12Device> _dev)
 	);
 }
 
-HRESULT SettingImgui::CreateBuff4Imgui(ComPtr<ID3D12Device> _dev)
+HRESULT SettingImgui::CreateRenderResource(ComPtr<ID3D12Device> _dev)
 {
-	auto dHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
 	D3D12_RESOURCE_DESC resDesc = {};
-
-	constexpr uint32_t shadow_difinition = 1024;
-	resDesc.Alignment = 65536;
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resDesc.Width = 720;
 	resDesc.Height = 720;
@@ -194,25 +203,21 @@ HRESULT SettingImgui::CreateBuff4Imgui(ComPtr<ID3D12Device> _dev)
 	resDesc.SampleDesc.Quality = 0;
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-	
-
-	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
 
 	auto result = _dev->CreateCommittedResource
 	(
-		&dHeapProp,
+		&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&resDesc,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		&depthClearValue,
-		IID_PPV_ARGS(imguiBuff.ReleaseAndGetAddressOf())
+		IID_PPV_ARGS(renderingResource.ReleaseAndGetAddressOf())
 	);
 
 	return result;
 }
 
-void SettingImgui::CreateRTV4Imgui(ComPtr<ID3D12Device> _dev)
+void SettingImgui::CreateRTV(ComPtr<ID3D12Device> _dev)
 {
 	D3D12_RENDER_TARGET_VIEW_DESC rtvViewDesc = {};
 	rtvViewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -222,7 +227,7 @@ void SettingImgui::CreateRTV4Imgui(ComPtr<ID3D12Device> _dev)
 
 	_dev->CreateRenderTargetView
 	(
-		imguiBuff.Get(),
+		renderingResource.Get(),
 		&rtvViewDesc,
 		handle
 	);
