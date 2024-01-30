@@ -138,8 +138,8 @@ bool D3DX12Wrapper::PrepareRendering() {
 	// TextureLoaderクラスのインスタンス化
 	textureLoader = new TextureLoader;
 
-	// レンダリングウィンドウ表示
-	ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
+	//// レンダリングウィンドウ表示
+	//ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
 
 	// ビューポートとシザー領域の設定
 	prepareRenderingWindow->SetViewportAndRect();

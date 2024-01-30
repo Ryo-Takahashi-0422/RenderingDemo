@@ -16,12 +16,14 @@ private:
 
 	
 	WNDCLASSEX w;
-	const unsigned int window_width = 1080;
-	const unsigned int window_height = 1080;
+	const unsigned int window_width = /*1080*/1080;
+	const unsigned int window_height = /*1080*/1080;
 	
 	HWND hwnd;
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
+
+	void ResizeWindow();
 
 public:
 	void CreateAppWindow();
