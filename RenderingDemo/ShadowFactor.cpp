@@ -298,6 +298,7 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
+    // 描画したテクスチャをコピー　描画元はUAVなのでSRVとして用意したリソースにコピーすることでテクスチャとして利用出来るようになる。
     _cmdList->CopyResource(copyTextureResource.Get(), outputTextureResource.Get());
 
     // 出力用リソース状態を元の状態に戻す

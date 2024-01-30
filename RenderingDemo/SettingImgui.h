@@ -36,16 +36,24 @@ private:
 
 	PostSetting* mappedPostSetting = nullptr;
 
+	// sun
 	float sunAngleX = 0.0f;
 	float sunAngleY = 60.0f;
 
+	//sky
 	int skyResX = 1024;
 	int skyResY = 1024;
 	bool isSkyResChanged = false;
 
+	// skyLUT
 	int skyLUTResX = 1024;
 	int skyLUTResY = 1024;
 	bool isSkyLUTResChanged = false;
+
+	// shadowFavtor
+	int shadowFactorResX = 1024;
+	int shadowFactorResY = 1024;
+	bool isShadowFavtorResChanged = false;
 
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成

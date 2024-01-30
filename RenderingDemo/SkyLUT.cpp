@@ -88,7 +88,7 @@ HRESULT SkyLUT::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTVertex.hlsl",
+        L"SkyLUTVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -101,7 +101,7 @@ HRESULT SkyLUT::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyLUTPixel.hlsl",
+        L"SkyLUTPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",

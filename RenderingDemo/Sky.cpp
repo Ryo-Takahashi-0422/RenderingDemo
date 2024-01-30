@@ -86,7 +86,7 @@ HRESULT Sky::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyVertex.hlsl",
+        L"SkyVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -99,7 +99,7 @@ HRESULT Sky::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyPixel.hlsl",
+        L"SkyPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",

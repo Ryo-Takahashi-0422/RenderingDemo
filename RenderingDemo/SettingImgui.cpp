@@ -112,6 +112,22 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 
 		ImGui::TreePop();
 	}
+
+	if (ImGui::TreeNode("ShadowFactor"))
+	{
+		isShadowFavtorResChanged = false;
+
+		if (ImGui::SliderInt("ShadowFactor Resolution X", &shadowFactorResX, 16, 1024))
+		{
+			isShadowFavtorResChanged = true;
+		}
+		if (ImGui::SliderInt("ShadowFactor Resolution Y", &shadowFactorResY, 16, 1024))
+		{
+			isShadowFavtorResChanged = true;
+		}
+
+		ImGui::TreePop();
+	}
 	//static bool blnFoV = false;
 	//ImGui::Checkbox("Field of View on/off", &blnFoV);
 	//isFoV = blnFoV;
