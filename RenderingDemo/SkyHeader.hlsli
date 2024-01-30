@@ -13,6 +13,12 @@ cbuffer worldMatrix : register(b1) // ƒL[‰Ÿ‰º‚É‚æ‚éworldÀ•W•Ï‰»
     int height;
 };
 
+cbuffer GaussianBlur : register(b2) // post-effect vector
+{
+    float4 weights[2];
+};
+
+
 SamplerState smp : register(s0);
 Texture2D<float4> SkyLUT : register(t0);
 

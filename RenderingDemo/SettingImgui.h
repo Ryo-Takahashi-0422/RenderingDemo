@@ -41,8 +41,8 @@ private:
 	float sunAngleY = 60.0f;
 
 	//sky
-	int skyResX = 1024;
-	int skyResY = 1024;
+	int skyResX = 64;
+	int skyResY = 64;
 	bool isSkyResChanged = false;
 
 	// skyLUT

@@ -26,6 +26,7 @@ void rayMarching(inout float3 scattering, inout float3 sumSigmaT, float currentT
 
     sumSigmaT += deltaSigmaT;
 }
+
 float4 ps_main(vsOutput input) : SV_TARGET
 {
     float x = input.position.x / (width - 1);

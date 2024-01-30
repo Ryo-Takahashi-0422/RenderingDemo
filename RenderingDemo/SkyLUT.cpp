@@ -368,7 +368,7 @@ HRESULT SkyLUT::CreateParticipatingResource()
         nullptr,
         IID_PPV_ARGS(skyLUTBufferResource.ReleaseAndGetAddressOf())
     );
-    
+
     return result;
 }
 

@@ -47,6 +47,7 @@ private:
     ComPtr<ID3D12Resource> participatingMediaResource;
     ComPtr<ID3D12Resource> skyLUTBufferResource;
     ComPtr<ID3D12Resource> shadowFactorResource;
+
     // 関与媒質用ヒープ・ビューの生成
     HRESULT CreateParticipatingMediaHeapAndView();
     // 関与媒質用定数のマッピング
@@ -61,8 +62,8 @@ private:
     //ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
-    D3D12_ROOT_PARAMETER rootParam[3] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[4] = {};
+    D3D12_ROOT_PARAMETER rootParam[4] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
