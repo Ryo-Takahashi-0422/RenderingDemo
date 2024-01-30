@@ -53,7 +53,8 @@ private:
 	// shadowFavtor
 	int shadowFactorResX = 1024;
 	int shadowFactorResY = 1024;
-	bool isShadowFavtorResChanged = false;
+	bool isShadowFactorResChanged = false;
+	std::vector<std::string> itemList = { "16", "512", "1024" };
 
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
@@ -85,6 +86,11 @@ public:
 	bool GetIsSkyLUTResolutionChanged() { return isSkyLUTResChanged; };
 	int GetSkyLUTResX() { return skyLUTResX; };
 	int GetSkyLUTResY() { return skyLUTResY; };
+
+	// shadowFactor
+	bool GetIsShadowFactorResolutionChanged() { return isShadowFactorResChanged; };
+	int GetShadowFactorResX() { return shadowFactorResX; };
+	int GetShadowFactorResY() { return shadowFactorResY; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

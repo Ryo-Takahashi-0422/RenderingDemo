@@ -172,8 +172,8 @@ HRESULT ShadowFactor::CreateTextureResource()
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    textureDesc.Width = res;
-    textureDesc.Height = res;
+    textureDesc.Width = width;
+    textureDesc.Height = height;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     textureDesc.DepthOrArraySize = 1;
     textureDesc.SampleDesc.Count = 1;
@@ -276,8 +276,8 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
 
     // 画像解像度を1グループあたりの要素数で割ることで、グループ数がどれだけ必要か算出する。その結果が割り切れない場合のことを踏まえ、THREAD_GROUP_SIZE_X - 1) / THREAD_GROUP_SIZE_Xを足している。
     // 例：res.x=415、THREAD_GROUP_SIZE_X = 16の時、25.9375。これに15/16=0.9375を足してint 26を代入
-    int threadGroupNum_X = (res + threadIdNum_X - 1) / threadIdNum_X;
-    int threadGroupNum_Y = (res + threadIdNum_Y - 1) / threadIdNum_Y;
+    int threadGroupNum_X = (width + threadIdNum_X - 1) / threadIdNum_X;
+    int threadGroupNum_Y = (height + threadIdNum_Y - 1) / threadIdNum_Y;
     _cmdList->Dispatch(threadGroupNum_X, threadGroupNum_Y, 1);
 
     // 出力用リソース状態をコピー元状態に設定
@@ -334,4 +334,21 @@ void ShadowFactor::SetParticipatingMedia(ParticipatingMedia media)
     m_Media->altitudeOfOzone = media.altitudeOfOzone;
     m_Media->groundRadius = media.groundRadius;
     m_Media->atomosphereRadius = media.atomosphereRadius;
+}
+
+void ShadowFactor::ChangeResolution(int _width, int _height)
+{
+    width = _width;
+    height = _height;
+
+    outputTextureResource->Release();
+    outputTextureResource = nullptr;
+    copyTextureResource->Release();
+    copyTextureResource = nullptr;
+    heap->Release();
+    heap = nullptr;
+
+    CreateHeap();
+    CreateTextureResource();
+    CreateView();
 }

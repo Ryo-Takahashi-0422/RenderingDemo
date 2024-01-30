@@ -596,8 +596,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 	skyLUT->SetSkyLUTResolution();
 
-	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
-	skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+	//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 
 	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
 	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
@@ -775,6 +775,8 @@ void D3DX12Wrapper::Run() {
 	bbIdx = 0;
 
 	XMFLOAT3 sunDir;
+	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // 以降は解像度に変更がある場合のみ描画する
+
 	while (true)
 	{		
 		// 今の時間を取得
@@ -818,14 +820,24 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
-		// skyLUTの解像度に変更がある場合の処理
+		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
+		// ShadowFactorの解像度に変更がある場合の処理
+		//if (settingImgui->GetIsShadowFactorResolutionChanged())
+		//{
+		//	shadowFactor->ChangeResolution(settingImgui->GetShadowFactorResX(), settingImgui->GetShadowFactorResY());
+		//	skyLUT->SetShadowFactorResource(shadowFactor->GetShadowFactorTextureResource().Get());
+		//	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		//	skyLUT->SetBarrierSWTrue();
+		//}
+
+		// SkyLUTの解像度に変更がある場合の処理
 		if (settingImgui->GetIsSkyLUTResolutionChanged())
 		{
 			skyLUT->ChangeSkyLUTResolution(settingImgui->GetSkyLUTResX(), settingImgui->GetSkyLUTResY());
 			sky->ChangeSkyLUTResourceAndView(skyLUT->GetSkyLUTRenderingResource().Get());
 		}
 
-		// skyの解像度に変更がある場合の処理
+		// Skyの解像度に変更がある場合の処理
 		if (settingImgui->GetIsSkyResolutionChanged())
 		{
 			sky->ChangeSceneResolution(settingImgui->GetSkyResX(), settingImgui->GetSkyResY());
@@ -860,7 +872,7 @@ void D3DX12Wrapper::Run() {
 		
 
 
-		shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		

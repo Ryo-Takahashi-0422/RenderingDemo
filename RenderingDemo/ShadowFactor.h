@@ -4,7 +4,8 @@ class ShadowFactor
 {
 private:
     // âëúìxä÷òA
-    int res = 1024;
+    int width = 1024;
+    int height = 1024;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
@@ -68,5 +69,5 @@ public:
     ComPtr<ID3D12Resource> GetShadowFactorTextureResource() { return copyTextureResource; };
     // é¿çs
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
-
+    void ChangeResolution(int _width, int _height);
 };

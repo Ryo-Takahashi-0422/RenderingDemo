@@ -46,7 +46,7 @@ private:
     HRESULT CreateParticipatingResource();
     ComPtr<ID3D12Resource> participatingMediaResource;
     ComPtr<ID3D12Resource> skyLUTBufferResource;
-    ComPtr<ID3D12Resource> shadowFactorBufferResource;
+    ComPtr<ID3D12Resource> shadowFactorResource;
     // 関与媒質用ヒープ・ビューの生成
     HRESULT CreateParticipatingMediaHeapAndView();
     // 関与媒質用定数のマッピング
@@ -91,6 +91,7 @@ private:
     UINT64 height = 1024;
 
     void RecreatreSource();
+    bool barrierSW = true; // シャドウファクターの解像度変化および初回の描画時にのみtrue
 
 public:
     SkyLUT();
@@ -98,8 +99,10 @@ public:
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
+    void SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource);
     void SetSkyLUTResolution();
     void ChangeSkyLUTResolution(int _width, int _height);
+    void SetBarrierSWTrue();
     
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 

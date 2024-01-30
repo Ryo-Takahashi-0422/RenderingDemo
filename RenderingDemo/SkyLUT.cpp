@@ -3,7 +3,7 @@
 
 
 SkyLUT::SkyLUT(ID3D12Device* _dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource) :
-    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorBufferResource(_shadowFactorRsource),
+    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorResource(_shadowFactorRsource),
     data(nullptr)//, /*_cmdAllocator(nullptr), _cmdList(nullptr), *//*fence(_fence)*/
 {
     m_Media = new ParticipatingMedia;
@@ -420,7 +420,7 @@ HRESULT SkyLUT::CreateParticipatingMediaHeapAndView()
 
     _dev->CreateShaderResourceView
     (
-        shadowFactorBufferResource.Get(),
+        shadowFactorResource.Get(),
         &srvDesc,
         handle
     );
@@ -463,6 +463,29 @@ void SkyLUT::SetSkyLUTBuffer(SkyLUTBuffer buffer)
 
     //m_SkyLUT->width = width;
     //m_SkyLUT->height = height;
+}
+
+void SkyLUT::SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource)
+{
+    shadowFactorResource = _shadowFactorRsource;
+    auto handle = skyLUTHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    handle.ptr += inc * 2;
+
+    // SkyLUTBuffer用view
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        shadowFactorResource.Get(),
+        &srvDesc,
+        handle
+    );
 }
 
 void SkyLUT::SetSkyLUTResolution()
@@ -539,12 +562,22 @@ void SkyLUT::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
 
-    // ShadowFactor出力のコピー用リソース状態をCompute Shaderで読み書き出来る状態に戻す
-    auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        shadowFactorBufferResource.Get(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-    );
-    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+    if (barrierSW)
+    {
+        // ShadowFactor出力のコピー用リソース状態をCompute Shaderで読み書き出来る状態に戻す
+        auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+            shadowFactorResource.Get(),
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+        _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+        barrierSW = false;
+    }
+}
+
+void SkyLUT::SetBarrierSWTrue()
+{
+    barrierSW = true;
 }

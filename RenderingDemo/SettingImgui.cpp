@@ -113,21 +113,40 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("ShadowFactor"))
-	{
-		isShadowFavtorResChanged = false;
+	// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
+	//if (ImGui::TreeNode("ShadowFactor"))
+	//{
+	//	isShadowFactorResChanged = false;
 
-		if (ImGui::SliderInt("ShadowFactor Resolution X", &shadowFactorResX, 16, 1024))
-		{
-			isShadowFavtorResChanged = true;
-		}
-		if (ImGui::SliderInt("ShadowFactor Resolution Y", &shadowFactorResY, 16, 1024))
-		{
-			isShadowFavtorResChanged = true;
-		}
+	//	//if (ImGui::SliderInt("ShadowFactor Resolution X", &shadowFactorResX, 16, 1024))
+	//	//{
+	//	//	isShadowFactorResChanged = true;
+	//	//}
+	//	//if (ImGui::SliderInt("ShadowFactor Resolution Y", &shadowFactorResY, 16, 1024))
+	//	//{
+	//	//	isShadowFactorResChanged = true;
+	//	//}
 
-		ImGui::TreePop();
-	}
+	//	/*std::vector<std::string> itemList = {"16", "512", "1024"};*/
+	//	static const char* s_currentItem = nullptr;
+	//	if (ImGui::BeginCombo("Combo", s_currentItem)) {
+	//		for (int i = 0; i < itemList.size(); ++i) {
+	//			const bool is_selected = (s_currentItem == itemList[i].c_str());
+	//			if (ImGui::Selectable(itemList[i].c_str(), is_selected))
+	//				s_currentItem = itemList[i].c_str();
+	//			if (is_selected)
+	//			{
+	//				shadowFactorResY = std::atoi(itemList[i].c_str());
+	//				isShadowFactorResChanged = true;
+	//			}
+	//		}
+	//		ImGui::EndCombo();
+	//	}
+
+	//	ImGui::TreePop();
+	//}
+
+
 	//static bool blnFoV = false;
 	//ImGui::Checkbox("Field of View on/off", &blnFoV);
 	//isFoV = blnFoV;
