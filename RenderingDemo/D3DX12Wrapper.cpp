@@ -574,7 +574,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 
-	sun = new Sun;
+	sun = new Sun(_dev.Get());
 	sun->Init();
 
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
@@ -873,6 +873,7 @@ void D3DX12Wrapper::Run() {
 
 
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		

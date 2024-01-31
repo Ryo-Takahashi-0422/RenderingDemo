@@ -8,8 +8,8 @@ private:
 	ComPtr<ID3D12Device> _dev;
 	// ルートシグネチャ関連
 	CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-	CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
-	D3D12_ROOT_PARAMETER rootParam[3] = {};
+	CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
+	D3D12_ROOT_PARAMETER rootParam[1] = {};
 	ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
 	ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
 	ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -17,7 +17,7 @@ private:
 	ComPtr<ID3DBlob> _errorBlob = nullptr; // シェーダー関連エラー格納用
 	ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	// コンピュート用パイプライン
-	ComPtr<ID3D12PipelineState> pipelineState;
+	ComPtr<ID3D12PipelineState> pipelineState = nullptr;
 
 	// ルートシグネチャの生成
 	HRESULT CreateRootSignature();
@@ -79,7 +79,7 @@ private:
 	BillboardMatrix* billboardMatrix = nullptr;
 
 public:
-
+	Sun(ID3D12Device* dev);
 	void Init();
 	XMMATRIX CalculateBillbordMatrix();
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);

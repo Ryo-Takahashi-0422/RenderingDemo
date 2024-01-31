@@ -1,6 +1,11 @@
 #include <stdafx.h>
 #include <Sun.h>
 
+Sun::Sun(ID3D12Device* dev)
+{
+    _dev = dev;
+}
+
 void Sun::Init()
 {
 	float xRad = 0.0f;
@@ -9,6 +14,7 @@ void Sun::Init()
 	XMFLOAT3 pos = { cos(yRad) * cos(xRad), -sin(yRad), cos(yRad) * sin(xRad) }; // ビルボード化のためyを負にする。太陽→カメラへのベクトル
 	direction = pos;
 	CreateSunVertex();
+    billboardMatrix = new BillboardMatrix;
     billboardMatrix->matrix = CalculateBillbordMatrix();
 
     CreateRootSignature();
@@ -18,11 +24,12 @@ void Sun::Init()
 
     RenderingSet();
     DrawResourceSet();
+    InitBillboardMatrixReosources();
 }
 
 void Sun::CreateSunVertex()
 {
-	auto div = 2 * PI / (vertexCnt * 2) ;
+	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
 	XMVECTOR ori = { 0,0,1,1 };
 	XMVECTOR begin = { -1,-1,1,1 };
@@ -78,7 +85,7 @@ XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
 }
 
 // ルートシグネチャ設定
-HRESULT Sky::CreateRootSignature()
+HRESULT Sun::CreateRootSignature()
 {
     //サンプラー作成
     stSamplerDesc[0].Init(0);
@@ -87,26 +94,14 @@ HRESULT Sky::CreateRootSignature()
 
     //ディスクリプタテーブルのスロット設定
     descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメータ
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
-    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // world matrix
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
+    rootParam[0].DescriptorTable.pDescriptorRanges = descTableRange;
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2];
-    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 3;
+    rootSignatureDesc.NumParameters = 1;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -138,7 +133,7 @@ HRESULT Sun::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"Sun.hlsl",
+        L"SunVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -151,7 +146,7 @@ HRESULT Sun::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"Sun.hlsl",
+        L"SunPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -248,8 +243,8 @@ HRESULT Sun::CreateGraphicPipeline()
     desc.BlendState.AlphaToCoverageEnable = false;
     desc.BlendState.IndependentBlendEnable = false;
     desc.BlendState.RenderTarget[0] = renderTargetDesc;
-    //desc.InputLayout.pInputElementDescs = inputLayout;
-    desc.InputLayout.NumElements = /*_countof(inputLayout)*/0;
+    desc.InputLayout.pInputElementDescs = inputLayout;
+    desc.InputLayout.NumElements = _countof(inputLayout);
     desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     desc.NumRenderTargets = 1;
     desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model

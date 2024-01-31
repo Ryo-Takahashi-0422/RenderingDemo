@@ -78,6 +78,9 @@
     <None Include="SkyHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
+    <None Include="SunHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -135,6 +138,12 @@
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="SkyPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SunVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SunPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
