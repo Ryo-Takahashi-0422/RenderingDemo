@@ -1,22 +1,22 @@
 #include <stdafx.h>
 #include <Sun.h>
 
-Sun::Sun(ID3D12Device* dev)
+Sun::Sun(ID3D12Device* dev, Camera* camera)
 {
     _dev = dev;
+    _camera = camera;
 }
 
 void Sun::Init()
 {
 	float xRad = 0.0f;
-	float yRad = 0.0f;
+	float yRad = 60.0f / (2 * PI);
 
 	XMFLOAT3 pos = { cos(yRad) * cos(xRad), -sin(yRad), cos(yRad) * sin(xRad) }; // ビルボード化のためyを負にする。太陽→カメラへのベクトル
 	direction = pos;
 	CreateSunVertex();
     billboardMatrix = new BillboardMatrix;
-    billboardMatrix->matrix = CalculateBillbordMatrix();
-
+    
     CreateRootSignature();
     ShaderCompile();
     SetInputLayout();
@@ -32,10 +32,8 @@ void Sun::CreateSunVertex()
 	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
 	XMVECTOR ori = { 0,0,1,1 };
-	XMVECTOR begin = { -1,-1,1,1 };
-	XMVECTOR end = { 1,1,1,1 };
-	XMVECTOR tmpPos;
-	for (int i = 0; i < vertexCnt * 2; ++i)
+
+    for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
 		{
@@ -57,14 +55,16 @@ void Sun::CreateSunVertex()
 
 XMMATRIX Sun::CalculateBillbordMatrix()
 {
+    XMVECTOR zDir = XMLoadFloat3(&direction);
+    XMVECTOR yDir = { 0,1,0,1 };
+    XMVECTOR xDir = XMVector3Cross(zDir, yDir);
+    yDir = XMVector3Cross(zDir, xDir);
+
 	XMMATRIX billBoardMatrix = XMMatrixIdentity();
-	XMVECTOR zDir = XMLoadFloat3(&direction);
-	XMVECTOR yDir = { 0,1,0,1 };
-	auto xDir = XMVector3Cross(zDir, yDir);
-	yDir = XMVector3Cross(zDir, xDir);
 	billBoardMatrix.r[0] = xDir;
 	billBoardMatrix.r[1] = yDir;
 	billBoardMatrix.r[2] = zDir;
+
 
 	XMVECTOR invSunDir = { -direction.x, -direction.y, -direction.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
@@ -72,7 +72,16 @@ XMMATRIX Sun::CalculateBillbordMatrix()
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
 	sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
 
+    auto cameraPos = _camera->GetCameraPos();
+    XMMATRIX cameraPosMatrix = XMMatrixIdentity();
+    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
+    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
+    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
+
+    billBoardMatrix = XMMatrixMultiply(billBoardMatrix, cameraPosMatrix);
 	billBoardMatrix = XMMatrixMultiply(billBoardMatrix, sunDirMatrix);
+    billBoardMatrix = XMMatrixMultiply(billBoardMatrix, _camera->GetView());
+    billBoardMatrix = XMMatrixMultiply(billBoardMatrix, _camera->GetProj());
 
 	return billBoardMatrix;
 }
@@ -82,7 +91,8 @@ XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
 	float xRad = XMConvertToRadians(angleX);
 	float yRad = XMConvertToRadians(angleY);
 	XMFLOAT3 pos = { cos(yRad) * cos(xRad), -sin(yRad), cos(yRad) * sin(xRad) }; // ビルボード化のためyを負にする。太陽→カメラへのベクトル
-	return pos;
+    direction = pos;
+	return direction;
 }
 
 // ルートシグネチャ設定
@@ -495,6 +505,7 @@ HRESULT Sun::MappingBillboardMatrix()
 // 実行
 void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
+    billboardMatrix->matrix = CalculateBillbordMatrix();
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
         renderingResource.Get(),
@@ -511,7 +522,7 @@ void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
     _cmdList->OMSetRenderTargets(1, &heapHandle, false, nullptr);
-    float clearColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+    float clearColor[4] = { 0.0f,0.0f,0.0f,1.0f };
     _cmdList->ClearRenderTargetView(heapHandle, clearColor, 0, nullptr);
     //_cmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 

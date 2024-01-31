@@ -574,7 +574,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 
-	sun = new Sun(_dev.Get());
+	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
 
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());

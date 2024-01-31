@@ -6,6 +6,7 @@ private:
 
 	// デバイス
 	ComPtr<ID3D12Device> _dev;
+	Camera* _camera;
 	// ルートシグネチャ関連
 	CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
 	CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
@@ -69,8 +70,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)Indexビュー
 	XMVECTOR* mappedVertPos = nullptr;
 	unsigned int* mappedIdx = nullptr;
-	float width = 64;
-	float height = 64;
+	float width = 1024;
+	float height = 1024;
 
 	struct BillboardMatrix
 	{
@@ -79,7 +80,7 @@ private:
 	BillboardMatrix* billboardMatrix = nullptr;
 
 public:
-	Sun(ID3D12Device* dev);
+	Sun(ID3D12Device* dev, Camera* camera);
 	void Init();
 	XMMATRIX CalculateBillbordMatrix();
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
