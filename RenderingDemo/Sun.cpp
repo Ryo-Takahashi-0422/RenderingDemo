@@ -35,13 +35,14 @@ void Sun::CreateSunVertex()
 	XMVECTOR begin = { -1,-1,1,1 };
 	XMVECTOR end = { 1,1,1,1 };
 	XMVECTOR tmpPos;
-	for (int i = 0; i < vertexCnt; ++i)
+	for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
 		{
 			vertexes.push_back(ori);
 			indices.push_back(i);
 			vertexCnt++;
+            rad -= div;
 			continue;
 		}
 
