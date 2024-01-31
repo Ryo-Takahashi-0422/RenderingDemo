@@ -1,9 +1,6 @@
 #include <stdafx.h>
 #include <ShadowFactor.h>
 
-// 確認用配列
-std::vector<float>test(256, 0);
-
 ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev), fence(_fence)
 {
     Init();
@@ -175,8 +172,8 @@ HRESULT ShadowFactor::CreateTextureResource()
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    textureDesc.Width = 256;
-    textureDesc.Height = 256;
+    textureDesc.Width = width;
+    textureDesc.Height = height;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     textureDesc.DepthOrArraySize = 1;
     textureDesc.SampleDesc.Count = 1;
@@ -277,7 +274,11 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     _cmdList->SetComputeRootDescriptorTable(1, handle);
 
-    _cmdList->Dispatch(16, 16, 1);
+    // 画像解像度を1グループあたりの要素数で割ることで、グループ数がどれだけ必要か算出する。その結果が割り切れない場合のことを踏まえ、THREAD_GROUP_SIZE_X - 1) / THREAD_GROUP_SIZE_Xを足している。
+    // 例：res.x=415、THREAD_GROUP_SIZE_X = 16の時、25.9375。これに15/16=0.9375を足してint 26を代入
+    int threadGroupNum_X = (width + threadIdNum_X - 1) / threadIdNum_X;
+    int threadGroupNum_Y = (height + threadIdNum_Y - 1) / threadIdNum_Y;
+    _cmdList->Dispatch(threadGroupNum_X, threadGroupNum_Y, 1);
 
     // 出力用リソース状態をコピー元状態に設定
     auto barrierDescOfOutputTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -297,6 +298,7 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
+    // 描画したテクスチャをコピー　描画元はUAVなのでSRVとして用意したリソースにコピーすることでテクスチャとして利用出来るようになる。
     _cmdList->CopyResource(copyTextureResource.Get(), outputTextureResource.Get());
 
     // 出力用リソース状態を元の状態に戻す
@@ -316,32 +318,6 @@ void ShadowFactor::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocat
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-    //_cmdList->Close();
-
-    ////コマンドの実行
-    //ID3D12CommandList* executeList[] = { _cmdList };
-    //_cmdQueue->ExecuteCommandLists(1, executeList);
-
-    //UINT64 fenceVal = _fenceVal;
-    //HANDLE event; // fnece用イベント
-    ////-----ここでID3D12Fenceの待機をさせる-----
-    //_cmdQueue->Signal(fence.Get(), ++fenceVal);
-
-    //while (fence->GetCompletedValue() != fenceVal)
-    //{
-    //    event = CreateEvent(nullptr, false, false, nullptr);
-    //    fence->SetEventOnCompletion(fenceVal, event);
-    //    //イベント発生待ち
-    //    WaitForSingleObject(event, INFINITE);
-    //    //イベントハンドルを閉じる
-    //    CloseHandle(event);
-    //}
-
-    //_cmdAllocator->Reset();
-    //_cmdList->Reset(_cmdAllocator, nullptr);
-    ////GPUからデータをもらう
-    ////test.assign((float*)data, (float*)data + test.size());    
-    //return fenceVal;
  }
 
 // 外部からの関与媒質設定
@@ -358,4 +334,21 @@ void ShadowFactor::SetParticipatingMedia(ParticipatingMedia media)
     m_Media->altitudeOfOzone = media.altitudeOfOzone;
     m_Media->groundRadius = media.groundRadius;
     m_Media->atomosphereRadius = media.atomosphereRadius;
+}
+
+void ShadowFactor::ChangeResolution(int _width, int _height)
+{
+    width = _width;
+    height = _height;
+
+    outputTextureResource->Release();
+    outputTextureResource = nullptr;
+    copyTextureResource->Release();
+    copyTextureResource = nullptr;
+    heap->Release();
+    heap = nullptr;
+
+    CreateHeap();
+    CreateTextureResource();
+    CreateView();
 }

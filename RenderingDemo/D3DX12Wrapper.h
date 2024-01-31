@@ -191,9 +191,8 @@ private:
 	HANDLE m_workerFinishedRenderFrame[2];
 	HANDLE m_workerSyncronize[2];
 	void LoadContexts();
-	void threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> cmList*/);
-	void DrawFBXMulti();
-	void DrawFBX();
+	void threadWorkTest(int num);
+
 	// DrawFBX用データ
 	UINT cbv_srv_Size;
 	//D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX;

@@ -86,7 +86,7 @@ HRESULT Sky::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyVertex.hlsl",
+        L"SkyVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -99,7 +99,7 @@ HRESULT Sky::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\SkyPixel.hlsl",
+        L"SkyPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -257,8 +257,8 @@ HRESULT Sky::CreateRenderingResource()
     auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
     D3D12_RESOURCE_DESC resDesc = {};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    resDesc.Width = resWidth;
-    resDesc.Height = resHeight;
+    resDesc.Width = width;
+    resDesc.Height = height;
     resDesc.DepthOrArraySize = 1;
     resDesc.MipLevels = 1;
     resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -354,7 +354,7 @@ HRESULT Sky::CreateSkyResources()
     );
     if (result != S_OK) return result;
 
-    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+    desc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneInfo) + 0xff) & ~0xff);
     result = _dev->CreateCommittedResource
     (
         &prop,
@@ -433,14 +433,62 @@ void Sky::SetFrustum(Frustum _frustum)
     m_Frustum->bottomRight = _frustum.bottomRight;
 }
 
-void Sky::SetSceneMatrix(XMMATRIX _world)
+void Sky::SetSceneInfo(XMMATRIX _world)
 {
     scneMatrix->world = _world;
+    scneMatrix->width = width;
+    scneMatrix->height = height;
+}
+
+// skyLUTの解像度に変更がある場合はそのリソースから作り変えているため、参照先のリソースを新たに設定して且つviewも設定し直す
+void Sky::ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource)
+{
+    skyLUTResource = _skyLUTRsource;
+    auto handle = skyHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
+
+    // SkyLUT用view
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // DXGI_FORMAT_R32G32B32A32_FLOATにしたいが...
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        skyLUTResource.Get(),
+        &srvDesc,
+        handle
+    );
 }
 
 void Sky::ChangeSceneMatrix(XMMATRIX _world)
 {
     scneMatrix->world *= _world;
+}
+
+void Sky::ChangeSceneResolution(int _width, int _height)
+{
+    scneMatrix->width = width;
+    scneMatrix->height = height;
+
+    width = _width;
+    height = _height;
+
+    RecreatreSource();
+}
+
+void Sky::RecreatreSource()
+{
+    renderingResource->Release();
+    renderingResource = nullptr;
+    rtvHeap->Release();
+    rtvHeap = nullptr;
+    srvHeap->Release();
+    srvHeap = nullptr;
+
+    RenderingSet();
 }
 
 // 実行

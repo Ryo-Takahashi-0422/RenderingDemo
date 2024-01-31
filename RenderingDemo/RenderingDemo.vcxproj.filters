@@ -280,9 +280,6 @@
     <ClCompile Include="SkyLUT.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
-    <ClCompile Include="ParticipatingMedia.cpp">
-      <Filter>ソース ファイル\Sky</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
@@ -290,6 +287,9 @@
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
     <ClCompile Include="Sky.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticipatingMedia.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
   </ItemGroup>
@@ -447,10 +447,10 @@
     <ClInclude Include="Camera.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
-    <ClInclude Include="Sun.h">
+    <ClInclude Include="Sky.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
-    <ClInclude Include="Sky.h">
+    <ClInclude Include="Sun.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>

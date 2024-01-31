@@ -9,7 +9,15 @@ cbuffer Frustum : register(b0) // Œ»İƒJƒƒ‰‚ª•`‰æ‚µ‚Ä‚¢‚éƒXƒNƒŠ[ƒ“À•W4‹÷‚Ìƒ
 cbuffer worldMatrix : register(b1) // ƒL[‰Ÿ‰º‚É‚æ‚éworldÀ•W•Ï‰»
 {
     matrix world;
+    int width;
+    int height;
 };
+
+cbuffer GaussianBlur : register(b2) // post-effect vector
+{
+    float4 weights[2];
+};
+
 
 SamplerState smp : register(s0);
 Texture2D<float4> SkyLUT : register(t0);

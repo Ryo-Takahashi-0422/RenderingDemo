@@ -8,6 +8,8 @@ cbuffer SkyLUTBuffer : register(b1)
     float3 sunDirection; // 
     float stepCnt;
     float3 sunIntensity;
+    int width;
+    int height;
 };
 
 SamplerState smp : register(s0); // No.0 sampler

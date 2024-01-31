@@ -15,6 +15,7 @@ float3 tonemap(float3 input)
     return (input * (POSTCOLOR_A * input + POSTCOLOR_B))
          / (input * (POSTCOLOR_C * input + POSTCOLOR_D) + POSTCOLOR_E);
 }
+
 float4 ps_main(vsOutput input) : SV_TARGET
 {
 	// ワールド空間における、カメラ→処理するピクセルへのベクトルを求める。
@@ -30,8 +31,8 @@ float4 ps_main(vsOutput input) : SV_TARGET
       
     //float x = input.texCoord.x;
     //float y = input.texCoord.y;
-    float x = input.position.x / 255;
-    float y = input.position.y / 255;
+    float x = input.position.x / (width - 1);
+    float y = input.position.y / (height - 1);
     float3 currentPixelDir = 
     normalize(
         lerp(lerp(topLeft, topRight, x),
@@ -49,6 +50,4 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float4 sky = SkyLUT.Sample(smp, float2(u, v));
     sky.xyz = tonemap(sky.xyz);
     
-    return sky;
-
-}
+    return sky;}

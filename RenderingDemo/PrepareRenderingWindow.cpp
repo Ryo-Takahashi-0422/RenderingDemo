@@ -42,6 +42,11 @@ LRESULT CALLBACK PrepareRenderingWindow::StaticWndProc(HWND hwnd, UINT msg, WPAR
 			TEXT("quit the application"), MB_ICONINFORMATION);
 		PostQuitMessage(0);
 		return 0;
+	// リサイズ処理
+	case WM_SIZE:
+		if (wparam != SIZE_MINIMIZED)
+			This->ResizeWindow();
+		break;
 	}
 
 	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
@@ -64,7 +69,7 @@ void PrepareRenderingWindow::CreateAppWindow()
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	hwnd = CreateWindow(
+	this->hwnd = CreateWindow(
 		w.lpszClassName,
 		_T("DX12test"),//タイトルバーの文字
 		WS_OVERLAPPEDWINDOW,//タイトルバーと境界線があるウィンドウです
@@ -76,6 +81,9 @@ void PrepareRenderingWindow::CreateAppWindow()
 		nullptr,//メニューハンドル
 		w.hInstance,//呼び出しアプリケーションハンドル
 		nullptr);//追加パラメータ
+
+	// レンダリングウィンドウ表示
+	ShowWindow(hwnd, SW_SHOW);
 }
 
 void PrepareRenderingWindow::SetViewportAndRect()
@@ -93,4 +101,14 @@ void PrepareRenderingWindow::SetViewportAndRect()
 	scissorRect.left = 0; //切り抜き左座標
 	scissorRect.right = scissorRect.left + window_width; //切り抜き右座標
 	scissorRect.bottom = scissorRect.top + window_height; //切り抜き下座標
+}
+
+void PrepareRenderingWindow::ResizeWindow()
+{
+	//RECT clientRect;
+	//GetClientRect(hwnd, &clientRect);
+	//POINT LT = { clientRect.left, clientRect.top };
+	//POINT RB = { clientRect.right, clientRect.bottom };
+	//ClientToScreen(hwnd, &LT);
+	//ClientToScreen(hwnd, &RB);
 }

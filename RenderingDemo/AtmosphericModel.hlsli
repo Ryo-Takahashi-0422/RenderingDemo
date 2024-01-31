@@ -45,8 +45,8 @@ float CalculatePhaseFunctiuon(float theta)
     float g = asymmetryParameter;
     float g2 = g * g;
     float m = 1 + g2 - 2 * g * theta;
-    float phaseMie = 3 / (8 * PI) * (1 - g2) * (1 + theta2) / ((2 + g2) * m * sqrt(m)); // Cornette-Shanks
-    //float phaseMie = (1 - g * g) / (4 * PI * m * sqrt(m)); 別式：ヘニエイグリーンスタイン
+    //float phaseMie = 3 / (8 * PI) * (1 - g2) * (1 + theta2) / ((2 + g2) * m * sqrt(m)); // Cornette-Shanks
+    float phaseMie = (1 - g2) / (4 * PI * m * sqrt(m)); //別式：ヘニエイグリーンスタイン
 
     return phaseRayleigh + phaseMie;
 

@@ -9,17 +9,20 @@ struct PostSetting
 	bool isBloom;
 };
 
+
+
+
 class SettingImgui
 {
 private:
 	ComPtr<ID3D12DescriptorHeap> imguiSRVHeap = nullptr; // imguiのSRV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> imguiRTVHeap = nullptr; // imguiのRTV用ディスクリプタヒープ
-	ComPtr<ID3D12Resource> imguiBuff = nullptr; // imgui用バッファー
+	ComPtr<ID3D12Resource> renderingResource = nullptr; // imgui用バッファー
 
-	HRESULT CreateSRVDHeap4Imgui(ComPtr<ID3D12Device> _dev);
-	HRESULT CreateRTVDHeap4Imgui(ComPtr<ID3D12Device> _dev);
-	HRESULT CreateBuff4Imgui(ComPtr<ID3D12Device> _dev);
-	void CreateRTV4Imgui(ComPtr<ID3D12Device> _dev);
+	HRESULT CreateSRVDHeap(ComPtr<ID3D12Device> _dev);
+	HRESULT CreateRTVDHeap(ComPtr<ID3D12Device> _dev);
+	HRESULT CreateRenderResource(ComPtr<ID3D12Device> _dev, int width, int height);
+	void CreateRTV(ComPtr<ID3D12Device> _dev);
 	bool blnResult;
 	float fovValueExp;
 	float bgColorExp[4];
@@ -33,16 +36,31 @@ private:
 
 	PostSetting* mappedPostSetting = nullptr;
 
+	// sun
+	float sunAngleX = 0.0f;
+	float sunAngleY = 60.0f;
+
+	//sky
+	int skyResX = 64;
+	int skyResY = 64;
+	bool isSkyResChanged = false;
+
+	// skyLUT
+	int skyLUTResX = 1024;
+	int skyLUTResY = 1024;
+	bool isSkyLUTResChanged = false;
+
+	// shadowFavtor
+	int shadowFactorResX = 1024;
+	int shadowFactorResY = 1024;
+	bool isShadowFactorResChanged = false;
+	std::vector<std::string> itemList = { "16", "512", "1024" };
+
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
 	HRESULT Init(ComPtr<ID3D12Device> _dev,	PrepareRenderingWindow* pRWindow);
 
-	void DrawDateOfImGUI(
-		ComPtr<ID3D12Device> _dev,
-		ComPtr<ID3D12GraphicsCommandList> _cmdList,
-		ComPtr<ID3D12Resource> pResoures,
-		BufferHeapCreator* bufferHeapCreator,
-		UINT backBufferIndex);
+	void DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCommandList> _cmdList);
 
 	float GetFovValue() { return fovValueExp; };
 	float GetBGColor(int num) { return bgColorExp[num]; };
@@ -54,4 +72,25 @@ public:
 	bool GetBloomOnOffBool() { return isBloomOn; };
 	bool GetEffectOnOffBool() { return isEffectOn; };
 	size_t GetPostSettingSize() { return sizeof(PostSetting); };
+
+	// sun
+	float GetSunAngleX() { return sunAngleX; };
+	float GetSunAngleY() { return sunAngleY; };
+
+	// sky
+	bool GetIsSkyResolutionChanged() { return isSkyResChanged; };
+	int GetSkyResX() { return skyResX; };
+	int GetSkyResY() { return skyResY; };
+
+	// skyLUT
+	bool GetIsSkyLUTResolutionChanged() { return isSkyLUTResChanged; };
+	int GetSkyLUTResX() { return skyLUTResX; };
+	int GetSkyLUTResY() { return skyLUTResY; };
+
+	// shadowFactor
+	bool GetIsShadowFactorResolutionChanged() { return isShadowFactorResChanged; };
+	int GetShadowFactorResX() { return shadowFactorResX; };
+	int GetShadowFactorResY() { return shadowFactorResY; };
+
+	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

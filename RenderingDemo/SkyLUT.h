@@ -8,7 +8,8 @@ struct SkyLUTBuffer
     XMFLOAT3 sunDirection;    
     float stepCnt;
     XMFLOAT3 sunIntensity;
-
+    int width;
+    int height;
 };
 
 class SkyLUT
@@ -45,7 +46,8 @@ private:
     HRESULT CreateParticipatingResource();
     ComPtr<ID3D12Resource> participatingMediaResource;
     ComPtr<ID3D12Resource> skyLUTBufferResource;
-    ComPtr<ID3D12Resource> shadowFactorBufferResource;
+    ComPtr<ID3D12Resource> shadowFactorResource;
+
     // 関与媒質用ヒープ・ビューの生成
     HRESULT CreateParticipatingMediaHeapAndView();
     // 関与媒質用定数のマッピング
@@ -57,11 +59,11 @@ private:
     // デバイス
     ComPtr<ID3D12Device> _dev;
     // フェンス
-    ComPtr<ID3D12Fence> fence = nullptr;
+    //ComPtr<ID3D12Fence> fence = nullptr;
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
-    D3D12_ROOT_PARAMETER rootParam[3] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[4] = {};
+    D3D12_ROOT_PARAMETER rootParam[4] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -86,15 +88,23 @@ private:
     //// コマンドリスト
     //ComPtr<ID3D12GraphicsCommandList> _cmdList;
 
-    UINT64 width = 256;
-    UINT64 height = 256;
+    UINT64 width = 1024;
+    UINT64 height = 1024;
+
+    void RecreatreSource();
+    bool barrierSW = true; // シャドウファクターの解像度変化および初回の描画時にのみtrue
 
 public:
     SkyLUT();
-    SkyLUT(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _shadowFactorRsource);
+    SkyLUT(ID3D12Device* dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);
+    void SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource);
+    void SetSkyLUTResolution();
+    void ChangeSkyLUTResolution(int _width, int _height);
+    void SetBarrierSWTrue();
+    
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return cbvsrvHeap; };

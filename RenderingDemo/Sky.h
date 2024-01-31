@@ -62,15 +62,19 @@ class Sky
     ComPtr<ID3D12Resource> skyLUTResource;
     ComPtr<ID3D12Resource> worldMatrixResource = nullptr;
 
-    float resWidth = 256;
-    float resHeight = 256;
+    float width = 64;
+    float height = 64;
 
     Frustum* m_Frustum = nullptr;
-    struct SceneMatrix
+    struct SceneInfo
     {
         XMMATRIX world; // world matrix
+        int width;
+        int height;
     };
-    SceneMatrix* scneMatrix = nullptr;
+    SceneInfo* scneMatrix = nullptr;
+
+    void RecreatreSource();
 
 public:
     Sky();
@@ -79,9 +83,11 @@ public:
     void SetFrustum(Frustum _frustum);
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
-    void SetSkyLUTResource();
-    void SetSceneMatrix(XMMATRIX _world);
+    void ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource); // skyLUTの解像度に変更がある場合はそのリソースから作り変えているため、参照先のリソースを新たに設定して且つviewも設定し直す
+    void SetSceneInfo(XMMATRIX _world);
+    
     void ChangeSceneMatrix(XMMATRIX _world);
+    void ChangeSceneResolution(int _width, int _height);
     ComPtr<ID3D12DescriptorHeap> GetSkyLUTRenderingHeap() { return rtvHeap; };
     ComPtr<ID3D12Resource> GetSkyLUTRenderingResource() { return renderingResource; };
 };
