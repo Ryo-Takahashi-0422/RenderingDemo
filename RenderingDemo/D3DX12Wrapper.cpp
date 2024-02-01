@@ -1898,7 +1898,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
 
 	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(7, gHandle); // sun
+	_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
 
 	_cmdList3->SetPipelineState(bBPipeline);
 
