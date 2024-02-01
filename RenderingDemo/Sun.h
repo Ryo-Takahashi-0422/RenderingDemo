@@ -80,6 +80,7 @@ private:
 		XMMATRIX proj;
 		XMMATRIX cameraPos;
 		XMMATRIX sunDir;
+		XMMATRIX billborad;
 	};
 	BillboardMatrix* mappedMatrix = nullptr;
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
@@ -91,5 +92,6 @@ public:
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
 	XMFLOAT3 GetDirection() { return direction; };
 	void ChangeSceneMatrix(XMMATRIX _world);
+	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

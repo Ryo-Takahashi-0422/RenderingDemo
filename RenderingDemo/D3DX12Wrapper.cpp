@@ -607,6 +607,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	sky->SetFrustum(camera->GetFrustum());
 	
 	// resourceManager[0]‚Ì‚İ‚ÉŠi”[...
+	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
 	resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 	resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
 
@@ -776,7 +777,7 @@ void D3DX12Wrapper::Run() {
 
 	XMFLOAT3 sunDir;
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ˆÈ~‚Í‰ğ‘œ“x‚É•ÏX‚ª‚ ‚éê‡‚Ì‚İ•`‰æ‚·‚é
-
+	sun->ChangeSceneMatrix(XMMatrixIdentity());
 	while (true)
 	{		
 		// ¡‚ÌŠÔ‚ğæ“¾
@@ -1196,7 +1197,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 7;
+			dHandle.ptr += cbv_srv_Size * 8;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -1895,6 +1896,9 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(7, gHandle); // sun
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

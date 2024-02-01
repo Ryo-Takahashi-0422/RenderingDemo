@@ -88,5 +88,7 @@ float4 ps(Output input) : SV_TARGET
     //    col = imgui;
     //}
     
-    return float4(col, 1) + imgui; 
+    float4 sunDisk = sun.Sample(smp, input.uv);
+    
+    return float4(col, 1) + imgui + sunDisk;
 }

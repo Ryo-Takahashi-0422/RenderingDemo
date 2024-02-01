@@ -2,7 +2,7 @@
 
 float4 ps_main(vsOutput input) : SV_TARGET
 {
-    float4 output = float4(0.1,0.5,0.5,1);
+    float4 output = float4(1.0f,1.0f,1.0f,1);
     
     return output;
 }

@@ -32,7 +32,7 @@ void Sun::CreateSunVertex()
 	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
 	XMVECTOR ori = { 0,0,1,1 };
-    float sunDiskSize_ = 0.004649f;
+    float sunDiskSize_ = 0.04649f;
     for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
@@ -56,18 +56,18 @@ void Sun::CreateSunVertex()
 void Sun::CalculateBillbordMatrix()
 {
     XMVECTOR zDir = XMLoadFloat3(&direction);
-    XMVECTOR yDir = { 0,1,0,1 };
+    XMVECTOR yDir = { 0,1,0,0 };
     XMVECTOR xDir = XMVector3Cross(zDir, yDir);
     yDir = XMVector3Cross(zDir, xDir);
     
 	XMMATRIX billBoardMatrix = XMMatrixIdentity();
-    billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
+    //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
 
-	//billBoardMatrix.r[0] = xDir;
-	//billBoardMatrix.r[1] = yDir;
-	//billBoardMatrix.r[2] = zDir;
+	billBoardMatrix.r[0] = xDir;
+	billBoardMatrix.r[1] = yDir;
+	billBoardMatrix.r[2] = zDir;
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
-    //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
+    billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
 	XMVECTOR invSunDir = { direction.x, -direction.y, direction.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
@@ -83,11 +83,12 @@ void Sun::CalculateBillbordMatrix()
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
     //cameraPosMatrix = XMMatrixTranspose(cameraPosMatrix);
 
-    mappedMatrix->world = billBoardMatrix/* * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
+    mappedMatrix->world = sceneMatrix/** sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
     mappedMatrix->view = _camera->GetView();
     mappedMatrix->proj = _camera->GetProj();
     mappedMatrix->cameraPos = cameraPosMatrix;
     mappedMatrix->sunDir = sunDirMatrix;
+    mappedMatrix->billborad = billBoardMatrix;
 }
 
 XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
