@@ -75,15 +75,21 @@ private:
 
 	struct BillboardMatrix
 	{
-		XMMATRIX matrix;
+		XMMATRIX world;
+		XMMATRIX view;
+		XMMATRIX proj;
+		XMMATRIX cameraPos;
+		XMMATRIX sunDir;
 	};
-	BillboardMatrix* billboardMatrix = nullptr;
+	BillboardMatrix* mappedMatrix = nullptr;
+	XMMATRIX sceneMatrix = XMMatrixIdentity();
 
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
 	void Init();
-	XMMATRIX CalculateBillbordMatrix();
+	void CalculateBillbordMatrix();
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
 	XMFLOAT3 GetDirection() { return direction; };
+	void ChangeSceneMatrix(XMMATRIX _world);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

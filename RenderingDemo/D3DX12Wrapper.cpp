@@ -1146,6 +1146,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
 				}
 			}
@@ -1157,6 +1158,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
 			}
@@ -1168,6 +1170,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				//connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(angleUpMatrix);
 					sky->ChangeSceneMatrix(angleUpMatrix);
 				}
 			}

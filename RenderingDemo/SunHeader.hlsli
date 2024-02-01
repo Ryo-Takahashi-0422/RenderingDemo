@@ -1,6 +1,10 @@
 cbuffer BillboardMatrix : register(b0) // 現在カメラが描画しているスクリーン座標4隅のワールド空間におけるベクトル
 {
-    matrix billboardMatrix;
+    matrix world;
+    matrix view;
+    matrix proj;
+    matrix cameraPos;
+    matrix sunDir;
 };
 
 struct vsOutput
