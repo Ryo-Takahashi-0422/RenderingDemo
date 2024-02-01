@@ -7,10 +7,11 @@ vsOutput vs_main(float4 pos : POSITION, float2 uv : TEXCOORD)
     //output.position = mul(output.position, sunDir);
     float4 ori = float4(pos.x, pos.y, 0, 1);
     //float4 test = mul(mul(cameraPos, ori), sunDir);
-    ori = mul(billboard, ori);
+    //
     ori = mul(cameraPos, ori);
+    ori = mul(billboard, ori);
     ori = mul(sunDir, ori);
-    ori.z -= 0.1f;
+    //ori.z -= 0.1f;
     output.position = mul(mul(mul(proj, view), world), /*float4(pos.x, pos.y, 0, 1)*/ori);
     //output.position = mul(cameraPos, output.position);
     //output.position = mul(sunDir, output.position);
