@@ -46,7 +46,7 @@ void Sun::CreateSunVertex()
 
 		XMVECTOR pos = { cos(rad), sin(rad), 1,1 };
 
-		vertexes.push_back(pos/* * sunDiskSize_*/);
+		vertexes.push_back(pos * sunDiskSize_);
 		indices.push_back(i);
 
 		rad += div;
@@ -55,11 +55,30 @@ void Sun::CreateSunVertex()
 
 void Sun::CalculateBillbordMatrix()
 {
-    XMVECTOR zDir = XMLoadFloat3(&direction);
-    XMVECTOR yDir = { 0,1,0,0 };
-    XMVECTOR xDir = XMVector3Cross(zDir, yDir);
+    auto fixedDir = direction;
+    fixedDir.y *= -1;
+    XMVECTOR zDir = XMLoadFloat3(&fixedDir);
+    XMVECTOR yDir = { 1,0,0,0 };
+    XMVECTOR xDir = XMVector3Cross(yDir, zDir);
     yDir = XMVector3Cross(zDir, xDir);
     
+
+    XMFLOAT3 up = { 0,1,0};
+    XMFLOAT3 right = { 1,0,0};
+    float rv{};
+    const auto&& v1{ DirectX::XMLoadFloat3(&fixedDir) }, && v2{ DirectX::XMLoadFloat3(&right) };
+    DirectX::XMStoreFloat(&rv, DirectX::XMVector3Dot(v1, v2));
+
+    if (std::abs(std::abs(rv) - 1) < 0.1f)
+    yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
+    else
+        yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));
+
+    xDir = XMVector3Cross(yDir, zDir);
+
+
+
+
 	XMMATRIX billBoardMatrix = XMMatrixIdentity();
     //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
 
@@ -69,7 +88,7 @@ void Sun::CalculateBillbordMatrix()
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
     //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { -direction.x, direction.y, direction.z, 1 };
+	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
 	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
@@ -83,7 +102,7 @@ void Sun::CalculateBillbordMatrix()
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
     //cameraPosMatrix = XMMatrixTranspose(cameraPosMatrix);
 
-    mappedMatrix->world = sceneMatrix/** sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
+    mappedMatrix->world = billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj();
     mappedMatrix->view = _camera->GetView();
     mappedMatrix->proj = _camera->GetProj();
     mappedMatrix->cameraPos = cameraPosMatrix;

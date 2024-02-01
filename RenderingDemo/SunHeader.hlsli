@@ -11,5 +11,6 @@ cbuffer BillboardMatrix : register(b0) // 現在カメラが描画しているスクリーン座標
 struct vsOutput
 {
     float4 position : SV_POSITION;
+    float4 clipPos : CLIP_POSITION;
     float2 texCoord : TEXCOORD;
 };
