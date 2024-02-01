@@ -64,12 +64,12 @@ void Sun::CalculateBillbordMatrix()
     //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
 
 	billBoardMatrix.r[0] = xDir;
-	billBoardMatrix.r[1] = yDir;
+	billBoardMatrix.r[1] = -yDir;
 	billBoardMatrix.r[2] = zDir;
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
     //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { direction.x, direction.y, direction.z, 1 };
+	XMVECTOR invSunDir = { -direction.x, direction.y, direction.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
 	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
