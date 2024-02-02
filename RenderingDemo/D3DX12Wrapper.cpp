@@ -1171,7 +1171,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				//connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
-					sun->ChangeSceneMatrix(angleUpMatrix);
+					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
 					sky->ChangeSceneMatrix(angleUpMatrix);
 				}
 			}
