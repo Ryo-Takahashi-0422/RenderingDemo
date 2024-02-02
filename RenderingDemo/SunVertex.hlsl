@@ -1,11 +1,11 @@
 #include "SunHeader.hlsli"
 
-vsOutput vs_main(float4 pos : POSITION, float2 uv : TEXCOORD)
+vsOutput vs_main(float2 pos : POSITION, float2 uv : TEXCOORD)
 {
     vsOutput output;
     //output.position = mul(float4(pos.x, pos.y, 0, 1), cameraPos);
     //output.position = mul(output.position, sunDir);
-    float4 ori = float4(pos.x, pos.y, 0, 1);
+    float4 ori = float4(pos, 0, 1);
     //float4 test = mul(mul(cameraPos, ori), sunDir);
     //
     
@@ -14,7 +14,7 @@ vsOutput vs_main(float4 pos : POSITION, float2 uv : TEXCOORD)
     
     ori = mul(sunDir, ori);
 
-    //ori.z -= 0.1f;
+    //ori.z = 2.277f;
     
     output.position = mul(mul(mul(proj, view), world), /*float4(pos.x, pos.y, 0, 1)*/ori);
     //output.position = mul(world, /*float4(pos.x, pos.y, 0, 1)*/ori);

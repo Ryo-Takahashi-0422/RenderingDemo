@@ -9,11 +9,6 @@ Sun::Sun(ID3D12Device* dev, Camera* camera)
 
 void Sun::Init()
 {
-	float xRad = 0.0f;
-	float yRad = 60.0f / (2 * PI);
-
-	XMFLOAT3 pos = { cos(yRad) * cos(xRad), -sin(yRad), cos(yRad) * sin(xRad) }; // ビルボード化のためyを負にする。太陽→カメラへのベクトル
-	direction = pos;
 	CreateSunVertex();
     mappedMatrix = new BillboardMatrix;
     
@@ -32,7 +27,7 @@ void Sun::CreateSunVertex()
 	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
 	XMVECTOR ori = { 0,0,0,1 };
-    float sunDiskSize_ = 0.05f;
+    float sunDiskSize_ = 0.01f;
     for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
@@ -60,7 +55,7 @@ void Sun::CalculateBillbordMatrix()
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
     XMVECTOR yDir = { 1,0,0,0 };
     XMVECTOR xDir = XMVector3Cross(yDir, zDir);
-    yDir = XMVector3Cross(zDir, xDir);
+    //yDir = XMVector3Cross(zDir, xDir);
     
 
     XMFLOAT3 up = { 0,1,0};
@@ -88,19 +83,17 @@ void Sun::CalculateBillbordMatrix()
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
     //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z, 1 };
+	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
 	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
 	sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
-    //sunDirMatrix = XMMatrixTranspose(sunDirMatrix);
 
     auto cameraPos = _camera->GetCameraPos();
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
+    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x + 0.06;
+    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y + 0.1;
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
-    //cameraPosMatrix = XMMatrixTranspose(cameraPosMatrix);
 
     mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
     mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
