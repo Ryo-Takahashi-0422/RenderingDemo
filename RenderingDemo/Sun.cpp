@@ -56,7 +56,7 @@ void Sun::CreateSunVertex()
 void Sun::CalculateBillbordMatrix()
 {
     auto fixedDir = direction;
-    fixedDir.y *= -1;
+    //fixedDir.y *= -1;
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
     XMVECTOR yDir = { 1,0,0,0 };
     XMVECTOR xDir = XMVector3Cross(yDir, zDir);
@@ -83,12 +83,12 @@ void Sun::CalculateBillbordMatrix()
     //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
 
 	billBoardMatrix.r[0] = xDir;
-	billBoardMatrix.r[1] = -yDir;
+	billBoardMatrix.r[1] = yDir;
 	billBoardMatrix.r[2] = zDir;
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
     //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z, 1 };
+	XMVECTOR invSunDir = { fixedDir.x, -fixedDir.y, fixedDir.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
 	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
@@ -102,8 +102,8 @@ void Sun::CalculateBillbordMatrix()
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
     //cameraPosMatrix = XMMatrixTranspose(cameraPosMatrix);
 
-    mappedMatrix->world = billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj();
-    mappedMatrix->view = _camera->GetView();
+    mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
+    mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
     mappedMatrix->proj = _camera->GetProj();
     mappedMatrix->cameraPos = cameraPosMatrix;
     mappedMatrix->sunDir = sunDirMatrix;
@@ -122,6 +122,7 @@ XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
 void Sun::ChangeSceneMatrix(XMMATRIX _world)
 {
     sceneMatrix *= _world;
+    mappedMatrix->scene = sceneMatrix;
 }
 
 // ルートシグネチャ設定

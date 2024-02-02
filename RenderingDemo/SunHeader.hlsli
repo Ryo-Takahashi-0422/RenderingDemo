@@ -6,6 +6,7 @@ cbuffer BillboardMatrix : register(b0) // 現在カメラが描画しているスクリーン座標
     matrix cameraPos;
     matrix sunDir;
     matrix billboard;
+    matrix scene;
 };
 
 struct vsOutput

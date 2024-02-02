@@ -81,10 +81,11 @@ private:
 		XMMATRIX cameraPos;
 		XMMATRIX sunDir;
 		XMMATRIX billborad;
+		XMMATRIX scene;
 	};
 	BillboardMatrix* mappedMatrix = nullptr;
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
-
+	XMFLOAT3 target = { 0, 1.5, 0 };
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
 	void Init();
