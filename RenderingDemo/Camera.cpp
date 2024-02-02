@@ -40,7 +40,7 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	//プロジェクション(射影)行列の生成・乗算
 	proj = XMMatrixPerspectiveFovLH
 	(
-		XM_PIDIV2, // 画角90°
+		XM_PIDIV2 * 1.5, // 画角90°
 		static_cast<float>(prepareRenderingWindow->GetWindowHeight()) / static_cast<float>(prepareRenderingWindow->GetWindowWidth()),
 		1.0, // ニア―クリップ
 		3000.0 // ファークリップ

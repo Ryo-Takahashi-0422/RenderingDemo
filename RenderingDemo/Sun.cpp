@@ -31,8 +31,8 @@ void Sun::CreateSunVertex()
 {
 	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
-	XMVECTOR ori = { 0,0,1,1 };
-    float sunDiskSize_ = 0.04649f;
+	XMVECTOR ori = { 0,0,0,1 };
+    float sunDiskSize_ = 0.05f;
     for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
@@ -44,7 +44,7 @@ void Sun::CreateSunVertex()
 			continue;
 		}
 
-		XMVECTOR pos = { cos(rad), sin(rad), 1,1 };
+		XMVECTOR pos = { cos(rad), sin(rad), 0,1 };
 
 		vertexes.push_back(pos * sunDiskSize_);
 		indices.push_back(i);
@@ -56,7 +56,7 @@ void Sun::CreateSunVertex()
 void Sun::CalculateBillbordMatrix()
 {
     auto fixedDir = direction;
-    //fixedDir.y *= -1;
+    fixedDir.y *= -1;
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
     XMVECTOR yDir = { 1,0,0,0 };
     XMVECTOR xDir = XMVector3Cross(yDir, zDir);
@@ -69,8 +69,8 @@ void Sun::CalculateBillbordMatrix()
     const auto&& v1{ DirectX::XMLoadFloat3(&fixedDir) }, && v2{ DirectX::XMLoadFloat3(&right) };
     DirectX::XMStoreFloat(&rv, DirectX::XMVector3Dot(v1, v2));
 
-    if (std::abs(std::abs(rv) - 1) < 0.1f)
-    yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
+    if (std::abs(std::abs(rv) - 1) < 0.25f)
+        yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
     else
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));
 
@@ -88,7 +88,7 @@ void Sun::CalculateBillbordMatrix()
     //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
     //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { fixedDir.x, -fixedDir.y, fixedDir.z, 1 };
+	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z, 1 };
 	XMMATRIX sunDirMatrix = XMMatrixIdentity();
 	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
 	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
