@@ -16,8 +16,8 @@ private:
 
 	
 	WNDCLASSEX w;
-	const unsigned int window_width = /*1080*/1080;
-	const unsigned int window_height = /*1080*/1080;
+	const unsigned int window_width = /*1080*/1024; // 画面サイズとテクスチャサイズが異なる場合、特に太陽の位置がずれることに注意 例：1080に対して太陽テクスチャサイズ1024の場合など
+	const unsigned int window_height = /*1080*/1024;
 	
 	HWND hwnd;
 	D3D12_VIEWPORT viewport;

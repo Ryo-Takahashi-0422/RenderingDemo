@@ -91,9 +91,9 @@ void Sun::CalculateBillbordMatrix()
 
     auto cameraPos = _camera->GetCameraPos();
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x + 0.06; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y + 0.1; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
-    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z + 0.06; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
+    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
+    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
+    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
 
     mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
     mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
