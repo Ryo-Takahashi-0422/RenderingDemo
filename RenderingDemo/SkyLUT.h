@@ -95,7 +95,7 @@ private:
     bool barrierSW = true; // シャドウファクターの解像度変化および初回の描画時にのみtrue
 
 public:
-    SkyLUT();
+    //SkyLUT();
     SkyLUT(ID3D12Device* dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);

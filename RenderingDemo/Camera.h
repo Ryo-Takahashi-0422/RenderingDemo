@@ -30,6 +30,7 @@ private:
 	XMVECTOR BottomRightNear = { 1.0f, -1.0f, 0.0f, 1.0f };
 	XMVECTOR BottomRightFar = { 1.0f, -1.0f, 0.1f, 1.0f };
 
+	XMFLOAT3 eye;
 public:
 
 	Camera();
@@ -38,6 +39,7 @@ public:
 	void CalculateFrustum();
 	
 	static Camera* GetInstance() { return instance; };
+	XMFLOAT3 GetCameraPos() { return eye; };
 	XMMATRIX GetWorld() { return world; };
 	XMMATRIX GetView() { return view; };
 	XMMATRIX GetProj() { return proj; };

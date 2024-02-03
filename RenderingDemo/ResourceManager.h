@@ -36,6 +36,7 @@ private:
 	ComPtr<ID3D12Resource> depthBuff2 = nullptr; // depth buffer
 	ComPtr<ID3D12Resource> skyBuffer = nullptr; // Sky•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> imguiBuffer = nullptr; // ImGui•`‰æŒ‹‰Ê
+	ComPtr<ID3D12Resource> sunBuffer = nullptr; // sun•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
@@ -139,6 +140,7 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 
 	void ClearReference();
+	void SetSunResourceAndCreateView(ComPtr<ID3D12Resource> _sunResource);
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);
 	int GetDescriptorNum() { return descriptorNum; };

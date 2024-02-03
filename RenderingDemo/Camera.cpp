@@ -25,7 +25,7 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	XMFLOAT3 eye(0, 1.5, 2.3);
+	eye = XMFLOAT3(0, 1.5, 2.3);
 	XMFLOAT3 target(0, 1.5, 0);
 	//XMFLOAT3 eye(0, 100, /*0.01*/10);
 	//XMFLOAT3 target(0, 10, 0);

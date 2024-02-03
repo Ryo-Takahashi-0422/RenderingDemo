@@ -574,7 +574,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 
-	sun = new Sun;
+	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
 
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
@@ -605,8 +605,11 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
+
+	sun->SetShadowFactorResource(shadowFactorResource.Get());
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
+	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
 	resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 	resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
 
@@ -776,7 +779,7 @@ void D3DX12Wrapper::Run() {
 
 	XMFLOAT3 sunDir;
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ˆÈ~‚Í‰ð‘œ“x‚É•ÏX‚ª‚ ‚éê‡‚Ì‚Ý•`‰æ‚·‚é
-
+	sun->ChangeSceneMatrix(XMMatrixIdentity());
 	while (true)
 	{		
 		// ¡‚ÌŽžŠÔ‚ðŽæ“¾
@@ -873,6 +876,7 @@ void D3DX12Wrapper::Run() {
 
 
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		
@@ -1145,6 +1149,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
 				}
 			}
@@ -1156,6 +1161,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
 			}
@@ -1167,6 +1173,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				//connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
 					sky->ChangeSceneMatrix(angleUpMatrix);
 				}
 			}
@@ -1192,7 +1199,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 7;
+			dHandle.ptr += cbv_srv_Size * 8;
 
 			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 
@@ -1891,6 +1898,9 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	gHandle.ptr += buffSize;
 	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+
+	gHandle.ptr += buffSize;
+	_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

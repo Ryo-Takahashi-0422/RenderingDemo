@@ -41,7 +41,7 @@ float4 ps_main(vsOutput input) : SV_TARGET
     float cosPhi = cos(phi);
     float sinPhi = sin(phi);
 
-    float theta = (y - 0.5f)/* * 0.5f*/ * PI; // -PI/2 ~ PI/2 ; // PI / 2 を掛けてy軸の範囲を-PI/2～PI/2に変化させている。 sign：x < 0 ? -1: 1　vm*vmで線形→非線形化している。vm二乗による符号の消失をsign(vm)で残している。
+    float theta = (y - 0.5f) * PI;
     float cosTheta = cos(theta);
     float sinTheta = sin(theta);
     

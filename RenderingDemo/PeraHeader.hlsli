@@ -4,6 +4,7 @@ Texture2D<float4> sponzaDepthmap : register(t2); // sponzaデプスマップ
 Texture2D<float4> connanDepthmap : register(t3); // キャラクターデプスマップ
 Texture2D<float4> sky : register(t4); // skyLUT
 Texture2D<float4> imguiWindow : register(t5); // skyLUT
+Texture2D<float4> sunTex : register(t6); // skyLUT
 
 SamplerState smp : register(s0); // サンプラー
 
