@@ -9,8 +9,8 @@ private:
 	Camera* _camera;
 	// ルートシグネチャ関連
 	CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-	CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
-	D3D12_ROOT_PARAMETER rootParam[1] = {};
+	CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
+	D3D12_ROOT_PARAMETER rootParam[2] = {};
 	ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
 	ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
 	ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -61,6 +61,7 @@ private:
 
 	ComPtr<ID3D12Resource> renderingResource = nullptr;
 	ComPtr<ID3D12Resource> matrixResource = nullptr;
+	ComPtr<ID3D12Resource> shadowFactorResource;
 	ComPtr<ID3D12Resource> vertBuff = nullptr; // vertex pos mapped buffer
 	ComPtr<ID3D12Resource> idxBuff = nullptr; // index mapped buffer
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
@@ -82,6 +83,7 @@ private:
 		XMMATRIX sunDir;
 		XMMATRIX billborad;
 		XMMATRIX scene;
+		XMFLOAT3 sunTheta;
 	};
 	BillboardMatrix* mappedMatrix = nullptr;
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
@@ -94,5 +96,6 @@ public:
 	XMFLOAT3 GetDirection() { return direction; };
 	void ChangeSceneMatrix(XMMATRIX _world);
 	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
+	void SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

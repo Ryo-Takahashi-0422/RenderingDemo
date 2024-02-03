@@ -605,6 +605,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	camera->CalculateFrustum();
 	sky->SetFrustum(camera->GetFrustum());
+
+	sun->SetShadowFactorResource(shadowFactorResource.Get());
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());

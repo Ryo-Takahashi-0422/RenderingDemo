@@ -27,7 +27,7 @@ void Sun::CreateSunVertex()
 	auto div = 2 * PI / vertexCnt;
 	auto rad = div;
 	XMVECTOR ori = { 0,0,0,1 };
-    float sunDiskSize_ = 0.01f;
+    float sunDiskSize_ = 0.03f;
     for (int i = 0; i < vertexCnt * 2; ++i)
 	{
 		if (i % 3 == 0)
@@ -101,6 +101,7 @@ void Sun::CalculateBillbordMatrix()
     mappedMatrix->cameraPos = cameraPosMatrix;
     mappedMatrix->sunDir = sunDirMatrix;
     mappedMatrix->billborad = billBoardMatrix;
+    mappedMatrix->sunTheta = direction;
 }
 
 XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
@@ -128,14 +129,20 @@ HRESULT Sun::CreateRootSignature()
 
     //ディスクリプタテーブルのスロット設定
     descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメータ
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[0].DescriptorTable.pDescriptorRanges = descTableRange;
+    rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 1;
+    rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -322,7 +329,7 @@ HRESULT Sun::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 1;
+    srvHeapDesc.NumDescriptors = 1; // matrix, shadowfactor tex
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
@@ -394,6 +401,9 @@ void Sun::CreateRenderingSRV()
         &srvDesc,
         handle
     );
+
+
+
 }
 
 // 頂点・インデックス関連設定
@@ -477,7 +487,7 @@ HRESULT Sun::CreateBillboardMatrixHeap()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 1; // matrix
+    heapDesc.NumDescriptors = 2; // matrix, shadowfactor
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
 
@@ -524,6 +534,28 @@ HRESULT Sun::MappingBillboardMatrix()
     return result;
 }
 
+void Sun::SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource)
+{
+    shadowFactorResource = _shadowFactorRsource;
+    auto handle = matrixHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    handle.ptr += inc;
+
+    // SkyLUTBuffer用view
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        shadowFactorResource.Get(),
+        &srvDesc,
+        handle
+    );
+}
 
 // 実行
 void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
@@ -556,6 +588,8 @@ void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     auto handle = matrixHeap->GetGPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     _cmdList->SetGraphicsRootDescriptorTable(0, handle); // matrix
+    handle.ptr += inc;
+    _cmdList->SetGraphicsRootDescriptorTable(1, handle); // shadowfactor
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->IASetVertexBuffers(0, 1, &vbView);

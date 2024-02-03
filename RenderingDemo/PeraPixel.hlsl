@@ -88,7 +88,7 @@ float4 ps(Output input) : SV_TARGET
     //    col = imgui;
     //}
     
-    float4 sunDisk = sun.Sample(smp, input.uv);
+    float4 sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
     
-    return float4(col, 1) + imgui + sunDisk;
+    return float4(col, 1) + imgui + sun;
 }
