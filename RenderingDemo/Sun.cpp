@@ -64,7 +64,7 @@ void Sun::CalculateBillbordMatrix()
     const auto&& v1{ DirectX::XMLoadFloat3(&fixedDir) }, && v2{ DirectX::XMLoadFloat3(&right) };
     DirectX::XMStoreFloat(&rv, DirectX::XMVector3Dot(v1, v2));
 
-    if (std::abs(std::abs(rv) - 1) < 0.1f)
+    if (std::abs(std::abs(rv) - 1) < 0.5f)
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
     else
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));

@@ -38,7 +38,7 @@ private:
 
 	// sun
 	float sunAngleX = 270.0f;
-	float sunAngleY = -5.0f;
+	float sunAngleY = 0.0f;
 
 	//sky
 	int skyResX = 64;

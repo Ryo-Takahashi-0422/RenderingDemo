@@ -30,7 +30,7 @@ private:
 	HRESULT CreateGraphicPipeline();
 
 	void CreateSunVertex();
-	int vertexCnt = 48;
+	int vertexCnt = 192;
 	std::vector<XMVECTOR> vertexes;
 	std::vector<unsigned int> indices;
 	XMFLOAT3 direction;
