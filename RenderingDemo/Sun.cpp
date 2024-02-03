@@ -64,7 +64,7 @@ void Sun::CalculateBillbordMatrix()
     const auto&& v1{ DirectX::XMLoadFloat3(&fixedDir) }, && v2{ DirectX::XMLoadFloat3(&right) };
     DirectX::XMStoreFloat(&rv, DirectX::XMVector3Dot(v1, v2));
 
-    if (std::abs(std::abs(rv) - 1) < 0.25f)
+    if (std::abs(std::abs(rv) - 1) < 0.1f)
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
     else
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));
@@ -91,9 +91,9 @@ void Sun::CalculateBillbordMatrix()
 
     auto cameraPos = _camera->GetCameraPos();
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x + 0.06;
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y + 0.1;
-    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
+    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x + 0.06; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
+    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y + 0.1; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
+    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z + 0.06; // ‘«‚³‚È‚¢‚Æ‘¾—zˆÊ’u‚ª‚¸‚ê‚é...
 
     mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
     mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
