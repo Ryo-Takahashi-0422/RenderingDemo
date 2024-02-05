@@ -456,9 +456,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	delete peraShaderCompile;
 
 	// コライダー描画用
+	std::string collisionVs = "CollisionVertex.hlsl";
+	std::string collisionPs = "CollisionPixel.hlsl";
+	auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
 	auto colliderBlobs = collisionShaderCompile->SetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionVertexShader.hlsl", "vs",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionPixelShader.hlsl", "ps");
+		collisionPathPair.first, "vs",
+		collisionPathPair.second, "ps");
 	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
 	_vsCollisionBlob = colliderBlobs.first;
 	_psCollisionBlob = colliderBlobs.second;

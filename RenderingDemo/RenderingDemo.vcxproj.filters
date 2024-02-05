@@ -54,9 +54,6 @@
     <None Include="BufferHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="CollisionHeaderShader.hlsli">
-      <Filter>Shader\Rebuild</Filter>
-    </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -79,6 +76,9 @@
       <Filter>Shader\Sky</Filter>
     </None>
     <None Include="shader\FBXHeader.hlsli">
+      <Filter>Shader\Rebuild</Filter>
+    </None>
+    <None Include="shader\CollisionHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
   </ItemGroup>
@@ -106,12 +106,6 @@
     </FxCompile>
     <FxCompile Include="LightMapShader.hlsl">
       <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="CollisionVertexShader.hlsl">
-      <Filter>Shader\Rebuild</Filter>
-    </FxCompile>
-    <FxCompile Include="CollisionPixelShader.hlsl">
-      <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
       <Filter>Shader\Sky</Filter>
@@ -144,6 +138,12 @@
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="shader\FBXVertex.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\CollisionPixel.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\CollisionVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>

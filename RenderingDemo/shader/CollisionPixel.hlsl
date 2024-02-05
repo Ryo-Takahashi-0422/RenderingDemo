@@ -1,4 +1,4 @@
-#include "CollisionHeaderShader.hlsli"
+#include "CollisionHeader.hlsli"
 
 float4 ps(Output input) : SV_TARGET
 {
