@@ -211,8 +211,8 @@ HRESULT Sun::ShaderCompile()
     std::string s = &cPath[0];
     s.erase(s.size() - 28, 28);
     
-    std::string vs = s + "\\RenderingDemo\\SunVertex.hlsl";
-    std::string ps = s + "\\RenderingDemo\\SunPixel.hlsl";
+    std::string vs = s + "\\RenderingDemo\\shader\\SunVertex.hlsl";
+    std::string ps = s + "\\RenderingDemo\\shader\\SunPixel.hlsl";
 
     int n;
     
@@ -353,7 +353,6 @@ HRESULT Sun::CreateGraphicPipeline()
     //desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     
     auto result = _dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-    printf("%d\n", 7);
     return result;
 }
 

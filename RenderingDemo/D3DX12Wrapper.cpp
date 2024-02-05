@@ -574,7 +574,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
-	printf("%d\n", 6);
+
 	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
 	
