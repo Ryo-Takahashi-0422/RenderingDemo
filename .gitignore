@@ -2,6 +2,7 @@ model/
 .xls
 .xlsx
 .vs
-x64/
+Debug/
+RenderingDemoRebuild\x64
 EffekseerTexture/
 DirectX12_Play/

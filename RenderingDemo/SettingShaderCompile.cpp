@@ -13,7 +13,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShade
 		"vs_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
-		_vsBlob.ReleaseAndGetAddressOf()
+		_vsBlob./*ReleaseAnd*/GetAddressOf()
 		, setRootSignature->GetErrorBlob().GetAddressOf()
 	);
 	
@@ -26,7 +26,7 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::SetShade
 		"ps_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
-		_psBlob.ReleaseAndGetAddressOf()
+		_psBlob./*ReleaseAnd*/GetAddressOf()
 		, setRootSignature->GetErrorBlob().GetAddressOf()
 	);
 	
