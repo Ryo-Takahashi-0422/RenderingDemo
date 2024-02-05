@@ -78,7 +78,7 @@
     <None Include="shader\PeraHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="shader\RaySphereIntersection.hlsl">
+    <None Include="shader\RaySphereIntersection.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>

@@ -1,4 +1,4 @@
-#include "RaySphereIntersection.hlsl"
+#include "RaySphereIntersection.hlsli"
 #include "AtmosphericModel.hlsli"
 #include "Definition.hlsli"
 

@@ -304,7 +304,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <None Include="shader\RaySphereIntersection.hlsl">
+    <None Include="shader\RaySphereIntersection.hlsli">
       <FileType>Document</FileType>
     </None>
     <FxCompile Include="shader\ShadowFactor.hlsl">
