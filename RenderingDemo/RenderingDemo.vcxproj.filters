@@ -125,9 +125,6 @@
     <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="ShadowFactor.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
@@ -144,6 +141,9 @@
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="shader\SkyPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowFactor.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>

@@ -78,10 +78,14 @@ HRESULT ShadowFactor::CreateRootSignature()
 // シェーダー設定
 HRESULT ShadowFactor::ShaderCompile()
 {
+    std::string cs = "ShadowFactor.hlsl";
+    std::string noUse = "nothing";
+    auto pair = Utility::GetHlslFilepath(cs, noUse);
+
     //シェーダーコンパイル
     auto result = D3DCompileFromFile
     (
-        L"ShadowFactor.hlsl",
+        pair.first,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "cs_main",
