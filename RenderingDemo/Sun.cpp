@@ -200,36 +200,13 @@ HRESULT Sun::CreateRootSignature()
 //  シェーダー設定
 HRESULT Sun::ShaderCompile()
 {
-    // 実行ファイルのパス取得
-    TCHAR tPath[_MAX_PATH];
-    GetModuleFileName(NULL, tPath, _MAX_PATH);
-
-    const size_t textSize = _MAX_PATH;
-    char cPath[textSize];
-    WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
-
-    std::string s = &cPath[0];
-    s.erase(s.size() - 28, 28);
-    
-    std::string vs = s + "\\RenderingDemo\\shader\\SunVertex.hlsl";
-    std::string ps = s + "\\RenderingDemo\\shader\\SunPixel.hlsl";
-
-    int n;
-    
-    n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), NULL, 0);   
-    LPWSTR vsPath = new WCHAR[n + 1];
-    n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), vsPath, n);
-    *(vsPath + n) = '\0';
-
-    int m;
-    m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), NULL, 0);
-    LPWSTR psPath = new WCHAR[m + 1];
-    m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), psPath, m);
-    *(psPath + m) = '\0';
+    std::string vs = "SunVertex.hlsl";
+    std::string ps = "SunPixel.hlsl";
+    auto pair = Utility::GetHlslFilepath(vs, ps);
 
     auto result = D3DCompileFromFile
     (
-        vsPath,
+        pair.first,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -242,7 +219,7 @@ HRESULT Sun::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        psPath,
+        pair.second,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",

@@ -112,3 +112,40 @@ std::vector<float> Utility::GetGaussianWeight(size_t count, float disp)
 
 	return weight;
 }
+
+std::pair<LPWSTR, LPWSTR> Utility::GetHlslFilepath(std::string _vsName, std::string _psName)
+{
+	// 実行ファイルのパス取得
+	TCHAR tPath[_MAX_PATH];
+	GetModuleFileName(NULL, tPath, _MAX_PATH);
+
+	const size_t textSize = _MAX_PATH;
+	char cPath[textSize];
+	WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
+
+	int eraseNum = 28;
+	std::string s = &cPath[0];
+	s.erase(s.size() - eraseNum, eraseNum);
+
+	std::string vs = s + "\\RenderingDemo\\shader\\" + _vsName;
+	std::string ps = s + "\\RenderingDemo\\shader\\" + _psName;
+
+	int n;
+
+	n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), NULL, 0);
+	LPWSTR vsPath = new WCHAR[n + 1];
+	n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), vsPath, n);
+	*(vsPath + n) = '\0';
+
+	int m;
+	m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), NULL, 0);
+	LPWSTR psPath = new WCHAR[m + 1];
+	m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), psPath, m);
+	*(psPath + m) = '\0';
+
+	std::pair<LPWSTR, LPWSTR> output;
+	output.first = vsPath;
+	output.second = psPath;
+
+	return output;
+}
