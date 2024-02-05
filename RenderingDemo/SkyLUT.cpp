@@ -86,9 +86,13 @@ HRESULT SkyLUT::CreateRootSignature()
 //  シェーダー設定
 HRESULT SkyLUT::ShaderCompile()
 {
+    std::string vs = "SkyLUTVertex.hlsl";
+    std::string ps = "SkyLUTPixel.hlsl";
+    auto pair = Utility::GetHlslFilepath(vs, ps);
+
     auto result = D3DCompileFromFile
     (
-        L"SkyLUTVertex.hlsl",
+        pair.first,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -101,7 +105,7 @@ HRESULT SkyLUT::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"SkyLUTPixel.hlsl",
+        pair.second,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",

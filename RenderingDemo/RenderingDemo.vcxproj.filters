@@ -69,9 +69,6 @@
     <None Include="Definition.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
-    <None Include="SkyLUTHeader.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
     <None Include="AtmosphericModel.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -79,6 +76,9 @@
       <Filter>Shader\Sky</Filter>
     </None>
     <None Include="shader\SunHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\SkyLUTHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
@@ -125,13 +125,7 @@
     <FxCompile Include="CollisionPixelShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="SkyLUTVertex.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
     <FxCompile Include="ShadowFactor.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyLUTPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="SkyVertex.hlsl">
@@ -144,6 +138,12 @@
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="shader\SunVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyLUTPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyLUTVertex.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
