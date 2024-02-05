@@ -367,15 +367,17 @@ bool D3DX12Wrapper::ResourceInit() {
 		// FBXInfoManager Instance
 		fbxInfoManager = FBXInfoManager::Instance();
 		fbxInfoManager.Init(modelPath[i]);
-
+		
 		// FBX resource creation
 		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
+		
 		resourceManager[i]->Init(camera);
+		
 	}
-
+	
 	// TextureTransporterクラスのインスタンス化
 	textureTransporter = new TextureTransporter;
-
+	
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
 	{
@@ -455,7 +457,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	_vsCollisionBlob = colliderBlobs.first;
 	_psCollisionBlob = colliderBlobs.second;
 	delete collisionShaderCompile;
-
+	
 	//// 表示用
 	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
 	//if (bufferBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
@@ -511,7 +513,6 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 
 // 初期化処理7：各バッファーを作成して頂点情報を読み込み
-
 
 	
 	//ファイル形式毎のテクスチャロード処理
@@ -573,10 +574,10 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// Sky設定
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
-
+	printf("%d\n", 6);
 	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
-
+	
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();

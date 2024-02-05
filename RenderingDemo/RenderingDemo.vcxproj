@@ -135,12 +135,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(DXTEX_DIR);$(Imgui);$(EFK_RELEASE_ROOT_DIR)\Effekseer;$(EFK_RELEASE_ROOT_DIR)\Effekseer\Effekseer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererCommon;$(DirectXTK_hpp);%(AdditionalIncludeDirectories);$(FBX_SDK_Include);C:\Users\RyoTaka\Documents\eigen-3.4.0;$(Imgui_Backends)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

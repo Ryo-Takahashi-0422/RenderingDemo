@@ -20,7 +20,7 @@ int main() {
 	if (!wrapper->PrepareRendering()) {
 		return -1;
 	}
-	
+
 	if (!wrapper->PipelineInit()) {
 		return -1;
 	}

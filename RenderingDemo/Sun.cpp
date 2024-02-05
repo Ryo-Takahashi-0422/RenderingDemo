@@ -16,7 +16,7 @@ void Sun::Init()
     ShaderCompile();
     SetInputLayout();
     CreateGraphicPipeline();
-
+    
     RenderingSet();
     DrawResourceSet();
     InitBillboardMatrixReosources();
@@ -200,9 +200,36 @@ HRESULT Sun::CreateRootSignature()
 //  シェーダー設定
 HRESULT Sun::ShaderCompile()
 {
+    // 実行ファイルのパス取得
+    TCHAR tPath[_MAX_PATH];
+    GetModuleFileName(NULL, tPath, _MAX_PATH);
+
+    const size_t textSize = _MAX_PATH;
+    char cPath[textSize];
+    WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
+
+    std::string s = &cPath[0];
+    s.erase(s.size() - 28, 28);
+    
+    std::string vs = s + "\\RenderingDemo\\SunVertex.hlsl";
+    std::string ps = s + "\\RenderingDemo\\SunPixel.hlsl";
+
+    int n;
+    
+    n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), NULL, 0);   
+    LPWSTR vsPath = new WCHAR[n + 1];
+    n = MultiByteToWideChar(CP_ACP, 0, vs.c_str(), vs.size(), vsPath, n);
+    *(vsPath + n) = '\0';
+
+    int m;
+    m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), NULL, 0);
+    LPWSTR psPath = new WCHAR[m + 1];
+    m = MultiByteToWideChar(CP_ACP, 0, ps.c_str(), ps.size(), psPath, m);
+    *(psPath + m) = '\0';
+
     auto result = D3DCompileFromFile
     (
-        L"SunVertex.hlsl",
+        vsPath,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -215,7 +242,7 @@ HRESULT Sun::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"SunPixel.hlsl",
+        psPath,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -260,7 +287,7 @@ void Sun::SetInputLayout()
     {
         "POSITION",
         0, // 同じセマンティクスに対するインデックス
-        DXGI_FORMAT_R32G32B32_FLOAT,
+        DXGI_FORMAT_R32G32_FLOAT,
         0, // スロットインデックス
         D3D12_APPEND_ALIGNED_ELEMENT,
         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
@@ -312,7 +339,7 @@ HRESULT Sun::CreateGraphicPipeline()
     desc.BlendState.AlphaToCoverageEnable = false;
     desc.BlendState.IndependentBlendEnable = false;
     desc.BlendState.RenderTarget[0] = renderTargetDesc;
-    desc.InputLayout.pInputElementDescs = inputLayout;
+    desc.InputLayout.pInputElementDescs = &inputLayout[0];
     desc.InputLayout.NumElements = _countof(inputLayout);
     desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     desc.NumRenderTargets = 1;
@@ -324,9 +351,9 @@ HRESULT Sun::CreateGraphicPipeline()
     //desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
     //desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; // ソースデータがコピー先データより小さい場合書き込む
     //desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-
+    
     auto result = _dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-
+    printf("%d\n", 7);
     return result;
 }
 
