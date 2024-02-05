@@ -18,6 +18,6 @@ Texture2D<float3> shadowFactor : register(t0);
 struct vsOutput
 {
     float4 position : SV_POSITION;
-    float4 clipPos : CLIP_POSITION;
+    //float4 clipPos : CLIP_POSITION;
     float2 texCoord : TEXCOORD;
 };

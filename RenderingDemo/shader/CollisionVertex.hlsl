@@ -1,4 +1,4 @@
-#include "CollisionHeaderShader.hlsli"
+#include "CollisionHeader.hlsli"
 
 Output vs(float4 pos : POSITION, float2 uv : TEXCOORD)
 {

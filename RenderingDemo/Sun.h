@@ -30,7 +30,7 @@ private:
 	HRESULT CreateGraphicPipeline();
 
 	void CreateSunVertex();
-	int vertexCnt = 48;
+	int vertexCnt = 192;
 	std::vector<XMVECTOR> vertexes;
 	std::vector<unsigned int> indices;
 	XMFLOAT3 direction;
@@ -87,15 +87,18 @@ private:
 	};
 	BillboardMatrix* mappedMatrix = nullptr;
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
-	XMFLOAT3 target = { 0, 1.5, 0 };
+	XMMATRIX sunViewMatrix;
+
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
 	void Init();
 	void CalculateBillbordMatrix();
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
+	void CalculateViewMatrix();
 	XMFLOAT3 GetDirection() { return direction; };
 	void ChangeSceneMatrix(XMMATRIX _world);
 	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
+	XMMATRIX GetViewMatrix() { return sunViewMatrix; };
 	void SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

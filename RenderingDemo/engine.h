@@ -6,7 +6,7 @@
 #include <Windows.h>
 #include<tchar.h>
 //#ifdef _DEBUG
-#include <pix3.h>
+//#include <pix3.h>
 #include <iostream>
 //#endif // _DEBUG
 #include <vector>
@@ -26,7 +26,6 @@
 #include <ReadData.h>
 #include <stdlib.h>
 #include <fstream>
-//#include <thread>
 
 //eigen
 #define _USE_MATH_DEFINES
@@ -103,4 +102,4 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ShadowFactor.h>
 #include <Sun.h>
 #include <SkyLUT.h>
-
+#include <Shadow.h>

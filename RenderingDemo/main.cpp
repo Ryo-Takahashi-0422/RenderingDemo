@@ -3,7 +3,7 @@
 #include<Windows.h>
 //#ifdef _DEBUG
 int main() {
-	PIXLoadLatestWinPixGpuCapturerLibrary();
+	//PIXLoadLatestWinPixGpuCapturerLibrary();
 //#else
 //#include<Windows.h>
 //int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -20,7 +20,7 @@ int main() {
 	if (!wrapper->PrepareRendering()) {
 		return -1;
 	}
-	
+
 	if (!wrapper->PipelineInit()) {
 		return -1;
 	}

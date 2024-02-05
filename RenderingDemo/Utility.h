@@ -37,4 +37,7 @@ namespace Utility
 	// @param disp 分散
 	// @return ウェイト
 	std::vector<float> GetGaussianWeight(size_t count, float disp);
+
+	// hlslのファイルパス作成
+	std::pair<LPWSTR, LPWSTR> GetHlslFilepath(std::string _vsName, std::string _psName);
 };

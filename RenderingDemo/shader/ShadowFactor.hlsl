@@ -1,8 +1,8 @@
-#include "RaySphereIntersection.hlsl"
+#include "RaySphereIntersection.hlsli"
 #include "AtmosphericModel.hlsli"
 #include "Definition.hlsli"
 
-#define STEP_CNT 500
+#define STEP_CNT 1000
 
 RWTexture2D<float4> shadowFactor; // UAVオブジェクト
 
@@ -13,6 +13,8 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
     
     float width, height;
     shadowFactor.GetDimensions(width, height);
+    if (DTid.x >= width || DTid.y >= height)
+        return;
     
     float rayHeight = lerp(0, atmosphereRadius - groundRadius, (DTid.x + 0.5f) / width);
     float2 rayPos = float2(0, rayHeight + groundRadius);

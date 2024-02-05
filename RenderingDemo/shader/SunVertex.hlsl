@@ -19,8 +19,8 @@ vsOutput vs_main(float2 pos : POSITION, float2 uv : TEXCOORD)
     output.position = mul(mul(mul(proj, view), world), /*float4(pos.x, pos.y, 0, 1)*/ori);
     //output.position = mul(world, /*float4(pos.x, pos.y, 0, 1)*/ori);
     output.position.z = output.position.w; // •s—v??
-    output.clipPos = output.position;
-    output.clipPos = mul(scene, output.clipPos);
+    //output.clipPos = output.position;
+    //output.clipPos = mul(scene, output.clipPos);
     //output.position = mul(cameraPos, output.position);
     //output.position = mul(sunDir, output.position);
     output.texCoord = uv;

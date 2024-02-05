@@ -101,7 +101,7 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 	}
 
 	_fenceVal = 0;
-	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
+	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence./*ReleaseAnd*/GetAddressOf()));
 }
 
 //#ifdef _DEBUG
@@ -251,7 +251,7 @@ bool D3DX12Wrapper::PipelineInit(){
 		&swapChainDesc,
 		nullptr,
 		nullptr,
-		(IDXGISwapChain1**)_swapChain.ReleaseAndGetAddressOf());
+		(IDXGISwapChain1**)_swapChain./*ReleaseAnd*/GetAddressOf());
 	if (result != S_OK) return false;
 
 //初期化処理５：レンダーターゲットビュー(RTV)の記述子ヒープを作成
@@ -367,15 +367,17 @@ bool D3DX12Wrapper::ResourceInit() {
 		// FBXInfoManager Instance
 		fbxInfoManager = FBXInfoManager::Instance();
 		fbxInfoManager.Init(modelPath[i]);
-
+		
 		// FBX resource creation
 		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
+		
 		resourceManager[i]->Init(camera);
+		
 	}
-
+	
 	// TextureTransporterクラスのインスタンス化
 	textureTransporter = new TextureTransporter;
-
+	
 	// 初期化処理1：ルートシグネチャ設定
 	if (FAILED(setRootSignature->SetRootsignatureParam(_dev)))
 	{
@@ -430,32 +432,41 @@ bool D3DX12Wrapper::ResourceInit() {
 	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
 
 	// FBXモデル描画用のシェーダーセッティング
+	std::string fbxVs = "FBXVertex.hlsl";
+	std::string fbxPs = "FBXPixel.hlsl";
+	auto fbxPathPair = Utility::GetHlslFilepath(fbxVs, fbxPs);
 	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob, 
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl", "FBXVS", 
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl", "FBXPS");
+		fbxPathPair.first, "FBXVS",
+		fbxPathPair.second, "FBXPS");
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
 	delete settingShaderCompile;
 
 	// バックバッファ描画用
+	std::string bufferVs = "PeraVertex.hlsl";
+	std::string bufferPs = "PeraPixel.hlsl";
+	auto bufferPathPair = Utility::GetHlslFilepath(bufferVs, bufferPs);
 	auto mBlobs = peraShaderCompile->SetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraVertex.hlsl", "vs",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraPixel.hlsl", "ps");
+		bufferPathPair.first, "vs",
+		bufferPathPair.second, "ps");
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
 	delete peraShaderCompile;
 
 	// コライダー描画用
+	std::string collisionVs = "CollisionVertex.hlsl";
+	std::string collisionPs = "CollisionPixel.hlsl";
+	auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
 	auto colliderBlobs = collisionShaderCompile->SetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionVertexShader.hlsl", "vs",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\CollisionPixelShader.hlsl", "ps");
+		collisionPathPair.first, "vs",
+		collisionPathPair.second, "ps");
 	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
 	_vsCollisionBlob = colliderBlobs.first;
 	_psCollisionBlob = colliderBlobs.second;
 	delete collisionShaderCompile;
-
+	
 	//// 表示用
 	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
 	//if (bufferBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
@@ -511,7 +522,6 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理6：コマンドリストのクローズ(コマンドリストの実行前には必ずクローズする)
 
 // 初期化処理7：各バッファーを作成して頂点情報を読み込み
-
 
 	
 	//ファイル形式毎のテクスチャロード処理
@@ -576,7 +586,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
-
+	
 	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
@@ -818,6 +828,7 @@ void D3DX12Wrapper::Run() {
 
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
+		sun->CalculateViewMatrix();
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;

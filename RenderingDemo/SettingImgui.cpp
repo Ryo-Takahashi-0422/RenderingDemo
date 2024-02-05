@@ -68,7 +68,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	if (ImGui::TreeNode("Sun"))
 	{
 		ImGui::SliderFloat("Sun Angle X", &sunAngleX, 0, 360);
-		ImGui::SliderFloat("Sun Angle Y", &sunAngleY, -5, 90);
+		ImGui::SliderFloat("Sun Angle Y", &sunAngleY, 0, 90);
 		//ImGui::InputFloat("Sun Intensity", &sunIntensity_);
 		//ImGui::InputFloat("Sun Disk Size", &sunDiskSize_, 0, 0, 8);
 		//if (ImGui::InputInt("Sun Disk Segments", &sunDiskSegments_))

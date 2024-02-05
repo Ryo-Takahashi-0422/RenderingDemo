@@ -54,32 +54,32 @@
     <None Include="BufferHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="PeraHeader.hlsli">
+    <None Include="shader\SunHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\SkyLUTHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\SkyHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\AtmosphericModel.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\Definition.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\PeraHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="FBXHeaderShader.hlsli">
+    <None Include="shader\RaySphereIntersection.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\FBXHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
-    <None Include="CollisionHeaderShader.hlsli">
+    <None Include="shader\CollisionHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
-    </None>
-    <None Include="RaySphereIntersection.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="Definition.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="SkyLUTHeader.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="AtmosphericModel.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="SkyHeader.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="SunHeader.hlsli">
-      <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -107,44 +107,44 @@
     <FxCompile Include="LightMapShader.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="PeraPixel.hlsl">
+    <FxCompile Include="shader\SunPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SunVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyLUTPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyLUTVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowFactor.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PeraPixel.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="PeraVertex.hlsl">
+    <FxCompile Include="shader\PeraVertex.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="FBXVertexShader.hlsl">
+    <FxCompile Include="shader\FBXPixel.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="FBXPixelShader.hlsl">
+    <FxCompile Include="shader\FBXVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="CollisionVertexShader.hlsl">
+    <FxCompile Include="shader\CollisionPixel.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
-    <FxCompile Include="CollisionPixelShader.hlsl">
+    <FxCompile Include="shader\CollisionVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyLUTVertex.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="ShadowFactor.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyLUTPixel.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyVertex.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyPixel.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SunVertex.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SunPixel.hlsl">
-      <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -299,6 +299,9 @@
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
     <ClCompile Include="ParticipatingMedia.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="Shadow.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
   </ItemGroup>
@@ -460,6 +463,9 @@
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
     <ClInclude Include="Sun.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Shadow.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>
