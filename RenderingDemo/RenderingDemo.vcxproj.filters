@@ -54,9 +54,6 @@
     <None Include="BufferHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="FBXHeaderShader.hlsli">
-      <Filter>Shader\Rebuild</Filter>
-    </None>
     <None Include="CollisionHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
@@ -80,6 +77,9 @@
     </None>
     <None Include="shader\RaySphereIntersection.hlsli">
       <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\FBXHeader.hlsli">
+      <Filter>Shader\Rebuild</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -106,12 +106,6 @@
     </FxCompile>
     <FxCompile Include="LightMapShader.hlsl">
       <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="FBXVertexShader.hlsl">
-      <Filter>Shader\Rebuild</Filter>
-    </FxCompile>
-    <FxCompile Include="FBXPixelShader.hlsl">
-      <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="CollisionVertexShader.hlsl">
       <Filter>Shader\Rebuild</Filter>
@@ -145,6 +139,12 @@
     </FxCompile>
     <FxCompile Include="shader\PeraVertex.hlsl">
       <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\FBXPixel.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\FBXVertex.hlsl">
+      <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

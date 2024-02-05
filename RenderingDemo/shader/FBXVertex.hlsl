@@ -1,4 +1,4 @@
-#include "FBXHeaderShader.hlsli"
+#include "FBXHeader.hlsli"
 
 Output FBXVS
 (float4 pos : POSITION,

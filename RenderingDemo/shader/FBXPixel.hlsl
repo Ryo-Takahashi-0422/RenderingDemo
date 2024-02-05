@@ -1,4 +1,4 @@
-#include "FBXHeaderShader.hlsli"
+#include "FBXHeader.hlsli"
 
 float4 FBXPS(Output input) : SV_TARGET
 {

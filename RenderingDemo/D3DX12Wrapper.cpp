@@ -432,9 +432,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	ComPtr<ID3D10Blob> _psBackbufferBlob = nullptr; // 表示用頂点ピクセルシェーダーオブジェクト格納用
 
 	// FBXモデル描画用のシェーダーセッティング
+	std::string fbxVs = "FBXVertex.hlsl";
+	std::string fbxPs = "FBXPixel.hlsl";
+	auto fbxPathPair = Utility::GetHlslFilepath(fbxVs, fbxPs);
 	auto blobs = settingShaderCompile->SetShaderCompile(setRootSignature, _vsBlob, _psBlob, 
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXVertexShader.hlsl", "FBXVS", 
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\FBXPixelShader.hlsl", "FBXPS");
+		fbxPathPair.first, "FBXVS",
+		fbxPathPair.second, "FBXPS");
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
