@@ -1,5 +1,5 @@
 #include "SkyHeader.hlsli"
-#include "Definition.hlsli"
+#include "../Definition.hlsli"
 
 #define POSTCOLOR_A 2.51
 #define POSTCOLOR_B 0.03

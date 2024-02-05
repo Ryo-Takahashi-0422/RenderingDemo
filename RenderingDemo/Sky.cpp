@@ -84,9 +84,13 @@ HRESULT Sky::CreateRootSignature()
 //  シェーダー設定
 HRESULT Sky::ShaderCompile()
 {
+    std::string vs = "SkyVertex.hlsl";
+    std::string ps = "SkyPixel.hlsl";
+    auto pair = Utility::GetHlslFilepath(vs, ps);
+
     auto result = D3DCompileFromFile
     (
-        L"SkyVertex.hlsl",
+        pair.first,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -99,7 +103,7 @@ HRESULT Sky::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"SkyPixel.hlsl",
+        pair.second,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",

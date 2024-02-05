@@ -72,13 +72,13 @@
     <None Include="AtmosphericModel.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
-    <None Include="SkyHeader.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
     <None Include="shader\SkyLUTHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\SkyHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
@@ -128,12 +128,6 @@
     <FxCompile Include="ShadowFactor.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
-    <FxCompile Include="SkyVertex.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyPixel.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
@@ -144,6 +138,12 @@
       <Filter>Shader\Sky</Filter>
     </FxCompile>
     <FxCompile Include="shader\SkyLUTVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkyPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
