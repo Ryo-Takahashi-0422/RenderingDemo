@@ -1,154 +1,24 @@
 #include <stdafx.h>
-#include <Sun.h>
+#include <Shadow.h>
 
-Sun::Sun(ID3D12Device* dev, Camera* camera)
+Shadow::Shadow(ID3D12Device* dev)
 {
     _dev = dev;
-    _camera = camera;
 }
 
-void Sun::Init()
+void Shadow::Init()
 {
-	CreateSunVertex();
-    mappedMatrix = new BillboardMatrix;
-    
     CreateRootSignature();
     ShaderCompile();
     SetInputLayout();
     CreateGraphicPipeline();
 
     RenderingSet();
-    DrawResourceSet();
-    InitBillboardMatrixReosources();
-}
-
-void Sun::CreateSunVertex()
-{
-	auto div = 2 * PI / vertexCnt;
-	auto rad = div;
-	XMVECTOR ori = { 0,0,0,1 };
-    float sunDiskSize_ = 0.03f;
-    for (int i = 0; i < vertexCnt * 2; ++i)
-	{
-		if (i % 3 == 0)
-		{
-			vertexes.push_back(ori);
-			indices.push_back(i);
-			vertexCnt++;
-            rad -= div;
-			continue;
-		}
-
-		XMVECTOR pos = { cos(rad), sin(rad), 0,1 };
-
-		vertexes.push_back(pos * sunDiskSize_);
-		indices.push_back(i);
-
-		rad += div;
-	}
-}
-
-void Sun::CalculateBillbordMatrix()
-{
-    auto fixedDir = direction;
-    fixedDir.y *= -1;
-    XMVECTOR zDir = XMLoadFloat3(&fixedDir);
-    XMVECTOR yDir = { 1,0,0,0 };
-    XMVECTOR xDir = XMVector3Cross(yDir, zDir);
-    //yDir = XMVector3Cross(zDir, xDir);
-    
-
-    XMFLOAT3 up = { 0,1,0};
-    XMFLOAT3 right = { 1,0,0};
-    float rv{};
-    const auto&& v1{ DirectX::XMLoadFloat3(&fixedDir) }, && v2{ DirectX::XMLoadFloat3(&right) };
-    DirectX::XMStoreFloat(&rv, DirectX::XMVector3Dot(v1, v2));
-
-    if (std::abs(std::abs(rv) - 1) < 0.5f)
-        yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
-    else
-        yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));
-
-    xDir = XMVector3Cross(yDir, zDir);
-
-
-
-
-	XMMATRIX billBoardMatrix = XMMatrixIdentity();
-    //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
-
-	billBoardMatrix.r[0] = xDir;
-	billBoardMatrix.r[1] = yDir;
-	billBoardMatrix.r[2] = zDir;
-    //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
-    //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
-
-	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
-	XMMATRIX sunDirMatrix = XMMatrixIdentity();
-	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
-	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
-	sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
-
-    auto cameraPos = _camera->GetCameraPos();
-    XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
-    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
-
-    mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
-    mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
-    mappedMatrix->proj = _camera->GetProj();
-    mappedMatrix->cameraPos = cameraPosMatrix;
-    mappedMatrix->sunDir = sunDirMatrix;
-    mappedMatrix->billborad = billBoardMatrix;
-    mappedMatrix->sunTheta = direction;
-}
-
-XMFLOAT3 Sun::CalculateDirectionFromDegrees(float angleX, float angleY)
-{	
-	float xRad = XMConvertToRadians(angleX);
-	float yRad = XMConvertToRadians(angleY);
-	XMFLOAT3 pos = { cos(yRad) * cos(xRad), -sin(yRad), cos(yRad) * sin(xRad) }; // ビルボード化のためyを負にする。太陽→カメラへのベクトル
-    direction = pos;
-	return direction;
-}
-
-void Sun::ChangeSceneMatrix(XMMATRIX _world)
-{
-    sceneMatrix *= _world;
-    mappedMatrix->scene = sceneMatrix;
-}
-
-void Sun::CalculateViewMatrix()
-{
-
-    //ビュー行列の生成・乗算
-    XMFLOAT3 target(0, 0, 0);
-    //XMFLOAT3 eye(0, 100, /*0.01*/10);
-    //XMFLOAT3 target(0, 10, 0);
-    XMFLOAT3 up(0, 1, 0);
-    auto fixedDir = direction;
-    fixedDir.y *= -1;
-
-    auto view = XMMatrixLookAtLH
-    (
-        XMLoadFloat3(&fixedDir),
-        XMLoadFloat3(&target),
-        XMLoadFloat3(&up)
-    );
-
-    //プロジェクション(射影)行列の生成・乗算
-    auto proj = XMMatrixPerspectiveFovLH
-    (
-        XM_PIDIV2, // 画角90°
-        1,
-        1.0, // ニア―クリップ
-        3000.0 // ファークリップ
-    );
+    InitWVPMatrixReosources();
 }
 
 // ルートシグネチャ設定
-HRESULT Sun::CreateRootSignature()
+HRESULT Shadow::CreateRootSignature()
 {
     //サンプラー作成
     stSamplerDesc[0].Init(0);
@@ -156,21 +26,15 @@ HRESULT Sun::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participatingMediaパラメータ
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // ShadowFactorテクスチャ
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // WVP
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 2;
+    rootSignatureDesc.NumParameters = 1;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -198,11 +62,11 @@ HRESULT Sun::CreateRootSignature()
 }
 
 //  シェーダー設定
-HRESULT Sun::ShaderCompile()
+HRESULT Shadow::ShaderCompile()
 {
     auto result = D3DCompileFromFile
     (
-        L"SunVertex.hlsl",
+        L"ShadowVertex.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "vs_main",
@@ -215,7 +79,7 @@ HRESULT Sun::ShaderCompile()
 
     result = D3DCompileFromFile
     (
-        L"SunPixel.hlsl",
+        L"ShadowPixel.hlsl",
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "ps_main",
@@ -253,7 +117,7 @@ HRESULT Sun::ShaderCompile()
 }
 
 // 
-void Sun::SetInputLayout()
+void Shadow::SetInputLayout()
 {
     // 座標
     inputLayout[0] =
@@ -282,7 +146,7 @@ void Sun::SetInputLayout()
 }
 
 // パイプラインの生成
-HRESULT Sun::CreateGraphicPipeline()
+HRESULT Shadow::CreateGraphicPipeline()
 {
     D3D12_RENDER_TARGET_BLEND_DESC renderTargetDesc = {};
     renderTargetDesc.BlendEnable = false;//ブレンドを有効にするか無効にするか
@@ -331,16 +195,17 @@ HRESULT Sun::CreateGraphicPipeline()
 }
 
 // RenderingTarget設定
-void Sun::RenderingSet()
+void Shadow::RenderingSet()
 {
     CreateRenderingHeap();
     CreateRenderingResource();
     CreateRenderingRTV();
     CreateRenderingSRV();
+    CreateRenderingDSV();
 }
 
-// RenderingTarget RTV,SRV用ヒープの生成
-HRESULT Sun::CreateRenderingHeap()
+// RenderingTarget RTV,SRV,DSV用ヒープの生成
+HRESULT Shadow::CreateRenderingHeap()
 {
     // RTV用
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
@@ -362,12 +227,23 @@ HRESULT Sun::CreateRenderingHeap()
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
 
+    // DSV用
+    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    dsvHeapDesc.NumDescriptors = 1; // 通常の深度マップ
+    result = _dev->CreateDescriptorHeap
+    (
+        &dsvHeapDesc,
+        IID_PPV_ARGS(dsvHeap.ReleaseAndGetAddressOf())
+    );
+
     return result;
 }
 
 // RenderingTarget用リソースの生成
-HRESULT Sun::CreateRenderingResource()
+HRESULT Shadow::CreateRenderingResource()
 {
+    // レンダリング用
     auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     float clsClr[4] = { 0.5,0.5,0.5,1.0 };
     auto depthClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsClr);
@@ -393,10 +269,37 @@ HRESULT Sun::CreateRenderingResource()
         IID_PPV_ARGS(renderingResource.ReleaseAndGetAddressOf())
     );
     if (result != S_OK) return result;
+
+    // 深度マップ用
+    auto depthHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    D3D12_RESOURCE_DESC depthResDesc = {};
+    depthResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    depthResDesc.Width = width;
+    depthResDesc.Height = height;
+    depthResDesc.DepthOrArraySize = 1;
+    depthResDesc.Format = DXGI_FORMAT_R32_TYPELESS; // 深度値書き込み用
+    depthResDesc.SampleDesc.Count = 1; // 1pixce/1つのサンプル
+    depthResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_CLEAR_VALUE dValue = {};
+    dValue.DepthStencil.Depth = 1.0f;
+    dValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+    result = _dev->CreateCommittedResource
+    (
+        &depthHeapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &depthResDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &dValue,
+        IID_PPV_ARGS(depthBuff.ReleaseAndGetAddressOf())
+    );
+
+    return result;
 }
 
 // RenderingTarget用RTVの作成
-void Sun::CreateRenderingRTV()
+void Shadow::CreateRenderingRTV()
 {
     auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -413,7 +316,7 @@ void Sun::CreateRenderingRTV()
 }
 
 // RenderingTarget用SRVの生成
-void Sun::CreateRenderingSRV()
+void Shadow::CreateRenderingSRV()
 {
     auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -429,89 +332,36 @@ void Sun::CreateRenderingSRV()
         &srvDesc,
         handle
     );
-
-
-
 }
 
-// 頂点・インデックス関連設定
-void Sun::DrawResourceSet()
+// RenderingTarget用DSVの作成
+void Shadow::CreateRenderingDSV()
 {
-    CreateDrawResourceResource();
-    CreateDrawResourceView();
-    MappingDrawResource();
-}
-
-// リソースの生成
-HRESULT Sun::CreateDrawResourceResource()
-{
-    auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto vertexBuffSize = vertexes.size() * sizeof(XMVECTOR);
-    auto vertresDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBuffSize);
-
-    auto result = _dev->CreateCommittedResource
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+    auto dsvHandle = dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart();
+    // sponza深度マップ用
+    _dev->CreateDepthStencilView
     (
-        &heapProp,
-        D3D12_HEAP_FLAG_NONE,
-        &vertresDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
-        nullptr,
-        IID_PPV_ARGS(vertBuff.ReleaseAndGetAddressOf())
+        depthBuff.Get(),
+        &dsvDesc,
+        dsvHandle
     );
-    if (result != S_OK) return result;
-
-    auto indiceBuffSize = indices.size() * sizeof(unsigned int);
-    auto indicesDesc = CD3DX12_RESOURCE_DESC::Buffer(indiceBuffSize);
-    result = _dev->CreateCommittedResource
-    (
-        &heapProp,
-        D3D12_HEAP_FLAG_NONE,
-        &indicesDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
-        nullptr,
-        IID_PPV_ARGS(idxBuff.ReleaseAndGetAddressOf())
-    );
-        
-    return result;
 }
 
-// viewの生成
-void Sun::CreateDrawResourceView()
+// WVP設定
+void Shadow::InitWVPMatrixReosources()
 {
-    vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();//バッファの仮想アドレス
-    vbView.SizeInBytes = vertexes.size() * sizeof(XMVECTOR);//全バイト数
-    vbView.StrideInBytes = sizeof(XMVECTOR);//1頂点あたりのバイト数
-
-    ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
-    ibView.SizeInBytes = indices.size() * sizeof(unsigned int);
-    ibView.Format = DXGI_FORMAT_R32_UINT;
+    CreateWVPMatrixHeap();
+    CreateWVPMatrixResources();
+    CreateWVPMatrixView();
+    MappingWVPMatrix();
 }
 
-HRESULT Sun::MappingDrawResource()
-{
-    auto result = vertBuff->Map(0, nullptr, (void**)&mappedVertPos);
-    if (result != S_OK) return result;
-    std::copy(std::begin(vertexes), std::end(vertexes), mappedVertPos);
-    vertBuff->Unmap(0, nullptr);
 
-    result = idxBuff->Map(0, nullptr, (void**)&mappedIdx); // mapping
-    if (result != S_OK) return result;
-    std::copy(std::begin(indices), std::end(indices), mappedIdx);
-    idxBuff->Unmap(0, nullptr);
-
-    return result;
-}
-
-// billboard設定
-void Sun::InitBillboardMatrixReosources()
-{
-    CreateBillboardMatrixHeap();
-    CreateBillboardMatrixResources();
-    CreateBillboardMatrixView();
-    MappingBillboardMatrix();
-}
-
-HRESULT Sun::CreateBillboardMatrixHeap()
+HRESULT Shadow::CreateWVPMatrixHeap()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -523,10 +373,10 @@ HRESULT Sun::CreateBillboardMatrixHeap()
     return result;
 }
 
-HRESULT Sun::CreateBillboardMatrixResources()
+HRESULT Shadow::CreateWVPMatrixResources()
 {
     auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(BillboardMatrix) + 0xff) & ~0xff);
+    auto resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(WVPMatrix) + 0xff) & ~0xff);
 
     auto result = _dev->CreateCommittedResource
     (
@@ -541,7 +391,7 @@ HRESULT Sun::CreateBillboardMatrixResources()
     return result;
 }
 
-void Sun::CreateBillboardMatrixView()
+void Shadow::CreateWVPMatrixView()
 {
     auto handle = matrixHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -556,39 +406,15 @@ void Sun::CreateBillboardMatrixView()
     );
 }
 
-HRESULT Sun::MappingBillboardMatrix()
+HRESULT Shadow::MappingWVPMatrix()
 {
     auto result = matrixResource->Map(0, nullptr, (void**)&mappedMatrix);
     return result;
 }
 
-void Sun::SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource)
-{
-    shadowFactorResource = _shadowFactorRsource;
-    auto handle = matrixHeap->GetCPUDescriptorHandleForHeapStart();
-    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    handle.ptr += inc;
-
-    // SkyLUTBuffer用view
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-    _dev->CreateShaderResourceView
-    (
-        shadowFactorResource.Get(),
-        &srvDesc,
-        handle
-    );
-}
-
 // 実行
-void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
-    CalculateBillbordMatrix();
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
         renderingResource.Get(),
@@ -596,6 +422,14 @@ void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
+
+    // デブスマップを読み込み可能状態に変更する
+    D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        depthBuff.Get(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
 
     _cmdList->RSSetViewports(1, _viewPort);
     _cmdList->RSSetScissorRects(1, _rect);
@@ -619,10 +453,10 @@ void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     handle.ptr += inc;
     _cmdList->SetGraphicsRootDescriptorTable(1, handle); // shadowfactor
 
-    _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    _cmdList->IASetVertexBuffers(0, 1, &vbView);
-    _cmdList->IASetIndexBuffer(&ibView);
-    _cmdList->DrawIndexedInstanced(indices.size(), 1, 0, 0, 0);
+    //_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //_cmdList->IASetVertexBuffers(0, 1, &vbView);
+    //_cmdList->IASetIndexBuffer(&ibView);
+    //_cmdList->DrawIndexedInstanced(indices.size(), 1, 0, 0, 0);
 
     barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -631,4 +465,12 @@ void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
+
+    // デブスマップを読み込み可能状態に変更する
+     barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        depthBuff.Get(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
 }

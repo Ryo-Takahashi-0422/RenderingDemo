@@ -101,7 +101,7 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 	}
 
 	_fenceVal = 0;
-	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
+	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence./*ReleaseAnd*/GetAddressOf()));
 }
 
 //#ifdef _DEBUG
@@ -251,7 +251,7 @@ bool D3DX12Wrapper::PipelineInit(){
 		&swapChainDesc,
 		nullptr,
 		nullptr,
-		(IDXGISwapChain1**)_swapChain.ReleaseAndGetAddressOf());
+		(IDXGISwapChain1**)_swapChain./*ReleaseAnd*/GetAddressOf());
 	if (result != S_OK) return false;
 
 //初期化処理５：レンダーターゲットビュー(RTV)の記述子ヒープを作成
@@ -818,6 +818,7 @@ void D3DX12Wrapper::Run() {
 
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
+		sun->CalculateViewMatrix();
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;

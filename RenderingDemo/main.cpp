@@ -3,7 +3,7 @@
 #include<Windows.h>
 //#ifdef _DEBUG
 int main() {
-	PIXLoadLatestWinPixGpuCapturerLibrary();
+	//PIXLoadLatestWinPixGpuCapturerLibrary();
 //#else
 //#include<Windows.h>
 //int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
