@@ -1,4 +1,4 @@
-#include "..\Definition.hlsli"
+#include "Definition.hlsli"
 
 cbuffer BillboardMatrix : register(b0) // 現在カメラが描画しているスクリーン座標4隅のワールド空間におけるベクトル
 {

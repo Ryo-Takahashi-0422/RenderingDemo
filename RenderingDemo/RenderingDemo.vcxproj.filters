@@ -54,23 +54,11 @@
     <None Include="BufferHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="PeraHeader.hlsli">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="FBXHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
     <None Include="CollisionHeaderShader.hlsli">
       <Filter>Shader\Rebuild</Filter>
-    </None>
-    <None Include="RaySphereIntersection.hlsl">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="Definition.hlsli">
-      <Filter>Shader\Sky</Filter>
-    </None>
-    <None Include="AtmosphericModel.hlsli">
-      <Filter>Shader\Sky</Filter>
     </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
@@ -79,6 +67,18 @@
       <Filter>Shader\Sky</Filter>
     </None>
     <None Include="shader\SkyHeader.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\AtmosphericModel.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\Definition.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
+    <None Include="shader\PeraHeader.hlsli">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\RaySphereIntersection.hlsl">
       <Filter>Shader\Sky</Filter>
     </None>
   </ItemGroup>
@@ -105,12 +105,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="LightMapShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="PeraPixel.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="PeraVertex.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="FBXVertexShader.hlsl">
@@ -145,6 +139,12 @@
     </FxCompile>
     <FxCompile Include="shader\ShadowFactor.hlsl">
       <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PeraPixel.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PeraVertex.hlsl">
+      <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

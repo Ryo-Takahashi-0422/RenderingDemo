@@ -1,6 +1,6 @@
-#include "../RaySphereIntersection.hlsl"
-#include "../AtmosphericModel.hlsli"
-#include "../Definition.hlsli"
+#include "RaySphereIntersection.hlsl"
+#include "AtmosphericModel.hlsli"
+#include "Definition.hlsli"
 
 #define STEP_CNT 1000
 

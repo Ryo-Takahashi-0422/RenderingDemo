@@ -441,9 +441,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	delete settingShaderCompile;
 
 	// バックバッファ描画用
+	std::string bufferVs = "PeraVertex.hlsl";
+	std::string bufferPs = "PeraPixel.hlsl";
+	auto bufferPathPair = Utility::GetHlslFilepath(bufferVs, bufferPs);
 	auto mBlobs = peraShaderCompile->SetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraVertex.hlsl", "vs",
-		L"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\RenderingDemo\\PeraPixel.hlsl", "ps");
+		bufferPathPair.first, "vs",
+		bufferPathPair.second, "ps");
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
