@@ -259,7 +259,12 @@ public:
 	///Applicationのシングルトンインスタンスを得る
 	static D3DX12Wrapper& Instance();
 
-	static D3DX12Wrapper* GetInstance() { return instance; };
+	static D3DX12Wrapper* GetInstance() 
+	{ 
+		/*return instance; */
+		static D3DX12Wrapper instance;        // スタティク変数として Singleton オブジェクトを生成
+		return &instance;
+	};
 
 	/// <summary>
 	/// 各種デバイスの作成 

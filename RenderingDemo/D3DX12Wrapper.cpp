@@ -22,7 +22,7 @@ D3DX12Wrapper* D3DX12Wrapper::instance = nullptr;
 
 D3DX12Wrapper::D3DX12Wrapper()
 {
-	instance = this;	
+	instance = this;
 };
 
 // 後処理
@@ -441,7 +441,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
-	delete settingShaderCompile;
+	//delete settingShaderCompile;
 
 	// バックバッファ描画用
 	std::string bufferVs = "PeraVertex.hlsl";

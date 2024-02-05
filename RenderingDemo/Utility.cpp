@@ -123,7 +123,12 @@ std::pair<LPWSTR, LPWSTR> Utility::GetHlslFilepath(std::string _vsName, std::str
 	char cPath[textSize];
 	WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
 
-	int eraseNum = 28;
+	int eraseNum;
+#ifdef _DEBUG
+	eraseNum = 28;
+#else 
+	eraseNum = 30;
+#endif
 	std::string s = &cPath[0];
 	s.erase(s.size() - eraseNum, eraseNum);
 
