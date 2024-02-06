@@ -37,8 +37,8 @@ private:
 	PostSetting* mappedPostSetting = nullptr;
 
 	// sun
-	float sunAngleX = 270.0f;
-	float sunAngleY = 0.0f;
+	float sunAngleX = 360.0f;
+	float sunAngleY = 40.0f;
 
 	//sky
 	int skyResX = 64;

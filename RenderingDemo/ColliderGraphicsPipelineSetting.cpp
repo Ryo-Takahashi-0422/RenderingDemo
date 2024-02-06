@@ -2,8 +2,9 @@
 #include <ColliderGraphicsPipelineSetting.h>
 
 
-ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
+ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(PeraLayout* _vertexInputLayout)// : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
 {
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);

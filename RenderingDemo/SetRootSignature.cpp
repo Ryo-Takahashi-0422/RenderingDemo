@@ -108,7 +108,7 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	(
 		&rootSignatureDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
-		_rootSigBlob./*ReleaseAnd*/GetAddressOf(),
+		_rootSigBlob.ReleaseAndGetAddressOf(),
 		_errorBlob.GetAddressOf()
 	);
 
@@ -117,7 +117,7 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 		0,
 		_rootSigBlob->GetBufferPointer(),
 		_rootSigBlob->GetBufferSize(),
-		IID_PPV_ARGS(_rootSignature./*ReleaseAnd*/GetAddressOf())
+		IID_PPV_ARGS(_rootSignature.ReleaseAndGetAddressOf())
 	);
 
 	_rootSigBlob->Release();

@@ -38,3 +38,13 @@ PeraLayout::PeraLayout()
 PeraLayout::~PeraLayout()
 {
 }
+
+std::vector<D3D12_INPUT_ELEMENT_DESC> PeraLayout::GetInputLayout()
+{
+	return inputLayout;
+}
+
+size_t PeraLayout::GetInputSize()
+{
+	return inputLayout.size();
+}

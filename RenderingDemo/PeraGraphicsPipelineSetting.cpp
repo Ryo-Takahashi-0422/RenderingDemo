@@ -1,8 +1,9 @@
 #include <stdafx.h>
 #include <PeraGraphicsPipelineSetting.h>
 
-PeraGraphicsPipelineSetting::PeraGraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : IGraphicsPipelineSetting(_vertexInputLayout)
+PeraGraphicsPipelineSetting::PeraGraphicsPipelineSetting(PeraLayout* _vertexInputLayout)/* : IGraphicsPipelineSetting(_vertexInputLayout)*/
 {
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);

@@ -1,10 +1,11 @@
 #include <stdafx.h>
 #include <GraphicsPipelineSetting.h>
 
-GraphicsPipelineSetting::GraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
+GraphicsPipelineSetting::GraphicsPipelineSetting(VertexInputLayout* _vertexInputLayout)// : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
 {
 	//const size_t i = vertexInputLayout->GetInputSize();
 	//D3D12_INPUT_ELEMENT_DESC inputLayout[i];
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);

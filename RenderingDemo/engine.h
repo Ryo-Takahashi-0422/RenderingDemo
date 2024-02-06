@@ -5,10 +5,11 @@
 #include <DirectXTex.h>
 #include <Windows.h>
 #include<tchar.h>
-//#ifdef _DEBUG
-//#include <pix3.h>
+#ifdef _DEBUG
+#include <pix3.h>
+#endif
 #include <iostream>
-//#endif // _DEBUG
+
 #include <vector>
 #include <d3d12.h>
 #include <dxgi1_6.h>

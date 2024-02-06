@@ -441,7 +441,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
-	//delete settingShaderCompile;
+	delete settingShaderCompile;
 
 	// バックバッファ描画用
 	std::string bufferVs = "PeraVertex.hlsl";
@@ -494,7 +494,7 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
-
+	
 	// コライダー用
 	result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
 
