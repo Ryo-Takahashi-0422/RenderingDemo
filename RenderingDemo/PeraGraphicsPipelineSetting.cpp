@@ -1,8 +1,9 @@
 #include <stdafx.h>
 #include <PeraGraphicsPipelineSetting.h>
 
-PeraGraphicsPipelineSetting::PeraGraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : IGraphicsPipelineSetting(_vertexInputLayout)
+PeraGraphicsPipelineSetting::PeraGraphicsPipelineSetting(PeraLayout* _vertexInputLayout)/* : IGraphicsPipelineSetting(_vertexInputLayout)*/
 {
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);
@@ -14,7 +15,7 @@ PeraGraphicsPipelineSetting::~PeraGraphicsPipelineSetting()
 }
 
 HRESULT PeraGraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	PeraSetRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine = SetGPL(setRootSignature, _vsBlob, _psBlob);
 	// ˆêŒÂ–Ú
@@ -27,7 +28,7 @@ void PeraGraphicsPipelineSetting::SetInputlayout(int i, D3D12_INPUT_ELEMENT_DESC
 }
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC PeraGraphicsPipelineSetting::SetGPL(
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	PeraSetRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine.pRootSignature = setRootSignature->GetRootSignature().Get();
 

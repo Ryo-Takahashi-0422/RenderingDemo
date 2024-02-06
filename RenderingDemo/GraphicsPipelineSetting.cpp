@@ -1,10 +1,11 @@
 #include <stdafx.h>
 #include <GraphicsPipelineSetting.h>
 
-GraphicsPipelineSetting::GraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
+GraphicsPipelineSetting::GraphicsPipelineSetting(VertexInputLayout* _vertexInputLayout)// : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
 {
 	//const size_t i = vertexInputLayout->GetInputSize();
 	//D3D12_INPUT_ELEMENT_DESC inputLayout[i];
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);
@@ -12,7 +13,7 @@ GraphicsPipelineSetting::GraphicsPipelineSetting(InputLayoutBase* _vertexInputLa
 }
 
 HRESULT GraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	SetRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine = SetGPL(setRootSignature, _vsBlob, _psBlob);
 	return _dev->CreateGraphicsPipelineState(&gpipeLine, IID_PPV_ARGS(_pipelineState.ReleaseAndGetAddressOf()));
@@ -24,7 +25,7 @@ void GraphicsPipelineSetting::SetInputlayout(int i, D3D12_INPUT_ELEMENT_DESC inp
 }
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicsPipelineSetting::SetGPL(
-	SetRootSignatureBase* setRootSignature,	ComPtr<ID3D10Blob> _vsBlob,	ComPtr<ID3D10Blob> _psBlob)
+	SetRootSignature* setRootSignature,	ComPtr<ID3D10Blob> _vsBlob,	ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine.pRootSignature = setRootSignature->GetRootSignature().Get();
 

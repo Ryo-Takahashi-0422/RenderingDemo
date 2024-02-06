@@ -441,13 +441,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
-	//delete settingShaderCompile;
+	delete settingShaderCompile;
 
 	// バックバッファ描画用
 	std::string bufferVs = "PeraVertex.hlsl";
 	std::string bufferPs = "PeraPixel.hlsl";
 	auto bufferPathPair = Utility::GetHlslFilepath(bufferVs, bufferPs);
-	auto mBlobs = peraShaderCompile->SetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
+	auto mBlobs = peraShaderCompile->PeraSetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
 		bufferPathPair.first, "vs",
 		bufferPathPair.second, "ps");
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
@@ -459,7 +459,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	std::string collisionVs = "CollisionVertex.hlsl";
 	std::string collisionPs = "CollisionPixel.hlsl";
 	auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
-	auto colliderBlobs = collisionShaderCompile->SetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
+	auto colliderBlobs = collisionShaderCompile->CollisionSetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
 		collisionPathPair.first, "vs",
 		collisionPathPair.second, "ps");
 	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
@@ -494,7 +494,7 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
-
+	
 	// コライダー用
 	result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
 

@@ -121,6 +121,16 @@ VertexInputLayout::VertexInputLayout()
 VertexInputLayout::~VertexInputLayout()
 {
 }
+
+std::vector<D3D12_INPUT_ELEMENT_DESC> VertexInputLayout::GetInputLayout()
+{
+	return inputLayout;
+}
+
+size_t VertexInputLayout::GetInputSize()
+{
+	return inputLayout.size();
+}
 //
 //std::vector<D3D12_INPUT_ELEMENT_DESC> VertexInputLayout::GetInputLayout()
 //{

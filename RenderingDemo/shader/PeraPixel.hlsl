@@ -66,18 +66,26 @@ float4 ps(Output input) : SV_TARGET
     float sponzaDepth = sponzaDepthmap.Sample(smp, input.uv);
     float connanDepth = connanDepthmap.Sample(smp, input.uv);
     
+    float4 sun = float4(0,0,0,0);
     float4 result;
     if (sponzaDepth < connanDepth)
     {
-        //result = sky.Sample(smp, input.uv); //tex.Sample(smp, input.uv);
+        result = tex.Sample(smp, input.uv); //tex.Sample(smp, input.uv);
 
-        result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
+        //result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
     }
+    else if (sponzaDepth == /*connanDepth ==*/ 1)
+    {
+        result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
+        sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
+    }
+
     else
     {
         result = tex2.Sample(smp, input.uv);
     }
     
+   
     float3 col = result;
     col = tonemap(col);    
     col = saturate(pow(col, 1 / 2.2));
@@ -88,7 +96,7 @@ float4 ps(Output input) : SV_TARGET
     //    col = imgui;
     //}
     
-    float4 sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
+    //float4 sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
     
     return float4(col, 1) + imgui + sun;
 }

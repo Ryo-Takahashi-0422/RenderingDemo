@@ -2,8 +2,9 @@
 #include <ColliderGraphicsPipelineSetting.h>
 
 
-ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(InputLayoutBase* _vertexInputLayout) : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
+ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(PeraLayout* _vertexInputLayout)// : /*vertexInputLayout*/IGraphicsPipelineSetting(_vertexInputLayout)
 {
+	vertexInputLayout = _vertexInputLayout;
 	for (int i = 0; i < vertexInputLayout->GetInputLayout().size(); ++i)
 	{
 		SetInputlayout(i, vertexInputLayout->GetInputLayout()[i]);
@@ -11,7 +12,7 @@ ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(InputLayoutBase
 }
 
 HRESULT ColliderGraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	CollisionRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine = SetGPL(setRootSignature, _vsBlob, _psBlob);
 	return _dev->CreateGraphicsPipelineState(&gpipeLine, IID_PPV_ARGS(_pipelineState.ReleaseAndGetAddressOf()));
@@ -23,7 +24,7 @@ void ColliderGraphicsPipelineSetting::SetInputlayout(int i, D3D12_INPUT_ELEMENT_
 }
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC ColliderGraphicsPipelineSetting::SetGPL(
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	CollisionRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine.pRootSignature = setRootSignature->GetRootSignature().Get();
 
