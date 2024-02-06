@@ -135,18 +135,6 @@ void Shadow::SetInputLayout()
         0 // 一度に描画するインスタンス数
 
     };
-
-    // UV
-    inputLayout[1] =
-    {
-        "TEXCOORD",
-        0,
-        DXGI_FORMAT_R32G32_FLOAT,
-        0, // スロットインデックス
-        D3D12_APPEND_ALIGNED_ELEMENT,
-        D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-        0
-    };
 }
 
 // パイプラインの生成

@@ -29,7 +29,7 @@ private:
 	// シェーダー設定
 	HRESULT ShaderCompile();	//
 	void SetInputLayout();
-	/* std::vector<*/D3D12_INPUT_ELEMENT_DESC/*>*/ inputLayout[2];
+	D3D12_INPUT_ELEMENT_DESC inputLayout[1];
 	// パイプラインの生成
 	HRESULT CreateGraphicPipeline();
 
