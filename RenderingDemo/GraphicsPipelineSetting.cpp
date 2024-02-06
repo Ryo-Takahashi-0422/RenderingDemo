@@ -13,7 +13,7 @@ GraphicsPipelineSetting::GraphicsPipelineSetting(VertexInputLayout* _vertexInput
 }
 
 HRESULT GraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
-	SetRootSignatureBase* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
+	SetRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine = SetGPL(setRootSignature, _vsBlob, _psBlob);
 	return _dev->CreateGraphicsPipelineState(&gpipeLine, IID_PPV_ARGS(_pipelineState.ReleaseAndGetAddressOf()));
@@ -25,7 +25,7 @@ void GraphicsPipelineSetting::SetInputlayout(int i, D3D12_INPUT_ELEMENT_DESC inp
 }
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicsPipelineSetting::SetGPL(
-	SetRootSignatureBase* setRootSignature,	ComPtr<ID3D10Blob> _vsBlob,	ComPtr<ID3D10Blob> _psBlob)
+	SetRootSignature* setRootSignature,	ComPtr<ID3D10Blob> _vsBlob,	ComPtr<ID3D10Blob> _psBlob)
 {
 	gpipeLine.pRootSignature = setRootSignature->GetRootSignature().Get();
 
