@@ -617,6 +617,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
+
+	shadow = new Shadow(_dev.Get());
+	shadow->Init();
+
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -763,13 +767,11 @@ void D3DX12Wrapper::Run() {
 		matTexSizes.push_back(matTexSize);
 	}
 
-	//viewPort = prepareRenderingWindow->GetViewPortPointer();
-	//rect = prepareRenderingWindow->GetRectPointer();
+	// ‰e‚Ì•`‰æ‚Å‚à—˜—p‚·‚é
+	shadow->SetVertexAndIndexInfo(vbViews, ibViews, itIndiceFirsts, indiceContainer);
 
 	HANDLE event; // fnece—pƒCƒxƒ“ƒg
-	// DrawFBX‚Å—˜—p‚·‚é
-	/*dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();*/
+	
 	fBXPipeline = gPLSetting->GetPipelineState().Get();
 	fBXRootsignature = setRootSignature->GetRootSignature().Get();
 
@@ -829,6 +831,7 @@ void D3DX12Wrapper::Run() {
 		// ‘¾—z‚ÌˆÊ’u‚ðXV
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
+		shadow->SetVPMatrix(sun->GetViewMatrix(), sun->GetProjMatrix());
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
@@ -888,6 +891,7 @@ void D3DX12Wrapper::Run() {
 
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		

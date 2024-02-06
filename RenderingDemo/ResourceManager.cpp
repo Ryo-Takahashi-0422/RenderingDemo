@@ -453,7 +453,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	);
 
 	// 3:connan描画先
-	handle.ptr += inc; // ★★★これを追加したらテクスチャバグ発生
+	handle.ptr += inc;
 	_dev->CreateShaderResourceView
 	(
 		renderingBuff2.Get(),

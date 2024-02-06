@@ -81,6 +81,9 @@
     <None Include="shader\CollisionHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="shader\Shadow.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -145,6 +148,12 @@
     </FxCompile>
     <FxCompile Include="shader\CollisionVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

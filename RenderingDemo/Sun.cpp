@@ -121,16 +121,17 @@ void Sun::ChangeSceneMatrix(XMMATRIX _world)
 
 void Sun::CalculateViewMatrix()
 {
-
     //ビュー行列の生成・乗算
     XMFLOAT3 target(0, 0, 0);
     //XMFLOAT3 eye(0, 100, /*0.01*/10);
     //XMFLOAT3 target(0, 10, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
-    fixedDir.y *= -1;
+    fixedDir.x *=100;
+    fixedDir.y *= -100;
+    fixedDir.z *= 100;
 
-    auto view = XMMatrixLookAtLH
+    sunViewMatrix = XMMatrixLookAtLH
     (
         XMLoadFloat3(&fixedDir),
         XMLoadFloat3(&target),
@@ -138,7 +139,7 @@ void Sun::CalculateViewMatrix()
     );
 
     //プロジェクション(射影)行列の生成・乗算
-    auto proj = XMMatrixPerspectiveFovLH
+    sunProjMatrix = XMMatrixPerspectiveFovLH
     (
         XM_PIDIV2, // 画角90°
         1,
