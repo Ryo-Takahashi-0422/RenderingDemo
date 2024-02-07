@@ -101,5 +101,5 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         endT = min(endT + divDepth, distanceLimit);
     }
     
-    AirTexture[DTid.xyz] = float4(scattering, 1);
+    AirTexture[int3(DTid.xy, z)] = float4(scattering, 1);
 }

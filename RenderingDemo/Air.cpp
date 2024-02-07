@@ -3,13 +3,11 @@
 
 Air::Air(ID3D12Device* _dev, ID3D12Fence* _fence, ComPtr<ID3D12Resource> _shadowMapRsource, ComPtr<ID3D12Resource> _shadowFactorRsource) : dev(_dev), fence(_fence), shadowMapResource(_shadowMapRsource), shadowFactorResource(_shadowFactorRsource)
 {
-    Init();
     m_Media = new ParticipatingMedia;
     m_Frustum = new Frustum;
     m_SceneInfo = new SceneInfo;
-    m_SceneInfo->world = XMMatrixIdentity();
-    m_SceneInfo->depthLength = depthLengthVal;
-    m_SceneInfo->distanceLimit = distanceLimitValue;
+
+    Init();
     //CreateCommand();
 }
 Air::~Air()
@@ -237,9 +235,8 @@ HRESULT Air::CreateTextureResource()
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     textureDesc.Width = width;
     textureDesc.Height = height;
-    textureDesc.DepthOrArraySize = static_cast<UINT>(depth);
+    textureDesc.DepthOrArraySize = depth;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-    textureDesc.DepthOrArraySize = 1;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
@@ -520,4 +517,8 @@ void Air::SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT
     m_SceneInfo->adjustedEyePos = _eyePos;
     m_SceneInfo->adjustedEyePos.y = 600.0f;
     m_SceneInfo->sunDirection = sunDirection;
+
+    m_SceneInfo->world = XMMatrixIdentity();
+    m_SceneInfo->depthLength = depthLengthVal;
+    m_SceneInfo->distanceLimit = distanceLimitValue;
 }
