@@ -155,6 +155,9 @@
     <FxCompile Include="shader\ShadowVertex.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
+    <FxCompile Include="shader\Air.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp">

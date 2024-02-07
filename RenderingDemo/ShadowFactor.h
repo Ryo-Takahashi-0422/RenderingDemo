@@ -60,8 +60,6 @@ private:
     // コマンドリスト
     ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 
-    ComPtr<ID3D11Texture2D> texture = nullptr;
-
 public:
     ShadowFactor(ID3D12Device* dev, ID3D12Fence* _fence);
     ~ShadowFactor();

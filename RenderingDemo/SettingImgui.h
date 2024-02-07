@@ -9,9 +9,6 @@ struct PostSetting
 	bool isBloom;
 };
 
-
-
-
 class SettingImgui
 {
 private:
