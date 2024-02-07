@@ -490,11 +490,11 @@ void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 
     // デブスマップを読み込み可能状態に変更する
-    barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        depthBuff.Get(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE
-    );
-    _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
+    //barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    //(
+    //    depthBuff.Get(),
+    //    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+    //    D3D12_RESOURCE_STATE_DEPTH_WRITE
+    //);
+    //_cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 }

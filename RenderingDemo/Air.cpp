@@ -457,6 +457,16 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
         D3D12_RESOURCE_STATE_DEPTH_WRITE
     );
     _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
+
+
+    // コピー用リソース状態をSkyLUT.hlslで読み込める状態にする
+    barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        copyTextureResource.Get(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 }
 
 // 外部からの関与媒質設定
