@@ -53,8 +53,6 @@ private:
     ComPtr<ID3D12Resource> participatingMediaResource = nullptr;
     ComPtr<ID3D12Resource> outputTextureResource = nullptr;
     ComPtr<ID3D12Resource> copyTextureResource = nullptr;
-    // 送受信用データ
-    void* data = nullptr;
     // コマンドアロケータ
     ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
     // コマンドリスト

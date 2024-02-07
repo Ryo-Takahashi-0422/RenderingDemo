@@ -433,9 +433,6 @@ void Sun::CreateRenderingSRV()
         &srvDesc,
         handle
     );
-
-
-
 }
 
 // 頂点・インデックス関連設定

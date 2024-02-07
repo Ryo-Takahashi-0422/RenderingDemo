@@ -15,9 +15,9 @@ cbuffer SkyLUTBuffer : register(b2)
     matrix sunViewMatrix;
     matrix sunProjMatrix;
     float3 eyePos;
-    float tDistance;
+    float depthLength;
     float3 adjustedEyePos;
-    float limitDistance;
+    float distanceLimit;
     float3 sunDirection;
 };
 
@@ -42,8 +42,8 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
              lerp(bottomLeftFrustum, bottomRightFrustum, DTid.x), DTid.y));    
     
     float startT = 0;
-    float divDepth = tDistance / depth;
-    float endT = min(divDepth, limitDistance);
+    float divDepth = depthLength / depth;
+    float endT = min(divDepth, distanceLimit);
     float maxT;
     float3 cameraPos3D = float3(0, adjustedEyePos.y + groundRadius, 0);
     if (!DiscriminateIntersectionWithSphere(cameraPos3D, currentPixelDir, groundRadius, maxT))
@@ -98,7 +98,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
 
         startT = nextT;
-        endT = max(endT + divDepth, limitDistance);
+        endT = min(endT + divDepth, distanceLimit);
     }
     
     AirTexture[DTid.xyz] = float4(scattering, 1);

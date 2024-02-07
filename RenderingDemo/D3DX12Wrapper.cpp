@@ -622,6 +622,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadow->Init();
 
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
+	air->SetFrustum(camera->GetFrustum());
+	air->SetParticipatingMedia(calculatedParticipatingMedia);
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -837,6 +839,7 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
+		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetCameraPos(), sun->GetDirection());
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 		// ShadowFactorの解像度に変更がある場合の処理
@@ -893,6 +896,7 @@ void D3DX12Wrapper::Run() {
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		//air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		

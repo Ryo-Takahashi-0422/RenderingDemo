@@ -4,6 +4,12 @@
 Air::Air(ID3D12Device* _dev, ID3D12Fence* _fence, ComPtr<ID3D12Resource> _shadowMapRsource, ComPtr<ID3D12Resource> _shadowFactorRsource) : dev(_dev), fence(_fence), shadowMapResource(_shadowMapRsource), shadowFactorResource(_shadowFactorRsource)
 {
     Init();
+    m_Media = new ParticipatingMedia;
+    m_Frustum = new Frustum;
+    m_SceneInfo = new SceneInfo;
+    m_SceneInfo->world = XMMatrixIdentity();
+    m_SceneInfo->depthLength = depthLengthVal;
+    m_SceneInfo->distanceLimit = distanceLimitValue;
     //CreateCommand();
 }
 Air::~Air()
@@ -34,10 +40,10 @@ HRESULT Air::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participating media
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0); // 出力結果格納用
-    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // frustum
-    descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // 各種計算用データ群
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // participating media    
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // frustum
+    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // 各種計算用データ群
+    descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0); // 出力結果格納用
     descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // shadowMap
     descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // shadowFactor
 
@@ -165,7 +171,7 @@ HRESULT Air::CreateHeap()
     D3D12_DESCRIPTOR_HEAP_DESC desc{};
     desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     desc.NodeMask = 0;
-    desc.NumDescriptors = 6; // CBV(ParticipatingMedia), CBV(Frustum), CBV(SceneInfo) UAV, SRV(DepthMap from Sun), SRV(ShadowFactor)
+    desc.NumDescriptors = 7; // CBV(ParticipatingMedia), CBV(Frustum), CBV(SceneInfo) UAV, SRV(DepthMap from Sun), SRV(ShadowFactor), SRV(出力結果)
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     auto result = dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap));
@@ -231,11 +237,12 @@ HRESULT Air::CreateTextureResource()
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     textureDesc.Width = width;
     textureDesc.Height = height;
+    textureDesc.DepthOrArraySize = static_cast<UINT>(depth);
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     textureDesc.DepthOrArraySize = 1;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
 
     auto result = dev->CreateCommittedResource
     (
@@ -304,10 +311,11 @@ void Air::CreateView()
     // 出力用UAV
     handle.ptr += inc;
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};
-    desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
     desc.Format = DXGI_FORMAT_UNKNOWN;
-    desc.Texture2D.MipSlice = 0;
-    desc.Texture2D.PlaneSlice = 0;
+    desc.Texture3D.FirstWSlice = 0;
+    desc.Texture3D.MipSlice = 0;
+    desc.Texture3D.WSize = -1;
 
     dev->CreateUnorderedAccessView
     (
@@ -317,14 +325,34 @@ void Air::CreateView()
         handle
     );
 
-    // コピー用UAV
+    // ShadowMap用view
     handle.ptr += inc;
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
+    dev->CreateShaderResourceView
+    (
+        shadowMapResource.Get(),
+        &srvDesc,
+        handle
+    );
+
+     // ShadowFactor用view
+    handle.ptr += inc;
+    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    dev->CreateShaderResourceView
+    (
+        shadowFactorResource.Get(),
+        &srvDesc,
+        handle
+    );
+
+    // コピー用UAV
+    handle.ptr += inc;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
     dev->CreateShaderResourceView
     (
         copyTextureResource.Get(),
@@ -362,16 +390,16 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     _cmdList->SetComputeRootDescriptorTable(0, handle); // participating media
 
     handle.ptr += inc;
-    _cmdList->SetComputeRootDescriptorTable(1, handle); // uav output 3d texture
+    _cmdList->SetComputeRootDescriptorTable(1, handle); // frustum 
 
     handle.ptr += inc;
-    _cmdList->SetComputeRootDescriptorTable(2, handle); // frustum
+    _cmdList->SetComputeRootDescriptorTable(2, handle); // sceneinfo
 
     handle.ptr += inc;
-    _cmdList->SetComputeRootDescriptorTable(3, handle); // sceneinfo
+    _cmdList->SetComputeRootDescriptorTable(3, handle); // uav output 3d texture
 
     handle.ptr += inc;
-    _cmdList->SetComputeRootDescriptorTable(4, handle); // depthmap from sun
+    _cmdList->SetComputeRootDescriptorTable(4, handle); // shadowmap
 
     handle.ptr += inc;
     _cmdList->SetComputeRootDescriptorTable(5, handle); // shadowfactor
@@ -420,6 +448,15 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+    // シャドウマップを深度書き込み可能な状態に戻す
+    auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+        shadowMapResource.Get(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
+    _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 }
 
 // 外部からの関与媒質設定
@@ -465,14 +502,12 @@ void Air::SetFrustum(Frustum _frustum)
 }
 
 // 外部からのSceneInfo設定
-void Air::SetSceneInfo(XMMATRIX _world)
-{
-    m_SceneInfo->world;
-    m_SceneInfo->sunViewMatrix;
-    m_SceneInfo->sunProjMatrix;
-    m_SceneInfo->eyePos;
-    m_SceneInfo->tDistance;
-    m_SceneInfo->adjustedEyePos;
-    m_SceneInfo->limitDistance;
-    m_SceneInfo->sunDirection;
+void Air::SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT3 _eyePos, XMFLOAT3 sunDirection)
+{   
+    m_SceneInfo->sunViewMatrix = _sunViewMatrix;
+    m_SceneInfo->sunProjMatrix = _sunProjMatrix;
+    m_SceneInfo->eyePos = _eyePos;    
+    m_SceneInfo->adjustedEyePos = _eyePos;
+    m_SceneInfo->adjustedEyePos.y = 600.0f;
+    m_SceneInfo->sunDirection = sunDirection;
 }

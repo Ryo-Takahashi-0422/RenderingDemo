@@ -6,6 +6,7 @@ private:
     // 解像度関連
     int width = 1024;
     int height = 1024;
+    int depth = 64;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
@@ -57,8 +58,6 @@ private:
     ComPtr<ID3D12Resource> copyTextureResource = nullptr;
     ComPtr<ID3D12Resource> shadowMapResource = nullptr;
     ComPtr<ID3D12Resource> shadowFactorResource = nullptr;
-    // 送受信用データ
-    void* data = nullptr;
     // コマンドアロケータ
     ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
     // コマンドリスト
@@ -71,21 +70,25 @@ private:
         XMMATRIX sunViewMatrix;
         XMMATRIX sunProjMatrix;
         XMFLOAT3 eyePos;
-        float tDistance;
+        float depthLength;
         XMFLOAT3 adjustedEyePos;
-        float limitDistance;
+        float distanceLimit;
         XMFLOAT3 sunDirection;
     };
+    float depthLengthVal = 100;
+    float distanceLimitValue = 1000;
+
     SceneInfo* m_SceneInfo = nullptr;
 
 public:
     Air(ID3D12Device* dev, ID3D12Fence* _fence, ComPtr<ID3D12Resource> _shadowMapRsource, ComPtr<ID3D12Resource> _shadowFactorRsource);
     ~Air();
-    void SetParticipatingMedia(ParticipatingMedia media);
-    ComPtr<ID3D12Resource> GetShadowFactorTextureResource() { return copyTextureResource; };
+    
+    ComPtr<ID3D12Resource> GetAirTextureResource() { return copyTextureResource; };
     // 実行
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);
+    void SetParticipatingMedia(ParticipatingMedia media);
     void SetFrustum(Frustum _frustum);
-    void SetSceneInfo(XMMATRIX _world);
+    void SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT3 _eyePos, XMFLOAT3 sunDirection);
 };
