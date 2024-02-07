@@ -621,6 +621,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadow = new Shadow(_dev.Get());
 	shadow->Init();
 
+	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());

@@ -428,7 +428,7 @@ HRESULT Sky::MappingSkyData()
     return result;
 }
 
-// ŠO•”‚©‚ç‚ÌSkyLUTBufferÝ’è
+// ŠO•”‚©‚ç‚ÌFrustumÝ’è
 void Sky::SetFrustum(Frustum _frustum)
 {
     m_Frustum->topLeft = _frustum.topLeft;
