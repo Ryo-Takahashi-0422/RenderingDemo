@@ -40,10 +40,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     normalize(
         lerp(lerp(topLeftFrustum, topRightFrustum, (DTid.x + 0.5) / width),
              lerp(bottomLeftFrustum, bottomRightFrustum, (DTid.x + 0.5) / width), (DTid.y + 0.5) / height));
-    currentPixelDir.x *= -1;
+    //currentPixelDir.x *= -1;
     
     float startT = 0;
-    float divDepth = /*depthLength / depth*/1.0f;
+    float divDepth = /*depthLength / depth*/0.7f;
     //float endT = min(divDepth, distanceLimit);
     float maxT;
     float3 cameraPos3D = float3(0, adjustedEyePos.y + groundRadius, 0);
@@ -104,7 +104,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf;
             sumSigmaT += deltaSigmaT;
         }
-
+        
+        //float temp = scattering.x;
+        //scattering.x = scattering.z;
+        //scattering.z = temp;
+        //temp = scattering.y;
+        //scattering.y = scattering.z;
+        //scattering.z = temp;
+        //scattering.x *= 1.02;
+        
         AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
         startT = nextT;
         endT = min(endT + divDepth, distanceLimit);

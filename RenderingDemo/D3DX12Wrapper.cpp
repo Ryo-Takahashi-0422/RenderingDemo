@@ -1173,7 +1173,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
-					camera->Transform(leftSpinMatrix);
+					camera->Transform(rightSpinMatrix);
 					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
 					shadow->SetRotationMatrix(leftSpinMatrix);
@@ -1187,7 +1187,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
-					camera->Transform(rightSpinMatrix);
+					camera->Transform(leftSpinMatrix);
 					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 					shadow->SetRotationMatrix(rightSpinMatrix);
