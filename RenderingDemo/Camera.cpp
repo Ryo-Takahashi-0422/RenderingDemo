@@ -26,7 +26,7 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 
 	//ビュー行列の生成・乗算
 	eye = XMFLOAT3(0, 1.5, 2.3);
-	XMFLOAT3 target(0, 1.5, 0);
+	target = XMFLOAT3(0, 1.5, 0);
 	//XMFLOAT3 eye(0, 100, /*0.01*/10);
 	//XMFLOAT3 target(0, 10, 0);
 	XMFLOAT3 up(0, 1, 0);
@@ -45,6 +45,59 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 		1.0, // ニア―クリップ
 		3000.0 // ファークリップ
 	);
+}
+
+void Camera::Transform(XMMATRIX transform)
+{
+	auto tempEye = XMVector4Transform(XMLoadFloat3(&eye), transform);
+	//XMStoreFloat3(&eye, tempEye);
+	XMFLOAT3 localEyePos;
+	XMStoreFloat3(&localEyePos, tempEye);
+
+	auto tempTarget = XMVector4Transform(XMLoadFloat3(&target), transform);
+	//XMStoreFloat3(&target, tempTarget);
+	XMFLOAT3 localTarget;
+	XMStoreFloat3(&localTarget, tempTarget);
+
+	XMFLOAT3 up(0, 1, 0);
+
+	view = XMMatrixLookAtLH
+	(
+		XMLoadFloat3(&localEyePos),
+		XMLoadFloat3(&localTarget),
+		XMLoadFloat3(&up)
+	);
+
+	CalculateFrustum();
+}
+
+void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
+{
+	// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
+	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
+	moveMatrix.r[0].m128_f32[0] = 1;
+	moveMatrix.r[0].m128_f32[2] = 0;
+	moveMatrix.r[2].m128_f32[0] = 0;
+	moveMatrix.r[2].m128_f32[2] = 1;
+
+	// カメラ座標を動かす
+	auto tempCameraPos = XMLoadFloat3(&eye);
+	tempCameraPos.m128_f32[3] = 1;
+
+	tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+	eye.x = tempCameraPos.m128_f32[0];
+	eye.y = tempCameraPos.m128_f32[1];
+	eye.z = tempCameraPos.m128_f32[2];
+
+	// ターゲット座標も動かす
+	auto tempTargetPos = XMLoadFloat3(&target);
+	tempTargetPos.m128_f32[3] = 1;
+
+	tempTargetPos = XMVector4Transform(tempTargetPos, moveMatrix);
+	target.x = tempTargetPos.m128_f32[0];
+	target.y = tempTargetPos.m128_f32[1];
+	target.z = tempTargetPos.m128_f32[2];
+
 }
 
 void Camera::CalculateFrustum()

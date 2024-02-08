@@ -42,14 +42,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
              lerp(bottomLeftFrustum, bottomRightFrustum, DTid.x), DTid.y));    
     
     float startT = 0;
-    float divDepth = depthLength / depth;
-    float endT = min(divDepth, distanceLimit);
+    float divDepth = /*depthLength / depth*/30.0f;
+    //float endT = min(divDepth, distanceLimit);
     float maxT;
     float3 cameraPos3D = float3(0, adjustedEyePos.y + groundRadius, 0);
     if (!DiscriminateIntersectionWithSphere(cameraPos3D, currentPixelDir, groundRadius, maxT))
     {
         DiscriminateIntersectionWithSphere(cameraPos3D, currentPixelDir, atmosphereRadius, maxT);
     }
+    float endT = min(divDepth, maxT);
     
     // 乱数生成器　https://nimushiki.com/2018/10/09/1252/#fracsindotcoxy_float212989878233_437585453
     float rand = frac(sin(dot(
@@ -58,21 +59,27 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     float3 scattering = float3(0, 0, 0);
     float3 sumSigmaT = float3(0, 0, 0);    
     
-    for (int z = 0; z < depth;++z)
+    // レイマーチング
+    for (int z = 0; z < depth; ++z)
     {
-        float nextT = lerp(startT, endT, rand);
-        float3 rayPos = cameraPos3D + nextT * currentPixelDir; // レイ位置を現在処理中のピクセル方向へnextT分進める
+        float dt = (endT - startT);
+        float nextT = startT + dt;
+
+        float randT = lerp(startT, nextT, rand);
+        float3 rayPos = cameraPos3D + randT * currentPixelDir; // レイ位置を現在処理中のピクセル方向へrandT分進める
         
         // 現在のレイが太陽から見て影の中にあるか判定する
         bool isShadow = false;
-        if (!hasIntersectionWithSphere(rayPos, sunDirection, groundRadius))
+        if (!hasIntersectionWithSphere(rayPos, -sunDirection, groundRadius))
         {
-            float4 shadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(rayPos, 1)); // 現在のレイ位置を、太陽から見たカメラの視錐台座標に変換
-            shadowPos.xyz /= shadowPos.w; // xyをwで割って、それら値を太陽から見たカメラの視錐台空間(-1～+1)に収めている
-            float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy; // xはそのまま0～1に調整し、yは空間の上端が0に、下端が1になるように調整。yの下端が1なのはv下端が1で、カメラから見た絵に変換された状態のレイ位置をuvで表す
+            //float4 shadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(rayPos, 1)); // 現在のレイ位置を、太陽から見たカメラの視錐台座標に変換
+            float3 shadowPos = eyePos + randT * currentPixelDir / 600.0f; // カメラからピクセル方向へレイを進める
+            float4 framedShadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(shadowPos, 1));
+            framedShadowPos.xyz /= framedShadowPos.w; // xyをwで割って、それら値を太陽から見たカメラの視錐台空間(-1～+1)に収めている
+            float2 shadowUV = 0.5 + float2(0.5, -0.5) * framedShadowPos.xy; // xはそのまま0～1に調整し、yは空間の上端が0に、下端が1になるように調整。yの下端が1なのはv下端が1で、カメラから見た絵に変換された状態のレイ位置をuvで表す
 
             float shadowZ = shadowMap.SampleLevel(smp, shadowUV, 0);
-            float rayZ = shadowPos.z;
+            float rayZ = framedShadowPos.z;
             isShadow = rayZ > shadowZ; // レイのz位置が太陽から見たデプスマップより同位置で取得したz値より大きければ、レイ位置は遮蔽されて影である
         }
         
@@ -82,7 +89,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             float h = length(rayPos) - groundRadius;
             float3 sigmaS = GetSigmaS(h);
             float3 sigmaT = GetSigmaT(h);
-            float3 deltaSigmaT = sigmaT * (nextT - startT); // T(c,x)
+            float3 deltaSigmaT = dt * sigmaT; // T(c,x)
             float3 transmittanceFromRayToEye = exp(-(sumSigmaT + deltaSigmaT));
             float phaseTheta = dot(sunDirection, -currentPixelDir);
             float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
@@ -93,13 +100,14 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             v = (sin(angleBetweenSunlightAndRay) + 1) * 0.5;
             float3 sf = shadowFactor.SampleLevel(smp, float2(u, v), 0); // S(x,li)計算
         
-            scattering += (nextT - startT) * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf;
+            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf;
             sumSigmaT += deltaSigmaT;
         }
 
+        AirTexture[int3(DTid.xy, z)] = float4(scattering * 100, 1);
         startT = nextT;
         endT = min(endT + divDepth, distanceLimit);
     }
     
-    AirTexture[int3(DTid.xy, z)] = float4(scattering, 1);
+    
 }

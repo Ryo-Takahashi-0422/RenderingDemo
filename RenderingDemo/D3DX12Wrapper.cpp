@@ -839,6 +839,8 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
+
+		air->SetFrustum(camera->GetFrustum());
 		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetCameraPos(), sun->GetDirection());
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
@@ -1169,6 +1171,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
+					camera->Transform(leftSpinMatrix);
 					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
 				}
@@ -1181,6 +1184,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					camera->Transform(rightSpinMatrix);
 					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
@@ -1203,6 +1207,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			{
 				// 当たり判定処理
 				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
+				camera->MoveCamera(forwardSpeed, connanDirection);
 			}
 
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド

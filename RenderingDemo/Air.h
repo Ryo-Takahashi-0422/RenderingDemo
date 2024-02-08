@@ -4,8 +4,8 @@ class Air
 {
 private:
     // ‰ð‘œ“xŠÖ˜A
-    int width = 1024;
-    int height = 1024;
+    int width = 256;
+    int height = 256;
     int depth = 64;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
@@ -75,8 +75,8 @@ private:
         float distanceLimit;
         XMFLOAT3 sunDirection;
     };
-    float depthLengthVal = 100;
-    float distanceLimitValue = 1000;
+    float depthLengthVal = 1000;
+    float distanceLimitValue = 30000;
 
     SceneInfo* m_SceneInfo = nullptr;
 
