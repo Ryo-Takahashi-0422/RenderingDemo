@@ -38,11 +38,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     
     float3 currentPixelDir =
     normalize(
-        lerp(lerp(topLeftFrustum, topRightFrustum, DTid.x),
-             lerp(bottomLeftFrustum, bottomRightFrustum, DTid.x), DTid.y));    
+        lerp(lerp(topLeftFrustum, topRightFrustum, (DTid.x + 0.5) / width),
+             lerp(bottomLeftFrustum, bottomRightFrustum, (DTid.x + 0.5) / width), (DTid.y + 0.5) / height));
+    currentPixelDir.x *= -1;
     
     float startT = 0;
-    float divDepth = /*depthLength / depth*/30.0f;
+    float divDepth = /*depthLength / depth*/1.0f;
     //float endT = min(divDepth, distanceLimit);
     float maxT;
     float3 cameraPos3D = float3(0, adjustedEyePos.y + groundRadius, 0);
@@ -69,18 +70,18 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float3 rayPos = cameraPos3D + randT * currentPixelDir; // レイ位置を現在処理中のピクセル方向へrandT分進める
         
         // 現在のレイが太陽から見て影の中にあるか判定する
-        bool isShadow = false;
+        bool isShadow = true;
         if (!hasIntersectionWithSphere(rayPos, -sunDirection, groundRadius))
         {
             //float4 shadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(rayPos, 1)); // 現在のレイ位置を、太陽から見たカメラの視錐台座標に変換
-            float3 shadowPos = eyePos + randT * currentPixelDir / 600.0f; // カメラからピクセル方向へレイを進める
+            float3 shadowPos = eyePos + randT * currentPixelDir/* / 10.0f*/; // カメラからピクセル方向へレイを進める
             float4 framedShadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(shadowPos, 1));
             framedShadowPos.xyz /= framedShadowPos.w; // xyをwで割って、それら値を太陽から見たカメラの視錐台空間(-1～+1)に収めている
             float2 shadowUV = 0.5 + float2(0.5, -0.5) * framedShadowPos.xy; // xはそのまま0～1に調整し、yは空間の上端が0に、下端が1になるように調整。yの下端が1なのはv下端が1で、カメラから見た絵に変換された状態のレイ位置をuvで表す
 
             float shadowZ = shadowMap.SampleLevel(smp, shadowUV, 0);
             float rayZ = framedShadowPos.z;
-            isShadow = rayZ > shadowZ; // レイのz位置が太陽から見たデプスマップより同位置で取得したz値より大きければ、レイ位置は遮蔽されて影である
+            isShadow = rayZ > shadowZ - 0.0001f; // レイのz位置が太陽から見たデプスマップより同位置で取得したz値より大きければ、レイ位置は遮蔽されて影である
         }
         
         // 現在のレイが太陽から見て影でないならスキャッタリングの計算を行う
@@ -104,7 +105,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             sumSigmaT += deltaSigmaT;
         }
 
-        AirTexture[int3(DTid.xy, z)] = float4(scattering * 100, 1);
+        AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
         startT = nextT;
         endT = min(endT + divDepth, distanceLimit);
     }

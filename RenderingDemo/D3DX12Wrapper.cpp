@@ -614,6 +614,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	sky->SetSceneInfo(camera->GetWorld());
 	
 	camera->CalculateFrustum();
+	camera->SetDummyFrustum();
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
@@ -840,8 +841,8 @@ void D3DX12Wrapper::Run() {
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
-		air->SetFrustum(camera->GetFrustum());
-		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetCameraPos(), sun->GetDirection());
+		air->SetFrustum(camera->GetDummyFrustum());
+		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetDummyCameraPos(), sun->GetDirection());
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 		// ShadowFactorの解像度に変更がある場合の処理

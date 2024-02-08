@@ -32,6 +32,12 @@ private:
 
 	XMFLOAT3 eye;
 	XMFLOAT3 target;
+
+	// for air
+	XMFLOAT3 dummyEyePos;
+	XMFLOAT3 dummyTargetPos;
+	XMMATRIX dummyView;
+	Frustum dummyFrustum;
 public:
 
 	Camera();
@@ -42,9 +48,15 @@ public:
 	void CalculateFrustum();
 	
 	static Camera* GetInstance() { return instance; };
-	XMFLOAT3 GetCameraPos() { return eye; };
+	XMFLOAT3 GetCameraPos() { return eye; };	
 	XMMATRIX GetWorld() { return world; };
 	XMMATRIX GetView() { return view; };
 	XMMATRIX GetProj() { return proj; };
 	Frustum GetFrustum() { return frustum; };
+
+	// air•`‰æ—p
+	XMFLOAT3 GetDummyCameraPos() { return dummyEyePos; };
+	XMMATRIX GetDummyView() { return dummyView; };
+	Frustum GetDummyFrustum() { return dummyFrustum; };
+	void SetDummyFrustum();
 };
