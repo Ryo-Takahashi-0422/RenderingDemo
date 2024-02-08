@@ -9,9 +9,6 @@ struct PostSetting
 	bool isBloom;
 };
 
-
-
-
 class SettingImgui
 {
 private:
@@ -38,7 +35,7 @@ private:
 
 	// sun
 	float sunAngleX = 360.0f;
-	float sunAngleY = 40.0f;
+	float sunAngleY = 90.0f;
 
 	//sky
 	int skyResX = 64;

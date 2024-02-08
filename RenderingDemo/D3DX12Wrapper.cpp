@@ -617,6 +617,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
+
+	shadow = new Shadow(_dev.Get());
+	shadow->Init();
+	
+	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
+	air->SetFrustum(camera->GetFrustum());
+	air->SetParticipatingMedia(calculatedParticipatingMedia);
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -763,13 +770,11 @@ void D3DX12Wrapper::Run() {
 		matTexSizes.push_back(matTexSize);
 	}
 
-	//viewPort = prepareRenderingWindow->GetViewPortPointer();
-	//rect = prepareRenderingWindow->GetRectPointer();
+	// 影の描画でも利用する
+	shadow->SetVertexAndIndexInfo(vbViews, ibViews, itIndiceFirsts, indiceContainer);
 
 	HANDLE event; // fnece用イベント
-	// DrawFBXで利用する
-	/*dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-	handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();*/
+	
 	fBXPipeline = gPLSetting->GetPipelineState().Get();
 	fBXRootsignature = setRootSignature->GetRootSignature().Get();
 
@@ -829,10 +834,14 @@ void D3DX12Wrapper::Run() {
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
+		shadow->SetVPMatrix(sun->GetViewMatrix(), sun->GetProjMatrix());
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
+
+		air->SetFrustum(camera->GetFrustum());
+		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetCameraPos(), sun->GetDirection());
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 		// ShadowFactorの解像度に変更がある場合の処理
@@ -888,6 +897,9 @@ void D3DX12Wrapper::Run() {
 
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
+		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		
@@ -1160,8 +1172,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
+					camera->Transform(leftSpinMatrix);
 					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
+					shadow->SetRotationMatrix(leftSpinMatrix);
 				}
 			}
 
@@ -1172,8 +1186,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				connanDirection *= leftSpinMatrix;
 				if (num == 0)
 				{
+					camera->Transform(rightSpinMatrix);
 					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
+					shadow->SetRotationMatrix(rightSpinMatrix);
 				}
 			}
 
@@ -1194,6 +1210,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			{
 				// 当たり判定処理
 				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
+				camera->MoveCamera(forwardSpeed, connanDirection);
+				shadow->SetMoveMatrix(forwardSpeed, connanDirection);
 			}
 
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド

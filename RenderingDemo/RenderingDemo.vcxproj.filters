@@ -81,6 +81,9 @@
     <None Include="shader\CollisionHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="shader\Shadow.hlsli">
+      <Filter>Shader\Sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -145,6 +148,15 @@
     </FxCompile>
     <FxCompile Include="shader\CollisionVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowPixel.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\ShadowVertex.hlsl">
+      <Filter>Shader\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\Air.hlsl">
+      <Filter>Shader\Sky</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -302,6 +314,9 @@
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
     <ClCompile Include="Shadow.cpp">
+      <Filter>ソース ファイル\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="Air.cpp">
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
   </ItemGroup>
@@ -466,6 +481,9 @@
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
     <ClInclude Include="Shadow.h">
+      <Filter>ヘッダー ファイル\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="Air.h">
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
   </ItemGroup>

@@ -246,6 +246,8 @@ private:
 	ParticipatingMedia calculatedParticipatingMedia;
 	SkyLUTBuffer skyLUTBuffer;
 	Sun* sun = nullptr;	
+	Shadow* shadow = nullptr;
+	Air* air = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;

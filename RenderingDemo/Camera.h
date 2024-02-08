@@ -31,11 +31,14 @@ private:
 	XMVECTOR BottomRightFar = { 1.0f, -1.0f, 0.1f, 1.0f };
 
 	XMFLOAT3 eye;
+	XMFLOAT3 target;
 public:
 
 	Camera();
 	~Camera();
 	void Init(PrepareRenderingWindow* _prepareRenderingWindow);
+	void Transform(XMMATRIX transform);
+	void MoveCamera(double speed, XMMATRIX charaDirection);
 	void CalculateFrustum();
 	
 	static Camera* GetInstance() { return instance; };

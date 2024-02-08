@@ -144,5 +144,6 @@ public:
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);
 	int GetDescriptorNum() { return descriptorNum; };
+	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
 };
 

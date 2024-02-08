@@ -74,7 +74,7 @@ float4 ps(Output input) : SV_TARGET
 
         //result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
     }
-    else if (sponzaDepth == /*connanDepth ==*/ 1)
+    else if (sponzaDepth == connanDepth == 1)
     {
         result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
         sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
