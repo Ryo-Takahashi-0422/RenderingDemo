@@ -6,7 +6,7 @@ private:
     // ‰ð‘œ“xŠÖ˜A
     int width = 256;
     int height = 256;
-    int depth = 64;
+    int depth = 128;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 

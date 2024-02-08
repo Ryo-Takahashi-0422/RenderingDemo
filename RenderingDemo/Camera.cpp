@@ -25,17 +25,16 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	//worldMat *= angle; // モデルが後ろ向きなので180°回転して調整
 
 	//ビュー行列の生成・乗算
-	eye = XMFLOAT3(0, 1.5, 2.3);
+	eye = XMFLOAT3(0, 1.5, 2.3);	
 	target = XMFLOAT3(0, 1.5, 0);
-	//XMFLOAT3 eye(0, 100, /*0.01*/10);
-	//XMFLOAT3 target(0, 10, 0);
+	
 	XMFLOAT3 up(0, 1, 0);
 	view = XMMatrixLookAtLH
 	(
 		XMLoadFloat3(&eye),
 		XMLoadFloat3(&target),
 		XMLoadFloat3(&up)
-	);
+	);	
 
 	//プロジェクション(射影)行列の生成・乗算
 	proj = XMMatrixPerspectiveFovLH
@@ -45,30 +44,69 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 		1.0, // ニア―クリップ
 		3000.0 // ファークリップ
 	);
+
+	// for air
+	dummyEyePos = eye;
+	dummyTargetPos = target;
+	dummyView = view;
 }
 
 void Camera::Transform(XMMATRIX transform)
 {
-	auto tempEye = XMVector4Transform(XMLoadFloat3(&eye), transform);
-	//XMStoreFloat3(&eye, tempEye);
-	XMFLOAT3 localEyePos;
-	XMStoreFloat3(&localEyePos, tempEye);
+	//auto tempEye = XMVector4Transform(XMLoadFloat3(&dummyEyePos), transform);
+	////XMStoreFloat3(&eye, tempEye);
+	//XMFLOAT3 localEyePos;
+	//XMStoreFloat3(&localEyePos, tempEye);
 
-	auto tempTarget = XMVector4Transform(XMLoadFloat3(&target), transform);
-	//XMStoreFloat3(&target, tempTarget);
-	XMFLOAT3 localTarget;
-	XMStoreFloat3(&localTarget, tempTarget);
+	//auto tempTarget = XMVector4Transform(XMLoadFloat3(&dummyTargetPos), transform);
+	////XMStoreFloat3(&target, tempTarget);
+	//XMFLOAT3 localTarget;
+	//XMStoreFloat3(&localTarget, tempTarget);
 
-	XMFLOAT3 up(0, 1, 0);
+	//XMFLOAT3 up(0, 1, 0);
 
-	view = XMMatrixLookAtLH
-	(
-		XMLoadFloat3(&localEyePos),
-		XMLoadFloat3(&localTarget),
-		XMLoadFloat3(&up)
-	);
+	//dummyView = XMMatrixLookAtLH
+	//(
+	//	XMLoadFloat3(&localEyePos),
+	//	XMLoadFloat3(&localTarget),
+	//	XMLoadFloat3(&up)
+	//);
 
-	CalculateFrustum();
+	dummyView = XMMatrixMultiply(dummyView, transform);
+
+	auto vp = XMMatrixMultiply(dummyView, proj);
+	auto invVP = XMMatrixInverse(nullptr, vp);/*XMMatrixMultiply(invView, invProj)*/;
+
+	auto topLeftN = XMVector4Transform(topLeftNear, invVP);
+	topLeftN /= topLeftN.m128_f32[3];
+	auto topLeftF = XMVector4Transform(topLeftFar, invVP);
+	topLeftF /= topLeftF.m128_f32[3];
+
+	dummyFrustum.topLeft = XMVector4Normalize(XMVectorSubtract(topLeftF, topLeftN));
+
+
+	auto topRightN = XMVector4Transform(topRightNear, invVP);
+	topRightN /= topRightN.m128_f32[3];
+	auto topRightF = XMVector4Transform(topRightFar, invVP);
+	topRightF /= topRightF.m128_f32[3];
+
+	dummyFrustum.topRight = XMVector4Normalize(XMVectorSubtract(topRightF, topRightN));
+
+
+	auto bottomLeftN = XMVector4Transform(BottomLeftNear, invVP);
+	bottomLeftN /= bottomLeftN.m128_f32[3];
+	auto bottomLeftF = XMVector4Transform(BottomLeftFar, invVP);
+	bottomLeftF /= bottomLeftF.m128_f32[3];
+
+	dummyFrustum.bottomLeft = XMVector4Normalize(XMVectorSubtract(bottomLeftF, bottomLeftN));
+
+
+	auto bottomRightN = XMVector4Transform(BottomRightNear, invVP);
+	bottomRightN /= bottomRightN.m128_f32[3];
+	auto bottomRightF = XMVector4Transform(BottomRightFar, invVP);
+	bottomRightF /= bottomRightF.m128_f32[3];
+
+	dummyFrustum.bottomRight = XMVector4Normalize(XMVectorSubtract(bottomRightF, bottomRightN));
 }
 
 void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
@@ -79,26 +117,32 @@ void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 	moveMatrix.r[0].m128_f32[2] = 0;
 	moveMatrix.r[2].m128_f32[0] = 0;
 	moveMatrix.r[2].m128_f32[2] = 1;
+	moveMatrix.r[3].m128_f32[2] *= -1;
 
 	// 以下コードは太陽の描画に影響する：消失する
-	//// カメラ座標を動かす
-	//auto tempCameraPos = XMLoadFloat3(&eye);
-	//tempCameraPos.m128_f32[3] = 1;
+	// カメラ座標を動かす
+	auto tempCameraPos = XMLoadFloat3(&dummyEyePos);
+	tempCameraPos.m128_f32[3] = 1;
 
-	//tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
-	//eye.x = tempCameraPos.m128_f32[0];
-	//eye.y = tempCameraPos.m128_f32[1];
-	//eye.z = tempCameraPos.m128_f32[2];
+	tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+	dummyEyePos.x = tempCameraPos.m128_f32[0];
+	dummyEyePos.y = tempCameraPos.m128_f32[1];
+	dummyEyePos.z = tempCameraPos.m128_f32[2];
 
-	//// ターゲット座標も動かす
-	//auto tempTargetPos = XMLoadFloat3(&target);
-	//tempTargetPos.m128_f32[3] = 1;
+	// ターゲット座標も動かす
+	auto tempTargetPos = XMLoadFloat3(&dummyTargetPos);
+	tempTargetPos.m128_f32[3] = 1;
 
-	//tempTargetPos = XMVector4Transform(tempTargetPos, moveMatrix);
-	//target.x = tempTargetPos.m128_f32[0];
-	//target.y = tempTargetPos.m128_f32[1];
-	//target.z = tempTargetPos.m128_f32[2];
+	tempTargetPos = XMVector4Transform(tempTargetPos, moveMatrix);
+	dummyTargetPos.x = tempTargetPos.m128_f32[0];
+	dummyTargetPos.y = tempTargetPos.m128_f32[1];
+	dummyTargetPos.z = tempTargetPos.m128_f32[2];
 
+}
+
+void Camera::SetDummyFrustum()
+{
+	dummyFrustum = frustum;
 }
 
 void Camera::CalculateFrustum()

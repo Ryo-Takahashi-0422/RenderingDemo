@@ -470,6 +470,11 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
 void Air::SetParticipatingMedia(ParticipatingMedia media)
 {
     m_Media->rayleighScattering = media.rayleighScattering;
+    float temp = m_Media->rayleighScattering.x;
+    m_Media->rayleighScattering.x = m_Media->rayleighScattering.z;
+    m_Media->rayleighScattering.z = temp;
+
+
     m_Media->mieScattering = media.mieScattering;
     m_Media->mieAbsorption = media.mieAbsorption;
     m_Media->ozoneAbsorption = media.ozoneAbsorption;
