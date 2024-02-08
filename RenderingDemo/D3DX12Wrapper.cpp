@@ -620,7 +620,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	shadow = new Shadow(_dev.Get());
 	shadow->Init();
-
+	
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
@@ -897,6 +897,7 @@ void D3DX12Wrapper::Run() {
 
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);

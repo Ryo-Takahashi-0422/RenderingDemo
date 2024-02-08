@@ -124,8 +124,9 @@ HRESULT Shadow::ShaderCompile()
 void Shadow::SetInputLayout()
 {
     // 座標
-    inputLayout[0] =
+    inputLayout =
     {
+        {
         "POSITION",
         0, // 同じセマンティクスに対するインデックス
         DXGI_FORMAT_R32G32B32_FLOAT,
@@ -134,6 +135,73 @@ void Shadow::SetInputLayout()
         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
         0 // 一度に描画するインスタンス数
 
+        },
+
+        //法線ベクトル
+        {
+            "NORMAL_Vertex",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+
+        //uv
+        {
+            "TEXCOORD",
+            0,
+            DXGI_FORMAT_R32G32_FLOAT,
+            0, // スロットインデックス
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+
+        //ボーン番号1セット目
+        {
+            "BONE_NO_ZeroToTwo",
+            0,
+            DXGI_FORMAT_R32G32B32_UINT, // unsigned shourt bone[0]-bone[2]
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+
+        //ボーン番号2セット目
+        {
+            "BONE_NO_ThreeToFive",
+            0,
+            DXGI_FORMAT_R32G32B32_UINT, // unsigned shourt bone[3]-bone[5]
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+
+        //ボーンウェイト1セット目
+        {
+            "WEIGHT_ZeroToTwo",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT, // float weight[0] - [2]
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+
+        //ボーンウェイト2セット目
+        {
+            "WEIGHT_ThreeToFive",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT, // float weight[3] - [5]
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        }
     };
 }
 
@@ -168,8 +236,8 @@ HRESULT Shadow::CreateGraphicPipeline()
     desc.BlendState.AlphaToCoverageEnable = false;
     desc.BlendState.IndependentBlendEnable = false;
     desc.BlendState.RenderTarget[0] = renderTargetDesc;
-    desc.InputLayout.pInputElementDescs = inputLayout;
-    desc.InputLayout.NumElements = _countof(inputLayout);
+    desc.InputLayout.pInputElementDescs = &inputLayout[0];
+    desc.InputLayout.NumElements = inputLayout.size();
     desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     desc.NumRenderTargets = 1;
     desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model
@@ -417,6 +485,11 @@ void Shadow::SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj)
     mappedMatrix->world = XMMatrixIdentity();
     mappedMatrix->view = _sunView;
     mappedMatrix->proj = _sunProj;
+}
+
+void Shadow::SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix)
+{
+    std::copy(std::begin(_fbxSceneMatrix->bones), std::end(_fbxSceneMatrix->bones), mappedMatrix->bones);
 }
 
 // 実行

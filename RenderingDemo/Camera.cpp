@@ -80,23 +80,24 @@ void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 	moveMatrix.r[2].m128_f32[0] = 0;
 	moveMatrix.r[2].m128_f32[2] = 1;
 
-	// カメラ座標を動かす
-	auto tempCameraPos = XMLoadFloat3(&eye);
-	tempCameraPos.m128_f32[3] = 1;
+	// 以下コードは太陽の描画に影響する：消失する
+	//// カメラ座標を動かす
+	//auto tempCameraPos = XMLoadFloat3(&eye);
+	//tempCameraPos.m128_f32[3] = 1;
 
-	tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
-	eye.x = tempCameraPos.m128_f32[0];
-	eye.y = tempCameraPos.m128_f32[1];
-	eye.z = tempCameraPos.m128_f32[2];
+	//tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+	//eye.x = tempCameraPos.m128_f32[0];
+	//eye.y = tempCameraPos.m128_f32[1];
+	//eye.z = tempCameraPos.m128_f32[2];
 
-	// ターゲット座標も動かす
-	auto tempTargetPos = XMLoadFloat3(&target);
-	tempTargetPos.m128_f32[3] = 1;
+	//// ターゲット座標も動かす
+	//auto tempTargetPos = XMLoadFloat3(&target);
+	//tempTargetPos.m128_f32[3] = 1;
 
-	tempTargetPos = XMVector4Transform(tempTargetPos, moveMatrix);
-	target.x = tempTargetPos.m128_f32[0];
-	target.y = tempTargetPos.m128_f32[1];
-	target.z = tempTargetPos.m128_f32[2];
+	//tempTargetPos = XMVector4Transform(tempTargetPos, moveMatrix);
+	//target.x = tempTargetPos.m128_f32[0];
+	//target.y = tempTargetPos.m128_f32[1];
+	//target.z = tempTargetPos.m128_f32[2];
 
 }
 
