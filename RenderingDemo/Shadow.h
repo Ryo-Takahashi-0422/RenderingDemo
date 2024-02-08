@@ -70,6 +70,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> matrixHeap = nullptr; // WVPmatrix用ディスクリプタヒープ
 	WVPMatrix* mappedMatrix = nullptr;
 	XMMATRIX m_moveMatrix = XMMatrixIdentity();
+	XMMATRIX m_rotationMatrix = XMMatrixIdentity();
 
 	float width = 1024;
 	float height = 1024;
@@ -79,7 +80,8 @@ public:
 	void Init();
 	void SetVertexAndIndexInfo(std::vector<D3D12_VERTEX_BUFFER_VIEW*> _vbViews, std::vector<D3D12_INDEX_BUFFER_VIEW*> _ibViews, std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> _itIndiceFirsts, std::vector<std::vector<std::pair<std::string, VertexInfo>>> _indiceContainer);
 	void SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj);
-	void SetTransformMatrix(double speed, XMMATRIX charaDirection);
+	void SetMoveMatrix(double speed, XMMATRIX charaDirection);
+	void SetRotationMatrix(XMMATRIX rotationMatrix);
 	void SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix);
 	ComPtr<ID3D12Resource> GetShadowMapREsource() { return depthBuff; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);

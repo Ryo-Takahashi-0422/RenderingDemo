@@ -492,7 +492,7 @@ void Shadow::SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix)
     std::copy(std::begin(_fbxSceneMatrix->bones), std::end(_fbxSceneMatrix->bones), mappedMatrix->bones);
 }
 
-void Shadow::SetTransformMatrix(double speed, XMMATRIX charaDirection)
+void Shadow::SetMoveMatrix(double speed, XMMATRIX charaDirection)
 {
     // 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
     auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
@@ -505,10 +505,18 @@ void Shadow::SetTransformMatrix(double speed, XMMATRIX charaDirection)
     m_moveMatrix *= moveMatrix;
 }
 
+void Shadow::SetRotationMatrix(XMMATRIX rotationMatrix)
+{
+    m_rotationMatrix *= rotationMatrix;
+}
+
 // 実行
 void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
-    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix); // こちらでキャラクターの移動用行列を更新する
+    // こちらでキャラクターの移動用行列を更新する
+    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
+    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
+    
 
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (

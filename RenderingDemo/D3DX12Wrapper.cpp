@@ -1175,6 +1175,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					camera->Transform(leftSpinMatrix);
 					sun->ChangeSceneMatrix(rightSpinMatrix);
 					sky->ChangeSceneMatrix(rightSpinMatrix);
+					shadow->SetRotationMatrix(leftSpinMatrix);
 				}
 			}
 
@@ -1188,6 +1189,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					camera->Transform(rightSpinMatrix);
 					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
+					shadow->SetRotationMatrix(rightSpinMatrix);
 				}
 			}
 
@@ -1209,7 +1211,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				// 当たり判定処理
 				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
 				camera->MoveCamera(forwardSpeed, connanDirection);
-				shadow->SetTransformMatrix(forwardSpeed, connanDirection);
+				shadow->SetMoveMatrix(forwardSpeed, connanDirection);
 			}
 
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
