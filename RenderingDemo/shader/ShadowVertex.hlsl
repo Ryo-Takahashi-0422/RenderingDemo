@@ -11,7 +11,14 @@ vsOutput vs_main
     float3 boneweight2 : WEIGHT_ThreeToFive
 )
 {
-    vsOutput output;
+    vsOutput output;    
+
+    if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
+    {
+        output.position = mul(mul(proj, view), pos);
+        
+        return output;
+    }
     
     matrix bm1 = bones[boneno1[0]] * boneweight1[0];
     matrix bm2 = bones[boneno1[1]] * boneweight1[1];
@@ -22,28 +29,9 @@ vsOutput vs_main
     matrix bm6 = bones[boneno2[2]] * boneweight2[2];
     
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
-    if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
-    {
-        bm[0][0] = 1;
-        bm[1][1] = 1;
-        bm[2][2] = 1;
-        bm[3][3] = 1;
-        output.position = mul(mul(proj, view), pos);
-        
-        return output;
-    }
-    pos = mul(bm, pos);
-
-    output.position = mul(mul(mul(proj, view), world), pos);
     
-    //if (boneweight1.x == 0 && boneweight1.y == 0 && boneweight1.z == 0 && )
-    //{
-    //    output.position = mul(mul(mul(proj, view), world), pos);
-    //}
-    //else
-    //{
-    //    output.position = mul(mul(proj, view), pos);
-    //}
+    pos = mul(bm, pos);
+    output.position = mul(mul(mul(proj, view), world), pos);
         
     return output;
 }

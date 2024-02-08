@@ -75,6 +75,8 @@ private:
 	float width = 1024;
 	float height = 1024;
 
+	void UpdateWorldMatrix();
+
 public:
 	Shadow(ID3D12Device* dev);
 	void Init();

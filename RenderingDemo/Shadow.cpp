@@ -510,13 +510,16 @@ void Shadow::SetRotationMatrix(XMMATRIX rotationMatrix)
     m_rotationMatrix *= rotationMatrix;
 }
 
-// 実行
-void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void Shadow::UpdateWorldMatrix()
 {
-    // こちらでキャラクターの移動用行列を更新する
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
-    
+}
+
+// 実行
+void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+{    
+    UpdateWorldMatrix();// キャラクターの移動用行列を更新する
 
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
