@@ -516,10 +516,40 @@ void Shadow::UpdateWorldMatrix()
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
 }
 
+void Shadow::SetSunDir(XMFLOAT3 dir)
+{
+    m_sunDir = dir;
+}
+
+void Shadow::UpdateSunDir()
+{
+    //ビュー行列の生成・乗算
+    XMFLOAT3 target(0, 0, 0);
+    //XMFLOAT3 eye(0, 100, /*0.01*/10);
+    //XMFLOAT3 target(0, 10, 0);
+    XMFLOAT3 up(0, 1, 0);
+    auto fixedDir = m_sunDir;
+    fixedDir.x *= 65;
+    fixedDir.y *= -65;
+    fixedDir.z *= 65;
+
+    auto temp = XMVector4Transform(XMLoadFloat3(&fixedDir), m_rotationMatrix);
+    temp = XMVector4Transform(temp, m_moveMatrix);
+    XMStoreFloat3(&fixedDir, temp);
+
+    mappedMatrix->view = XMMatrixLookAtLH
+    (
+        XMLoadFloat3(&fixedDir),
+        XMLoadFloat3(&target),
+        XMLoadFloat3(&up)
+    );
+}
+
 // 実行
 void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {    
     UpdateWorldMatrix();// キャラクターの移動用行列を更新する
+    UpdateSunDir();
 
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
