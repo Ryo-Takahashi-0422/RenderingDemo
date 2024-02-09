@@ -76,8 +76,6 @@ private:
 	float height = 1024;
 
 	void UpdateWorldMatrix();
-	void UpdateSunDir();
-	XMFLOAT3 m_sunDir;
 
 public:
 	Shadow(ID3D12Device* dev);
@@ -88,6 +86,5 @@ public:
 	void SetRotationMatrix(XMMATRIX rotationMatrix);
 	void SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix);
 	ComPtr<ID3D12Resource> GetShadowMapREsource() { return depthBuff; };
-	void SetSunDir(XMFLOAT3 dir);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

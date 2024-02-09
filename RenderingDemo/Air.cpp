@@ -533,3 +533,9 @@ void Air::SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT
     m_SceneInfo->depthLength = depthLengthVal;
     m_SceneInfo->distanceLimit = distanceLimitValue;
 }
+
+void Air::ChangeSunDirByShadow(XMMATRIX _viewmatrix, XMFLOAT3 _sunDirection)
+{
+    m_SceneInfo->sunViewMatrix = _viewmatrix;
+    m_SceneInfo->sunDirection = _sunDirection;
+}

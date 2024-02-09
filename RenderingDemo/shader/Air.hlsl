@@ -59,10 +59,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     
     float3 scattering = float3(0, 0, 0);
     float3 sumSigmaT = float3(0, 0, 0);    
-    
+    float cut = 1.0f;
     // レイマーチング
     for (int z = 0; z < depth; ++z)
     {
+        
         float dt = (endT - startT);
         float nextT = startT + dt;
 
@@ -101,8 +102,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             v = (sin(angleBetweenSunlightAndRay) + 1) * 0.5;
             float3 sf = shadowFactor.SampleLevel(smp, float2(u, v), 0); // S(x,li)計算
         
-            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf;
+            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf * cut;
             sumSigmaT += deltaSigmaT;
+        }
+        else
+        {
+            cut *= 0.9;
         }
         
         //float temp = scattering.x;
