@@ -102,7 +102,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             v = (sin(angleBetweenSunlightAndRay) + 1) * 0.5;
             float3 sf = shadowFactor.SampleLevel(smp, float2(u, v), 0); // S(x,li)ŒvŽZ
         
-            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf * cut;
+            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf/* * cut*/;
             sumSigmaT += deltaSigmaT;
         }
         else

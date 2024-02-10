@@ -91,5 +91,4 @@ public:
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetFrustum(Frustum _frustum);
     void SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT3 _eyePos, XMFLOAT3 sunDirection);
-    void ChangeSunDirByShadow(XMMATRIX sunDirectionFromShadowPass, XMFLOAT3 sunDirection); // シャドウマップ生成時に太陽方向を変えているため、合わせる
 };

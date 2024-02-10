@@ -417,7 +417,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 8 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-8:skyとImGuiとsun, 9-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 9 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-8:skyとImGuiとsun, 9-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -484,7 +484,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	handle.ptr += inc * 3; // sky, ImGui,sun分空けておく
+	handle.ptr += inc * 4; // sky, ImGui,sun, Air空けておく
 
 	// 9-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
@@ -693,6 +693,29 @@ void ResourceManager::SetSunResourceAndCreateView(ComPtr<ID3D12Resource> _sunRes
 	_dev->CreateShaderResourceView
 	(
 		sunBuffer.Get(),
+		&srvDesc,
+		handle
+	);
+}
+
+void ResourceManager::SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airResource)
+{
+	airBuffer = _airResource;
+
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	handle.ptr += inc * 8;
+
+	_dev->CreateShaderResourceView
+	(
+		airBuffer.Get(),
 		&srvDesc,
 		handle
 	);

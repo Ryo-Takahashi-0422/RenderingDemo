@@ -54,9 +54,10 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerState smpToon : register(s1); // No.1 sampler(toon)
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
-Texture2D<float4> colormap : register(t0);
-Texture2D<float4> normalmap : register(t1);
-Texture2D<float4> specularmap : register(t2);
-Texture2D<float4> metalmap : register(t3);
-Texture2D<float> transparentmap : register(t4);
+Texture3D<float4> airmap : register(t0);
+Texture2D<float4> colormap : register(t1);
+Texture2D<float4> normalmap : register(t2);
+Texture2D<float4> specularmap : register(t3);
+Texture2D<float4> metalmap : register(t4);
+Texture2D<float> transparentmap : register(t5);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture

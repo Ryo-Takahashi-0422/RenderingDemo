@@ -456,14 +456,16 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 
 
-    // コピー用リソース状態をSkyLUT.hlslで読み込める状態にする
-    barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        copyTextureResource.Get(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-    );
-    _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+
+    //// コピー用リソース状態をUAVに戻す
+    //barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+    //(
+    //    copyTextureResource.Get(),
+    //    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+    //    D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    //);
+    //_cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 }
 
 // 外部からの関与媒質設定
@@ -532,10 +534,4 @@ void Air::SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT
     m_SceneInfo->world = XMMatrixIdentity();
     m_SceneInfo->depthLength = depthLengthVal;
     m_SceneInfo->distanceLimit = distanceLimitValue;
-}
-
-void Air::ChangeSunDirByShadow(XMMATRIX _viewmatrix, XMFLOAT3 _sunDirection)
-{
-    m_SceneInfo->sunViewMatrix = _viewmatrix;
-    m_SceneInfo->sunDirection = _sunDirection;
 }

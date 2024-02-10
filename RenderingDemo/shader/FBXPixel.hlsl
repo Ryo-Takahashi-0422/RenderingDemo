@@ -35,11 +35,13 @@ float4 FBXPS(Output input) : SV_TARGET
     if (col.a == 0) discard; // アルファ値が0なら透過させる
     
     //return col;
+    
+    float4 air = airmap.Sample(smp, float3(input.uv, 1));
 
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)
     //{
-    return renderingResultOfNormalMapAndDiffuseMap /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    return renderingResultOfNormalMapAndDiffuseMap + air; /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     //}
     //else
     //{
