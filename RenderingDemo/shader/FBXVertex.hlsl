@@ -31,11 +31,6 @@ Output FBXVS
         bm[3][3] = 1;
     }
     pos = mul(bm, pos);
-    
-    //if(instNo == 1)
-    //{
-    //    pos = mul(shadow, pos); // 影を計算
-    //}
 
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
@@ -46,11 +41,7 @@ Output FBXVS
 
     float3 lightDirection = float3(0, 1, 1);
     output.lightTangentDirection = float4(normalize(lightDirection), 1);
-    
-    //output.tangent = normalize(mul(world, tangent));
-    //output.biNormal = normalize(mul(world, binormal));
-    //output.normal = normalize(mul(world, norm));
-    
+     
     float3x3 bmTan;
     bmTan[0] = bm[0];
     bmTan[1] = bm[1];
@@ -66,9 +57,10 @@ Output FBXVS
     
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
     output.uv = uv;
-    //output.ray = normalize(pos.xyz - eye);
-    //output.instNo = instNo;
-    //output.tpos = mul(lightCamera, pos); // world乗算をしても結果が変わらないのは、使っているworldが単位行列だから
+    
+    output.screenPosition = output.svpos;
+    output.worldPosition = mul(shadowPosMatrix, pos);
+    output.worldNormal = normalize(mul(world, norm).xyz);
 
     return output;
 }

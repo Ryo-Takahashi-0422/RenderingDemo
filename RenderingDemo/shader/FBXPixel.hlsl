@@ -36,12 +36,16 @@ float4 FBXPS(Output input) : SV_TARGET
     
     //return col;
     
-    float4 air = airmap.Sample(smp, float3(input.uv, 1));
+    float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
+    scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
+    float airZ = distance(input.worldPosition, eyePos) / 300; // areialの奥行は2000、これを設定値64で分割して3次元区分けしている。
+    float4 air = airmap.SampleLevel(smp, float3(scrPos, saturate(airZ)), 0);
+    float3 inScatter = air.xyz;
 
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)
     //{
-    return renderingResultOfNormalMapAndDiffuseMap + air; /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    return renderingResultOfNormalMapAndDiffuseMap + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     //}
     //else
     //{

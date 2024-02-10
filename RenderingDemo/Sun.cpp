@@ -127,9 +127,9 @@ void Sun::CalculateViewMatrix()
     //XMFLOAT3 target(0, 10, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
-    fixedDir.x *=65;
-    fixedDir.y *= -65;
-    fixedDir.z *= 65;
+    fixedDir.x *=100;
+    fixedDir.y *= -100;
+    fixedDir.z *= 100;
 
     sunViewMatrix = XMMatrixLookAtLH
     (

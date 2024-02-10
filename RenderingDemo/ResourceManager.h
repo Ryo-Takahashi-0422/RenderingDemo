@@ -13,6 +13,13 @@ struct FBXSceneMatrix
 	//XMMATRIX invView; // inverted view matrix
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
+	XMMATRIX shadowPosMatrix;
+	XMMATRIX shadowPosInvMatrix;
+	XMMATRIX shadowView;
+	XMFLOAT3 eyePos;
+	float pad;
+	XMFLOAT3 sunDIr;
+
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off
 };
@@ -148,6 +155,6 @@ public:
 	void SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airResource);
 	int GetDescriptorNum() { return descriptorNum; };
 	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
-
+	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);
 };
 

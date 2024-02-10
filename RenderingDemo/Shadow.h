@@ -86,5 +86,8 @@ public:
 	void SetRotationMatrix(XMMATRIX rotationMatrix);
 	void SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix);
 	ComPtr<ID3D12Resource> GetShadowMapREsource() { return depthBuff; };
+	XMMATRIX GetShadowPosMatrix() { return mappedMatrix->world; };
+	XMMATRIX GetShadowPosInvMatrix() { return XMMatrixInverse(nullptr, mappedMatrix->world); };
+	XMMATRIX GetShadowView() { return mappedMatrix->view; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

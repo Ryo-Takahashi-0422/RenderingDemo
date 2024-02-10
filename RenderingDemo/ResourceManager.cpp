@@ -720,3 +720,12 @@ void ResourceManager::SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airRes
 		handle
 	);
 }
+
+void ResourceManager::SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr)
+{
+	mappedMatrix->shadowPosMatrix = _shadowPosMatrix;
+	mappedMatrix->shadowPosInvMatrix = _shadowPosInvMatrix;
+	mappedMatrix->shadowView = _shadowView;
+	mappedMatrix->eyePos = _eyePos;
+	mappedMatrix->sunDIr = _sunDIr;
+}

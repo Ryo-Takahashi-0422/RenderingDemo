@@ -9,14 +9,18 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	stSamplerDesc[0].Init(0);
 	stSamplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	stSamplerDesc[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	stSamplerDesc[1].Init(1, D3D12_FILTER_ANISOTROPIC,
 	D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
-	stSamplerDesc[2] = stSamplerDesc[0];
+	stSamplerDesc[2].Init(2);
+	stSamplerDesc[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	stSamplerDesc[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	stSamplerDesc[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	stSamplerDesc[2].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL; // <=ならtrue(1.0) でなければfalse(0.0)
-	stSamplerDesc[2].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // 比較結果をバイリニア補間
-	stSamplerDesc[2].MaxAnisotropy = 1; // 深度傾斜を有効にする
-	stSamplerDesc[2].ShaderRegister = 2;
+	//stSamplerDesc[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	//stSamplerDesc[2].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL; // <=ならtrue(1.0) でなければfalse(0.0)
+	//stSamplerDesc[2].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // 比較結果をバイリニア補間
+	//stSamplerDesc[2].MaxAnisotropy = 1; // 深度傾斜を有効にする
+	//stSamplerDesc[2].ShaderRegister = 2;
 
 	//ディスクリプタテーブルのスロット設定
 	descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // martix
