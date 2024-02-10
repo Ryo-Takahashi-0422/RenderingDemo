@@ -46,9 +46,21 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	);
 
 	// for air
-	dummyEyePos = eye;
 	dummyTargetPos = target;
-	dummyView = view;
+	auto deye = XMFLOAT3(0, 1.5, 0); // eye.z 2,3のままだとairの描画結果がz方向に2.3オフセットした見た目になってしまう
+	dummyEyePos = deye;
+	
+
+	auto dtarget = XMFLOAT3(0, 1.5, -1);
+
+	dummyView = XMMatrixLookAtLH
+	(
+		XMLoadFloat3(&deye),
+		XMLoadFloat3(&dtarget),
+		XMLoadFloat3(&up)
+	);
+
+	
 }
 
 void Camera::Transform(XMMATRIX transform)
@@ -137,7 +149,6 @@ void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 	dummyTargetPos.x = tempTargetPos.m128_f32[0];
 	dummyTargetPos.y = tempTargetPos.m128_f32[1];
 	dummyTargetPos.z = tempTargetPos.m128_f32[2];
-
 }
 
 void Camera::SetDummyFrustum()

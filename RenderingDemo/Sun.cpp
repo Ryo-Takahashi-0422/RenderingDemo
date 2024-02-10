@@ -130,6 +130,7 @@ void Sun::CalculateViewMatrix()
     fixedDir.x *=100;
     fixedDir.y *= -100;
     fixedDir.z *= 100;
+    expFixedDir = fixedDir;
 
     sunViewMatrix = XMMatrixLookAtLH
     (

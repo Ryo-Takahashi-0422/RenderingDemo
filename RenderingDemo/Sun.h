@@ -89,6 +89,7 @@ private:
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
 	XMMATRIX sunViewMatrix;
 	XMMATRIX sunProjMatrix;
+	XMFLOAT3 expFixedDir;
 
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
@@ -97,6 +98,7 @@ public:
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
 	void CalculateViewMatrix();
 	XMFLOAT3 GetDirection() { return direction; };
+	XMFLOAT3 GetFixedDirection() { return expFixedDir; };
 	void ChangeSceneMatrix(XMMATRIX _world);
 	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
 	XMMATRIX GetViewMatrix() { return sunViewMatrix; };
