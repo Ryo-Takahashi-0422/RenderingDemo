@@ -40,7 +40,7 @@ float4 FBXPS(Output input) : SV_TARGET
     scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
     float airZ = distance(input.worldPosition, eyePos) / 300; // areialの奥行は2000、これを設定値64で分割して3次元区分けしている。
     float4 air = airmap.Sample(smp, float3(scrPos, saturate(airZ)));
-    float3 inScatter = air.xyz*2.4;
+    float3 inScatter = air.xyz;
 
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)

@@ -107,7 +107,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         else
         {
-            cut *= 0.9;
+            cut *= 0.8;
         }
         
         //float temp = scattering.x;

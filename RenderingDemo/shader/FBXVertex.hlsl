@@ -59,7 +59,7 @@ Output FBXVS
     output.uv = uv;
     
     output.screenPosition = output.svpos;
-    output.worldPosition = mul(shadowPosMatrix, pos);
+    output.worldPosition = pos; //mul(shadowPosMatrix, pos);
     output.worldNormal = normalize(mul(world, norm).xyz);
 
     return output;

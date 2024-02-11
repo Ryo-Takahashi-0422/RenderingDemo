@@ -909,7 +909,7 @@ void D3DX12Wrapper::Run() {
 		
 		for (int i = 0; i < threadNum; i++)
 		{
-			resourceManager[i]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetCameraPos(), sun->GetDirection());
+			resourceManager[i]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 			SetEvent(m_workerBeginRenderFrame[i]);			
 		}
 		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
