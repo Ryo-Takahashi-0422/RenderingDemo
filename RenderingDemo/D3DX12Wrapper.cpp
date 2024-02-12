@@ -838,14 +838,14 @@ void D3DX12Wrapper::Run() {
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
-		shadow->SetVPMatrix(sun->GetViewMatrix(), sun->GetProjMatrix());
+		shadow->SetVPMatrix(sun->GetShadowViewMatrix(), sun->GetProjMatrix()); // sun->GetViewMatrix()
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 		air->SetFrustum(camera->GetDummyFrustum());
-		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetDummyCameraPos(), sun->GetDirection());
+		air->SetSceneInfo(sun->GetShadowViewMatrix(), sun->GetProjMatrix(), camera->GetDummyCameraPos(), sun->GetDirection()); // sun->GetViewMatrix()
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 		// ShadowFactorの解像度に変更がある場合の処理

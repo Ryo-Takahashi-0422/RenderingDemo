@@ -13,7 +13,6 @@ vsOutput vs_main(float2 pos : POSITION, float2 uv : TEXCOORD)
     ori = mul(cameraPos, ori);
     
     ori = mul(sunDir, ori);
-
     //ori.z = 2.277f;
     
     output.position = mul(mul(mul(proj, view), world), /*float4(pos.x, pos.y, 0, 1)*/ori);

@@ -63,6 +63,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     // レイマーチング
     for (int z = 0; z < depth; ++z)
     {
+        // 逆光対策　数値は現合
+        if (scattering.z >= 0.00005f)
+        {
+            scattering.x = 0.000015f;
+            scattering.y = 0.000027f;
+            scattering.z = 0.00005f;
+            AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
+            break;
+        }
         
         float dt = (endT - startT);
         float nextT = startT + dt;
@@ -72,6 +81,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         // 現在のレイが太陽から見て影の中にあるか判定する
         bool isShadow = true;
+        float shadowZ;
         if (!hasIntersectionWithSphere(rayPos, -sunDirection, groundRadius))
         {
             //float4 shadowPos = mul(mul(mul(sunProjMatrix, sunViewMatrix), world), float4(rayPos, 1)); // 現在のレイ位置を、太陽から見たカメラの視錐台座標に変換
@@ -80,19 +90,22 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             framedShadowPos.xyz /= framedShadowPos.w; // xyをwで割って、それら値を太陽から見たカメラの視錐台空間(-1～+1)に収めている
             float2 shadowUV = 0.5 + float2(0.5, -0.5) * framedShadowPos.xy; // xはそのまま0～1に調整し、yは空間の上端が0に、下端が1になるように調整。yの下端が1なのはv下端が1で、カメラから見た絵に変換された状態のレイ位置をuvで表す
 
-            float shadowZ = shadowMap.SampleLevel(smp, shadowUV, 0);
+            shadowZ = shadowMap.SampleLevel(smp, shadowUV, 0);
             float rayZ = framedShadowPos.z;
             isShadow = rayZ > shadowZ - 0.0001f; // レイのz位置が太陽から見たデプスマップより同位置で取得したz値より大きければ、レイ位置は遮蔽されて影である
         }
         
         // 現在のレイが太陽から見て影でないならスキャッタリングの計算を行う
-        if (!isShadow)
+        if (!isShadow/* && scattering.z < 0.00004f*//*shadowZ < 0.999f*/)
         {
+
+            
             float h = length(rayPos) - groundRadius;
             float3 sigmaS = GetSigmaS(h);
             float3 sigmaT = GetSigmaT(h);
             float3 deltaSigmaT = dt * sigmaT; // T(c,x)
             float3 transmittanceFromRayToEye = exp(-(sumSigmaT + deltaSigmaT));
+            transmittanceFromRayToEye *= transmittanceFromRayToEye; // 逆光対策
             float phaseTheta = dot(sunDirection, -currentPixelDir);
             float phaseFuncResult = CalculatePhaseFunctiuon(phaseTheta);
             float angleBetweenSunlightAndRay = PI / 2 - acos(dot(-sunDirection, normalize(rayPos)));
@@ -100,9 +113,9 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             float u, v;
             u = h / (atmosphereRadius - groundRadius);
             v = (sin(angleBetweenSunlightAndRay) + 1) * 0.5;
-            float3 sf = shadowFactor.SampleLevel(smp, float2(u, v), 0); // S(x,li)計算
-        
-            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf/* * cut*/;
+            float3 sf = shadowFactor.SampleLevel(smp, float2(u, v), 0); // S(x,li)計算           
+               
+           scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf /* * cut*/;
             sumSigmaT += deltaSigmaT;
         }
         else
