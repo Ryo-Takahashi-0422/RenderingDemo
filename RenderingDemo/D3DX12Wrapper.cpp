@@ -630,6 +630,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
 	resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 	resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
+	// air(ボリュームライティング)はオブジェクトとキャラクターで利用
+	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
+	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 
 	return true;
 }
@@ -835,14 +838,14 @@ void D3DX12Wrapper::Run() {
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
-		shadow->SetVPMatrix(sun->GetViewMatrix(), sun->GetProjMatrix());
+		shadow->SetVPMatrix(sun->GetShadowViewMatrix(), sun->GetProjMatrix()); // sun->GetViewMatrix()
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 		air->SetFrustum(camera->GetDummyFrustum());
-		air->SetSceneInfo(sun->GetViewMatrix(), sun->GetProjMatrix(), camera->GetDummyCameraPos(), sun->GetDirection());
+		air->SetSceneInfo(sun->GetShadowViewMatrix(), sun->GetProjMatrix(), camera->GetDummyCameraPos(), sun->GetDirection()); // sun->GetViewMatrix()
 
 		// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 		// ShadowFactorの解像度に変更がある場合の処理
@@ -906,11 +909,23 @@ void D3DX12Wrapper::Run() {
 		
 		for (int i = 0; i < threadNum; i++)
 		{
-			SetEvent(m_workerBeginRenderFrame[i]);
+			resourceManager[i]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
+			SetEvent(m_workerBeginRenderFrame[i]);			
 		}
 		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
+
+		
+		// airのコピー用リソース状態をUAVに戻す
+		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			resourceManager[0]->GetAirBuff().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
@@ -1231,8 +1246,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 			dHandle.ptr += cbv_srv_Size * 8;
 
-			//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-
+			localCmdList->SetGraphicsRootDescriptorTable(2, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+			dHandle.ptr += cbv_srv_Size;
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
@@ -1248,7 +1263,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			auto matTexSize = matTexSizes[fbxIndex];
 			auto tHandle = dHandle;
 			tHandle.ptr += cbv_srv_Size * indiceContainerSize ;
-			auto textureTableStartIndex = 2; // 2 is number of texture memory position in SRV
+			int texStartIndex = 3; // テクスチャを格納するディスクリプタテーブル番号の開始位置
+			auto textureTableStartIndex = texStartIndex; // 3 is number of texture memory position in SRV
 			auto indiceSize = 0;
 			int itMATCnt = 0;
 			for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
@@ -1309,7 +1325,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				++itIndiceFirst;
 				++itPhonsInfo;
 
-				textureTableStartIndex = 2; // init
+				textureTableStartIndex = texStartIndex; // init
 
 			}
 			//SetEvent(m_workerSyncronize[num]); // end drawing.

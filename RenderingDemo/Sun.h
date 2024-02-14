@@ -88,7 +88,9 @@ private:
 	BillboardMatrix* mappedMatrix = nullptr;
 	XMMATRIX sceneMatrix = XMMatrixIdentity();
 	XMMATRIX sunViewMatrix;
+	XMMATRIX shadowViewMatrix;
 	XMMATRIX sunProjMatrix;
+	XMFLOAT3 expFixedDir;
 
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
@@ -97,9 +99,11 @@ public:
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);
 	void CalculateViewMatrix();
 	XMFLOAT3 GetDirection() { return direction; };
+	XMFLOAT3 GetFixedDirection() { return expFixedDir; };
 	void ChangeSceneMatrix(XMMATRIX _world);
 	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
 	XMMATRIX GetViewMatrix() { return sunViewMatrix; };
+	XMMATRIX GetShadowViewMatrix() { return shadowViewMatrix; };
 	XMMATRIX GetProjMatrix() { return sunProjMatrix; };
 	void SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);

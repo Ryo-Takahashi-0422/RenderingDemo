@@ -31,8 +31,8 @@ float4 ps_main(vsOutput input) : SV_TARGET
       
     //float x = input.texCoord.x;
     //float y = input.texCoord.y;
-    float x = input.position.x / (width - 1);
-    float y = input.position.y / (height - 1);
+    float x = (input.position.x + 0.5f) / width;
+    float y = (input.position.y + 0.5f) / height;
     float3 currentPixelDir = 
     normalize(
         lerp(lerp(topLeft, topRight, x),

@@ -9,6 +9,10 @@ struct Output
     float3 tangent : TANGENT;
     float3 biNormal : BINORMAL;
     float3 normal : NORMAL2;
+    
+    float4 screenPosition : SCREEN_POSITIO;
+    float3 worldPosition : WORLD_POSITION;
+    float3 worldNormal : WORLD_NORMAL;
 
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
@@ -35,6 +39,12 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     //matrix bones[256]; // bone matrix
     //matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
+    
+    matrix shadowPosMatrix;
+    matrix shadowPosInvMatrix;
+    matrix shadowView;
+    float3 eyePos;
+    float3 sunDIr;
     //float3 lightVec;
     //bool isSelfShadow;
 };
@@ -54,9 +64,10 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerState smpToon : register(s1); // No.1 sampler(toon)
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
-Texture2D<float4> colormap : register(t0);
-Texture2D<float4> normalmap : register(t1);
-Texture2D<float4> specularmap : register(t2);
-Texture2D<float4> metalmap : register(t3);
-Texture2D<float> transparentmap : register(t4);
+Texture3D<float4> airmap : register(t0);
+Texture2D<float4> colormap : register(t1);
+Texture2D<float4> normalmap : register(t2);
+Texture2D<float4> specularmap : register(t3);
+Texture2D<float4> metalmap : register(t4);
+Texture2D<float> transparentmap : register(t5);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture

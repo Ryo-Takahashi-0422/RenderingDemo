@@ -53,10 +53,8 @@ void Sun::CalculateBillbordMatrix()
     auto fixedDir = direction;
     fixedDir.y *= -1;
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
-    XMVECTOR yDir = { 1,0,0,0 };
-    XMVECTOR xDir = XMVector3Cross(yDir, zDir);
-    //yDir = XMVector3Cross(zDir, xDir);
-    
+    XMVECTOR xDir, yDir;
+    //yDir = XMVector3Cross(zDir, xDir);    
 
     XMFLOAT3 up = { 0,1,0};
     XMFLOAT3 right = { 1,0,0};
@@ -68,11 +66,7 @@ void Sun::CalculateBillbordMatrix()
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&up));
     else
         yDir = XMVector3Cross(zDir, XMLoadFloat3(&right));
-
     xDir = XMVector3Cross(yDir, zDir);
-
-
-
 
 	XMMATRIX billBoardMatrix = XMMatrixIdentity();
     //billBoardMatrix = XMMatrixMultiply(sceneMatrix, billBoardMatrix);
@@ -80,22 +74,43 @@ void Sun::CalculateBillbordMatrix()
 	billBoardMatrix.r[0] = xDir;
 	billBoardMatrix.r[1] = yDir;
 	billBoardMatrix.r[2] = zDir;
-    //billBoardMatrix = XMMatrixInverse(nullptr, billBoardMatrix);
-    //billBoardMatrix = XMMatrixTranspose(billBoardMatrix);
 
-	XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
-	XMMATRIX sunDirMatrix = XMMatrixIdentity();
-	sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
-	sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1];
-	sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
-
-    auto cameraPos = _camera->GetCameraPos();
+    auto cameraPos = _camera->GetCameraPos(); 
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
     cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
     cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
 
-    mappedMatrix->world = XMMatrixIdentity()/*billBoardMatrix * sunDirMatrix * cameraPosMatrix * _camera->GetView() * _camera->GetProj()*/;
+    // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
+    auto cal = _camera->GetDummyCameraPos();
+    cal.x *= 0.012; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
+    auto newdir = fixedDir;
+    newdir.x -= cal.x;
+    float theta = atan2(newdir.y, newdir.x);
+    fixedDir.x = cos(theta);
+    fixedDir.y = sin(theta);
+    fixedDir.y = std::min(std::max(fixedDir.y, 0.0f), 1.0f);
+    XMStoreFloat3(&fixedDir, XMVector3Normalize(XMLoadFloat3(&fixedDir)));
+
+    XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
+    XMMATRIX sunDirMatrix = XMMatrixIdentity();
+    sunDirMatrix.r[3].m128_f32[0] = invSunDir.m128_f32[0];
+    sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1]/* * invSunDir.m128_f32[1]*/; // 2乗するとshadowmapの視点高さと大体合う。カメラの移動に対しても合うが、偶然と思われる。当然skyLUTの輝き中心からは少しずれる。
+    sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
+
+    auto cameraPos4Shadow = _camera->GetDummyCameraPos();
+    cameraPos4Shadow.y = 0;
+    cameraPos4Shadow.z = 0;
+    //auto target = XMFLOAT3(cameraPos4Shadow.x, cameraPos4Shadow.y, cameraPos4Shadow.z - 2.3);
+
+    shadowViewMatrix = XMMatrixLookAtLH
+    (
+        XMLoadFloat3(&expFixedDir),
+        XMLoadFloat3(&cameraPos4Shadow),
+        XMLoadFloat3(&up)
+    );
+
+    mappedMatrix->world = XMMatrixIdentity();
     mappedMatrix->view = XMMatrixMultiply(_camera->GetView(), sceneMatrix);
     mappedMatrix->proj = _camera->GetProj();
     mappedMatrix->cameraPos = cameraPosMatrix;
@@ -127,9 +142,10 @@ void Sun::CalculateViewMatrix()
     //XMFLOAT3 target(0, 10, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
-    fixedDir.x *=65;
-    fixedDir.y *= -65;
-    fixedDir.z *= 65;
+    fixedDir.x *=100;
+    fixedDir.y *= -100;
+    fixedDir.z *= 100;
+    expFixedDir = fixedDir;
 
     sunViewMatrix = XMMatrixLookAtLH
     (

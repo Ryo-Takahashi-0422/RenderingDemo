@@ -13,6 +13,13 @@ struct FBXSceneMatrix
 	//XMMATRIX invView; // inverted view matrix
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
+	XMMATRIX shadowPosMatrix;
+	XMMATRIX shadowPosInvMatrix;
+	XMMATRIX shadowView;
+	XMFLOAT3 eyePos;
+	float pad;
+	XMFLOAT3 sunDIr;
+
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off
 };
@@ -37,6 +44,7 @@ private:
 	ComPtr<ID3D12Resource> skyBuffer = nullptr; // Sky•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> imguiBuffer = nullptr; // ImGui•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> sunBuffer = nullptr; // sun•`‰æŒ‹‰Ê
+	ComPtr<ID3D12Resource> airBuffer = nullptr; // air•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
@@ -108,6 +116,7 @@ public:
 	ComPtr<ID3D12Resource> GetRenderingBuff2() { return renderingBuff2; };
 	ComPtr<ID3D12Resource> GetDepthBuff() { return depthBuff; };
 	ComPtr<ID3D12Resource> GetDepthBuff2() { return depthBuff2; };
+	ComPtr<ID3D12Resource> GetAirBuff() { return airBuffer; };
 	std::vector<ComPtr<ID3D12Resource>> GetTextureUploadBuff() { return textureUploadBuff; };
 	std::vector<ComPtr<ID3D12Resource>> GetTextureReadBuff() { return textureReadBuff; };
 	std::vector<DirectX::TexMetadata*> GetTextureMetaData() { return textureMetaData; };
@@ -143,7 +152,9 @@ public:
 	void SetSunResourceAndCreateView(ComPtr<ID3D12Resource> _sunResource);
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);
+	void SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airResource);
 	int GetDescriptorNum() { return descriptorNum; };
 	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
+	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);
 };
 
