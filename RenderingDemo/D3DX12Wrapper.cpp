@@ -789,7 +789,7 @@ void D3DX12Wrapper::Run() {
 
 				if (currentMaterialName != lastMaterialName)
 				{
-					textureIndexes.push_back(std::pair<int, int>(index, num));
+					textureIndexes[index].push_back(num);
 					num = 0;
 				}
 			}
@@ -797,7 +797,7 @@ void D3DX12Wrapper::Run() {
 			num++;
 		}
 
-		textureIndexes.push_back(std::pair<int, int>(index, num));
+		textureIndexes[index].push_back(num);
 
 		++index;
 		num = 0;
@@ -936,9 +936,10 @@ void D3DX12Wrapper::Run() {
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		
+
+		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		for (int i = 0; i < threadNum; i++)
 		{
-			resourceManager[i]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 			SetEvent(m_workerBeginRenderFrame[i]);			
 		}
 		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
@@ -960,7 +961,7 @@ void D3DX12Wrapper::Run() {
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 		_cmdList3->Close();
 
-		_cmdList2->Close();
+		//_cmdList2->Close();
 		
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
@@ -1145,30 +1146,30 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
 		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		//dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
+		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-		//auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		//handleFBX.ptr += num * inc;
+		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		handleFBX.ptr += num * inc;
 
 		localCmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 		//画面クリア
 		float clearColor[4];
-		if (num == 0)
-		{
+		//if (num == 0)
+		//{
 			clearColor[0] = 1.0f;
 			clearColor[1] = 1.0f;
 			clearColor[2] = 1.0f;
 			clearColor[3] = 1.0f;
-		}
-		else if (num == 1)
-		{
-			clearColor[0] = 0.0f;
-			clearColor[1] = 0.0f;
-			clearColor[2] = 0.0f;
-			clearColor[3] = 0.0f;
-		}
+		//}
+		//else if (num == 1)
+		//{
+		//	clearColor[0] = 0.0f;
+		//	clearColor[1] = 0.0f;
+		//	clearColor[2] = 0.0f;
+		//	clearColor[3] = 0.0f;
+		//}
 
 		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
 
@@ -1282,23 +1283,29 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
-			int indiceContainerSize = indiceContainer[fbxIndex].size();
 			auto ofst = 0;
+			ofst += itIndiceFirst[fbxIndex].second.indices.size() * num;
+			itIndiceFirst += num;
+			int indiceContainerSize = indiceContainer[fbxIndex].size();
+
 
 			auto itPhonsInfo = itPhonsInfos[fbxIndex];
+			itPhonsInfo += num;
 
 			//auto mappedPhong = resourceManager[fbxIndex]->GetMappedPhong();
 
 			auto itMaterialAndTextureName = itMaterialAndTextureNames[fbxIndex];
+			itMaterialAndTextureName += textureIndexes[fbxIndex][0] * num;
 			//itMATCnt = /*0*/num;
 			auto matTexSize = matTexSizes[fbxIndex];
 			auto tHandle = dHandle;
-			tHandle.ptr += cbv_srv_Size * indiceContainerSize ;
+			tHandle.ptr += cbv_srv_Size * indiceContainerSize + cbv_srv_Size * textureIndexes[fbxIndex][0] * num; // ★★スレッド1のみ更にスレッド0が処理する最初のテクスチャ数分　+ cbv_srv_Size * textureIndexes[0].second
 			int texStartIndex = 3; // テクスチャを格納するディスクリプタテーブル番号の開始位置
 			auto textureTableStartIndex = texStartIndex; // 3 is number of texture memory position in SRV
 			auto indiceSize = 0;
 			int itMATCnt = 0;
-			for (int i = 0; i < indiceContainerSize; ++i) // ★マルチスレッド化出来ない？
+			itMATCnt += textureIndexes[fbxIndex][0] * num;
+			for (int i = num; i < indiceContainerSize-3; i += threadNum)
 			{
 				//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 				//mappedPhong[i]->diffuse[0] = itPhonsInfo->second.diffuse[0];
@@ -1337,6 +1344,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						}
 						++itMaterialAndTextureName/*itMaterialAndTextureName += 2*/;
 
+						if (itMaterialAndTextureName == materialAndTexturenameInfo[fbxIndex].end())
+						{
+							break;
+						}
 					}
 				}
 
@@ -1353,9 +1364,31 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				localCmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
 				//dHandle.ptr += cbv_srv_Size;
 				ofst += indiceSize;
-				++itIndiceFirst;
-				++itPhonsInfo;
 
+				//++itIndiceFirst;
+				//++itPhonsInfo;
+
+				if (fbxIndex != 1)
+				{
+					itIndiceFirst += threadNum;
+					itPhonsInfo += threadNum;
+				}
+
+				//if (num == 0 && (i + 1) <= textureIndexes[fbxIndex].size())
+				//{
+					auto itNext = itIndiceFirst - 1;
+					ofst += itNext->second.indices.size();
+					tHandle.ptr += cbv_srv_Size * textureIndexes[fbxIndex][i + 1]; // [1]スレッドで処理する次の該当モデルインデックスのテクスチャ数
+				//}
+				//else if (num == 1 && (i + 1) <= textureIndexes[fbxIndex].size())
+				//{
+				//	auto itNext = itIndiceFirst - 1;
+				//	ofst += itNext->second.indices.size();
+				//	tHandle.ptr += cbv_srv_Size * textureIndexes[fbxIndex][i + 1]; // [0]スレッドで処理する次の該当モデルインデックスのテクスチャ数
+				//}
+				
+				itMaterialAndTextureName += textureIndexes[fbxIndex][i + 1];
+				itMATCnt += textureIndexes[fbxIndex][i + 1];
 				textureTableStartIndex = texStartIndex; // init
 
 			}

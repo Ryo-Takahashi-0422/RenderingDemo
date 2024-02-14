@@ -183,7 +183,7 @@ private:
 	{
 		int threadIndex;
 	};
-	int threadNum = 1;
+	int threadNum = 2;
 	ThreadParameter m_threadParameters[2];
 	HANDLE m_threadHandles[2];
 	// Synchronization objects.
@@ -211,7 +211,7 @@ private:
 	//std::vector<std::pair<std::string, PhongInfo>>::iterator itPhonsInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
-	std::vector<std::pair<int, int>> textureIndexes;
+	std::map<int, std::vector<int>> textureIndexes;
 	//std::vector<std::pair<std::string, std::string>>::iterator itMaterialAndTextureName;
 	std::vector<int> matTexSizes;
 	//int ofst = 0;
