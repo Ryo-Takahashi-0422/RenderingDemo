@@ -211,6 +211,7 @@ private:
 	//std::vector<std::pair<std::string, PhongInfo>>::iterator itPhonsInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
+	std::map<int, std::vector<int>> textureIndexes;
 	//std::vector<std::pair<std::string, std::string>>::iterator itMaterialAndTextureName;
 	std::vector<int> matTexSizes;
 	//int ofst = 0;

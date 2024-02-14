@@ -62,29 +62,26 @@ float4 SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, 
 
 float4 ps(Output input) : SV_TARGET
 {
-    //return sky.Sample(smp, input.uv);
-    float sponzaDepth = sponzaDepthmap.Sample(smp, input.uv);
-    float connanDepth = connanDepthmap.Sample(smp, input.uv);
+    float threadOneDepth = sponzaDepthmap.Sample(smp, input.uv);
+    float threadTwoDepth = connanDepthmap.Sample(smp, input.uv);
     
     float4 sun = float4(0,0,0,0);
     float4 result;
-    if (sponzaDepth < connanDepth)
-    {
-        result = tex.Sample(smp, input.uv); //tex.Sample(smp, input.uv);
 
-        //result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
-    }
-    else if (sponzaDepth == connanDepth == 1)
+    
+    if (threadOneDepth == threadTwoDepth == 1)
     {
         result = SimpleGaussianBlur(sky, smp, input.uv /*, dx, dy*/);
         sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
     }
-
+    else if (threadOneDepth < threadTwoDepth)
+    {
+        result = tex.Sample(smp, input.uv);
+    }
     else
     {
         result = tex2.Sample(smp, input.uv);
     }
-    
    
     float3 col = result;
     col = tonemap(col);    
