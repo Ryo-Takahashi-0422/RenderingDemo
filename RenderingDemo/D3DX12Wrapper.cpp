@@ -772,6 +772,35 @@ void D3DX12Wrapper::Run() {
 		itMaterialAndTextureNames.push_back(itMaterialAndTextureName);
 		int matTexSize = materialAndTexturenameInfo[fbxIndex].size();
 		matTexSizes.push_back(matTexSize);
+
+
+	}
+
+	int index = 0;
+	int num = 0;
+	std::string lastMaterialName;
+	for (auto& infos : materialAndTexturenameInfo)
+	{
+		for (int i = 0; i < infos.size(); ++i)
+		{
+			if (i > 0)
+			{
+				auto currentMaterialName = infos[i].first;
+
+				if (currentMaterialName != lastMaterialName)
+				{
+					textureIndexes.push_back(std::pair<int, int>(index, num));
+					num = 0;
+				}
+			}
+			lastMaterialName = infos[i].first;
+			num++;
+		}
+
+		textureIndexes.push_back(std::pair<int, int>(index, num));
+
+		++index;
+		num = 0;
 	}
 
 	// 影の描画でも利用する
@@ -930,6 +959,8 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 		_cmdList3->Close();
+
+		_cmdList2->Close();
 		
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
@@ -1114,10 +1145,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
 		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
+		//dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		handleFBX.ptr += num * inc;
+		//auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		//handleFBX.ptr += num * inc;
 
 		localCmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
@@ -1142,7 +1173,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
 
 		int lastSRVSetNum = 0;
-		for (int fbxIndex = num; fbxIndex <= num; ++fbxIndex)
+		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
 			localCmdList->SetPipelineState(fBXPipeline);
@@ -1153,28 +1184,28 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			if (input->CheckKey(DIK_RIGHT)) inputRight = true;
 			if (input->CheckKey(DIK_UP)) inputUp = true;
 
-			if (resourceManager[num]->GetIsAnimationModel())
+			if (resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
 				// start character with idle animation
-				resourceManager[num]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 
 				// ★Switch化できないか？
 				// W Key
 				if (inputW)
 				{
-					resourceManager[num]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				}
 
 				// Left Key
 				if (inputLeft)
 				{
-					resourceManager[num]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				}
 
 				// Right Key
 				if (inputRight)
 				{
-					resourceManager[num]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 				}
 
 
@@ -1182,9 +1213,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			// ★Switch化できないか？
 			// Left Arrow Key
-			if (inputLeft && !resourceManager[num]->GetIsAnimationModel())
+			if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[num]->GetMappedMatrix()->world *= rightSpinMatrix;
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
 				connanDirection *= rightSpinMatrix;
 				if (num == 0)
 				{
@@ -1196,33 +1227,33 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			}
 
 			// Right Arrow Key
-			if (inputRight && !resourceManager[num]->GetIsAnimationModel())
+			if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[num]->GetMappedMatrix()->world *= leftSpinMatrix;
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
 				connanDirection *= leftSpinMatrix;
-				if (num == 0)
-				{
+				//if (num == 0)
+				//{
 					camera->Transform(leftSpinMatrix);
 					sun->ChangeSceneMatrix(leftSpinMatrix);
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 					shadow->SetRotationMatrix(rightSpinMatrix);
-				}
+				//}
 			}
 
 			// Up Arrow Key
-			if (inputUp && !resourceManager[num]->GetIsAnimationModel())
+			if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[num]->GetMappedMatrix()->world *= angleUpMatrix;
+				resourceManager[fbxIndex]->GetMappedMatrix()->world *= angleUpMatrix;
 				//connanDirection *= leftSpinMatrix;
-				if (num == 0)
-				{
+				//if (num == 0)
+				//{
 					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
 					sky->ChangeSceneMatrix(angleUpMatrix);
-				}
+				//}
 			}
 
 			// W Key
-			if (inputW && !resourceManager[num]->GetIsAnimationModel())
+			if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
 				// 当たり判定処理
 				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
@@ -1293,7 +1324,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				if (matTexSize > 0) {
 					//std::string currentMeshName = itMaterialAndTextureName->first;
 					// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
-					while (itMaterialAndTextureName->first == itPhonsInfo->first)
+					while (itMaterialAndTextureName->first == itPhonsInfo->first) // TODO:secondを使っていない→容量の無駄遣いなので消す
 					{
 						localCmdList->SetGraphicsRootDescriptorTable(textureTableStartIndex, tHandle); // index of texture
 						tHandle.ptr += cbv_srv_Size;
@@ -1320,7 +1351,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 				indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
 				localCmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
-				dHandle.ptr += cbv_srv_Size;
+				//dHandle.ptr += cbv_srv_Size;
 				ofst += indiceSize;
 				++itIndiceFirst;
 				++itPhonsInfo;
@@ -1896,14 +1927,14 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
-	D3D12_RESOURCE_BARRIER barrierDesc4DepthMap2 = CD3DX12_RESOURCE_BARRIER::Transition
-	(
-		resourceManager[0]->GetDepthBuff2().Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	);
+	//D3D12_RESOURCE_BARRIER barrierDesc4DepthMap2 = CD3DX12_RESOURCE_BARRIER::Transition
+	//(
+	//	resourceManager[0]->GetDepthBuff2().Get(),
+	//	D3D12_RESOURCE_STATE_DEPTH_WRITE,
+	//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	//);
 	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
-	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
+	//_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
 
 	// only bufferHeapCreator[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart() is initialized as backbuffer
 	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -1966,11 +1997,11 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	// 各デブスマップを深度書き込み可能状態に変更する
 	barrierDesc4DepthMap.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barrierDesc4DepthMap.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	barrierDesc4DepthMap2.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barrierDesc4DepthMap2.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	//barrierDesc4DepthMap2.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	//barrierDesc4DepthMap2.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
 	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
-	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
+	//_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
 	//for (int i = 0; i < strModelNum; ++i)
 	//{
 	//	// デプスマップ用バッファの状態を書き込み可能に戻す
