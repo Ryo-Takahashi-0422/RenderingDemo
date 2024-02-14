@@ -1352,57 +1352,26 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					}
 				}
 
-				//else
-				//{
-				//	for (int j = textureTableStartIndex; j < 4 + textureTableStartIndex; ++j)
-				//	{
-				//		localCmdList->SetGraphicsRootDescriptorTable(j, tHandle); // index of texture
-				//		tHandle.ptr += buffSize;
-				//	}
-				//}
-
 				indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
 				localCmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
-				//dHandle.ptr += cbv_srv_Size;
 				ofst += indiceSize;
 
-				//++itIndiceFirst;
-				//++itPhonsInfo;
-
-				if (/*fbxIndex != 1*/i + threadNum >= indiceContainerSize)
+				if (i + threadNum >= indiceContainerSize)
 				{					
 					break;
 				}
 				itIndiceFirst += threadNum;
 				itPhonsInfo += threadNum;
-				//if (num == 0 && (i + 1) <= textureIndexes[fbxIndex].size())
-				//{
-					auto itNext = itIndiceFirst - 1;
-					ofst += itNext->second.indices.size();
-					tHandle.ptr += cbv_srv_Size * textureIndexes[fbxIndex][i + 1]; // [1]スレッドで処理する次の該当モデルインデックスのテクスチャ数
-				//}
-				//else if (num == 1 && (i + 1) <= textureIndexes[fbxIndex].size())
-				//{
-				//	auto itNext = itIndiceFirst - 1;
-				//	ofst += itNext->second.indices.size();
-				//	tHandle.ptr += cbv_srv_Size * textureIndexes[fbxIndex][i + 1]; // [0]スレッドで処理する次の該当モデルインデックスのテクスチャ数
-				//}
+
+				auto itNext = itIndiceFirst - 1;
+				ofst += itNext->second.indices.size();
+				tHandle.ptr += cbv_srv_Size * textureIndexes[fbxIndex][i + 1]; // [1]スレッドで処理する次の該当モデルインデックスのテクスチャ数
 				
 				itMaterialAndTextureName += textureIndexes[fbxIndex][i + 1];
 				itMATCnt += textureIndexes[fbxIndex][i + 1];
 				textureTableStartIndex = texStartIndex; // init
 
 			}
-			//SetEvent(m_workerSyncronize[num]); // end drawing.
-			//WaitForMultipleObjects(threadNum, m_workerSyncronize, TRUE, INFINITE);
-			//if (num == 0)
-			//{
-			//	WaitForSingleObject(m_workerSyncronize[1], INFINITE);
-			//}
-			//else if(num==1)				
-			//{
-			//	WaitForSingleObject(m_workerSyncronize[0], INFINITE);
-			//}
 			
 			if (num == 0)
 			{
