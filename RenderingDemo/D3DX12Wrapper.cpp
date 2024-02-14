@@ -351,10 +351,11 @@ bool D3DX12Wrapper::ResourceInit() {
 	// 3 texture model
 	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Ziggrat.txt");
 
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\InputTest.bin");
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Sponza.bin");
 
 	// 4 textures model
-	modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");
+	/*modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");*/
+	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Connan.bin");
 	
 	resourceManager.resize(modelPath.size());
 	FBXInfoManager fbxInfoManager;
@@ -1284,7 +1285,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
 			auto ofst = 0;
-			ofst += itIndiceFirst[fbxIndex].second.indices.size() * num;
+			ofst += itIndiceFirst->second.indices.size() * num;
 			itIndiceFirst += num;
 			int indiceContainerSize = indiceContainer[fbxIndex].size();
 
@@ -1305,7 +1306,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			auto indiceSize = 0;
 			int itMATCnt = 0;
 			itMATCnt += textureIndexes[fbxIndex][0] * num;
-			for (int i = num; i < indiceContainerSize-3; i += threadNum)
+			for (int i = num; i < indiceContainerSize; i += threadNum)
 			{
 				//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 				//mappedPhong[i]->diffuse[0] = itPhonsInfo->second.diffuse[0];
@@ -1368,12 +1369,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				//++itIndiceFirst;
 				//++itPhonsInfo;
 
-				if (fbxIndex != 1)
-				{
-					itIndiceFirst += threadNum;
-					itPhonsInfo += threadNum;
+				if (/*fbxIndex != 1*/i + threadNum >= indiceContainerSize)
+				{					
+					break;
 				}
-
+				itIndiceFirst += threadNum;
+				itPhonsInfo += threadNum;
 				//if (num == 0 && (i + 1) <= textureIndexes[fbxIndex].size())
 				//{
 					auto itNext = itIndiceFirst - 1;
