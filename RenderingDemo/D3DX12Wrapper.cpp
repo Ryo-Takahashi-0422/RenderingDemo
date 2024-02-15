@@ -1222,9 +1222,11 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 					XMVECTOR tempCameraPos;
 					tempCameraPos.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0];
-					tempCameraPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] * -1;
+					tempCameraPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1];
 					tempCameraPos.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2];
+					tempCameraPos.m128_f32[3] = 1;
 					tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+					// 以下が無ければどの角度でもカメラが置いてきぼりになる。あれば初期向きのみ追従する。viewの生成が上手くいっていない...?
 					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0] = tempCameraPos.m128_f32[0];
 					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] = tempCameraPos.m128_f32[1];
 					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2] = tempCameraPos.m128_f32[2];
