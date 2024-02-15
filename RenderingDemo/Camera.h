@@ -45,6 +45,7 @@ public:
 	void Init(PrepareRenderingWindow* _prepareRenderingWindow);
 	void Transform(XMMATRIX transform);
 	void MoveCamera(double speed, XMMATRIX charaDirection);
+	void RotateCamera(XMMATRIX rotate);
 	void CalculateFrustum();
 	
 	static Camera* GetInstance() { return instance; };
@@ -56,6 +57,7 @@ public:
 
 	// air•`‰æ—p
 	XMFLOAT3 GetDummyCameraPos() { return dummyEyePos; };
+	XMFLOAT3 GetDummyTargetPos() { return dummyTargetPos; };
 	XMMATRIX GetDummyView() { return dummyView; };
 	Frustum GetDummyFrustum() { return dummyFrustum; };
 	void SetDummyFrustum();

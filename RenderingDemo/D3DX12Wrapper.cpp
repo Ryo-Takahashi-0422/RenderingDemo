@@ -1196,18 +1196,86 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				if (inputW)
 				{
 					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, forwardSpeed);
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
+					//auto tempCenterPos = XMLoadFloat3(&bSphere.Center);
+					//tempCenterPos.m128_f32[3] = 1;
+
+					XMVECTOR tempCenterPos;
+					tempCenterPos.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+					tempCenterPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
+					tempCenterPos.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+					tempCenterPos.m128_f32[3] = 1;
+
+					// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
+					auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, forwardSpeed), connanDirection);
+					moveMatrix.r[0].m128_f32[0] = 1;
+					moveMatrix.r[0].m128_f32[2] = 0;
+					moveMatrix.r[2].m128_f32[0] = 0;
+					moveMatrix.r[2].m128_f32[2] = 1;
+					tempCenterPos = XMVector4Transform(tempCenterPos, moveMatrix); // 符号注意
+
+					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = tempCenterPos.m128_f32[0];
+					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = tempCenterPos.m128_f32[1];
+					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = tempCenterPos.m128_f32[2];
+
+
+					XMVECTOR tempCameraPos;
+					tempCameraPos.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0];
+					tempCameraPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] * -1;
+					tempCameraPos.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2];
+					tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0] = tempCameraPos.m128_f32[0];
+					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] = tempCameraPos.m128_f32[1];
+					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2] = tempCameraPos.m128_f32[2];
+					/*resourceManager[fbxIndex]->GetMappedMatrix()->view *= moveMatrix;*/
 				}
 
 				// Left Key
 				if (inputLeft)
 				{
+					connanDirection *= leftSpinMatrix;
+					
 					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->GetMappedMatrix()->rotation *= leftSpinMatrix;
+
+					XMFLOAT3 up(0, 1, 0);
+
+					
+					auto u = camera->GetDummyTargetPos();
+					u.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+					u.y = 1.5;
+					u.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+					XMFLOAT3 z(0, 0, 2.3);
+					XMStoreFloat3(&z, XMVector3Transform(XMLoadFloat3(&z), connanDirection));
+
+					auto p = u;
+					p.x += z.x;
+					p.y += z.y;
+					p.z += z.z;
+
+
+
+					auto v = XMMatrixLookAtLH
+					(
+						XMLoadFloat3(&p),
+						XMLoadFloat3(&u),
+						XMLoadFloat3(&up)
+					);
+
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = v;
+					//camera->RotateCamera(leftSpinMatrix);
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->GetDummyView();////////////
 				}
 
 				// Right Key
 				if (inputRight)
 				{
+					connanDirection *= leftSpinMatrix;
 					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->GetMappedMatrix()->rotation *= rightSpinMatrix;
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= rightSpinMatrix;///////////////
 				}
 
 
@@ -1217,8 +1285,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			// Left Arrow Key
 			if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
-				connanDirection *= rightSpinMatrix;
+				resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+				//resourceManager[fbxIndex]->GetMappedMatrix()->view *= rightSpinMatrix;
+				/*connanDirection *= rightSpinMatrix;*/
 				if (num == 0)
 				{
 					camera->Transform(rightSpinMatrix);
@@ -1231,8 +1300,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			// Right Arrow Key
 			if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
-				connanDirection *= leftSpinMatrix;
+				//resourceManager[fbxIndex]->GetMappedMatrix()->view *= leftSpinMatrix;
+				/*connanDirection *= leftSpinMatrix;*/
 				//if (num == 0)
 				//{
 					camera->Transform(leftSpinMatrix);
@@ -1245,7 +1314,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			// Up Arrow Key
 			if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= angleUpMatrix;
+				resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
 				//connanDirection *= leftSpinMatrix;
 				//if (num == 0)
 				//{
@@ -1258,7 +1327,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 			{
 				// 当たり判定処理
-				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
+				//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
+				resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
 				camera->MoveCamera(forwardSpeed, connanDirection);
 				shadow->SetMoveMatrix(forwardSpeed, connanDirection);
 			}

@@ -13,6 +13,7 @@ struct FBXSceneMatrix
 	//XMMATRIX invView; // inverted view matrix
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
+	XMMATRIX rotation;
 	XMMATRIX shadowPosMatrix;
 	XMMATRIX shadowPosInvMatrix;
 	XMMATRIX shadowView;

@@ -40,6 +40,7 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     //matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
     
+    matrix rotation;
     matrix shadowPosMatrix;
     matrix shadowPosInvMatrix;
     matrix shadowView;
