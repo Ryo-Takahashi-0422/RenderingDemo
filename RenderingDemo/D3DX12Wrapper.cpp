@@ -1220,16 +1220,50 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = tempCenterPos.m128_f32[2];
 
 
-					XMVECTOR tempCameraPos;
-					tempCameraPos.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0];
-					tempCameraPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1];
-					tempCameraPos.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2];
-					tempCameraPos.m128_f32[3] = 1;
-					tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
-					// 以下が無ければどの角度でもカメラが置いてきぼりになる。あれば初期向きのみ追従する。viewの生成が上手くいっていない...?
-					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0] = tempCameraPos.m128_f32[0];
-					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] = tempCameraPos.m128_f32[1];
-					resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2] = tempCameraPos.m128_f32[2];
+					//XMVECTOR tempCameraPos;
+					//tempCameraPos.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0];
+					//tempCameraPos.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1];
+					//tempCameraPos.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2];
+					//tempCameraPos.m128_f32[3] = 1;
+
+					////if (resourceManager[fbxIndex]->GetMappedMatrix()->view.r[0].m128_f32[0] > 0)
+					////{
+					////	moveMatrix.r[3].m128_f32[0] *= -1;
+					////}
+					////if (resourceManager[fbxIndex]->GetMappedMatrix()->view.r[2].m128_f32[2] > 0)
+					////{
+					////	moveMatrix.r[3].m128_f32[2] *= -1;
+					////}
+					//tempCameraPos = XMVector4Transform(tempCameraPos, moveMatrix);
+					//// 以下が無ければどの角度でもカメラが置いてきぼりになる。あれば初期向きのみ追従する。viewの生成が上手くいっていない...?
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[0] = tempCameraPos.m128_f32[0];
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[1] = tempCameraPos.m128_f32[1];
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view.r[3].m128_f32[2] = tempCameraPos.m128_f32[2];
+					auto u = camera->GetDummyTargetPos();
+					u.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+					u.y = 1.5;
+					u.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+					XMFLOAT3 up(0, 1, 0);
+					XMFLOAT3 z(0, 0, 2.3);
+					XMStoreFloat3(&z, XMVector3Transform(XMLoadFloat3(&z), connanDirection));
+
+					auto p = u;
+					p.x += z.x;
+					p.y += z.y;
+					p.z += z.z;
+
+
+
+					auto v = XMMatrixLookAtLH
+					(
+						XMLoadFloat3(&p),
+						XMLoadFloat3(&u),
+						XMLoadFloat3(&up)
+					);
+
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = v;
+
 					/*resourceManager[fbxIndex]->GetMappedMatrix()->view *= moveMatrix;*/
 				}
 
