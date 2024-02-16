@@ -48,7 +48,7 @@ void Sun::CreateSunVertex()
 	}
 }
 
-void Sun::CalculateBillbordMatrix(XMFLOAT3 _cameraPos)
+void Sun::CalculateBillbordMatrix()
 {
     auto fixedDir = direction;
     //XMStoreFloat3(&fixedDir,XMLoadFloat3(&charaPos));
@@ -99,7 +99,7 @@ void Sun::CalculateBillbordMatrix(XMFLOAT3 _cameraPos)
     sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1]/* * invSunDir.m128_f32[1]*/; // 2乗するとshadowmapの視点高さと大体合う。カメラの移動に対しても合うが、偶然と思われる。当然skyLUTの輝き中心からは少しずれる。
     sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
 
-    auto cameraPos4Shadow = _camera->GetDummyCameraPos();
+    auto cameraPos4Shadow = cameraPos;
     cameraPos4Shadow.y = 0;
     cameraPos4Shadow.z = 0;
     //auto target = XMFLOAT3(cameraPos4Shadow.x, cameraPos4Shadow.y, cameraPos4Shadow.z - 2.3);
@@ -604,9 +604,9 @@ void Sun::SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource)
 }
 
 // 実行
-void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect, XMFLOAT3 _charaPos)
+void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
-    CalculateBillbordMatrix(_charaPos);
+    CalculateBillbordMatrix();
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
         renderingResource.Get(),

@@ -46,7 +46,7 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	);
 
 	// for air
-	dummyTargetPos = /*target*/XMFLOAT3(0, 1.5, -2.3);
+	dummyTargetPos = /*target*/XMFLOAT3(0.0f, 1.5f, -2.3f);
 	auto deye = XMFLOAT3(0, 1.5, 0); // eye.z 2,3のままだとairの描画結果がz方向に2.3オフセットした見た目になってしまう
 	dummyEyePos = deye;
 	
@@ -157,14 +157,15 @@ void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 		XMLoadFloat3(&dummyTargetPos),
 		XMLoadFloat3(&up)
 	);
+
 }
 
 void Camera::RotateCamera(XMMATRIX rotate)
 {
 	XMFLOAT3 up(0, 1, 0);
 
-	float newEyeX = dummyEyePos.z * cosf(0.02) + dummyEyePos.x * sinf(0.02);
-	float newEyeZ = -dummyEyePos.z * sinf(0.02) + dummyEyePos.x * cosf(0.02);
+	float newEyeX = dummyEyePos.z * cosf(0.01f) + dummyEyePos.x * sinf(0.01f);
+	float newEyeZ = -dummyEyePos.z * sinf(0.01f) + dummyEyePos.x * cosf(0.01f);
 
 	dummyEyePos.x = newEyeX;
 	dummyEyePos.z = newEyeZ;
@@ -226,12 +227,12 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 {
 	XMFLOAT3 charaPos = _charaPos;
 	XMMATRIX charDir = _charaDir;
-	charaPos.x = charaPos.x;
-	charaPos.y = 1.5;
-	charaPos.z = charaPos.z;
+	//charaPos.x = charaPos.x;
+	//charaPos.y = 1.5f;
+	//charaPos.z = charaPos.z;
 
 	XMFLOAT3 up(0, 1, 0);
-	XMFLOAT3 z(0, 0, 2.3);
+	XMFLOAT3 z(0.0f, 0.0f, 2.3f);
 	XMStoreFloat3(&z, XMVector3Transform(XMLoadFloat3(&z), charDir));
 
 	auto cameraPos = charaPos;
@@ -240,14 +241,14 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 	cameraPos.z += z.z;
 	orbitPos = cameraPos;
 
-	auto view = XMMatrixLookAtLH
+	auto oView = XMMatrixLookAtLH
 	(
 		XMLoadFloat3(&cameraPos),
 		XMLoadFloat3(&charaPos),
 		XMLoadFloat3(&up)
 	);
 
-	orbitView = view;
+	orbitView = oView;
 
-	return view;
+	return oView;
 }

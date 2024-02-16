@@ -616,6 +616,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	camera->CalculateFrustum();
 	camera->SetDummyFrustum();
+	camera->MoveCamera(0, XMMatrixIdentity()); // camera views—ñ‰Šú‰»@–³‚¯‚ê‚Î‘¾—z‚Ì‰ŠúˆÊ’u‚É‰e‹¿‚·‚é
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
@@ -927,10 +928,8 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 		
-
-		XMFLOAT3 cameraPos = camera->GetOrbitCameraPos();
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
-		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect, cameraPos);
+		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
@@ -1225,11 +1224,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 				// Left Key
 				if (inputLeft)
-				{					
-					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-					resourceManager[fbxIndex]->GetMappedMatrix()->rotation *= leftSpinMatrix;
-
+				{	
 					connanDirection *= leftSpinMatrix;
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+
+					
 					XMFLOAT3 charaPos;
 					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 					charaPos.y = 1.5;
@@ -1241,10 +1241,11 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				// Right Key
 				if (inputRight)
 				{
-					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-					resourceManager[fbxIndex]->GetMappedMatrix()->rotation *= rightSpinMatrix;
-
 					connanDirection *= rightSpinMatrix;
+					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+
+					
 					XMFLOAT3 charaPos;
 					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 					charaPos.y = 1.5;
