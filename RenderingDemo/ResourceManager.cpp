@@ -374,6 +374,8 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	mappedMatrix->world = m_Camera->GetWorld();
 	mappedMatrix->view = m_Camera->GetView();
 	mappedMatrix->proj = m_Camera->GetProj();
+
+	mappedMatrix->rotation = XMMatrixIdentity();
     
 	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
 	XMVECTOR det;

@@ -616,6 +616,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	camera->CalculateFrustum();
 	camera->SetDummyFrustum();
+	camera->MoveCamera(0, XMMatrixIdentity()); // camera view行列初期化　無ければ太陽の初期位置に影響する
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
@@ -927,8 +928,6 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 		
-
-
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
@@ -1157,20 +1156,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		//画面クリア
 		float clearColor[4];
-		//if (num == 0)
-		//{
-			clearColor[0] = 1.0f;
-			clearColor[1] = 1.0f;
-			clearColor[2] = 1.0f;
-			clearColor[3] = 1.0f;
-		//}
-		//else if (num == 1)
-		//{
-		//	clearColor[0] = 0.0f;
-		//	clearColor[1] = 0.0f;
-		//	clearColor[2] = 0.0f;
-		//	clearColor[3] = 0.0f;
-		//}
+		clearColor[0] = 1.0f;
+		clearColor[1] = 1.0f;
+		clearColor[2] = 1.0f;
+		clearColor[3] = 1.0f;
 
 		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
 
@@ -1180,89 +1169,127 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
 			localCmdList->SetPipelineState(fBXPipeline);
 
-			// キー入力処理。当たり判定処理も含める。
-			if (input->CheckKey(DIK_W)) inputW = true;
-			if (input->CheckKey(DIK_LEFT)) inputLeft = true;
-			if (input->CheckKey(DIK_RIGHT)) inputRight = true;
-			if (input->CheckKey(DIK_UP)) inputUp = true;
-
-			if (resourceManager[fbxIndex]->GetIsAnimationModel())
+			// アフィン変換の操作は単一スレッドのみ実行する。複数スレッドで処理すると、その分挙動速度が倍増する・太陽がぶれるなど悪影響が出るため。
+			if (num == 0)
 			{
-				// start character with idle animation
-				resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+				// キー入力処理。当たり判定処理も含める。
+				if (input->CheckKey(DIK_W)) inputW = true;
+				if (input->CheckKey(DIK_LEFT)) inputLeft = true;
+				if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+				if (input->CheckKey(DIK_UP)) inputUp = true;
+
+				if (resourceManager[fbxIndex]->GetIsAnimationModel())
+				{
+					// start character with idle animation
+					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+
+					XMFLOAT3 charaPos;
+					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+					charaPos.y = 1.5;
+					charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+					// W Key
+					if (inputW)
+					{
+						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+
+						XMVECTOR worldVec;
+						worldVec.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+						worldVec.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
+						worldVec.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+						worldVec.m128_f32[3] = 1;
+
+						// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
+						auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, forwardSpeed), connanDirection);
+						moveMatrix.r[0].m128_f32[0] = 1;
+						moveMatrix.r[0].m128_f32[2] = 0;
+						moveMatrix.r[2].m128_f32[0] = 0;
+						moveMatrix.r[2].m128_f32[2] = 1;
+						worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
+
+						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = worldVec.m128_f32[0];
+						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
+						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
+
+						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+					}
+
+					// Left Key
+					if (inputLeft)
+					{
+						connanDirection *= leftSpinMatrix;
+						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+
+						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+					}
+
+					// Right Key
+					if (inputRight)
+					{
+						connanDirection *= rightSpinMatrix;
+						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+
+						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+					}
+
+
+				}
 
 				// ★Switch化できないか？
-				// W Key
-				if (inputW)
+				// Left Arrow Key
+				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= rightSpinMatrix;
+					/*connanDirection *= rightSpinMatrix;*/
+					if (num == 0)
+					{
+						camera->Transform(rightSpinMatrix);
+						sun->ChangeSceneMatrix(rightSpinMatrix);
+						sky->ChangeSceneMatrix(rightSpinMatrix);
+						shadow->SetRotationMatrix(leftSpinMatrix);
+					}
 				}
 
-				// Left Key
-				if (inputLeft)
+				// Right Arrow Key
+				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= leftSpinMatrix;
+					/*connanDirection *= leftSpinMatrix;*/
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+					if (num == 0)
+					{
+						camera->Transform(leftSpinMatrix);
+						sun->ChangeSceneMatrix(leftSpinMatrix);
+						sky->ChangeSceneMatrix(leftSpinMatrix);
+						shadow->SetRotationMatrix(rightSpinMatrix);
+					}
 				}
 
-				// Right Key
-				if (inputRight)
+				// Up Arrow Key
+				if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-				}
-
-
-			}
-
-			// ★Switch化できないか？
-			// Left Arrow Key
-			if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
-			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= rightSpinMatrix;
-				connanDirection *= rightSpinMatrix;
-				if (num == 0)
-				{
-					camera->Transform(rightSpinMatrix);
-					sun->ChangeSceneMatrix(rightSpinMatrix);
-					sky->ChangeSceneMatrix(rightSpinMatrix);
-					shadow->SetRotationMatrix(leftSpinMatrix);
-				}
-			}
-
-			// Right Arrow Key
-			if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
-			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= leftSpinMatrix;
-				connanDirection *= leftSpinMatrix;
-				//if (num == 0)
-				//{
-					camera->Transform(leftSpinMatrix);
-					sun->ChangeSceneMatrix(leftSpinMatrix);
-					sky->ChangeSceneMatrix(leftSpinMatrix);
-					shadow->SetRotationMatrix(rightSpinMatrix);
-				//}
-			}
-
-			// Up Arrow Key
-			if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
-			{
-				resourceManager[fbxIndex]->GetMappedMatrix()->world *= angleUpMatrix;
-				//connanDirection *= leftSpinMatrix;
-				//if (num == 0)
-				//{
+					resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
+					//connanDirection *= leftSpinMatrix;
+					//if (num == 0)
+					//{
 					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
 					sky->ChangeSceneMatrix(angleUpMatrix);
-				//}
-			}
+					//}
+				}
 
-			// W Key
-			if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
-			{
-				// 当たり判定処理
-				collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
-				camera->MoveCamera(forwardSpeed, connanDirection);
-				shadow->SetMoveMatrix(forwardSpeed, connanDirection);
+				// W Key
+				if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
+				{
+					// 当たり判定処理
+					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
+					resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
+					camera->MoveCamera(forwardSpeed, connanDirection);
+					shadow->SetMoveMatrix(forwardSpeed, connanDirection);
+				}
 			}
-
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 			localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 

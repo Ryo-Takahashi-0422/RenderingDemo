@@ -38,6 +38,9 @@ private:
 	XMFLOAT3 dummyTargetPos;
 	XMMATRIX dummyView;
 	Frustum dummyFrustum;
+
+	XMFLOAT3 orbitPos{ 0, 0, 0 };
+	XMMATRIX orbitView = XMMatrixIdentity();
 public:
 
 	Camera();
@@ -45,7 +48,6 @@ public:
 	void Init(PrepareRenderingWindow* _prepareRenderingWindow);
 	void Transform(XMMATRIX transform);
 	void MoveCamera(double speed, XMMATRIX charaDirection);
-	void CalculateFrustum();
 	
 	static Camera* GetInstance() { return instance; };
 	XMFLOAT3 GetCameraPos() { return eye; };	
@@ -53,10 +55,16 @@ public:
 	XMMATRIX GetView() { return view; };
 	XMMATRIX GetProj() { return proj; };
 	Frustum GetFrustum() { return frustum; };
+	XMMATRIX CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir);
 
 	// air•`‰æ—p
 	XMFLOAT3 GetDummyCameraPos() { return dummyEyePos; };
+	XMFLOAT3 GetDummyTargetPos() { return dummyTargetPos; };
 	XMMATRIX GetDummyView() { return dummyView; };
 	Frustum GetDummyFrustum() { return dummyFrustum; };
 	void SetDummyFrustum();
+
+	void CalculateFrustum();
+	XMFLOAT3 GetOrbitCameraPos() { return orbitPos; };
+	XMMATRIX GetOrbitView() { return orbitView; };
 };

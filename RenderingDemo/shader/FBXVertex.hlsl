@@ -31,6 +31,7 @@ Output FBXVS
         bm[3][3] = 1;
     }
     pos = mul(bm, pos);
+    pos = mul(rotation, pos);
 
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
