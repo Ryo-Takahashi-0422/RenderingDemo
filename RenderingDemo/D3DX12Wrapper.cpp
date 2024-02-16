@@ -928,9 +928,9 @@ void D3DX12Wrapper::Run() {
 		//SetBloomColor();
 		
 
-
+		XMFLOAT3 cameraPos = camera->GetOrbitCameraPos();
 		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
-		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect, cameraPos);
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());

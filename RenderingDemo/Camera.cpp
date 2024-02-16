@@ -238,6 +238,7 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 	cameraPos.x += z.x;
 	cameraPos.y += z.y;
 	cameraPos.z += z.z;
+	orbitPos = cameraPos;
 
 	auto view = XMMatrixLookAtLH
 	(
@@ -245,6 +246,8 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 		XMLoadFloat3(&charaPos),
 		XMLoadFloat3(&up)
 	);
+
+	orbitView = view;
 
 	return view;
 }

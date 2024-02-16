@@ -48,9 +48,10 @@ void Sun::CreateSunVertex()
 	}
 }
 
-void Sun::CalculateBillbordMatrix()
+void Sun::CalculateBillbordMatrix(XMFLOAT3 _cameraPos)
 {
     auto fixedDir = direction;
+    //XMStoreFloat3(&fixedDir,XMLoadFloat3(&charaPos));
     fixedDir.y *= -1;
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
     XMVECTOR xDir, yDir;
@@ -75,22 +76,22 @@ void Sun::CalculateBillbordMatrix()
 	billBoardMatrix.r[1] = yDir;
 	billBoardMatrix.r[2] = zDir;
 
-    auto cameraPos = _camera->GetCameraPos(); 
+    auto cameraPos = _camera->GetDummyCameraPos(); 
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
     cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
     cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
 
     // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
-    auto cal = _camera->GetDummyCameraPos();
-    cal.x *= 0.012; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
-    auto newdir = fixedDir;
-    newdir.x -= cal.x;
-    float theta = atan2(newdir.y, newdir.x);
-    fixedDir.x = cos(theta);
-    fixedDir.y = sin(theta);
-    fixedDir.y = std::min(std::max(fixedDir.y, 0.0f), 1.0f);
-    XMStoreFloat3(&fixedDir, XMVector3Normalize(XMLoadFloat3(&fixedDir)));
+    //auto cal = _camera->GetDummyCameraPos();
+    //cal.x *= 0.012; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
+    //auto newdir = fixedDir;
+    //newdir.x -= cal.x;
+    //float theta = atan2(newdir.y, newdir.x);
+    //fixedDir.x = cos(theta);
+    //fixedDir.y = sin(theta);
+    //fixedDir.y = std::min(std::max(fixedDir.y, 0.0f), 1.0f);
+    //XMStoreFloat3(&fixedDir, XMVector3Normalize(XMLoadFloat3(&fixedDir)));
 
     XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
     XMMATRIX sunDirMatrix = XMMatrixIdentity();
@@ -603,9 +604,9 @@ void Sun::SetShadowFactorResource(ID3D12Resource* _shadowFactorRsource)
 }
 
 // 実行
-void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void Sun::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect, XMFLOAT3 _charaPos)
 {
-    CalculateBillbordMatrix();
+    CalculateBillbordMatrix(_charaPos);
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
         renderingResource.Get(),
