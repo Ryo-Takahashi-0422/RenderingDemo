@@ -48,7 +48,6 @@ public:
 	void Init(PrepareRenderingWindow* _prepareRenderingWindow);
 	void Transform(XMMATRIX transform);
 	void MoveCamera(double speed, XMMATRIX charaDirection);
-	void RotateCamera(XMMATRIX rotate);
 	
 	static Camera* GetInstance() { return instance; };
 	XMFLOAT3 GetCameraPos() { return eye; };	

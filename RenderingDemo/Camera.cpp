@@ -160,24 +160,6 @@ void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 
 }
 
-void Camera::RotateCamera(XMMATRIX rotate)
-{
-	XMFLOAT3 up(0, 1, 0);
-
-	float newEyeX = dummyEyePos.z * cosf(0.01f) + dummyEyePos.x * sinf(0.01f);
-	float newEyeZ = -dummyEyePos.z * sinf(0.01f) + dummyEyePos.x * cosf(0.01f);
-
-	dummyEyePos.x = newEyeX;
-	dummyEyePos.z = newEyeZ;
-
-	dummyView = XMMatrixLookAtLH
-	(
-		XMLoadFloat3(&dummyEyePos),
-		XMLoadFloat3(&dummyTargetPos),
-		XMLoadFloat3(&up)
-	);
-}
-
 void Camera::SetDummyFrustum()
 {
 	dummyFrustum = frustum;
