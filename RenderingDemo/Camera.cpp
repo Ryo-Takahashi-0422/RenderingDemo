@@ -221,3 +221,30 @@ void Camera::CalculateFrustum()
 
 	frustum.bottomRight = XMVector4Normalize(XMVectorSubtract(bottomRightF, bottomRightN));
 }
+
+XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
+{
+	XMFLOAT3 charaPos = _charaPos;
+	XMMATRIX charDir = _charaDir;
+	charaPos.x = charaPos.x;
+	charaPos.y = 1.5;
+	charaPos.z = charaPos.z;
+
+	XMFLOAT3 up(0, 1, 0);
+	XMFLOAT3 z(0, 0, 2.3);
+	XMStoreFloat3(&z, XMVector3Transform(XMLoadFloat3(&z), charDir));
+
+	auto cameraPos = charaPos;
+	cameraPos.x += z.x;
+	cameraPos.y += z.y;
+	cameraPos.z += z.z;
+
+	auto view = XMMatrixLookAtLH
+	(
+		XMLoadFloat3(&cameraPos),
+		XMLoadFloat3(&charaPos),
+		XMLoadFloat3(&up)
+	);
+
+	return view;
+}

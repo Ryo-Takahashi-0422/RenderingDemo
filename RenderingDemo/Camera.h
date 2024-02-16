@@ -54,6 +54,7 @@ public:
 	XMMATRIX GetView() { return view; };
 	XMMATRIX GetProj() { return proj; };
 	Frustum GetFrustum() { return frustum; };
+	XMMATRIX CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir);
 
 	// air•`‰æ—p
 	XMFLOAT3 GetDummyCameraPos() { return dummyEyePos; };
