@@ -1243,7 +1243,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 					//if (num == 0)
 					//{
-						//camera->Transform(rightSpinMatrix);
+						//camera->Transform(leftSpinMatrix);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
 						shadow->SetRotationMatrix(connanDirection);
@@ -1256,7 +1256,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 					//if (num == 0)
 					//{
-						//camera->Transform(leftSpinMatrix);
+						//camera->Transform(rightSpinMatrix);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
 						shadow->SetRotationMatrix(connanDirection);
@@ -1277,7 +1277,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					// “–‚½‚è”»’èˆ—
 					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
 					resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
-					camera->MoveCamera(forwardSpeed, connanDirection);
+					//camera->MoveCamera(forwardSpeed, connanDirection);
 					shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
 				}
 			}

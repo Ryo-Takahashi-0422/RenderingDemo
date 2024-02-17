@@ -99,9 +99,10 @@ void Sun::CalculateBillbordMatrix()
     sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1]/* * invSunDir.m128_f32[1]*/; // 2乗するとshadowmapの視点高さと大体合う。カメラの移動に対しても合うが、偶然と思われる。当然skyLUTの輝き中心からは少しずれる。
     sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
 
-    auto cameraPos4Shadow = _camera->GetCameraPos();
-    //cameraPos4Shadow.y = 0;
-    //cameraPos4Shadow.z = 0;
+    auto cameraPos4Shadow = cameraPos;
+    cameraPos4Shadow.x = 0; // 一旦原点注視で
+    cameraPos4Shadow.y = 0;
+    cameraPos4Shadow.z = 0;
     //auto target = XMFLOAT3(cameraPos4Shadow.x, cameraPos4Shadow.y, cameraPos4Shadow.z - 2.3);
 
     shadowViewMatrix = XMMatrixLookAtLH

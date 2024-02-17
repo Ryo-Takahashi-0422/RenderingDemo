@@ -124,7 +124,7 @@ void Camera::Transform(XMMATRIX transform)
 void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 {
 	// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
-	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
+	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, speed), charaDirection);
 	moveMatrix.r[0].m128_f32[0] = 1;
 	moveMatrix.r[0].m128_f32[2] = 0;
 	moveMatrix.r[2].m128_f32[0] = 0;
@@ -229,7 +229,7 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 		XMLoadFloat3(&charaPos),
 		XMLoadFloat3(&up)
 	);
-
+	dummyEyePos = cameraPos;
 	orbitView = oView;
 
 	auto vp = XMMatrixMultiply(orbitView, proj);
