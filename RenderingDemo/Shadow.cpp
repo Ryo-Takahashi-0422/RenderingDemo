@@ -492,22 +492,14 @@ void Shadow::SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix)
     std::copy(std::begin(_fbxSceneMatrix->bones), std::end(_fbxSceneMatrix->bones), mappedMatrix->bones);
 }
 
-void Shadow::SetMoveMatrix(double speed, XMMATRIX charaDirection)
+void Shadow::SetMoveMatrix(XMMATRIX charaWorldMatrix)
 {
-    // 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
-    auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
-    moveMatrix.r[0].m128_f32[0] = 1;
-    moveMatrix.r[0].m128_f32[2] = 0;
-    moveMatrix.r[2].m128_f32[0] = 0;
-    moveMatrix.r[2].m128_f32[2] = 1;
-    moveMatrix.r[3].m128_f32[2] *= -1;
-
-    m_moveMatrix *= moveMatrix;
+    m_moveMatrix = charaWorldMatrix;
 }
 
 void Shadow::SetRotationMatrix(XMMATRIX rotationMatrix)
 {
-    m_rotationMatrix *= rotationMatrix;
+    m_rotationMatrix = rotationMatrix;
 }
 
 void Shadow::UpdateWorldMatrix()
