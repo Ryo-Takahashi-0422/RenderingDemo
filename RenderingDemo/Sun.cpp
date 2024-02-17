@@ -78,9 +78,9 @@ void Sun::CalculateBillbordMatrix()
 
     auto cameraPos = _camera->GetDummyCameraPos();
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
-    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
+    cameraPosMatrix.r[3].m128_f32[0] = /*cameraPos.x*/0;
+    cameraPosMatrix.r[3].m128_f32[1] = /*cameraPos.y*/1.5;
+    cameraPosMatrix.r[3].m128_f32[2] = /*cameraPos.z*/0;
 
     // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
     //auto cal = _camera->GetDummyCameraPos();
