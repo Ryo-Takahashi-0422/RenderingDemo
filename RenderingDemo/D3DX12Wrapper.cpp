@@ -928,9 +928,9 @@ void D3DX12Wrapper::Run() {
 		//SetSSAOSwitch();
 		//SetBloomColor();
 		
-		//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		// カメラはキャラクター移動に追従する。太陽はワールド原点(0,0,0)注視の角度指定*100の位置に固定されているため、太陽描画時はビルボード乗算→カメラ位置(追従位置)へ平行移動→太陽方向へ平行移動とする。
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer());
+		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
@@ -1237,47 +1237,38 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 				}
 
-				// ★Switch化できないか？
 				// Left Arrow Key
 				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= rightSpinMatrix;
-					/*connanDirection *= rightSpinMatrix;*/
-					if (num == 0)
-					{
-						camera->Transform(rightSpinMatrix);
+					//if (num == 0)
+					//{
+						//camera->Transform(leftSpinMatrix);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
-						shadow->SetRotationMatrix(leftSpinMatrix);
-					}
+						shadow->SetRotationMatrix(connanDirection);
+					//}
 				}
 
 				// Right Arrow Key
 				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					//resourceManager[fbxIndex]->GetMappedMatrix()->view *= leftSpinMatrix;
-					/*connanDirection *= leftSpinMatrix;*/
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					if (num == 0)
-					{
-						camera->Transform(leftSpinMatrix);
+					//if (num == 0)
+					//{
+						//camera->Transform(rightSpinMatrix);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
-						shadow->SetRotationMatrix(rightSpinMatrix);
-					}
+						shadow->SetRotationMatrix(connanDirection);
+					//}
 				}
 
 				// Up Arrow Key
 				if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
-					//connanDirection *= leftSpinMatrix;
-					//if (num == 0)
-					//{
 					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
 					sky->ChangeSceneMatrix(angleUpMatrix);
-					//}
 				}
 
 				// W Key
@@ -1286,8 +1277,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					// 当たり判定処理
 					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
 					resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
-					camera->MoveCamera(forwardSpeed, connanDirection);
-					shadow->SetMoveMatrix(forwardSpeed, connanDirection);
+					//camera->MoveCamera(forwardSpeed, connanDirection);
+					shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
 				}
 			}
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド

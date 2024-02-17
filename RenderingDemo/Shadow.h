@@ -82,7 +82,7 @@ public:
 	void Init();
 	void SetVertexAndIndexInfo(std::vector<D3D12_VERTEX_BUFFER_VIEW*> _vbViews, std::vector<D3D12_INDEX_BUFFER_VIEW*> _ibViews, std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> _itIndiceFirsts, std::vector<std::vector<std::pair<std::string, VertexInfo>>> _indiceContainer);
 	void SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj);
-	void SetMoveMatrix(double speed, XMMATRIX charaDirection);
+	void SetMoveMatrix(XMMATRIX charaWorldMatrix);
 	void SetRotationMatrix(XMMATRIX rotationMatrix);
 	void SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix);
 	ComPtr<ID3D12Resource> GetShadowMapREsource() { return depthBuff; };

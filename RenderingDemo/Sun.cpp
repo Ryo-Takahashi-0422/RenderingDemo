@@ -76,11 +76,11 @@ void Sun::CalculateBillbordMatrix()
 	billBoardMatrix.r[1] = yDir;
 	billBoardMatrix.r[2] = zDir;
 
-    auto cameraPos = _camera->GetDummyCameraPos(); 
+    auto cameraPos = _camera->GetDummyCameraPos();
     XMMATRIX cameraPosMatrix = XMMatrixIdentity();
-    cameraPosMatrix.r[3].m128_f32[0] = cameraPos.x;
-    cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
-    cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
+    cameraPosMatrix.r[3].m128_f32[0] = /*cameraPos.x*/0;
+    cameraPosMatrix.r[3].m128_f32[1] = /*cameraPos.y*/1.5;
+    cameraPosMatrix.r[3].m128_f32[2] = /*cameraPos.z*/0;
 
     // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
     //auto cal = _camera->GetDummyCameraPos();
@@ -100,6 +100,7 @@ void Sun::CalculateBillbordMatrix()
     sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
 
     auto cameraPos4Shadow = cameraPos;
+    cameraPos4Shadow.x = 0; // 一旦原点注視で
     cameraPos4Shadow.y = 0;
     cameraPos4Shadow.z = 0;
     //auto target = XMFLOAT3(cameraPos4Shadow.x, cameraPos4Shadow.y, cameraPos4Shadow.z - 2.3);
@@ -139,8 +140,6 @@ void Sun::CalculateViewMatrix()
 {
     //ビュー行列の生成・乗算
     XMFLOAT3 target(0, 0, 0);
-    //XMFLOAT3 eye(0, 100, /*0.01*/10);
-    //XMFLOAT3 target(0, 10, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
     fixedDir.x *=100;
