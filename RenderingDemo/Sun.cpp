@@ -99,13 +99,17 @@ void Sun::CalculateBillbordMatrix()
     sunDirMatrix.r[3].m128_f32[1] = invSunDir.m128_f32[1]/* * invSunDir.m128_f32[1]*/; // 2乗するとshadowmapの視点高さと大体合う。カメラの移動に対しても合うが、偶然と思われる。当然skyLUTの輝き中心からは少しずれる。
     sunDirMatrix.r[3].m128_f32[2] = invSunDir.m128_f32[2];
 
-    auto cameraPos4Shadow = cameraPos;
+    //auto cameraPos4Shadow = cameraPos;
+    // 移動するカメラを注視することでシャドウマップはその向きを常に変化させる。これにより影エッジが変化してしまい、ジャギーが目立つことになる。全て0にセットして計算することで回避する。
+    cameraPos.x = 0;
+    cameraPos.y = 0;
+    cameraPos.z = 0;
 
     //expFixedDir.x += cameraPos4Shadow.x; 太陽の高さ合わせ対策その2 太陽半径調整値0.01あたりでいい感じになる
     shadowViewMatrix = XMMatrixLookAtLH
     (
         XMLoadFloat3(&expFixedDir),
-        XMLoadFloat3(&cameraPos4Shadow),
+        XMLoadFloat3(&cameraPos),
         XMLoadFloat3(&up)
     );
 

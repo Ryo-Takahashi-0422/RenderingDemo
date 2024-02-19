@@ -57,6 +57,7 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX proj;
+		XMMATRIX rotation;
 		XMMATRIX bones[256];
 	};
 	// VPmatrixŠÖ˜A

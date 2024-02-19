@@ -1410,7 +1410,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			
 			if (num == 0)
 			{
-				DrawCollider(fbxIndex);
+				//DrawCollider(fbxIndex);
 			}
 		}
 

@@ -504,7 +504,7 @@ void Shadow::SetRotationMatrix(XMMATRIX rotationMatrix)
 
 void Shadow::UpdateWorldMatrix()
 {
-    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
+    mappedMatrix->rotation = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
 }
 

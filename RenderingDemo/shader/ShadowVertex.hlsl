@@ -31,6 +31,7 @@ vsOutput vs_main
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
     
     pos = mul(bm, pos);
+    pos = mul(rotation, pos);
     output.position = mul(mul(mul(proj, view), world), pos);
         
     return output;
