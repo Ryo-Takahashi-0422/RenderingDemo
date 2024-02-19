@@ -521,10 +521,15 @@ void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
 
+    D3D12_VIEWPORT viewport = *_viewPort;
+    D3D12_RECT rect = *_rect;
+    viewport.Width = width;
+    viewport.Height = height;
+    rect.right = width;
+    rect.bottom = height;
 
-
-    _cmdList->RSSetViewports(1, _viewPort);
-    _cmdList->RSSetScissorRects(1, _rect);
+    _cmdList->RSSetViewports(1, &viewport);
+    _cmdList->RSSetScissorRects(1, &rect);
 
     auto dsvh = dsvHeap->GetCPUDescriptorHandleForHeapStart();
     auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();

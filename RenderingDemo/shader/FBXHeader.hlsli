@@ -11,7 +11,7 @@ struct Output
     float3 normal : NORMAL2;
     
     float4 screenPosition : SCREEN_POSITIO;
-    float3 worldPosition : WORLD_POSITION;
+    float4 worldPosition : WORLD_POSITION;
     float3 worldNormal : WORLD_NORMAL;
 
     //float3 ray : VECTOR; // 視点ベクトル
@@ -66,9 +66,10 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
 Texture3D<float4> airmap : register(t0);
-Texture2D<float4> colormap : register(t1);
-Texture2D<float4> normalmap : register(t2);
-Texture2D<float4> specularmap : register(t3);
-Texture2D<float4> metalmap : register(t4);
-Texture2D<float> transparentmap : register(t5);
+Texture2D<float> shadowmap : register(t1);
+Texture2D<float4> colormap : register(t2);
+Texture2D<float4> normalmap : register(t3);
+Texture2D<float4> specularmap : register(t4);
+Texture2D<float4> metalmap : register(t5);
+Texture2D<float> transparentmap : register(t6);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture

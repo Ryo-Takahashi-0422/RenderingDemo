@@ -635,6 +635,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	// air(ボリュームライティング)はオブジェクトとキャラクターで利用
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
+	// シャドウマップもセット
+	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapREsource());
+	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapREsource());
 
 	return true;
 }
@@ -938,6 +941,7 @@ void D3DX12Wrapper::Run() {
 		
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
+		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);			
@@ -956,6 +960,14 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
+		// シャドウマップを深度書き込み可能な状態に戻す
+		auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			shadow->GetShadowMapREsource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
@@ -1297,7 +1309,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 			dHandle.ptr += cbv_srv_Size * 8;
 
-			localCmdList->SetGraphicsRootDescriptorTable(2, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+			int textureindex = 2;
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // air
+			++textureindex;
+			dHandle.ptr += cbv_srv_Size;
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // shadowmap
+			++textureindex;
 			dHandle.ptr += cbv_srv_Size;
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
@@ -1319,7 +1336,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			auto matTexSize = matTexSizes[fbxIndex];
 			auto tHandle = dHandle;
 			tHandle.ptr += cbv_srv_Size * indiceContainerSize + cbv_srv_Size * textureIndexes[fbxIndex][0] * num; // ★★スレッド1のみ更にスレッド0が処理する最初のテクスチャ数分　+ cbv_srv_Size * textureIndexes[0].second
-			int texStartIndex = 3; // テクスチャを格納するディスクリプタテーブル番号の開始位置
+			int texStartIndex = textureindex; // テクスチャを格納するディスクリプタテーブル番号の開始位置
 			auto textureTableStartIndex = texStartIndex; // 3 is number of texture memory position in SRV
 			auto indiceSize = 0;
 			int itMATCnt = 0;

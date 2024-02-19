@@ -45,7 +45,19 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 renderingResultOfNormalMapAndDiffuseMap = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)
     //{
-    return renderingResultOfNormalMapAndDiffuseMap + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    
+    
+    float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
+    shadowPos.xyz /= shadowPos.w;
+    float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy;
+    float shadowZ = shadowmap.Sample(smp, shadowUV);
+    float shadowFactor = 1;
+    if (shadowPos.z - 0.0001f >= shadowZ)
+    {
+        shadowFactor = 0.3;
+    }
+    
+        return renderingResultOfNormalMapAndDiffuseMap * shadowFactor + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     //}
     //else
     //{

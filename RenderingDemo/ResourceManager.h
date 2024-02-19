@@ -46,6 +46,7 @@ private:
 	ComPtr<ID3D12Resource> imguiBuffer = nullptr; // ImGui•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> sunBuffer = nullptr; // sun•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> airBuffer = nullptr; // air•`‰æŒ‹‰Ê
+	ComPtr<ID3D12Resource> shadowmapBuffer = nullptr; // ƒVƒƒƒhƒEƒ}ƒbƒv•`‰æŒ‹‰Ê
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
@@ -154,6 +155,7 @@ public:
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);
 	void SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airResource);
+	void SetShadowResourceAndCreateView(ComPtr<ID3D12Resource> _shadowResource);
 	int GetDescriptorNum() { return descriptorNum; };
 	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
 	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);

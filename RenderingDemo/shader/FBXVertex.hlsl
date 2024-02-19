@@ -23,15 +23,24 @@ Output FBXVS
     matrix bm6 = bones[boneno2[2]] * boneweight2[2];
     
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
-    if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
+    bool moveObj = true;
+    if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
     {
+        moveObj = false;
         bm[0][0] = 1;
         bm[1][1] = 1;
         bm[2][2] = 1;
         bm[3][3] = 1;
+        output.worldPosition = pos;
     }
-    pos = mul(bm, pos);
-    pos = mul(rotation, pos);
+    else
+    {
+        pos = mul(bm, pos);
+        pos = mul(rotation, pos);
+        output.worldPosition = mul(shadowPosMatrix, pos);
+    }
+    //pos = mul(bm, pos);
+    //pos = mul(rotation, pos);
 
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
@@ -60,7 +69,7 @@ Output FBXVS
     output.uv = uv;
     
     output.screenPosition = output.svpos;
-    output.worldPosition = pos; //mul(shadowPosMatrix, pos);
+    //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldÇÕíPà çsóÒÇ»ÇÃÇ≈èÊéZÇµÇ»Ç¢
     output.worldNormal = normalize(mul(world, norm).xyz);
 
     return output;
