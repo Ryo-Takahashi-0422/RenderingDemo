@@ -3,7 +3,7 @@
 vsOutput vs_main
 (
     float4 pos : POSITION,
-    float4 norm : NORMAL_Vertex,
+    float4 norm : NORMAL/*_Vertex*/,
     float2 uv : TEXCOORD,
     uint3 boneno1 : BONE_NO_ZeroToTwo,
     uint3 boneno2 : BONE_NO_ThreeToFive,
@@ -15,6 +15,7 @@ vsOutput vs_main
 
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
+        //pos -= norm*0.001;
         output.position = mul(mul(proj, view), pos);
         
         return output;
@@ -30,8 +31,10 @@ vsOutput vs_main
     
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
     
+    
     pos = mul(bm, pos);
     pos = mul(rotation, pos);
+    //pos -= norm * 0.01;
     output.position = mul(mul(mul(proj, view), world), pos);
         
     return output;

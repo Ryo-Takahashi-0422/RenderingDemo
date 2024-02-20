@@ -84,7 +84,7 @@ void Sun::CalculateBillbordMatrix()
 
     // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
     auto cal = _camera->GetDummyCameraPos();
-    cal.x *= 0.012; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
+    cal.x *= 0.0184; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
     auto newdir = fixedDir;
     newdir.x -= cal.x;
     float theta = atan2(newdir.y, newdir.x);
@@ -143,9 +143,9 @@ void Sun::CalculateViewMatrix()
     XMFLOAT3 target(0, 0, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
-    fixedDir.x *=100;
-    fixedDir.y *= -100;
-    fixedDir.z *= 100;
+    fixedDir.x *=65;
+    fixedDir.y *= -65;
+    fixedDir.z *= 65;
     expFixedDir = fixedDir;
 
     sunViewMatrix = XMMatrixLookAtLH

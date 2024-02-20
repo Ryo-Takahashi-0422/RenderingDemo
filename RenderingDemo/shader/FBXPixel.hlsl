@@ -52,9 +52,9 @@ float4 FBXPS(Output input) : SV_TARGET
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy;
     float shadowZ = shadowmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
-    if (shadowPos.z - 0.00005f >= shadowZ) // 時にキャラクターの影に影響している。影の境目が目につく。
+    if (shadowPos.z - 0.00001f >= shadowZ) // 時にキャラクターの影に影響している。影の境目が目につく。
     {
-        shadowFactor = 0.3;
+        shadowFactor = min(0.3, (-sunDIr.y + 0.1));
     }
     
         return renderingResultOfNormalMapAndDiffuseMap * shadowFactor + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;

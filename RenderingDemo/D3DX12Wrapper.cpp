@@ -1223,7 +1223,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
 						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
 
+						charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+						charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 					}
 
 					// Left Key
@@ -1232,7 +1235,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						connanDirection *= leftSpinMatrix;
 						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-
+						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 					}
 
@@ -1242,37 +1245,27 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						connanDirection *= rightSpinMatrix;
 						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-
+						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 					}
-
-
 				}
 
 				// Left Arrow Key
 				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					//if (num == 0)
-					//{
-						//camera->Transform(leftSpinMatrix);
-						sun->ChangeSceneMatrix(rightSpinMatrix);
-						sky->ChangeSceneMatrix(rightSpinMatrix);
-						shadow->SetRotationMatrix(connanDirection);
-					//}
+
+					sun->ChangeSceneMatrix(rightSpinMatrix);
+					sky->ChangeSceneMatrix(rightSpinMatrix);
 				}
 
 				// Right Arrow Key
 				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					//if (num == 0)
-					//{
-						//camera->Transform(rightSpinMatrix);
-						sun->ChangeSceneMatrix(leftSpinMatrix);
-						sky->ChangeSceneMatrix(leftSpinMatrix);
-						shadow->SetRotationMatrix(connanDirection);
-					//}
+
+					sun->ChangeSceneMatrix(leftSpinMatrix);
+					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
 
 				// Up Arrow Key
@@ -1288,9 +1281,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				{
 					// 当たり判定処理
 					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
-					resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
-					//camera->MoveCamera(forwardSpeed, connanDirection);
-					shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 				}
 			}
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
