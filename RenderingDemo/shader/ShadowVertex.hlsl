@@ -18,6 +18,10 @@ vsOutput vs_main
         //pos -= norm*0.001;
         output.position = mul(mul(proj, view), pos);
         
+        float3 worldPos = mul(world, pos);
+        output.depthAndLength.x = length(worldPos - lightPos) / 100.0f;
+        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
+        
         return output;
     }
     
@@ -36,6 +40,10 @@ vsOutput vs_main
     pos = mul(rotation, pos);
     //pos -= norm * 0.01;
     output.position = mul(mul(mul(proj, view), world), pos);
+    
+    float3 worldPos = mul(world, pos);
+    output.depthAndLength.x = length(worldPos - lightPos) / 1000.0f;
+    output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
         
     return output;
 }
