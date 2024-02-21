@@ -624,9 +624,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadow = new Shadow(_dev.Get());
 	shadow->Init();
 	
-	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
+	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
+
+	blur = new Blur(_dev.Get());
+	blur->Init();
+	blur->SetShadowRenderingResourse(shadow->GetShadowRenderingResource());
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -636,8 +640,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	// シャドウマップもセット
-	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapREsource());
-	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapREsource());
+	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource());
+	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource());
 
 	return true;
 }
@@ -873,6 +877,7 @@ void D3DX12Wrapper::Run() {
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
 		shadow->SetVPMatrix(sun->GetShadowViewMatrix(), sun->GetProjMatrix()); // sun->GetViewMatrix()
+		shadow->SetSunPos(sun->GetFixedDirection());
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
@@ -938,7 +943,7 @@ void D3DX12Wrapper::Run() {
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		
+		blur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -963,7 +968,7 @@ void D3DX12Wrapper::Run() {
 		// シャドウマップを深度書き込み可能な状態に戻す
 		auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
 		(
-			shadow->GetShadowMapREsource().Get(),
+			shadow->GetShadowMapResource().Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE
 		);

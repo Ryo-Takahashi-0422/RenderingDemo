@@ -59,6 +59,7 @@ private:
 		XMMATRIX proj;
 		XMMATRIX rotation;
 		XMMATRIX bones[256];
+		XMFLOAT3 lightPos;
 	};
 	// VPmatrixŠÖ˜A
 	void InitWVPMatrixReosources();
@@ -83,10 +84,12 @@ public:
 	void Init();
 	void SetVertexAndIndexInfo(std::vector<D3D12_VERTEX_BUFFER_VIEW*> _vbViews, std::vector<D3D12_INDEX_BUFFER_VIEW*> _ibViews, std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> _itIndiceFirsts, std::vector<std::vector<std::pair<std::string, VertexInfo>>> _indiceContainer);
 	void SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj);
+	void SetSunPos(XMFLOAT3 _sunPos);
 	void SetMoveMatrix(XMMATRIX charaWorldMatrix);
 	void SetRotationMatrix(XMMATRIX rotationMatrix);
 	void SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix);
-	ComPtr<ID3D12Resource> GetShadowMapREsource() { return depthBuff; };
+	ComPtr<ID3D12Resource> GetShadowMapResource() { return depthBuff; };
+	ComPtr<ID3D12Resource> GetShadowRenderingResource() { return renderingResource; };
 	XMMATRIX GetShadowPosMatrix() { return mappedMatrix->world; };
 	XMMATRIX GetShadowPosInvMatrix() { return XMMatrixInverse(nullptr, mappedMatrix->world); };
 	XMMATRIX GetShadowView() { return mappedMatrix->view; };

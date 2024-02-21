@@ -249,6 +249,7 @@ private:
 	Sun* sun = nullptr;	
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
+	Blur* blur = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;
