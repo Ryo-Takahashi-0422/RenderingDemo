@@ -630,7 +630,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	blur = new Blur(_dev.Get());
 	blur->Init();
-	blur->SetShadowRenderingResourse(shadow->GetShadowRenderingResource());
+	blur->SetShadowRenderingResourse(shadow->GetShadowMapResource()/*GetShadowRenderingResource()*/);
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -640,8 +640,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	// シャドウマップもセット
-	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource());
-	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource());
+	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource()/*blur->GetBlurResource()*/);
+	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource()/*blur->GetBlurResource()*/);
 
 	return true;
 }
@@ -1163,7 +1163,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
 		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
+		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		handleFBX.ptr += num * inc;

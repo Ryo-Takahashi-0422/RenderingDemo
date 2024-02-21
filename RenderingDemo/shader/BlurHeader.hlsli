@@ -4,5 +4,10 @@ struct vsOutput
     float2 texCoord : TEXCOORD;
 };
 
+cbuffer GaussianWeight : register(b0) // gaussian weight
+{
+    float4 gaussianWeights[2];
+};
+
 Texture2D<float4> shadowRendering : register(t0);
 SamplerState smp : register(s0); // No.0 sampler

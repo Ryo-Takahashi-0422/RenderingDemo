@@ -2,5 +2,9 @@
 
 float4 ps_main(vsOutput input) : SV_TARGET
 {
-    return float4(input.depthAndLength.x, input.depthAndLength.y, 0.0f, 0.0f);
+    
+    //float depth = length(input.worldPos - lightPos) / 200;
+    //float depth2 = depth * depth;
+    
+    return float4(input.depthAndLength.x/*depth*/, input.depthAndLength.y/*depth2*/, 0.0f, 1.0f);
 }

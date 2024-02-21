@@ -43,8 +43,53 @@ float4 SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, 
     return ret / 256;
 }
 
-float4 ps_main(vsOutput input) : SV_TARGET
+float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, float dx, float dy)
 {
+    float4 ret = float4(0, 0, 0, 0);
+    ret = _texture.Sample(smp, _uv);
+    ret += gaussianWeights[0] * ret;
+    
+    // ‰¡•ûŒü
+    for (int i = 1; i < 8; ++i)
+    {
+        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(i * dx, 0)) * 0.1;
+        //0000, 1
+        //0000, 2
+        //0000, 3
+        //0001, 0
+        //0001, 1
+        //0001, 2
+        //0001, 3‚Ì•À‚ÑBŸ‚Ìs‚Í-i‚æ‚è-1`-8‚Ü‚Å
+        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(-i * dx, 0)) * 0.1;
+    }
+    
+    // c•ûŒü
+    for (int j = 1; j < 8; ++j)
+    {
+        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, j * dy)) * 0.1;
+        //0000, 1
+        //0000, 2
+        //0000, 3
+        //0001, 0
+        //0001, 1
+        //0001, 2
+        //0001, 3‚Ì•À‚ÑBŸ‚Ìs‚Í-j‚æ‚è-1`-8‚Ü‚Å
+        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, -j * dy)) * 0.1;
+    }
+    
+    return ret;
+}
+
+
+float ps_main(vsOutput input) : SV_TARGET
+{
+    float w, h, levels;
+    shadowRendering.GetDimensions(0, w, h, levels);
+    float dx = 1.0f / w;
+    float dy = 1.0f / h;
+    
     float4 blur = /*shadowRendering.Sample(smp, input.texCoord)*/SimpleGaussianBlur(shadowRendering, smp, input.texCoord);
-    return blur;
+    //float4 blur = Get5x5GaussianBlur(shadowRendering, smp, input.texCoord, dx, dy);
+    
+    return blur.x;
 }

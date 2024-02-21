@@ -13,6 +13,7 @@ struct Output
     float4 screenPosition : SCREEN_POSITIO;
     float4 worldPosition : WORLD_POSITION;
     float3 worldNormal : WORLD_NORMAL;
+    float4 lvPos : LIGHTVIEW_POSITION;
 
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
@@ -66,7 +67,7 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
 Texture3D<float4> airmap : register(t0);
-Texture2D<float> shadowmap : register(t1);
+Texture2D<float4> shadowmap : register(t1);
 Texture2D<float4> colormap : register(t2);
 Texture2D<float4> normalmap : register(t3);
 Texture2D<float4> specularmap : register(t4);

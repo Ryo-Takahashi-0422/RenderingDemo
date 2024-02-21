@@ -11,16 +11,19 @@ vsOutput vs_main
     float3 boneweight2 : WEIGHT_ThreeToFive
 )
 {
-    vsOutput output;    
+    vsOutput output;
+    float lAdust = 100.0f;
 
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
         //pos -= norm*0.001;
         output.position = mul(mul(proj, view), pos);
         
-        float3 worldPos = mul(world, pos);
-        output.depthAndLength.x = length(worldPos - lightPos) / 100.0f;
+        float3 worldPos = pos;
+        output.depthAndLength.x = length(worldPos - lightPos) / lAdust;
         output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
+        
+        output.worldPos = pos;
         
         return output;
     }
@@ -42,7 +45,8 @@ vsOutput vs_main
     output.position = mul(mul(mul(proj, view), world), pos);
     
     float3 worldPos = mul(world, pos);
-    output.depthAndLength.x = length(worldPos - lightPos) / 1000.0f;
+    output.worldPos = worldPos;
+    output.depthAndLength.x = length(worldPos - lightPos) / lAdust;
     output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
         
     return output;

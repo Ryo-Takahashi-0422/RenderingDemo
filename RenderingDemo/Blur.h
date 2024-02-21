@@ -8,8 +8,8 @@ private:
 	ComPtr<ID3D12Device> _dev;
 	// ルートシグネチャ関連
 	CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-	CD3DX12_DESCRIPTOR_RANGE descTableRange[1] = {};
-	D3D12_ROOT_PARAMETER rootParam[1] = {};
+	CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
+	D3D12_ROOT_PARAMETER rootParam[2] = {};
 	ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
 	ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
 	ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -38,9 +38,12 @@ private:
 	void CreateRenderingRTV();
 	// SRV生成
 	void CreateRenderingSRV();
+	// gaussian weight
+	void SetGaussianData();
 
 	ComPtr<ID3D12Resource> renderingResource = nullptr; // 描画用
 	ComPtr<ID3D12Resource> shadowRendringResource = nullptr; // shadowの描画結果(デプスマップではない)用
+	ComPtr<ID3D12Resource> gaussianResource = nullptr;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> shadowRenderingHeap = nullptr; // shadowRendering用ディスクリプタヒープ
@@ -48,10 +51,12 @@ private:
 	float width = 4096;
 	float height = 4096;
 
+	float* mappedweight = nullptr;
 
 public:
 	Blur(ID3D12Device* dev);
 	void Init();
 	void SetShadowRenderingResourse(ComPtr<ID3D12Resource> _shadowRenderingRsource);
+	ComPtr<ID3D12Resource> GetBlurResource() { return renderingResource; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

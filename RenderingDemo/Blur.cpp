@@ -26,14 +26,20 @@ HRESULT Blur::CreateRootSignature()
 
     //ディスクリプタテーブルのスロット設定
     descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // shadow rendering
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // shadow rendering
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 1;
+    rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -202,6 +208,7 @@ void Blur::RenderingSet()
     CreateRenderingResource();
     CreateRenderingRTV();
     CreateRenderingSRV();
+    SetGaussianData();
 }
 
 // RenderingTarget RTV,SRV,shadowRendering用ヒープの生成
@@ -228,6 +235,7 @@ HRESULT Blur::CreateRenderingHeap()
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
 
     // shadowRendering用
+    srvHeapDesc.NumDescriptors = 2;
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(shadowRenderingHeap.ReleaseAndGetAddressOf()));
 
     return result;
@@ -301,6 +309,40 @@ void Blur::CreateRenderingSRV()
     );
 }
 
+void Blur::SetGaussianData()
+{
+    auto weights = Utility::GetGaussianWeight(8, 5.0f);
+
+    auto gaussianHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto gaussianBuffResDesc = CD3DX12_RESOURCE_DESC::Buffer(Utility::AlignmentSize(sizeof(weights[0]) * weights.size(), 256));
+    _dev->CreateCommittedResource
+    (
+        &gaussianHeapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &gaussianBuffResDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(gaussianResource.ReleaseAndGetAddressOf())
+    );
+
+    auto handle = shadowRenderingHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
+
+    D3D12_CONSTANT_BUFFER_VIEW_DESC gDesc;
+    gDesc.BufferLocation = gaussianResource->GetGPUVirtualAddress();
+    gDesc.SizeInBytes = gaussianResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
+    (
+        &gDesc,
+        handle
+    );
+
+    gaussianResource->Map(0, nullptr, (void**)&mappedweight);
+    std::copy(weights.begin(), weights.end(), mappedweight);
+    gaussianResource->Unmap(0, nullptr);
+}
+
 void Blur::SetShadowRenderingResourse(ComPtr<ID3D12Resource> _shadowRenderingRsource)
 {
     shadowRendringResource = _shadowRenderingRsource;
@@ -309,7 +351,7 @@ void Blur::SetShadowRenderingResourse(ComPtr<ID3D12Resource> _shadowRenderingRso
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.Format = /*DXGI_FORMAT_R8G8B8A8_UNORM*/DXGI_FORMAT_R32_FLOAT;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
@@ -354,6 +396,9 @@ void Blur::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmd
 
     auto handle = shadowRenderingHeap->GetGPUDescriptorHandleForHeapStart();
     _cmdList->SetGraphicsRootDescriptorTable(0, handle); // shadowMap
+
+    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(1, handle); // gaussian weights
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(3, 1, 0, 0);

@@ -113,7 +113,7 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
     // c•ûŒü
     for (int j = 1; j < 8; ++j)
     {
-        ret += bkweights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, 1 * dy));
+        ret += bkweights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, j * dy));
         //0000, 1
         //0000, 2
         //0000, 3
