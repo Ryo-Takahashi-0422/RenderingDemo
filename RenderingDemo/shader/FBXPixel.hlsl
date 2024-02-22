@@ -49,29 +49,31 @@ float4 FBXPS(Output input) : SV_TARGET
     
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
-    float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy/*(input.lvPos.xy / input.lvPos.w)*/;
+    float2 shadowUV = 0.5 + float2(0.5, -0.5) * /*shadowPos.xy*/(input.lvPos.xy / input.lvPos.w);
     float shadowZ = shadowmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
     
-    //float2 shadowValue = shadowmap.Sample(smp, shadowUV).xy;
-    if (shadowPos.z - 0.00001f >= shadowZ) // Žž‚ÉƒLƒƒƒ‰ƒNƒ^[‚Ì‰e‚É‰e‹¿‚µ‚Ä‚¢‚éB‰e‚Ì‹«–Ú‚ª–Ú‚É‚Â‚­B
-    {
-        shadowFactor = min(0.3, (-sunDIr.y + 0.1));
-    }
-    //shadowPos.z /= 65;
-    //float lz = input.lvPos.z;
-    //if (lz > shadowValue.r && lz <= 1.0f)
+    float2 shadowValue = shadowmap.Sample(smp, shadowUV).xy;
+    //if (shadowPos.z - 0.00001f >= shadowZ) // Žž‚ÉƒLƒƒƒ‰ƒNƒ^[‚Ì‰e‚É‰e‹¿‚µ‚Ä‚¢‚éB‰e‚Ì‹«–Ú‚ª–Ú‚É‚Â‚­B
     //{
-    //    float depth_sq = shadowValue.x * shadowValue.x;
-    //    float var = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
-    //    float md = lz - shadowValue.x;
-    //    float litFactor = var / (var + md * md);
-    //    float3 shadowColor = reslut.xyz * 0.3f;
-    //    reslut.xyz = lerp(shadowColor, reslut.xyz, litFactor);
-
+    //    shadowFactor = min(0.3, (-sunDIr.y + 0.1));
     //}
+    //shadowPos.z /= 65;
+    float lz = input.lvPos.z;
+    if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+    {
+        float depth_sq = shadowValue.y;
+        float var = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
+        float md = lz - shadowValue.x;
+        float litFactor = var / (var + md * md);
+        float3 shadowColor = reslut.xyz * 0.3f;
+        reslut.xyz = lerp(shadowColor, reslut.xyz, litFactor);
+        shadowFactor = min(1.0, (-sunDIr.y + 0.1));
+    }
     
-    return reslut * shadowFactor + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    reslut = reslut/* * shadowFactor*/ + float4(inScatter, 0);
+    
+    return reslut; /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     //}
     //else
     //{

@@ -642,8 +642,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	// シャドウマップもセット
-	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*//*blur->GetBlurResource()*/comBlur->GetBlurTextureResource());
-	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*//*blur->GetBlurResource()*/comBlur->GetBlurTextureResource());
+	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/blur->GetBlurResource()/*comBlur->GetBlurTextureResource()*/);
+	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/blur->GetBlurResource()/*comBlur->GetBlurTextureResource()*/);
 
 	return true;
 }
@@ -946,7 +946,7 @@ void D3DX12Wrapper::Run() {
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		blur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -977,14 +977,14 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
-		// コピー用リソース状態をテクスチャとして読み込める状態にする
-		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			comBlur->GetBlurTextureResource().Get(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		);
-		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+		//// comBlur コピー用リソース状態をテクスチャとして読み込める状態にする
+		//barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		//(
+		//	comBlur->GetBlurTextureResource().Get(),
+		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		//);
+		//_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
