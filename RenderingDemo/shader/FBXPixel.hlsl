@@ -42,38 +42,55 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 air = airmap.Sample(smp, float3(scrPos, saturate(airZ)));
     float3 inScatter = air.xyz;
 
-    float4 reslut = float4(bright * col.x, bright * col.y, bright * col.z, 1);
+    float4 result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)
     //{
     
     
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
-    float2 shadowUV = 0.5 + float2(0.5, -0.5) * /*shadowPos.xy*/(input.lvPos.xy / input.lvPos.w);
-    float shadowZ = shadowmap.Sample(smp, shadowUV);
-    float shadowFactor = 1;
-    
-    float2 shadowValue = shadowmap.Sample(smp, shadowUV).xy;
-    //if (shadowPos.z - 0.00001f >= shadowZ) // 時にキャラクターの影に影響している。影の境目が目につく。
-    //{
-    //    shadowFactor = min(0.3, (-sunDIr.y + 0.1));
-    //}
+    float2 shadowUV = 0.5 + float2(0.5, -0.5) * /*shadowPos.xy*/(input.lvPos.xy / input.lvPos.w);  
+    float2 shadowValue = vsmmap.Sample(smp, shadowUV).xy;
+
+    float4 oriCol = result;
     //shadowPos.z /= 65;
     float lz = input.lvPos.z;
-    if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+
+    //if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+    //{
+    //    float depth_sq = shadowValue.y;
+    //    float var = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
+    //    float md = lz - shadowValue.x;
+    //    float litFactor = var / (var + md * md);
+
+    //    float3 shadowColor = result.xyz * 0.3f;
+    //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
+    //}
+    
+        
+    float depth = depthmap.Sample(smp, shadowUV);
+    float shadowFactor = 1;
+    if (shadowPos.z - 0.00001f >= depth) // 時にキャラクターの影に影響している。影の境目が目につく。
     {
         float depth_sq = shadowValue.y;
-        float var = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
-        float md = lz - shadowValue.x;
+        float var = 0.000000001f;
+        float md = shadowPos.z - depth;
         float litFactor = var / (var + md * md);
-        float3 shadowColor = reslut.xyz * 0.3f;
-        reslut.xyz = lerp(shadowColor, reslut.xyz, litFactor);
-        shadowFactor = min(1.0, (-sunDIr.y + 0.1));
+
+        float3 shadowColor = result.xyz * 0.3f;
+        result.xyz = lerp(shadowColor, result.xyz, litFactor);
+        
+        
     }
     
-    reslut = reslut/* * shadowFactor*/ + float4(inScatter, 0);
+    if (-sunDIr.y <= 0.7f)
+    {
+        shadowFactor = max(0.3f, (-sunDIr.y + 0.3f));
+    }
     
-    return reslut; /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
+    result = result * shadowFactor + float4(inScatter, 0);
+    
+    return result; /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
     //}
     //else
     //{

@@ -4,8 +4,8 @@ class ComputeBlur
 {
 private:
     // ‰ð‘œ“xŠÖ˜A
-    int width = 2048;
-    int height = 2048;
+    int width = 1024;
+    int height = 1024;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
