@@ -167,6 +167,9 @@
     <FxCompile Include="shader\BlurVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
+    <FxCompile Include="shader\ComputeBlur.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp">
@@ -329,6 +332,9 @@
       <Filter>ソース ファイル\Sky</Filter>
     </ClCompile>
     <ClCompile Include="Blur.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeBlur.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -499,6 +505,9 @@
       <Filter>ヘッダー ファイル\Sky</Filter>
     </ClInclude>
     <ClInclude Include="Blur.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeBlur.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

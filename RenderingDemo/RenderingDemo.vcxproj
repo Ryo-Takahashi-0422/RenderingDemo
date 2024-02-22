@@ -272,6 +272,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\ComputeBlur.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\FBXPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">FBXPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -396,6 +404,7 @@
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
+    <ClCompile Include="ComputeBlur.cpp" />
     <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="BloomShaderCompile.cpp" />
     <ClCompile Include="BufferHeapCreator.cpp" />
@@ -458,6 +467,7 @@
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />
+    <ClInclude Include="ComputeBlur.h" />
     <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="BloomShaderCompile.h" />
     <ClInclude Include="BufferHeapCreator.h" />

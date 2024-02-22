@@ -1,46 +1,5 @@
 #include "FBXHeader.hlsli"
-float SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, float dx, float dy*/)
-{
-    float ret = 0;
-    
-    float w, h, levels;
-    _texture.GetDimensions(0, w, h, levels);
-    float dx = 1.0f / w;
-    float dy = 1.0f / h;
 
-    // highest
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, 2 * dy)) * 1;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, 2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, 2 * dy)) * 6;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, 2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, 2 * dy)) * 1;
-    // high
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, 1 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, 1 * dy)) * 16;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, 1 * dy)) * 24;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, 1 * dy)) * 16;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, 1 * dy)) * 4;
-    // middle
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, 0 * dy)) * 6;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, 0 * dy)) * 24;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, 0 * dy)) * 36;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, 0 * dy)) * 24;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, 0 * dy)) * 6;
-    // low
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, -1 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, -1 * dy)) * 16;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, -1 * dy)) * 24;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, -1 * dy)) * 16;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, -1 * dy)) * 4;
-    // lowest
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, -2 * dy)) * 1;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, -2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, -2 * dy)) * 6;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, -2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, -2 * dy)) * 1;
- 
-    return ret / 256;
-}
 float4 FBXPS(Output input) : SV_TARGET
 {
     float3 light = normalize(float3(0, 1, 0));
@@ -90,8 +49,8 @@ float4 FBXPS(Output input) : SV_TARGET
     
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
-    float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy /*(input.lvPos.xy / input.lvPos.w)*/;
-    float shadowZ = /*shadowmap.Sample(smp, shadowUV)*/SimpleGaussianBlur(shadowmap, smp, shadowUV);
+    float2 shadowUV = 0.5 + float2(0.5, -0.5) * shadowPos.xy/*(input.lvPos.xy / input.lvPos.w)*/;
+    float shadowZ = shadowmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
     
     //float2 shadowValue = shadowmap.Sample(smp, shadowUV).xy;
@@ -113,5 +72,9 @@ float4 FBXPS(Output input) : SV_TARGET
     //}
     
     return reslut * shadowFactor + float4(inScatter, 0); /* + float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1)*/;
-
+    //}
+    //else
+    //{
+    //    return float4(diffuseB * diffuse.r, diffuseB * diffuse.g, diffuseB * diffuse.b, 1);
+    //}
 }

@@ -52,7 +52,7 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
     // ‰¡•ûŒü
     for (int i = 1; i < 8; ++i)
     {
-        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(i * dx, 0)) * 0.1;
+        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(i * dx, 0))/256;
         //0000, 1
         //0000, 2
         //0000, 3
@@ -60,13 +60,13 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
         //0001, 1
         //0001, 2
         //0001, 3‚Ì•À‚ÑBŸ‚Ìs‚Í-i‚æ‚è-1`-8‚Ü‚Å
-        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(-i * dx, 0)) * 0.1;
+        ret += gaussianWeights[i >> 2][i % 4] * _texture.Sample(smp, _uv + float2(-i * dx, 0)) / 256;
     }
     
     // c•ûŒü
     for (int j = 1; j < 8; ++j)
     {
-        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, j * dy)) * 0.1;
+        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, j * dy)) / 256;
         //0000, 1
         //0000, 2
         //0000, 3
@@ -74,14 +74,14 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
         //0001, 1
         //0001, 2
         //0001, 3‚Ì•À‚ÑBŸ‚Ìs‚Í-j‚æ‚è-1`-8‚Ü‚Å
-        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, -j * dy)) * 0.1;
+        ret += gaussianWeights[j >> 2][j % 4] * _texture.Sample(smp, _uv + float2(0, -j * dy)) / 256;
     }
     
     return ret;
 }
 
 
-float ps_main(vsOutput input) : SV_TARGET
+float4 ps_main(vsOutput input) : SV_TARGET
 {
     float w, h, levels;
     shadowRendering.GetDimensions(0, w, h, levels);
@@ -90,6 +90,5 @@ float ps_main(vsOutput input) : SV_TARGET
     
     float4 blur = /*shadowRendering.Sample(smp, input.texCoord)*/SimpleGaussianBlur(shadowRendering, smp, input.texCoord);
     //float4 blur = Get5x5GaussianBlur(shadowRendering, smp, input.texCoord, dx, dy);
-    
-    return blur.x;
+    return blur;
 }

@@ -630,7 +630,9 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	blur = new Blur(_dev.Get());
 	blur->Init();
-	blur->SetShadowRenderingResourse(shadow->GetShadowMapResource()/*GetShadowRenderingResource()*/);
+	blur->SetShadowRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
+
+	comBlur = new ComputeBlur(_dev.Get(), shadow->GetShadowMapResource());
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -640,8 +642,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	// シャドウマップもセット
-	resourceManager[0]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource()/*blur->GetBlurResource()*/);
-	resourceManager[1]->SetShadowResourceAndCreateView(shadow->GetShadowMapResource()/*blur->GetBlurResource()*/);
+	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*//*blur->GetBlurResource()*/comBlur->GetBlurTextureResource());
+	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*//*blur->GetBlurResource()*/comBlur->GetBlurTextureResource());
 
 	return true;
 }
@@ -944,6 +946,7 @@ void D3DX12Wrapper::Run() {
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		blur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -973,6 +976,15 @@ void D3DX12Wrapper::Run() {
 			D3D12_RESOURCE_STATE_DEPTH_WRITE
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
+
+		// コピー用リソース状態をテクスチャとして読み込める状態にする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			comBlur->GetBlurTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK

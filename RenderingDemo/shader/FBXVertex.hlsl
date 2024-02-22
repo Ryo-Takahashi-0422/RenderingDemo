@@ -25,7 +25,7 @@ Output FBXVS
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
     bool moveObj = true;
     
-    //float lAdust = 100.0f;
+    float lAdust = 100.0f;
     if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
     {
         moveObj = false;
@@ -35,9 +35,9 @@ Output FBXVS
         bm[3][3] = 1;
         output.worldPosition = pos;
         
-        //output.lvPos = mul(mul(proj, shadowView), output.worldPosition);
-        //float3 lightPos = -65 * sunDIr;
-        //output.lvPos.z = length(output.worldPosition.xyz - lightPos) / lAdust;
+        output.lvPos = mul(mul(proj, shadowView), output.worldPosition);
+        float3 lightPos = -65 * sunDIr;
+        output.lvPos.z = length(output.worldPosition.xyz - lightPos) / lAdust;
     }
     else
     {
@@ -45,9 +45,9 @@ Output FBXVS
         pos = mul(rotation, pos);
         output.worldPosition = mul(shadowPosMatrix, pos);
         
-        //output.lvPos = mul(mul(mul(proj, shadowView), shadowPosMatrix), pos);
-        //float3 lightPos = -65 * sunDIr;
-        //output.lvPos.z = length(output.worldPosition.xyz - lightPos) / lAdust;
+        output.lvPos = mul(mul(mul(proj, shadowView), shadowPosMatrix), pos);
+        float3 lightPos = -65 * sunDIr;
+        output.lvPos.z = length(output.worldPosition.xyz - lightPos) / lAdust;
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);

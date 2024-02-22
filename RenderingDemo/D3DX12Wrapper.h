@@ -250,6 +250,7 @@ private:
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
 	Blur* blur = nullptr;
+	ComputeBlur* comBlur = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;
