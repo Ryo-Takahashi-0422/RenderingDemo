@@ -249,7 +249,8 @@ private:
 	Sun* sun = nullptr;	
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
-	Blur* blur = nullptr;
+	//Blur* shadowRenderingBlur = nullptr;
+	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
 	
 	//★★★コライダーdebug用

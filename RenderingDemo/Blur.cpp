@@ -236,7 +236,7 @@ HRESULT Blur::CreateRenderingHeap()
 
     // shadowRendering—p
     srvHeapDesc.NumDescriptors = 2;
-    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(shadowRenderingHeap.ReleaseAndGetAddressOf()));
+    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(renderingHeap.ReleaseAndGetAddressOf()));
 
     return result;
 }
@@ -325,7 +325,7 @@ void Blur::SetGaussianData()
         IID_PPV_ARGS(gaussianResource.ReleaseAndGetAddressOf())
     );
 
-    auto handle = shadowRenderingHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     handle.ptr += inc;
 
@@ -343,11 +343,11 @@ void Blur::SetGaussianData()
     gaussianResource->Unmap(0, nullptr);
 }
 
-void Blur::SetShadowRenderingResourse(ComPtr<ID3D12Resource> _shadowRenderingRsource)
+void Blur::SetRenderingResourse(ComPtr<ID3D12Resource> _RenderingRsource)
 {
-    shadowRendringResource = _shadowRenderingRsource;
+    blurResource = _RenderingRsource;
 
-    auto handle = shadowRenderingHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -357,7 +357,7 @@ void Blur::SetShadowRenderingResourse(ComPtr<ID3D12Resource> _shadowRenderingRso
 
     _dev->CreateShaderResourceView
     (
-        shadowRendringResource.Get(),
+        blurResource.Get(),
         &srvDesc,
         handle
     );
@@ -392,9 +392,9 @@ void Blur::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmd
 
     _cmdList->SetGraphicsRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipelineState.Get());
-    _cmdList->SetDescriptorHeaps(1, shadowRenderingHeap.GetAddressOf());
+    _cmdList->SetDescriptorHeaps(1, renderingHeap.GetAddressOf());
 
-    auto handle = shadowRenderingHeap->GetGPUDescriptorHandleForHeapStart();
+    auto handle = renderingHeap->GetGPUDescriptorHandleForHeapStart();
     _cmdList->SetGraphicsRootDescriptorTable(0, handle); // shadowMap
 
     handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
