@@ -54,34 +54,43 @@ float4 FBXPS(Output input) : SV_TARGET
 
     float4 oriCol = result;
     //shadowPos.z /= 65;
-    float lz = input.lvPos.z;
-
-    //if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
-    //{
-    //    float depth_sq = shadowValue.y;
-    //    float var = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
-    //    float md = lz - shadowValue.x;
-    //    float litFactor = var / (var + md * md);
-
-    //    float3 shadowColor = result.xyz * 0.3f;
-    //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
-    //}
-    
-        
-    float depth = depthmap.Sample(smp, shadowUV);
-    float shadowFactor = 1;
-    if (shadowPos.z - 0.00001f >= depth) // 時にキャラクターの影に影響している。影の境目が目につく。
+    float lz = input.lvDepth;
+    if (input.isChara)
     {
+        lz = input.trueDepth;
+        shadowValue = float2(vsmmap.Sample(smp, shadowUV).z, vsmmap.Sample(smp, shadowUV).z * vsmmap.Sample(smp, shadowUV).z);
+        //shadowValue.x *= 3.0f;
+        //shadowValue.y = shadowValue.x * shadowValue.x;
+
+    }
+    if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+    {
+
         float depth_sq = shadowValue.y;
-        float var = 0.000000001f;
-        float md = shadowPos.z - depth;
+        float var = min(max(depth_sq - shadowValue.y, 0.00005f), 1.0f);
+        float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
 
         float3 shadowColor = result.xyz * 0.3f;
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
-        
-        
     }
+    
+        
+    float depth = depthmap.Sample(smp, shadowUV);
+    float shadowFactor = 1;
+    // こちらを利用する場合はsunのprojを透視投影ビューに切り替えを要する
+    //if (shadowPos.z - 0.00001f >= depth) // 時にキャラクターの影に影響している。影の境目が目につく。
+    //{
+    //    float depth_sq = shadowValue.y;
+    //    float var = 0.000000001f;
+    //    float md = shadowPos.z - depth;
+    //    float litFactor = var / (var + md * md);
+
+    //    float3 shadowColor = result.xyz * 0.3f;
+    //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
+        
+        
+    //}
     
     if (-sunDIr.y <= 0.7f)
     {

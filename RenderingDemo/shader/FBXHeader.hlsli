@@ -14,7 +14,10 @@ struct Output
     float4 worldPosition : WORLD_POSITION;
     float3 worldNormal : WORLD_NORMAL;
     float4 lvPos : LIGHTVIEW_POSITION;
-
+    bool isChara : CharacterOrNot;
+    float3 truePos : TRUE_POSITION;
+    float lvDepth : LIGHTVIEW_DEPTH;
+    float trueDepth : TRUE_DEPTH;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
@@ -32,6 +35,7 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     matrix world; // world matrix
     matrix view; // view matrix
     matrix proj; // projection matrix
+    matrix oProj;
     //matrix lightCamera; // view matrix from light * orthographic projection matrix
     //matrix shadow; // shadow matrix
     //float3 eye; // eye(camera) position

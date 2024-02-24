@@ -12,17 +12,22 @@ vsOutput vs_main
 )
 {
     vsOutput output;
-    float lAdust = 100.0f;
+    float lAdust = 200.0f;
 
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
         //pos -= norm*0.001;
         output.position = mul(mul(proj, view), pos);
         
-        float3 worldPos = pos;
-        output.depthAndLength.x = length(worldPos - lightPos) / lAdust;
-        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
+        // vsmの出力結果を安定させる。この処理がないとrgb値にムラが出る。利用する側でも同様の処理を行う必要あり。
+        float3 oLightPos = lightPos;
+        oLightPos.x += pos.x;
+        oLightPos.z += pos.z;
         
+        float3 worldPos = pos;
+        output.depthAndLength.x = length(worldPos - oLightPos) / lAdust;
+        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
+        output.trueDepth = output.depthAndLength.x;
         output.worldPos = pos;
         
         return output;
@@ -44,9 +49,17 @@ vsOutput vs_main
     //pos -= norm * 0.01;
     output.position = mul(mul(mul(proj, view), world), pos);
     
+    float3 oLightPos = lightPos;
+    oLightPos.x += pos.x;
+    oLightPos.z += pos.z;
+    
+    //oLightPos.z += pos.z;
+    
     float3 worldPos = mul(world, pos);
     output.worldPos = worldPos;
-    output.depthAndLength.x = length(worldPos - lightPos) / lAdust;
+    output.trueDepth = length(worldPos - oLightPos) / lAdust;
+    oLightPos /= 3.0f;
+    output.depthAndLength.x = length(worldPos - oLightPos) / lAdust;
     output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
         
     return output;

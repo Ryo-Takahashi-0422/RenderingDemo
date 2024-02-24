@@ -628,9 +628,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
 
-	//shadowRenderingBlur = new Blur(_dev.Get());
-	//shadowRenderingBlur->Init();
-	//shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
+	shadowRenderingBlur = new Blur(_dev.Get());
+	shadowRenderingBlur->Init();
+	shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
 
 
 	comBlur = new ComputeBlur(_dev.Get(), shadow->GetShadowMapResource());
@@ -642,15 +642,18 @@ bool D3DX12Wrapper::ResourceInit() {
 	// air(ボリュームライティング)はオブジェクトとキャラクターで利用
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
-	//// VSMをセット
-	//resourceManager[0]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
-	//resourceManager[1]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
+	// VSMをセット
+	resourceManager[0]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
+	resourceManager[1]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
 	// airのブラー結果をセット
 	//resourceManager[0]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	//resourceManager[1]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	// ブラーしたシャドウマップをセット
 	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
 	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
+	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
+	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
 
 	return true;
 }
@@ -952,7 +955,7 @@ void D3DX12Wrapper::Run() {
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		//blur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());

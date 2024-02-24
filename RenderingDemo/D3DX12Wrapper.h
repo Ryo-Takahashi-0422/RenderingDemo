@@ -249,7 +249,7 @@ private:
 	Sun* sun = nullptr;	
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
-	//Blur* shadowRenderingBlur = nullptr;
+	Blur* shadowRenderingBlur = nullptr;
 	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
 	

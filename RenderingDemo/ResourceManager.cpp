@@ -777,3 +777,8 @@ void ResourceManager::SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPo
 	mappedMatrix->eyePos = _eyePos;
 	mappedMatrix->sunDIr = _sunDIr;
 }
+
+void ResourceManager::SetProjMatrix(XMMATRIX _proj)
+{
+	mappedMatrix->oProj = _proj;
+}

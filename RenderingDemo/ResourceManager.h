@@ -6,6 +6,7 @@ struct FBXSceneMatrix
 	XMMATRIX world; // world matrix
 	XMMATRIX view; // view matrix
 	XMMATRIX proj; // projection matri
+	XMMATRIX oProj;
 	//XMMATRIX lightCamera; // view from light(view * projection)
 	//XMMATRIX shadow; // shadow matrix
 	//XMFLOAT3 eye; // position of camera
@@ -152,6 +153,7 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 
 	void ClearReference();
+	void SetProjMatrix(XMMATRIX _proj);
 	void SetSunResourceAndCreateView(ComPtr<ID3D12Resource> _sunResource);
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);

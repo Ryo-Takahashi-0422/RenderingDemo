@@ -11,6 +11,18 @@ void Sun::Init()
 {
 	CreateSunVertex();
     mappedMatrix = new BillboardMatrix;
+
+    // デプスマップベースの影描画にはこちらを利用
+    ////プロジェクション(射影)行列の生成・乗算
+    //sunProjMatrix = XMMatrixPerspectiveFovLH
+    //(
+    //    XM_PIDIV2, // 画角90°
+    //    1,
+    //    1.0, // ニア―クリップ
+    //    3000.0 // ファークリップ
+    //);
+
+    sunProjMatrix = XMMatrixOrthographicLH(100, 100, 1, 1000);
     
     CreateRootSignature();
     ShaderCompile();
@@ -82,16 +94,20 @@ void Sun::CalculateBillbordMatrix()
     cameraPosMatrix.r[3].m128_f32[1] = cameraPos.y;
     cameraPosMatrix.r[3].m128_f32[2] = cameraPos.z;
 
-    // 太陽の位置合わせ苦肉策。カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
-    auto cal = _camera->GetDummyCameraPos();
-    cal.x *= 0.0184; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
-    auto newdir = fixedDir;
-    newdir.x -= cal.x;
-    float theta = atan2(newdir.y, newdir.x);
-    fixedDir.x = cos(theta);
-    fixedDir.y = sin(theta);
-    fixedDir.y = std::min(std::max(fixedDir.y, 0.0f), 1.0f);
-    XMStoreFloat3(&fixedDir, XMVector3Normalize(XMLoadFloat3(&fixedDir)));
+    //billBoardMatrix =
+    //    XMMatrixLookAtLH(XMLoadFloat3(&fixedDir), XMLoadFloat3(&cameraPos), XMLoadFloat3(&up));
+
+    // 太陽の位置合わせ苦肉策。原因は透視投影ビューを利用することにより太陽の平行な光線を前提とした計算との間で不整合が生じる。対策は平行投影ビューを利用するか、以下のように無理やり調整するかのどちらか。
+    // カメラビュー行列は原点固定のため、実際のカメラが原点を離れる=オブジェクトが動く場合に太陽が見え始めた実際のカメラ位置は移動しないため、Dummy位置を取得してカメラ位置の変化と対応させることが出来ない。dummyの変化量に合わせて太陽角度を変更させるしかない。
+    //auto cal = _camera->GetDummyCameraPos();
+    //cal.x *= 0.0184; // 現合値。システムの都合で2024/2/12時点での苦しい対策...
+    //auto newdir = fixedDir;
+    //newdir.x -= cal.x;
+    //float theta = atan2(newdir.y, newdir.x);
+    //fixedDir.x = cos(theta);
+    //fixedDir.y = sin(theta);
+    //fixedDir.y = std::min(std::max(fixedDir.y, 0.0f), 1.0f);
+    //XMStoreFloat3(&fixedDir, XMVector3Normalize(XMLoadFloat3(&fixedDir)));
 
     XMVECTOR invSunDir = { fixedDir.x, fixedDir.y, fixedDir.z , 1 };
     XMMATRIX sunDirMatrix = XMMatrixIdentity();
@@ -153,15 +169,6 @@ void Sun::CalculateViewMatrix()
         XMLoadFloat3(&fixedDir),
         XMLoadFloat3(&target),
         XMLoadFloat3(&up)
-    );
-
-    //プロジェクション(射影)行列の生成・乗算
-    sunProjMatrix = XMMatrixPerspectiveFovLH
-    (
-        XM_PIDIV2, // 画角90°
-        1,
-        1.0, // ニア―クリップ
-        3000.0 // ファークリップ
     );
 }
 

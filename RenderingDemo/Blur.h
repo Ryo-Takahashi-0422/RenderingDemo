@@ -48,8 +48,8 @@ private:
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> renderingHeap = nullptr; // rendering用ディスクリプタヒープ
 
-	float width = 256;
-	float height = 256;
+	float width = 4096;
+	float height = 4096;
 
 	float* mappedweight = nullptr;
 
