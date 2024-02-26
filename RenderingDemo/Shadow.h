@@ -74,8 +74,8 @@ private:
 	XMMATRIX m_moveMatrix = XMMatrixIdentity();
 	XMMATRIX m_rotationMatrix = XMMatrixIdentity();
 
-	float width = 4096;
-	float height = 4096;
+	float width = 2048;
+	float height = 2048;
 
 	void UpdateWorldMatrix();
 

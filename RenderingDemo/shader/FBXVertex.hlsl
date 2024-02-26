@@ -26,6 +26,11 @@ Output FBXVS
     bool moveObj = true;
     
     float lAdust = 200.0f;
+    float3 lightPos;
+    lightPos.x = 65 * sunDIr.x;
+    lightPos.y = -65 * sunDIr.y;
+    lightPos.z = 65 * sunDIr.z;
+    
     if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
     {
         moveObj = false;
@@ -38,10 +43,11 @@ Output FBXVS
         output.lvPos = mul(mul(oProj, shadowView), output.worldPosition);
         
         // 平行投影に合わせてライトの位置を頂点の位置の真上に移動した状態で、ライト→頂点への距離を算出している。
-        float3 lightPos = -65 * sunDIr;
-        lightPos.x += pos.x;
-        lightPos.z += pos.z;
+        //float3 lightPos = -65 * sunDIr;
+        //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
+        //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
     }
     else
@@ -53,16 +59,18 @@ Output FBXVS
         output.lvPos = mul(mul(mul(oProj, shadowView), shadowPosMatrix), pos);
         
         // 平行投影に合わせてライトの位置を頂点の位置の真上に移動した状態で、ライト→頂点への距離を算出している。
-        float3 lightPos = -65 * sunDIr;
-        lightPos.x += pos.x;
-        lightPos.z += pos.z;
+        //float3 lightPos = -65 * sunDIr;
+        //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
+        //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
 
         // キャラクターのシャドウマップ上の描画は2通りある。通常のライト位置および高さを1/n倍したもので、後者はsponzaの影描画で利用する。前者はキャラクターの影描画で利用する。
-        output.truePos = output.lvPos;
+        output.truePos = output.lvPos;        
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
         
         lightPos /= 3.0f;
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        //output.lvDepth *= 65 / (lightPos.y + 0.01f);
         output.isChara = true;
         
     }

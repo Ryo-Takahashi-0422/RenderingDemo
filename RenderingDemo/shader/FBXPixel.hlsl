@@ -63,22 +63,22 @@ float4 FBXPS(Output input) : SV_TARGET
         //shadowValue.y = shadowValue.x * shadowValue.x;
 
     }
-    if (lz /*-0.05f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+    if (lz /*- 0.0001f*/ >= shadowValue.x/* && lz <= 1.0f*/)
     {
 
         float depth_sq = shadowValue.y;
-        float var = min(max(depth_sq - shadowValue.y, 0.00005f), 1.0f);
+        float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
 
-        float3 shadowColor = result.xyz * 0.3f;
+        float3 shadowColor = result.xyz * 0.2f;
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
     }
     
         
     float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
-    // こちらを利用する場合はsunのprojを透視投影ビューに切り替えを要する
+    //// こちらを利用する場合はsunのprojを透視投影ビューに切り替えを要する
     //if (shadowPos.z - 0.00001f >= depth) // 時にキャラクターの影に影響している。影の境目が目につく。
     //{
     //    float depth_sq = shadowValue.y;

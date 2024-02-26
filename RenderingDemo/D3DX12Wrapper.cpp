@@ -890,9 +890,14 @@ void D3DX12Wrapper::Run() {
 		sun->CalculateViewMatrix();
 		shadow->SetVPMatrix(sun->GetShadowViewMatrix(), sun->GetProjMatrix()); // sun->GetViewMatrix()
 		shadow->SetSunPos(sun->GetFixedDirection());
+
+		// VSMを利用する場合は平行投影ビュー行列を利用するため以下のsunDir代入処理を用いる
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
+
+		// 深度マップを使う場合は透視投影行列によりビュー行列を作成しているため、太陽位置をカメラ位置に合わせて調整している。これに伴い、skyLUTにおける太陽の位置を合わせて調整する必要がある。
+		//skyLUTBuffer.sunDirection = sun->GetPersedSunDirection();
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 		air->SetFrustum(camera->GetDummyFrustum());

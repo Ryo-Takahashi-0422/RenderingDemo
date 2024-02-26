@@ -13,16 +13,16 @@ void Sun::Init()
     mappedMatrix = new BillboardMatrix;
 
     // デプスマップベースの影描画にはこちらを利用
-    ////プロジェクション(射影)行列の生成・乗算
-    //sunProjMatrix = XMMatrixPerspectiveFovLH
-    //(
-    //    XM_PIDIV2, // 画角90°
-    //    1,
-    //    1.0, // ニア―クリップ
-    //    3000.0 // ファークリップ
-    //);
+    //プロジェクション(射影)行列の生成・乗算
+    sunProjMatrix = XMMatrixPerspectiveFovLH
+    (
+        XM_PIDIV2, // 画角90°
+        1,
+        1.0, // ニア―クリップ
+        3000.0 // ファークリップ
+    );
 
-    sunProjMatrix = XMMatrixOrthographicLH(100, 100, 1, 1000);
+    sunProjMatrix = XMMatrixOrthographicLH(100, 100, 1, 200);
     
     CreateRootSignature();
     ShaderCompile();
@@ -65,6 +65,7 @@ void Sun::CalculateBillbordMatrix()
     auto fixedDir = direction;
     //XMStoreFloat3(&fixedDir,XMLoadFloat3(&charaPos));
     fixedDir.y *= -1;
+
     XMVECTOR zDir = XMLoadFloat3(&fixedDir);
     XMVECTOR xDir, yDir;
     //yDir = XMVector3Cross(zDir, xDir);    
@@ -159,7 +160,7 @@ void Sun::CalculateViewMatrix()
     XMFLOAT3 target(0, 0, 0);
     XMFLOAT3 up(0, 1, 0);
     auto fixedDir = direction;
-    fixedDir.x *=65;
+    fixedDir.x *= 65;
     fixedDir.y *= -65;
     fixedDir.z *= 65;
     expFixedDir = fixedDir;

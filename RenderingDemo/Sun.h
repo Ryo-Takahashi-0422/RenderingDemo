@@ -100,6 +100,7 @@ public:
 	void CalculateViewMatrix();
 	XMFLOAT3 GetDirection() { return direction; };
 	XMFLOAT3 GetFixedDirection() { return expFixedDir; };
+
 	void ChangeSceneMatrix(XMMATRIX _world);
 	ComPtr<ID3D12Resource> GetRenderResource() { return renderingResource; };
 	XMMATRIX GetViewMatrix() { return sunViewMatrix; };

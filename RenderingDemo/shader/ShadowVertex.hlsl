@@ -21,8 +21,8 @@ vsOutput vs_main
         
         // vsmの出力結果を安定させる。この処理がないとrgb値にムラが出る。利用する側でも同様の処理を行う必要あり。
         float3 oLightPos = lightPos;
-        oLightPos.x += pos.x;
-        oLightPos.z += pos.z;
+        //oLightPos.x += pos.x/* * lightPos.y / 65.0f*/;
+        //oLightPos.z += pos.z/* * lightPos.y / 65.0f*/;
         
         float3 worldPos = pos;
         output.depthAndLength.x = length(worldPos - oLightPos) / lAdust;
@@ -50,8 +50,8 @@ vsOutput vs_main
     output.position = mul(mul(mul(proj, view), world), pos);
     
     float3 oLightPos = lightPos;
-    oLightPos.x += pos.x;
-    oLightPos.z += pos.z;
+    //oLightPos.x += pos.x/* * lightPos.y / 65.0f*/;
+    //oLightPos.z += pos.z/* * lightPos.y / 65.0f*/;
     
     //oLightPos.z += pos.z;
     
