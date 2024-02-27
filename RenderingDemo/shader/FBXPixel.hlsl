@@ -55,15 +55,27 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 oriCol = result;
     //shadowPos.z /= 65;
     float lz = input.lvDepth;
+    lz = length(input.worldPosition - input.light) / input.adjust;
+    
+    
+    float Dot = dot(input.worldNormal, sunDIr);
+    float nor = saturate(abs(Dot) + 0.5f);
     if (input.isChara)
     {
         lz = input.trueDepth;
         shadowValue = float2(vsmmap.Sample(smp, shadowUV).z, vsmmap.Sample(smp, shadowUV).z * vsmmap.Sample(smp, shadowUV).z);
         //shadowValue.x *= 3.0f;
         //shadowValue.y = shadowValue.x * shadowValue.x;
+        nor += 0.3f;
 
     }
-    if (lz /*- 0.0001f*/ >= shadowValue.x/* && lz <= 1.0f*/)
+
+    //if (nor < 0.0f)
+    //{
+    //    lz *= 2.5;
+    //}
+
+    if (lz /*- 0.0001f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
 
         float depth_sq = shadowValue.y;
@@ -71,10 +83,11 @@ float4 FBXPS(Output input) : SV_TARGET
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
 
-        float3 shadowColor = result.xyz * 0.2f;
+        float3 shadowColor = result.xyz * 0.3f * nor;
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
     }
     
+
         
     float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
@@ -86,7 +99,7 @@ float4 FBXPS(Output input) : SV_TARGET
     //    float md = shadowPos.z - depth;
     //    float litFactor = var / (var + md * md);
 
-    //    float3 shadowColor = result.xyz * 0.3f;
+    //    float3 shadowColor = result.xyz * 0.3f * nor;
     //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
         
         

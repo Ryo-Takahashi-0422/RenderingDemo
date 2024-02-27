@@ -25,11 +25,12 @@ Output FBXVS
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
     bool moveObj = true;
     
-    float lAdust = 200.0f;
+    output.adjust = 200.0f;
     float3 lightPos;
     lightPos.x = 65 * sunDIr.x;
     lightPos.y = -65 * sunDIr.y;
     lightPos.z = 65 * sunDIr.z;
+    output.light = lightPos;
     
     if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
     {
@@ -46,7 +47,7 @@ Output FBXVS
         //float3 lightPos = -65 * sunDIr;
         //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
         //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
-        output.lvDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
     }
@@ -65,11 +66,11 @@ Output FBXVS
 
         // キャラクターのシャドウマップ上の描画は2通りある。通常のライト位置および高さを1/n倍したもので、後者はsponzaの影描画で利用する。前者はキャラクターの影描画で利用する。
         output.truePos = output.lvPos;        
-        output.trueDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
         
         lightPos /= 3.0f;
-        output.lvDepth = length(output.worldPosition.xyz - lightPos) / lAdust;
+        output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65 / (lightPos.y + 0.01f);
         output.isChara = true;
         
@@ -105,7 +106,7 @@ Output FBXVS
     
     output.screenPosition = output.svpos;
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
-    output.worldNormal = normalize(mul(world, norm).xyz);
+    output.worldNormal = normalize(mul(world, norm).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
 
     return output;
 }

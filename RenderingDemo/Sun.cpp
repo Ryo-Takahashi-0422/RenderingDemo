@@ -22,7 +22,7 @@ void Sun::Init()
         3000.0 // ファークリップ
     );
 
-    sunProjMatrix = XMMatrixOrthographicLH(100, 100, 1, 200);
+    sunProjMatrix = XMMatrixOrthographicLH(100.0f, 100.0f, 1.0f, 200.0f);
     
     CreateRootSignature();
     ShaderCompile();

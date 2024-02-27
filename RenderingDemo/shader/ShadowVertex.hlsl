@@ -12,7 +12,7 @@ vsOutput vs_main
 )
 {
     vsOutput output;
-    float lAdust = 200.0f;
+    output.adjust = 200.0f;
 
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
@@ -25,11 +25,11 @@ vsOutput vs_main
         //oLightPos.z += pos.z/* * lightPos.y / 65.0f*/;
         
         float3 worldPos = pos;
-        output.depthAndLength.x = length(worldPos - oLightPos) / lAdust;
+        output.depthAndLength.x = length(worldPos - oLightPos) / output.adjust;
         output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
         output.trueDepth = output.depthAndLength.x;
         output.worldPos = pos;
-        
+        output.isChara = false;
         return output;
     }
     
@@ -57,10 +57,10 @@ vsOutput vs_main
     
     float3 worldPos = mul(world, pos);
     output.worldPos = worldPos;
-    output.trueDepth = length(worldPos - oLightPos) / lAdust;
+    output.trueDepth = length(worldPos - oLightPos) / output.adjust;
     oLightPos /= 3.0f;
-    output.depthAndLength.x = length(worldPos - oLightPos) / lAdust;
+    output.depthAndLength.x = length(worldPos - oLightPos) / output.adjust;
     output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
-        
+    output.isChara = true;
     return output;
 }

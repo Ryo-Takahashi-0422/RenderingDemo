@@ -18,6 +18,8 @@ struct Output
     float3 truePos : TRUE_POSITION;
     float lvDepth : LIGHTVIEW_DEPTH;
     float trueDepth : TRUE_DEPTH;
+    float3 light : LIGHT;
+    float adjust : ADJUST;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
