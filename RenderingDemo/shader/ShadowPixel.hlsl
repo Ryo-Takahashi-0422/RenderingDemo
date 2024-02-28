@@ -3,9 +3,13 @@
 float4 ps_main(vsOutput input) : SV_TARGET
 {
     float3 oLightPos = lightPos;
-    if (input.isChara)
+    // 2024/2/28時点、sponzaの草花や花瓶など高度低めのオブジェクトの影が薄くなる問題に対する手段は以下以外にない...以下のようにあらゆるオブジェクトにライトを近づけて影を強調すると、太陽高度低めのときに外壁が光を貫通してしまう...
+    // pixより拾った頂点インデックス番号で影を強調するオブジェクトを直に指定している。ちなみにキャラクター描画時にはインデックスが0開始且つ25714以下に収まるため、キャラクターの影も強調出来ている。現状はもうこれ以外に思いつかない...泣
+    if (input.index <= 25714 || (49897 <= input.index && input.index <= 77462) || (229613 <= input.index && input.index <= 233693))
     {
-        oLightPos /= 3.0f;
+        float newY = input.worldPos.y + 5.0f;
+        float div = oLightPos.y / newY;
+        oLightPos /= div;
     }
     
     float depth = length(input.worldPos - oLightPos) / input.adjust;

@@ -60,20 +60,11 @@ float4 FBXPS(Output input) : SV_TARGET
     
     float Dot = dot(input.worldNormal, sunDIr);
     float nor = saturate(abs(Dot) + 0.5f);
-    if (input.isChara)
+    if (input.isEnhanceShadow)
     {
         lz = input.trueDepth;
         shadowValue = float2(vsmmap.Sample(smp, shadowUV).z, vsmmap.Sample(smp, shadowUV).z * vsmmap.Sample(smp, shadowUV).z);
-        //shadowValue.x *= 3.0f;
-        //shadowValue.y = shadowValue.x * shadowValue.x;
-        nor += 0.3f;
-
     }
-
-    //if (nor < 0.0f)
-    //{
-    //    lz *= 2.5;
-    //}
 
     if (lz /*- 0.0001f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {

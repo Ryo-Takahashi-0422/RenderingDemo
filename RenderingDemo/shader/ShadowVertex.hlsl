@@ -8,7 +8,8 @@ vsOutput vs_main
     uint3 boneno1 : BONE_NO_ZeroToTwo,
     uint3 boneno2 : BONE_NO_ThreeToFive,
     float3 boneweight1 : WEIGHT_ZeroToTwo,
-    float3 boneweight2 : WEIGHT_ThreeToFive
+    float3 boneweight2 : WEIGHT_ThreeToFive,
+uint index : SV_VertexID
 )
 {
     vsOutput output;
@@ -16,19 +17,19 @@ vsOutput vs_main
 
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
-        //pos -= norm*0.001;
         output.position = mul(mul(proj, view), pos);
         
         // vsmの出力結果を安定させる。この処理がないとrgb値にムラが出る。利用する側でも同様の処理を行う必要あり。
         float3 oLightPos = lightPos;
-        //oLightPos.x += pos.x/* * lightPos.y / 65.0f*/;
-        //oLightPos.z += pos.z/* * lightPos.y / 65.0f*/;
         
         float3 worldPos = pos;
-        output.depthAndLength.x = length(worldPos - oLightPos) / output.adjust;
-        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
-        output.trueDepth = output.depthAndLength.x;
         output.worldPos = pos;
+        output.trueDepth = length(worldPos - lightPos) / output.adjust;
+
+        output.depthAndLength.x = length(worldPos - lightPos) / output.adjust;
+        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
+        output.index = index;
+        
         output.isChara = false;
         return output;
     }
@@ -41,24 +42,21 @@ vsOutput vs_main
     matrix bm5 = bones[boneno2[1]] * boneweight2[1];
     matrix bm6 = bones[boneno2[2]] * boneweight2[2];
     
-    matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
-    
+    matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;   
     
     pos = mul(bm, pos);
     pos = mul(rotation, pos);
-    //pos -= norm * 0.01;
+
     output.position = mul(mul(mul(proj, view), world), pos);
     
     float3 oLightPos = lightPos;
-    //oLightPos.x += pos.x/* * lightPos.y / 65.0f*/;
-    //oLightPos.z += pos.z/* * lightPos.y / 65.0f*/;
-    
-    //oLightPos.z += pos.z;
     
     float3 worldPos = mul(world, pos);
     output.worldPos = worldPos;
-    output.trueDepth = length(worldPos - oLightPos) / output.adjust;
-    oLightPos /= 3.0f;
+    output.trueDepth = /*0.98f * */length(worldPos - oLightPos) / output.adjust;
+    //float jj = worldPos.y + 5.0f;
+    //float k = oLightPos.y / jj;
+    //oLightPos /= k;
     output.depthAndLength.x = length(worldPos - oLightPos) / output.adjust;
     output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
     output.isChara = true;

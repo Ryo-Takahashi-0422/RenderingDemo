@@ -14,12 +14,13 @@ struct Output
     float4 worldPosition : WORLD_POSITION;
     float3 worldNormal : WORLD_NORMAL;
     float4 lvPos : LIGHTVIEW_POSITION;
-    bool isChara : CharacterOrNot;
+    bool isEnhanceShadow : ENHANCESHADOW;
     float3 truePos : TRUE_POSITION;
     float lvDepth : LIGHTVIEW_DEPTH;
     float trueDepth : TRUE_DEPTH;
     float3 light : LIGHT;
     float adjust : ADJUST;
+    float index : INDEX;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;

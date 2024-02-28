@@ -91,6 +91,7 @@ private:
 	XMMATRIX shadowViewMatrix;
 	XMMATRIX sunProjMatrix;
 	XMFLOAT3 expFixedDir;
+	float adjustDirValue = 95.0f; // 観測値として65以下だと平行投影ビュー時に太陽位置がある角度においてsponzaにめり込み、シェーディングエラーが発生する
 
 public:
 	Sun(ID3D12Device* dev, Camera* camera);

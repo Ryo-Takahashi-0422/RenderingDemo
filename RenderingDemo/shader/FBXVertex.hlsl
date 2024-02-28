@@ -10,7 +10,8 @@ Output FBXVS
     float3 boneweight2 : WEIGHT_ThreeToFive,
     float3 tangent : TANGENT,
     float3 binormal : BINORMAL,
-    float3 vnormal : NORMAL)
+    float3 vnormal : NORMAL,
+uint index : SV_VertexID)
 {
     Output output; // ピクセルシェーダーに渡す値
     
@@ -27,9 +28,10 @@ Output FBXVS
     
     output.adjust = 200.0f;
     float3 lightPos;
-    lightPos.x = 65 * sunDIr.x;
-    lightPos.y = -65 * sunDIr.y;
-    lightPos.z = 65 * sunDIr.z;
+    float adjustDirValue = 95.0f;
+    lightPos.x = adjustDirValue * sunDIr.x;
+    lightPos.y = -adjustDirValue * sunDIr.y;
+    lightPos.z = adjustDirValue * sunDIr.z;
     output.light = lightPos;
     
     if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
@@ -47,9 +49,22 @@ Output FBXVS
         //float3 lightPos = -65 * sunDIr;
         //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
         //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
+        output.truePos = output.lvPos;
+        output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
+        //float jj = output.worldPosition.y + 5.0f;
+        //float k = output.worldPosition.y / jj;
+        //lightPos /= k;
+        output.isEnhanceShadow = false;
+        if (index <= 25714 || (49897 <= index && index <= 77462) || (229613 <= index && index <= 233693))
+        {
+            float newY = output.worldPosition.y + 5.0f;
+            float div = lightPos.y / newY;
+            lightPos /= div;
+            output.isEnhanceShadow = true;
+        }
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
-        output.isChara = false;
+        
     }
     else
     {
@@ -69,10 +84,12 @@ Output FBXVS
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
         
-        lightPos /= 3.0f;
+        float jj = output.worldPosition.y + 5.0f;
+        float k = output.worldPosition.y / jj;
+        lightPos /= k;
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65 / (lightPos.y + 0.01f);
-        output.isChara = true;
+        output.isEnhanceShadow = true;
         
     }
     //pos = mul(bm, pos);

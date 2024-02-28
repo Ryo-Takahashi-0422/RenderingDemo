@@ -19,4 +19,5 @@ struct vsOutput
     float trueDepth : TRUE_DEPTH;
     bool isChara : IS_CHARACTER;
     float adjust : ADJUST;
+    float index : INDEX;
 };
