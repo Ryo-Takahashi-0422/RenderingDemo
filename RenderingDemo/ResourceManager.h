@@ -3,6 +3,7 @@
 //シェーダー側に渡す基本的な行列データ
 struct FBXSceneMatrix
 {
+	XMMATRIX charaRot;
 	XMMATRIX world; // world matrix
 	XMMATRIX view; // view matrix
 	XMMATRIX proj; // projection matri

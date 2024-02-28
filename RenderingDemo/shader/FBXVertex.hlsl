@@ -64,7 +64,8 @@ uint index : SV_VertexID)
         }
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
-        
+        output.isChara = false;
+
     }
     else
     {
@@ -90,7 +91,7 @@ uint index : SV_VertexID)
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65 / (lightPos.y + 0.01f);
         output.isEnhanceShadow = true;
-        
+        output.isChara = true;
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);
@@ -102,7 +103,7 @@ uint index : SV_VertexID)
     mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
     mat = transpose(mat);
 
-    float3 lightDirection = float3(0, 1, 1);
+    float3 lightDirection = -sunDIr;
     output.lightTangentDirection = float4(normalize(lightDirection), 1);
      
     float3x3 bmTan;
@@ -116,6 +117,8 @@ uint index : SV_VertexID)
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
     output.norm = mul(world, norm);
+    output.rotatedNorm = mul(world, norm);
+    output.rotatedNorm = mul(charaRot, output.rotatedNorm);
     //output.vnormal = mul(view, output.norm);
     
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ

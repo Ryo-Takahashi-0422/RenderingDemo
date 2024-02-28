@@ -15,12 +15,14 @@ struct Output
     float3 worldNormal : WORLD_NORMAL;
     float4 lvPos : LIGHTVIEW_POSITION;
     bool isEnhanceShadow : ENHANCESHADOW;
+    bool isChara : chara;
     float3 truePos : TRUE_POSITION;
     float lvDepth : LIGHTVIEW_DEPTH;
     float trueDepth : TRUE_DEPTH;
     float3 light : LIGHT;
     float adjust : ADJUST;
     float index : INDEX;
+    float4 rotatedNorm : ROTATED_NORMAL;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
@@ -35,6 +37,7 @@ struct PixelOutput
 
 cbuffer SceneBuffer : register(b0) // 変換行列
 {
+    matrix charaRot;
     matrix world; // world matrix
     matrix view; // view matrix
     matrix proj; // projection matrix

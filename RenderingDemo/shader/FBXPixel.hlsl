@@ -2,16 +2,31 @@
 
 float4 FBXPS(Output input) : SV_TARGET
 {
-    float3 light = normalize(float3(0, 1, 0));
-    float3 lightColor = float3(1, 1, 1);
+    float4 result;
     
-    // ディフューズ計算
-    float diffuseB = saturate(dot(light, input.norm.xyz));
+    //float3 light = normalize(float3(0, 1, 0));
+    //float3 lightColor = float3(1, 1, 1);
+    
+    //// ディフューズ計算
+    //float diffuseB = saturate(dot(light, input.norm.xyz));
     float tangentWeight = 1.0f;
-    unsigned int biNormalWeight = 0; // 0でUVシームが多少目立たなくなる
+    unsigned int biNormalWeight = 0.3; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.3f;
-    float brightEmpha = 2.5f;
+    float brightEmpha = 4.5f;
     
+    float Dot = dot(input.worldNormal, sunDIr);
+    float nor = saturate(abs(Dot) + 0.5f);
+    
+    if (input.isChara)
+    {
+        brightEmpha = 1.3f;
+        nor += 0.75f;
+        brightMin = 0.2f;
+        input.normal.x *= charaRot[0].z/* * 0.5f*/;
+        //input.normal.y *= -sign(charaRot[0].y) * charaRot[0].x /* * 0.5f*/;
+        //input.normal.z *= charaRot[0].x/* * 0.5f*/;
+    }
+
     // タイリング対応
     int uvX = abs(input.uv.x);
     int uvY = abs(input.uv.y);
@@ -23,9 +38,10 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
     //return float4(normVec, 1);
-    float3 normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-    //return float4(normal, 1);
     
+    float3 normal = abs(dot(sunDIr, normalize(input.norm.xyz))) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    //return float4(normal, 1);
+    normal *= -sunDIr.y;
     //return float4(input.lightTangentDirection.xyz, 1);
     float bright = dot(input.lightTangentDirection.xyz, normal);
     bright = max(brightMin, bright);
@@ -42,7 +58,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 air = airmap.Sample(smp, float3(scrPos, saturate(airZ)));
     float3 inScatter = air.xyz;
 
-    float4 result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
+    result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     //if(col.x !=0)
     //{
     
@@ -58,22 +74,30 @@ float4 FBXPS(Output input) : SV_TARGET
     lz = length(input.worldPosition - input.light) / input.adjust;
     
     
-    float Dot = dot(input.worldNormal, sunDIr);
-    float nor = saturate(abs(Dot) + 0.5f);
+
     if (input.isEnhanceShadow)
     {
         lz = input.trueDepth;
         shadowValue = float2(vsmmap.Sample(smp, shadowUV).z, vsmmap.Sample(smp, shadowUV).z * vsmmap.Sample(smp, shadowUV).z);
     }
+    
+    if (input.isChara)
+    {
+        //float a = dot(normalize(input.rotatedNorm.xyz), sunDIr);
+        //if (a < 0)
+        //    a -= a;
+        //float b = clamp(a, 0, 1);
+        //result.xyz += a;
+    }
 
-    if (lz /*- 0.0001f*/ > shadowValue.x/* && lz <= 1.0f*/)
+    if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
 
         float depth_sq = shadowValue.y;
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
-
+        
         float3 shadowColor = result.xyz * 0.3f * nor;
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
     }

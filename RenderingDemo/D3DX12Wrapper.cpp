@@ -1316,6 +1316,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 				}
 			}
+
+			resourceManager[fbxIndex]->GetMappedMatrix()->charaRot = XMMatrixMultiply(connanDirection, XMMatrixRotationAxis(XMVECTOR{0,1,0,0}, -PI / 2));
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 			localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
