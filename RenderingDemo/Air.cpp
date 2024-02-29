@@ -446,14 +446,14 @@ void Air::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdA
     );
     _cmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
-    // シャドウマップを深度書き込み可能な状態に戻す
-    auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        shadowMapResource.Get(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE
-    );
-    _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
+    //// シャドウマップを深度書き込み可能な状態に戻す
+    //auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    //(
+    //    shadowMapResource.Get(),
+    //    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+    //    D3D12_RESOURCE_STATE_DEPTH_WRITE
+    //);
+    //_cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 
 
 

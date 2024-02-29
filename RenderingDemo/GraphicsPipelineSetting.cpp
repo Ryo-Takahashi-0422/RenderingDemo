@@ -47,6 +47,8 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicsPipelineSetting::SetGPL(
 	gpipeLine.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	gpipeLine.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	gpipeLine.RasterizerState.DepthClipEnable = true;
+	//gpipeLine.RasterizerState.DepthBias = 0.1;
+	//gpipeLine.RasterizerState.SlopeScaledDepthBias = 0.1;
 
 	renderTargetDesc.BlendEnable = false;//ブレンドを有効にするか無効にするか
 	renderTargetDesc.LogicOpEnable = false;//論理操作を有効にするか無効にするか

@@ -11,9 +11,18 @@ struct Output
     float3 normal : NORMAL2;
     
     float4 screenPosition : SCREEN_POSITIO;
-    float3 worldPosition : WORLD_POSITION;
+    float4 worldPosition : WORLD_POSITION;
     float3 worldNormal : WORLD_NORMAL;
-
+    float4 lvPos : LIGHTVIEW_POSITION;
+    bool isEnhanceShadow : ENHANCESHADOW;
+    bool isChara : chara;
+    float3 truePos : TRUE_POSITION;
+    float lvDepth : LIGHTVIEW_DEPTH;
+    float trueDepth : TRUE_DEPTH;
+    float3 light : LIGHT;
+    float adjust : ADJUST;
+    float index : INDEX;
+    float4 rotatedNorm : ROTATED_NORMAL;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
@@ -28,9 +37,11 @@ struct PixelOutput
 
 cbuffer SceneBuffer : register(b0) // 変換行列
 {
+    matrix charaRot; // キャラクターの回転行列を転置したもの。
     matrix world; // world matrix
     matrix view; // view matrix
     matrix proj; // projection matrix
+    matrix oProj;
     //matrix lightCamera; // view matrix from light * orthographic projection matrix
     //matrix shadow; // shadow matrix
     //float3 eye; // eye(camera) position
@@ -66,9 +77,11 @@ SamplerState smp : register(s0); // No.0 sampler
 //SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
 //
 Texture3D<float4> airmap : register(t0);
-Texture2D<float4> colormap : register(t1);
-Texture2D<float4> normalmap : register(t2);
-Texture2D<float4> specularmap : register(t3);
-Texture2D<float4> metalmap : register(t4);
-Texture2D<float> transparentmap : register(t5);
+Texture2D<float4> vsmmap : register(t1);
+Texture2D<float4> depthmap : register(t2);
+Texture2D<float4> colormap : register(t3);
+Texture2D<float4> normalmap : register(t4);
+Texture2D<float4> specularmap : register(t5);
+Texture2D<float4> metalmap : register(t6);
+Texture2D<float> transparentmap : register(t7);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture

@@ -624,9 +624,16 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadow = new Shadow(_dev.Get());
 	shadow->Init();
 	
-	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapREsource(), shadowFactor->GetShadowFactorTextureResource());
+	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
+
+	shadowRenderingBlur = new Blur(_dev.Get());
+	shadowRenderingBlur->Init();
+	shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
+
+
+	comBlur = new ComputeBlur(_dev.Get(), shadow->GetShadowMapResource());
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -635,6 +642,18 @@ bool D3DX12Wrapper::ResourceInit() {
 	// air(ボリュームライティング)はオブジェクトとキャラクターで利用
 	resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
 	resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
+	// VSMをセット
+	resourceManager[0]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
+	resourceManager[1]->SetVSMResourceAndCreateView(shadowRenderingBlur->GetBlurResource());
+	// airのブラー結果をセット
+	//resourceManager[0]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
+	//resourceManager[1]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
+	// ブラーしたシャドウマップをセット
+	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
+	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
+	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
 
 	return true;
 }
@@ -870,9 +889,15 @@ void D3DX12Wrapper::Run() {
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());
 		sun->CalculateViewMatrix();
 		shadow->SetVPMatrix(sun->GetShadowViewMatrix(), sun->GetProjMatrix()); // sun->GetViewMatrix()
+		shadow->SetSunPos(sun->GetFixedDirection());
+
+		// VSMを利用する場合は平行投影ビュー行列を利用するため以下のsunDir代入処理を用いる
 		skyLUTBuffer.sunDirection.x = sunDir.x;
 		skyLUTBuffer.sunDirection.y = sunDir.y;
 		skyLUTBuffer.sunDirection.z = sunDir.z;
+
+		// 深度マップを使う場合は透視投影行列によりビュー行列を作成しているため、太陽位置をカメラ位置に合わせて調整している。これに伴い、skyLUTにおける太陽の位置を合わせて調整する必要がある。
+		//skyLUTBuffer.sunDirection = sun->GetPersedSunDirection();
 		skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 
 		air->SetFrustum(camera->GetDummyFrustum());
@@ -935,9 +960,11 @@ void D3DX12Wrapper::Run() {
 		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		
+		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
+		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);			
@@ -956,6 +983,23 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
+		// シャドウマップを深度書き込み可能な状態に戻す
+		auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			shadow->GetShadowMapResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
+
+		// comBlur コピー用リソース状態をテクスチャとして読み込める状態にする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			comBlur->GetBlurTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
@@ -1146,7 +1190,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
 		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);;
+		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
 		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		handleFBX.ptr += num * inc;
@@ -1211,7 +1255,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
 						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
 
+						charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+						charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 					}
 
 					// Left Key
@@ -1220,7 +1267,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						connanDirection *= leftSpinMatrix;
 						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-
+						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 					}
 
@@ -1230,37 +1277,27 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						connanDirection *= rightSpinMatrix;
 						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-
+						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 					}
-
-
 				}
 
 				// Left Arrow Key
 				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					//if (num == 0)
-					//{
-						//camera->Transform(leftSpinMatrix);
-						sun->ChangeSceneMatrix(rightSpinMatrix);
-						sky->ChangeSceneMatrix(rightSpinMatrix);
-						shadow->SetRotationMatrix(connanDirection);
-					//}
+
+					sun->ChangeSceneMatrix(rightSpinMatrix);
+					sky->ChangeSceneMatrix(rightSpinMatrix);
 				}
 
 				// Right Arrow Key
 				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-					//if (num == 0)
-					//{
-						//camera->Transform(rightSpinMatrix);
-						sun->ChangeSceneMatrix(leftSpinMatrix);
-						sky->ChangeSceneMatrix(leftSpinMatrix);
-						shadow->SetRotationMatrix(connanDirection);
-					//}
+
+					sun->ChangeSceneMatrix(leftSpinMatrix);
+					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
 
 				// Up Arrow Key
@@ -1276,11 +1313,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				{
 					// 当たり判定処理
 					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
-					resourceManager[fbxIndex]->GetMappedMatrix()->view *= XMMatrixTranslation(0, 0, forwardSpeed);
-					//camera->MoveCamera(forwardSpeed, connanDirection);
-					shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
+					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 				}
 			}
+
+			// ★キャラクターの回転行列を転置したものをGPUへ渡す。DirectXではCPUから受け取った行列は転置してGPUへ転送される。(or GPUで転置される? 詳しくは不明) CPU側で利用している回転行列とGPUで利用する回転行列を合わせることでGPU側での法線回転計算が上手くいっている認識だが...
+			resourceManager[fbxIndex]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 			localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
@@ -1297,7 +1335,17 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
 			dHandle.ptr += cbv_srv_Size * 8;
 
-			localCmdList->SetGraphicsRootDescriptorTable(2, dHandle); // Phong Material Parameters(Numdescriptor : 3)
+			int textureindex = 2;
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // air
+			++textureindex;
+			dHandle.ptr += cbv_srv_Size;
+
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // vsm
+			++textureindex;
+			dHandle.ptr += cbv_srv_Size;
+
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap
+			++textureindex;
 			dHandle.ptr += cbv_srv_Size;
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
@@ -1319,7 +1367,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			auto matTexSize = matTexSizes[fbxIndex];
 			auto tHandle = dHandle;
 			tHandle.ptr += cbv_srv_Size * indiceContainerSize + cbv_srv_Size * textureIndexes[fbxIndex][0] * num; // ★★スレッド1のみ更にスレッド0が処理する最初のテクスチャ数分　+ cbv_srv_Size * textureIndexes[0].second
-			int texStartIndex = 3; // テクスチャを格納するディスクリプタテーブル番号の開始位置
+			int texStartIndex = textureindex; // テクスチャを格納するディスクリプタテーブル番号の開始位置
 			auto textureTableStartIndex = texStartIndex; // 3 is number of texture memory position in SRV
 			auto indiceSize = 0;
 			int itMATCnt = 0;
@@ -1393,7 +1441,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			
 			if (num == 0)
 			{
-				DrawCollider(fbxIndex);
+				//DrawCollider(fbxIndex);
 			}
 		}
 

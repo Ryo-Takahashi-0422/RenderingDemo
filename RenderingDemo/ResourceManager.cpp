@@ -419,7 +419,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 9 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-8:skyとImGuiとsun, 9-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 11 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-11:skyとImGuiとsunとairとvsmとshadowmap, 12-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -486,9 +486,9 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	handle.ptr += inc * 4; // sky, ImGui,sun, Air空けておく
+	handle.ptr += inc * 6; // sky, ImGui,sun, Air, vsm, shadowmap分空けておく
 
-	// 9-x:Phong Material Parameters
+	// 12-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];
@@ -723,6 +723,52 @@ void ResourceManager::SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airRes
 	);
 }
 
+void ResourceManager::SetVSMResourceAndCreateView(ComPtr<ID3D12Resource> _vsmResource)
+{
+	vsmBuffer = _vsmResource;
+
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	handle.ptr += inc * 9;
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = /*DXGI_FORMAT_R32_FLOAT*/DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	_dev->CreateShaderResourceView
+	(
+		vsmBuffer.Get(),
+		&srvDesc,
+		handle
+	);
+
+}
+
+void ResourceManager::SetShadowResourceAndCreateView(ComPtr<ID3D12Resource> _shadowResource)
+{
+	shadowmapBuffer = _shadowResource;
+
+	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	handle.ptr += inc * 10;
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	_dev->CreateShaderResourceView
+	(
+		shadowmapBuffer.Get(),
+		&srvDesc,
+		handle
+	);
+
+}
+
 void ResourceManager::SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr)
 {
 	mappedMatrix->shadowPosMatrix = _shadowPosMatrix;
@@ -730,4 +776,9 @@ void ResourceManager::SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPo
 	mappedMatrix->shadowView = _shadowView;
 	mappedMatrix->eyePos = _eyePos;
 	mappedMatrix->sunDIr = _sunDIr;
+}
+
+void ResourceManager::SetProjMatrix(XMMATRIX _proj)
+{
+	mappedMatrix->oProj = _proj;
 }

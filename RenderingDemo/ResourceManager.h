@@ -3,9 +3,11 @@
 //シェーダー側に渡す基本的な行列データ
 struct FBXSceneMatrix
 {
+	XMMATRIX charaRot;
 	XMMATRIX world; // world matrix
 	XMMATRIX view; // view matrix
 	XMMATRIX proj; // projection matri
+	XMMATRIX oProj;
 	//XMMATRIX lightCamera; // view from light(view * projection)
 	//XMMATRIX shadow; // shadow matrix
 	//XMFLOAT3 eye; // position of camera
@@ -46,6 +48,8 @@ private:
 	ComPtr<ID3D12Resource> imguiBuffer = nullptr; // ImGui描画結果
 	ComPtr<ID3D12Resource> sunBuffer = nullptr; // sun描画結果
 	ComPtr<ID3D12Resource> airBuffer = nullptr; // air描画結果
+	ComPtr<ID3D12Resource> vsmBuffer = nullptr; // vsm描画結果
+	ComPtr<ID3D12Resource> shadowmapBuffer = nullptr; // シャドウマップ描画結果
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
@@ -150,10 +154,13 @@ public:
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
 
 	void ClearReference();
+	void SetProjMatrix(XMMATRIX _proj);
 	void SetSunResourceAndCreateView(ComPtr<ID3D12Resource> _sunResource);
 	void SetSkyResourceAndCreateView(ComPtr<ID3D12Resource> _skyResource);
 	void SetImGuiResourceAndCreateView(ComPtr<ID3D12Resource> _imguiResource);
 	void SetAirResourceAndCreateView(ComPtr<ID3D12Resource> _airResource);
+	void SetVSMResourceAndCreateView(ComPtr<ID3D12Resource> _vsmResource);
+	void SetShadowResourceAndCreateView(ComPtr<ID3D12Resource> _shadowResource);
 	int GetDescriptorNum() { return descriptorNum; };
 	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
 	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);

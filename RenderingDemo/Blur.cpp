@@ -1,12 +1,12 @@
 #include <stdafx.h>
-#include <Shadow.h>
+#include <Blur.h>
 
-Shadow::Shadow(ID3D12Device* dev)
+Blur::Blur(ID3D12Device* dev)
 {
     _dev = dev;
 }
 
-void Shadow::Init()
+void Blur::Init()
 {
     CreateRootSignature();
     ShaderCompile();
@@ -14,11 +14,10 @@ void Shadow::Init()
     CreateGraphicPipeline();
 
     RenderingSet();
-    InitWVPMatrixReosources();
 }
 
 // ルートシグネチャ設定
-HRESULT Shadow::CreateRootSignature()
+HRESULT Blur::CreateRootSignature()
 {
     //サンプラー作成
     stSamplerDesc[0].Init(0);
@@ -26,15 +25,21 @@ HRESULT Shadow::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // WVP
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // shadow rendering
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // shadow rendering
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[0].DescriptorTable.pDescriptorRanges = &descTableRange[0];
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 1;
+    rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -62,10 +67,10 @@ HRESULT Shadow::CreateRootSignature()
 }
 
 //  シェーダー設定
-HRESULT Shadow::ShaderCompile()
+HRESULT Blur::ShaderCompile()
 {
-    std::string vs = "ShadowVertex.hlsl";
-    std::string ps = "ShadowPixel.hlsl";
+    std::string vs = "BlurVertex.hlsl";
+    std::string ps = "BlurPixel.hlsl";
     auto pair = Utility::GetHlslFilepath(vs, ps);
 
     auto result = D3DCompileFromFile
@@ -121,7 +126,7 @@ HRESULT Shadow::ShaderCompile()
 }
 
 // 
-void Shadow::SetInputLayout()
+void Blur::SetInputLayout()
 {
     // 座標
     inputLayout =
@@ -137,18 +142,6 @@ void Shadow::SetInputLayout()
 
         },
 
-        //法線ベクトル
-        {
-            //"NORMAL_Vertex",
-            "NORMAL",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-
         //uv
         {
             "TEXCOORD",
@@ -158,56 +151,12 @@ void Shadow::SetInputLayout()
             D3D12_APPEND_ALIGNED_ELEMENT,
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
             0
-        },
-
-        //ボーン番号1セット目
-        {
-            "BONE_NO_ZeroToTwo",
-            0,
-            DXGI_FORMAT_R32G32B32_UINT, // unsigned shourt bone[0]-bone[2]
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-
-        //ボーン番号2セット目
-        {
-            "BONE_NO_ThreeToFive",
-            0,
-            DXGI_FORMAT_R32G32B32_UINT, // unsigned shourt bone[3]-bone[5]
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-
-        //ボーンウェイト1セット目
-        {
-            "WEIGHT_ZeroToTwo",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT, // float weight[0] - [2]
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-
-        //ボーンウェイト2セット目
-        {
-            "WEIGHT_ThreeToFive",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT, // float weight[3] - [5]
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
         }
     };
 }
 
 // パイプラインの生成
-HRESULT Shadow::CreateGraphicPipeline()
+HRESULT Blur::CreateGraphicPipeline()
 {
     D3D12_RENDER_TARGET_BLEND_DESC renderTargetDesc = {};
     renderTargetDesc.BlendEnable = false;//ブレンドを有効にするか無効にするか
@@ -245,10 +194,7 @@ HRESULT Shadow::CreateGraphicPipeline()
     desc.SampleDesc.Count = 1; //1サンプル/ピクセル
     desc.SampleDesc.Quality = 0;
     desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE/*D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT*/;
-    desc.DepthStencilState.DepthEnable = true;
-    desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 深度バッファーに深度値を描き込む
-    desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; // ソースデータがコピー先データより小さい場合書き込む
-    desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    desc.DepthStencilState.DepthEnable = false;
 
     auto result = _dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
 
@@ -256,17 +202,17 @@ HRESULT Shadow::CreateGraphicPipeline()
 }
 
 // RenderingTarget設定
-void Shadow::RenderingSet()
+void Blur::RenderingSet()
 {
     CreateRenderingHeap();
     CreateRenderingResource();
     CreateRenderingRTV();
     CreateRenderingSRV();
-    CreateRenderingDSV();
+    SetGaussianData();
 }
 
-// RenderingTarget RTV,SRV,DSV用ヒープの生成
-HRESULT Shadow::CreateRenderingHeap()
+// RenderingTarget RTV,SRV,shadowRendering用ヒープの生成
+HRESULT Blur::CreateRenderingHeap()
 {
     // RTV用
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
@@ -283,26 +229,20 @@ HRESULT Shadow::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 1; // matrix, shadowfactor tex
+    srvHeapDesc.NumDescriptors = 1;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
 
-    // DSV用
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.NumDescriptors = 1; // 通常の深度マップ
-    result = _dev->CreateDescriptorHeap
-    (
-        &dsvHeapDesc,
-        IID_PPV_ARGS(dsvHeap.ReleaseAndGetAddressOf())
-    );
+    // shadowRendering用
+    srvHeapDesc.NumDescriptors = 2;
+    result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(renderingHeap.ReleaseAndGetAddressOf()));
 
     return result;
 }
 
 // RenderingTarget用リソースの生成
-HRESULT Shadow::CreateRenderingResource()
+HRESULT Blur::CreateRenderingResource()
 {
     // レンダリング用
     auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -329,38 +269,12 @@ HRESULT Shadow::CreateRenderingResource()
         &depthClearValue,
         IID_PPV_ARGS(renderingResource.ReleaseAndGetAddressOf())
     );
-    if (result != S_OK) return result;
-
-    // 深度マップ用
-    auto depthHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    D3D12_RESOURCE_DESC depthResDesc = {};
-    depthResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    depthResDesc.Width = width;
-    depthResDesc.Height = height;
-    depthResDesc.DepthOrArraySize = 1;
-    depthResDesc.Format = DXGI_FORMAT_R32_TYPELESS; // 深度値書き込み用
-    depthResDesc.SampleDesc.Count = 1; // 1pixce/1つのサンプル
-    depthResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-    D3D12_CLEAR_VALUE dValue = {};
-    dValue.DepthStencil.Depth = 1.0f;
-    dValue.Format = DXGI_FORMAT_D32_FLOAT;
-
-    result = _dev->CreateCommittedResource
-    (
-        &depthHeapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &depthResDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &dValue,
-        IID_PPV_ARGS(depthBuff.ReleaseAndGetAddressOf())
-    );
-
+    
     return result;
 }
 
 // RenderingTarget用RTVの作成
-void Shadow::CreateRenderingRTV()
+void Blur::CreateRenderingRTV()
 {
     auto handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -377,7 +291,7 @@ void Shadow::CreateRenderingRTV()
 }
 
 // RenderingTarget用SRVの生成
-void Shadow::CreateRenderingSRV()
+void Blur::CreateRenderingSRV()
 {
     auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -395,130 +309,63 @@ void Shadow::CreateRenderingSRV()
     );
 }
 
-// RenderingTarget用DSVの作成
-void Shadow::CreateRenderingDSV()
+void Blur::SetGaussianData()
 {
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-    auto dsvHandle = dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart();
-    // sponza深度マップ用
-    _dev->CreateDepthStencilView
+    auto weights = Utility::GetGaussianWeight(8, 5.0f);
+
+    auto gaussianHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto gaussianBuffResDesc = CD3DX12_RESOURCE_DESC::Buffer(Utility::AlignmentSize(sizeof(weights[0]) * weights.size(), 256));
+    _dev->CreateCommittedResource
     (
-        depthBuff.Get(),
-        &dsvDesc,
-        dsvHandle
-    );
-}
-
-// WVP設定
-void Shadow::InitWVPMatrixReosources()
-{
-    CreateWVPMatrixHeap();
-    CreateWVPMatrixResources();
-    CreateWVPMatrixView();
-    MappingWVPMatrix();
-}
-
-
-HRESULT Shadow::CreateWVPMatrixHeap()
-{
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
-    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.NumDescriptors = 1; // matrix
-    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    heapDesc.NodeMask = 0;
-
-    auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(matrixHeap.ReleaseAndGetAddressOf()));
-    return result;
-}
-
-HRESULT Shadow::CreateWVPMatrixResources()
-{
-    auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(WVPMatrix) + 0xff) & ~0xff);
-
-    auto result = _dev->CreateCommittedResource
-    (
-        &heapProp,
+        &gaussianHeapProp,
         D3D12_HEAP_FLAG_NONE,
-        &resDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+        &gaussianBuffResDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(matrixResource.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(gaussianResource.ReleaseAndGetAddressOf())
     );
 
-    return result;
-}
+    auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
 
-void Shadow::CreateWVPMatrixView()
-{
-    auto handle = matrixHeap->GetCPUDescriptorHandleForHeapStart();
-
-    // frustum用view
-    D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
-    desc.BufferLocation = matrixResource->GetGPUVirtualAddress();
-    desc.SizeInBytes = matrixResource->GetDesc().Width;
+    D3D12_CONSTANT_BUFFER_VIEW_DESC gDesc;
+    gDesc.BufferLocation = gaussianResource->GetGPUVirtualAddress();
+    gDesc.SizeInBytes = gaussianResource->GetDesc().Width;
     _dev->CreateConstantBufferView
     (
-        &desc,
+        &gDesc,
+        handle
+    );
+
+    gaussianResource->Map(0, nullptr, (void**)&mappedweight);
+    std::copy(weights.begin(), weights.end(), mappedweight);
+    gaussianResource->Unmap(0, nullptr);
+}
+
+void Blur::SetRenderingResourse(ComPtr<ID3D12Resource> _RenderingRsource)
+{
+    blurResource = _RenderingRsource;
+
+    auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM/*DXGI_FORMAT_R32_FLOAT*/;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        blurResource.Get(),
+        &srvDesc,
         handle
     );
 }
 
-HRESULT Shadow::MappingWVPMatrix()
-{
-    auto result = matrixResource->Map(0, nullptr, (void**)&mappedMatrix);
-    return result;
-}
-
-void Shadow::SetVertexAndIndexInfo(std::vector<D3D12_VERTEX_BUFFER_VIEW*> _vbViews, std::vector<D3D12_INDEX_BUFFER_VIEW*> _ibViews, std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> _itIndiceFirsts, std::vector<std::vector<std::pair<std::string, VertexInfo>>> _indiceContainer)
-{
-    vbViews = _vbViews;
-    ibViews = _ibViews;
-    itIndiceFirsts = _itIndiceFirsts;
-    indiceContainer = _indiceContainer;
-}
-
-void Shadow::SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj)
-{
-    mappedMatrix->world = XMMatrixIdentity();
-    mappedMatrix->view = _sunView;
-    mappedMatrix->proj = _sunProj;
-}
-
-void Shadow::SetSunPos(XMFLOAT3 _sunPos)
-{
-    mappedMatrix->lightPos = _sunPos;
-}
-
-void Shadow::SetBoneMatrix(FBXSceneMatrix* _fbxSceneMatrix)
-{
-    std::copy(std::begin(_fbxSceneMatrix->bones), std::end(_fbxSceneMatrix->bones), mappedMatrix->bones);
-}
-
-void Shadow::SetMoveMatrix(XMMATRIX charaWorldMatrix)
-{
-    m_moveMatrix = charaWorldMatrix;
-}
-
-void Shadow::SetRotationMatrix(XMMATRIX rotationMatrix)
-{
-    m_rotationMatrix = rotationMatrix;
-}
-
-void Shadow::UpdateWorldMatrix()
-{
-    mappedMatrix->rotation = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
-    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
-}
-
 // 実行
-void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
-{    
-    UpdateWorldMatrix();// キャラクターの移動用行列を更新する
-
+void Blur::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+{
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
         renderingResource.Get(),
@@ -537,42 +384,24 @@ void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
     _cmdList->RSSetViewports(1, &viewport);
     _cmdList->RSSetScissorRects(1, &rect);
 
-    auto dsvh = dsvHeap->GetCPUDescriptorHandleForHeapStart();
     auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-    _cmdList->OMSetRenderTargets(1, &heapHandle, false, &dsvh);
+    _cmdList->OMSetRenderTargets(1, &heapHandle, false, nullptr);
     float clearColor[4] = { 0.0f,0.0f,0.0f,1.0f };
     _cmdList->ClearRenderTargetView(heapHandle, clearColor, 0, nullptr);
-    _cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
     _cmdList->SetGraphicsRootSignature(rootSignature.Get());
     _cmdList->SetPipelineState(pipelineState.Get());
-    _cmdList->SetDescriptorHeaps(1, matrixHeap.GetAddressOf());
+    _cmdList->SetDescriptorHeaps(1, renderingHeap.GetAddressOf());
 
-    auto handle = matrixHeap->GetGPUDescriptorHandleForHeapStart();
-    //auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    _cmdList->SetGraphicsRootDescriptorTable(0, handle); // matrix
+    auto handle = renderingHeap->GetGPUDescriptorHandleForHeapStart();
+    _cmdList->SetGraphicsRootDescriptorTable(0, handle); // shadowMap
+
+    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(1, handle); // gaussian weights
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    
-    
-    for (int i = 0; i < 2; ++i)
-    {
-        int ofst = 0;
-        int indiceSize = 0;
-        auto itIndiceFirst = itIndiceFirsts[i];
-        int indiceContainerSize = indiceContainer[i].size();
-        _cmdList->IASetVertexBuffers(0, 1, vbViews[i]);
-        _cmdList->IASetIndexBuffer(ibViews[i]);
-
-        for (int j = 0; j < indiceContainerSize; ++j)
-        {
-            indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
-            _cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
-            ofst += indiceSize;
-            ++itIndiceFirst;
-        }
-    }
+    _cmdList->DrawInstanced(3, 1, 0, 0);
 
     barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -581,13 +410,4 @@ void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _c
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
     _cmdList->ResourceBarrier(1, &barrierDesc);
-
-    // デブスマップを読み込み可能状態に変更する
-    D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        depthBuff.Get(),
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-    );
-    _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 }
