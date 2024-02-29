@@ -119,15 +119,9 @@ uint index : SV_VertexID)
     output.norm = mul(world, norm);
     
     matrix rot = charaRot;
-    //rot *= sign(sunDIr.x);
-    //rot[1].y *= sign(sunDIr.x);
     output.rotatedNorm = norm;
     output.rotatedNorm = mul(rot, output.rotatedNorm);
-    //output.rotatedNorm = mul(mul(mul(proj, view), world), output.rotatedNorm);
-    //output.rotatedNorm.x *= sign(-sunDIr.x);
-    //output.rotatedNorm.z *= sign(-sunDIr.x);
-    //output.vnormal = mul(view, output.norm);
-    
+
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
     output.uv = uv;
     

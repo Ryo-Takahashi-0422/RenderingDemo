@@ -37,7 +37,7 @@ struct PixelOutput
 
 cbuffer SceneBuffer : register(b0) // 変換行列
 {
-    matrix charaRot;
+    matrix charaRot; // キャラクターの回転行列を転置したもの。
     matrix world; // world matrix
     matrix view; // view matrix
     matrix proj; // projection matrix
