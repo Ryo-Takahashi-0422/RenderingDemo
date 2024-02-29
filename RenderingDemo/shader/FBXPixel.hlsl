@@ -22,11 +22,11 @@ float4 FBXPS(Output input) : SV_TARGET
         brightEmpha = 1.3f;
         nor += 0.75f;
         brightMin = 0.2f;
-        input.normal.x *= charaRot[0].z/* * 0.5f*/;
+        
         //input.normal.y *= -sign(charaRot[0].y) * charaRot[0].x /* * 0.5f*/;
         //input.normal.z *= charaRot[0].x/* * 0.5f*/;
     }
-
+    input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     // タイリング対応
     int uvX = abs(input.uv.x);
     int uvY = abs(input.uv.y);
@@ -39,11 +39,11 @@ float4 FBXPS(Output input) : SV_TARGET
     normVec = normalize(normVec);
     //return float4(normVec, 1);
     
-    float3 normal = abs(dot(sunDIr, normalize(input.norm.xyz))) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    float3 normal = dot(sunDIr, normalize(-input.rotatedNorm.xyz)) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     //return float4(normal, 1);
     normal *= -sunDIr.y;
     //return float4(input.lightTangentDirection.xyz, 1);
-    float bright = dot(input.lightTangentDirection.xyz, normal);
+    float bright = dot(abs(input.lightTangentDirection.xyz), normal);
     bright = max(brightMin, bright);
     bright = saturate(bright * brightEmpha);
     
