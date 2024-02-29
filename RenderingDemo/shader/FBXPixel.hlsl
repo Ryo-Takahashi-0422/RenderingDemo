@@ -43,7 +43,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 normCol = normalmap.Sample(smp, input.uv);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
-    float3 normal = dot(sunDIr, normalize(-input.rotatedNorm.xyz)) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    float3 normal = dot(-sunDIr, normalize(input.rotatedNorm.xyz)) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     normal *= -sunDIr.y;
     
     // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
