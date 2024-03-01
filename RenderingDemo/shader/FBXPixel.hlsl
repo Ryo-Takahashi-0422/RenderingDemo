@@ -43,8 +43,15 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 normCol = normalmap.Sample(smp, input.uv);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
-    float3 normal = dot(-sunDIr, normalize(input.rotatedNorm.xyz)) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-    normal *= -sunDIr.y;
+    
+    // 回転した法線のz前方は-方向(直したい...)なので、太陽方向もz成分をマイナス掛けする。この処理がないと太陽のx軸回転に対するキャラクターの陰が回転方向と反対側に出てしまう
+    float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
+    float3 adjustDir = -sunDIr;
+    adjustDir.z *= -1;    
+    float rotatedNormDot = dot(adjustDir, rotatedNorm);
+    
+    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
     
     // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
     if (lz - 0.01f > shadowValue.x && input.isChara)
@@ -69,7 +76,7 @@ float4 FBXPS(Output input) : SV_TARGET
     
 
     
-    
+    float fff = dot(-sunDIr, input.rotatedNorm.xyz);
 
 
 
@@ -80,6 +87,12 @@ float4 FBXPS(Output input) : SV_TARGET
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
+        
+        // sponzaの影が暗すぎるので底上げ
+        //if (!input.isChara)
+        //{
+        //    litFactor *= 1.0f + -sunDIr.y * 0.5;
+        //}
         
         float3 shadowColor = result.xyz * 0.3f * nor;
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
