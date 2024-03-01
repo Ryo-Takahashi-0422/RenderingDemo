@@ -14,7 +14,7 @@ uint index : SV_VertexID
 {
     vsOutput output;
     output.adjust = 200.0f;
-
+    output.specialObj = false;
     if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
     {
         output.position = mul(mul(proj, view), pos);
@@ -25,6 +25,12 @@ uint index : SV_VertexID
         float3 worldPos = pos;
         output.worldPos = pos;
         output.trueDepth = length(worldPos - lightPos) / output.adjust;
+        
+        // ポール影がキャラクター背面に貫通するのが目立つので、対策。キャラクターのレンダリング時にポールの落ち影かどうか判定するのに利用する。
+        if ((77496 <= index && index <= 91841))
+        {
+            output.specialObj = true;
+        }
 
         output.depthAndLength.x = length(worldPos - lightPos) / output.adjust;
         output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
