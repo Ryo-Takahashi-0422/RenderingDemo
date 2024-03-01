@@ -55,7 +55,7 @@ uint index : SV_VertexID)
         //float k = output.worldPosition.y / jj;
         //lightPos /= k;
         output.isEnhanceShadow = false;
-        if (index <= 25714 || (49897 <= index && index <= 77462) || (229613 <= index && index <= 233693))
+        if (index <= 25714 || (49897 <= index && index <= 77462) || (77496 <= index && index <= 91841) || (229613 <= index && index <= 233693))
         {
             float newY = output.worldPosition.y + 5.0f;
             float div = lightPos.y / newY;

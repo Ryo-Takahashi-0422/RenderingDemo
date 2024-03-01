@@ -20,4 +20,5 @@ struct vsOutput
     bool isChara : IS_CHARACTER;
     float adjust : ADJUST;
     float index : INDEX;
+    bool specialObj : SPECIALOBJ;
 };

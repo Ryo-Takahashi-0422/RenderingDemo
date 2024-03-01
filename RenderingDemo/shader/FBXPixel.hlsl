@@ -3,11 +3,12 @@
 float4 FBXPS(Output input) : SV_TARGET
 {
     float4 result;
-    
+       
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * /*shadowPos.xy*/(input.lvPos.xy / input.lvPos.w);
-    float2 shadowValue = vsmmap.Sample(smp, shadowUV).xy;
+    float4 vsmSample = vsmmap.Sample(smp, shadowUV);
+    float2 shadowValue = /*vsmmap.Sample(smp, shadowUV)*/vsmSample.xy;
 
     float lz = input.lvDepth;
     lz = length(input.worldPosition - input.light) / input.adjust;
@@ -15,7 +16,7 @@ float4 FBXPS(Output input) : SV_TARGET
     if (input.isEnhanceShadow)
     {
         lz = input.trueDepth;
-        shadowValue = float2(vsmmap.Sample(smp, shadowUV).z, vsmmap.Sample(smp, shadowUV).z * vsmmap.Sample(smp, shadowUV).z);
+        shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
     float tangentWeight = 1.0f;
@@ -43,8 +44,15 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 normCol = normalmap.Sample(smp, input.uv);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
-    float3 normal = dot(-sunDIr, normalize(input.rotatedNorm.xyz)) + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-    normal *= -sunDIr.y;
+    
+    // 回転した法線のz前方は-方向(直したい...)なので、太陽方向もz成分をマイナス掛けする。この処理がないと太陽のx軸回転に対するキャラクターの陰が回転方向と反対側に出てしまう
+    float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
+    float3 adjustDir = -sunDIr;
+    adjustDir.z *= -1;    
+    float rotatedNormDot = dot(adjustDir, rotatedNorm);
+    
+    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
     
     // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
     if (lz - 0.01f > shadowValue.x && input.isChara)
@@ -67,21 +75,31 @@ float4 FBXPS(Output input) : SV_TARGET
         discard; // アルファ値が0なら透過させる
     result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     
-
-    
-    
-
-
-
+    // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
+    // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
+    if (rotatedNormDot > 0)
+    {
+        rotatedNormDot = 0;
+    }
+    rotatedNormDot *= -1;
+    bool isSpecial = vsmSample.w;
+   
     if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
-
         float depth_sq = shadowValue.y;
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
-        float litFactor = var / (var + md * md);
-        
+        float litFactor = var / (var + md * md);              
         float3 shadowColor = result.xyz * 0.3f * nor;
+        
+        // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
+        if (input.isChara && isSpecial)
+        {
+            shadowColor *= (1.9f + rotatedNormDot * rotatedNormDot) * max(-sunDIr.y, 0.85f);
+            shadowColor.x = min(shadowColor.x, result.x);
+            shadowColor.y = min(shadowColor.y, result.y);
+            shadowColor.z = min(shadowColor.z, result.z);
+        }
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
     }
     
