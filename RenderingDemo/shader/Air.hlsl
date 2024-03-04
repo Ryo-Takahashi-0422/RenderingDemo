@@ -43,7 +43,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     //currentPixelDir.x *= -1;
     
     float startT = 0;
-    float divDepth = /*depthLength / depth*/0.7f;
+    float divDepth = /*depthLength / depth*/0.35f;
     //float endT = min(divDepth, distanceLimit);
     float maxT;
     float3 cameraPos3D = float3(0, adjustedEyePos.y + groundRadius, 0);

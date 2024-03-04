@@ -23,6 +23,7 @@ struct Output
     float adjust : ADJUST;
     float index : INDEX;
     float4 rotatedNorm : ROTATED_NORMAL;
+    float3 ray : RAY;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;

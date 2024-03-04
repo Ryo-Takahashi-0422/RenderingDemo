@@ -83,6 +83,16 @@ float4 FBXPS(Output input) : SV_TARGET
     }
     rotatedNormDot *= -1;
     bool isSpecial = vsmSample.w;
+    
+    float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
+    //float3 ray = normalize(input.svpos.xyz - eyePos);
+    float3 reflection = normalize(reflect(sunDIr, input.rotatedNorm.xyz));
+    float3 speclur = dot(reflection, -input.ray);
+    speclur = saturate(speclur);
+    speclur *= speclurColor;
+    //speclur = pow(speclur, 2);
+    speclur *= -sunDIr.y/* * 0.5f*/;
+    
    
     if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
@@ -101,9 +111,10 @@ float4 FBXPS(Output input) : SV_TARGET
             shadowColor.z = min(shadowColor.z, result.z);
         }
         result.xyz = lerp(shadowColor, result.xyz, litFactor);
+        speclur *= litFactor;
     }
     
-
+    //return float4(speclur, 1);
         
     float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
@@ -126,7 +137,11 @@ float4 FBXPS(Output input) : SV_TARGET
         shadowFactor = max(0.3f, (-sunDIr.y + 0.3f));
     }
     
-    result = result * shadowFactor + float4(inScatter, 0);
+    result = result * shadowFactor + float4(inScatter, 0) + float4(speclur, 0);
     
-    return result;;
+
+    
+    //result.xyz += speclur.xyz;
+    
+    return result;
 }

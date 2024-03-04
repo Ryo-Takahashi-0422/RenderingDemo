@@ -4,9 +4,9 @@ class Air
 {
 private:
     // ‰ð‘œ“xŠÖ˜A
-    int width = 256;
-    int height = 256;
-    int depth = 128;
+    int width = 128;
+    int height = 128;
+    int depth = 256;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
