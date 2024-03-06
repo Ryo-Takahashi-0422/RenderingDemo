@@ -1258,6 +1258,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 						charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 					}
 

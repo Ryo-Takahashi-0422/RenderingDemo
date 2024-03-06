@@ -20,8 +20,10 @@ struct FBXSceneMatrix
 	XMMATRIX shadowPosInvMatrix;
 	XMMATRIX shadowView;
 	XMFLOAT3 eyePos;
-	float pad;
+	float pad0;
 	XMFLOAT3 sunDIr;
+	float pad1;
+	XMFLOAT3 charaPos;
 
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off

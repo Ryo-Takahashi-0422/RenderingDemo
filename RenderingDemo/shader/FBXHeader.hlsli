@@ -58,6 +58,7 @@ cbuffer SceneBuffer : register(b0) // •ÏŠ·s—ñ
     matrix shadowView;
     float3 eyePos;
     float3 sunDIr;
+    float3 charaPos;
     //float3 lightVec;
     //bool isSelfShadow;
 };

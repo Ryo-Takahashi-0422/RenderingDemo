@@ -27,11 +27,21 @@ float4 FBXPS(Output input) : SV_TARGET
     float Dot = dot(input.worldNormal, sunDIr);
     float nor = saturate(abs(Dot) + 0.5f);
     
+    float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
+    //float3 ray = normalize(input.svpos.xyz - eyePos);
+    float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
+    float3 speclur = dot(reflection, -input.ray);
+    speclur = saturate(speclur);
+    speclur *= speclurColor;
+    //speclur = pow(speclur, 2);
+    speclur *= -sunDIr.y/* * 0.5f*/;
+    
     if (input.isChara)
     {
-        brightEmpha = 1.3f;
+        brightEmpha = 0.7f;
         nor += 0.75f;
-        brightMin = 0.2f;
+        brightMin = 0.35f;
+        speclur = pow(speclur, 2);
     }
     input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     
@@ -49,7 +59,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
     float3 adjustDir = -sunDIr;
     adjustDir.z *= -1;    
-    float rotatedNormDot = dot(adjustDir, rotatedNorm);
+    float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
     float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
@@ -83,16 +93,13 @@ float4 FBXPS(Output input) : SV_TARGET
     }
     rotatedNormDot *= -1;
     bool isSpecial = vsmSample.w;
-    
-    float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
-    //float3 ray = normalize(input.svpos.xyz - eyePos);
-    float3 reflection = normalize(reflect(sunDIr, input.rotatedNorm.xyz));
-    float3 speclur = dot(reflection, -input.ray);
-    speclur = saturate(speclur);
-    speclur *= speclurColor;
-    //speclur = pow(speclur, 2);
-    speclur *= -sunDIr.y/* * 0.5f*/;
-    
+    // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
+    // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
+    // 特定の位置で調節してごまかすしかない。根本的に影が貫通しない処理を再設計する必要がある。
+    if (charaPos.z < -5.5f || charaPos.z > 5.4f)
+    {
+        isSpecial = false;
+    }
    
     if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
