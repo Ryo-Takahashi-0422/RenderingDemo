@@ -1,8 +1,8 @@
 #include "FBXHeader.hlsli"
 
-float4 FBXPS(Output input) : SV_TARGET
+PixelOutput FBXPS(Output input) : SV_TARGET
 {
-    float4 result;
+    PixelOutput result;
        
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
@@ -71,6 +71,8 @@ float4 FBXPS(Output input) : SV_TARGET
     {
         normal *= 0.2;
     }
+    // 法線画像の結果をレンダーターゲット2に格納する
+    result.normal = float4(normal, 0);
 
     float bright = dot(abs(input.lightTangentDirection.xyz), normal);
     bright = max(brightMin, bright);
@@ -85,7 +87,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 col = colormap.Sample(smp, input.uv);
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
-    result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
+    result.col = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     
     // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
     // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
@@ -109,17 +111,17 @@ float4 FBXPS(Output input) : SV_TARGET
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);              
-        float3 shadowColor = result.xyz * 0.3f * nor;
+        float3 shadowColor = result.col.xyz * 0.3f * nor;
         
         // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
         if (input.isChara && isSpecial)
         {
             shadowColor *= (1.9f + rotatedNormDot * rotatedNormDot) * max(-sunDIr.y, 0.85f);
-            shadowColor.x = min(shadowColor.x, result.x);
-            shadowColor.y = min(shadowColor.y, result.y);
-            shadowColor.z = min(shadowColor.z, result.z);
+            shadowColor.x = min(shadowColor.x, result.col.x);
+            shadowColor.y = min(shadowColor.y, result.col.y);
+            shadowColor.z = min(shadowColor.z, result.col.z);
         }
-        result.xyz = lerp(shadowColor, result.xyz, litFactor);
+        result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         speclur *= litFactor;
     }
     
@@ -135,8 +137,8 @@ float4 FBXPS(Output input) : SV_TARGET
     //    float md = shadowPos.z - depth;
     //    float litFactor = var / (var + md * md);
 
-    //    float3 shadowColor = result.xyz * 0.3f * nor;
-    //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
+    //    float3 shadowColor = result.col.xyz * 0.3f * nor;
+    //    result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         
         
     //}
@@ -146,7 +148,8 @@ float4 FBXPS(Output input) : SV_TARGET
         shadowFactor = max(0.3f, (-sunDIr.y + 0.3f));
     }
     
-    result = result * shadowFactor + float4(inScatter, 0) + float4(speclur, 0);
+    // 色情報をレンダーターゲット1に格納する
+    result.col = result.col * shadowFactor + float4(inScatter, 0) + float4(speclur, 0);
     
 
     

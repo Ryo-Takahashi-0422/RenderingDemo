@@ -32,7 +32,7 @@ struct Output
 struct PixelOutput
 {
     float4 col : SV_TARGET0; // model color rendering
-    //float4 mnormal : SV_TARGET1; // model normal rendering
+    float4 normal : SV_TARGET1; // model normal rendering
     //float4 highLum : SV_TARGET2; // model high luminance rendering
 };
 
