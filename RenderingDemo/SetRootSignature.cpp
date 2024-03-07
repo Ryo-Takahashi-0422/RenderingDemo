@@ -35,6 +35,8 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	descTableRange[8].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6); // specular
 	descTableRange[9].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7); // metal
 	descTableRange[10].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8); // transparency
+	descTableRange[11].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9);
+	descTableRange[12].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
 
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParam[0].DescriptorTable.NumDescriptorRanges = 1; // WVP用
@@ -102,7 +104,12 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	rootParam[11].DescriptorTable.pDescriptorRanges = &descTableRange[11];
 	rootParam[11].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootSignatureDesc.NumParameters = 11;
+	rootParam[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[12].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[12].DescriptorTable.pDescriptorRanges = &descTableRange[12];
+	rootParam[12].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootSignatureDesc.NumParameters = 13;
 	rootSignatureDesc.pParameters = rootParam;
 	rootSignatureDesc.NumStaticSamplers = 3;
 	rootSignatureDesc.pStaticSamplers = stSamplerDesc;

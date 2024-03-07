@@ -19,8 +19,8 @@ float4 FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 1.0f;
-    unsigned int biNormalWeight = 0.3; // 0でUVシームが多少目立たなくなる
+    float tangentWeight = 0.0f;
+    float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.3f;
     float brightEmpha = 4.5f;
     
@@ -42,6 +42,8 @@ float4 FBXPS(Output input) : SV_TARGET
         nor += 0.75f;
         brightMin = 0.35f;
         speclur = pow(speclur, 2);
+        tangentWeight = 1.0f;
+        biNormalWeight = 0.3;
     }
     input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     
