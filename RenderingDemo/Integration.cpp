@@ -264,7 +264,7 @@ HRESULT Integration::CreateRenderingHeap()
     // RTV用
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 3;
+    rtvHeapDesc.NumDescriptors = 3; // color, normal, depth(精度不足により使わない)
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
 
@@ -276,7 +276,7 @@ HRESULT Integration::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 3;
+    srvHeapDesc.NumDescriptors = 4; // color, normal, depth(精度不足により使わない) , 外部統合デプス
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
@@ -407,6 +407,28 @@ void Integration::CreateRenderingSRV()
     _dev->CreateShaderResourceView
     (
         renderingResource3.Get(),
+        &srvDesc,
+        handle
+    );
+}
+
+void Integration::SetDepthmapResourse(ComPtr<ID3D12Resource> _resource)
+{
+    integratedDepthmap = _resource;
+
+    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    handle.ptr += inc * 3;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    _dev->CreateShaderResourceView
+    (
+        integratedDepthmap.Get(),
         &srvDesc,
         handle
     );

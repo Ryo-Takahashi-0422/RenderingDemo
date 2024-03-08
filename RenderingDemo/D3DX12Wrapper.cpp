@@ -563,6 +563,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// ‰æ‘œ“‡ƒNƒ‰ƒX¶¬
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
+	integration->SetDepthmapResourse(depthMapIntegration->GetTextureResource());
 
 	return true;
 }
