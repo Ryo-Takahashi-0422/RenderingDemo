@@ -253,6 +253,7 @@ private:
 	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
 	Integration* integration = nullptr;
+	DepthMapIntegration* depthMapIntegration = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;

@@ -281,6 +281,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\DepthMapIntegration.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\FBXPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">FBXPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -427,6 +435,7 @@
     <ClCompile Include="BufferHeapCreator.cpp" />
     <ClCompile Include="BufferShaderCompile.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
+    <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
     <ClCompile Include="IGraphicsPipelineSetting.cpp" />
@@ -491,6 +500,7 @@
     <ClInclude Include="BufferHeapCreator.h" />
     <ClInclude Include="BufferShaderCompile.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
+    <ClInclude Include="DepthMapIntegration.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />

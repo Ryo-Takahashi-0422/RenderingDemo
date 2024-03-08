@@ -179,6 +179,9 @@
     <FxCompile Include="shader\IntegrationVertex.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
+    <FxCompile Include="shader\DepthMapIntegration.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp">
@@ -347,6 +350,9 @@
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
     <ClCompile Include="Integration.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthMapIntegration.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -523,6 +529,9 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="Integration.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthMapIntegration.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

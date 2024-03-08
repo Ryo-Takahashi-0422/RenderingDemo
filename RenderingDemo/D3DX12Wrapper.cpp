@@ -562,6 +562,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// 画像統合クラス生成
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
+	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 
 	return true;
 }
@@ -865,6 +866,7 @@ void D3DX12Wrapper::Run() {
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
+		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		
 		// airのコピー用リソース状態をUAVに戻す
 		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -884,10 +886,19 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
-		// comBlur コピー用リソース状態をテクスチャとして読み込める状態にする
+		// comBlur コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
 			comBlur->GetBlurTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+		// comBlur コピー用リソース状態をUAVにする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			depthMapIntegration->GetTextureResource().Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 		);

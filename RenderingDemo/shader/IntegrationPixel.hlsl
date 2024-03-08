@@ -63,6 +63,7 @@ float4 SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, 
 PixelOutput ps_main(vsOutput input) : SV_TARGET
 {
     PixelOutput result;
+    float depth;
     float threadOneDepth = sponzaDepthmap.Sample(smp, input.uv);
     float threadTwoDepth = connanDepthmap.Sample(smp, input.uv);
     
@@ -77,13 +78,15 @@ PixelOutput ps_main(vsOutput input) : SV_TARGET
     {
         result.color = tex.Sample(smp, input.uv);
         result.normal = normal1.Sample(smp, input.uv);
-        result.depth = float4(threadOneDepth, threadOneDepth, threadOneDepth, 0);
+        /*result.depth*/
+        depth = float4(threadOneDepth, threadOneDepth, threadOneDepth, 1);
     }
     else
     {
         result.color = tex2.Sample(smp, input.uv);
         result.normal = normal2.Sample(smp, input.uv);
-        result.depth = float4(threadTwoDepth, threadTwoDepth, threadTwoDepth, 0);
+        /*result.depth*/
+        depth = float4(threadTwoDepth, threadTwoDepth, threadTwoDepth, 1);
     }
    
     float3 col = result.color.rgb;
@@ -99,5 +102,7 @@ PixelOutput ps_main(vsOutput input) : SV_TARGET
     //float4 sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
     result.color.rgb = col;
     result.color += imgui + sun;
+    
+    result.depth = depth;
     return result;
 }
