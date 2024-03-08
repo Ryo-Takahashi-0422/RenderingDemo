@@ -2,5 +2,9 @@
 
 float4 ps(Output input) : SV_TARGET
 {   
-    return tex.Sample(smp, input.uv);
+    float4 color = tex.Sample(smp, input.uv);
+    float4 ssao = ssaoTex.Sample(smp, input.uv);
+    
+    color = lerp(color * 0.7, color, ssao.x);
+    return color;
 }

@@ -566,9 +566,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
-	comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
-	integration->SetDepthmapResourse(comBlur->GetBlurTextureResource());
-	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), comBlur->GetBlurTextureResource());
+	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
+	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ブラーかけずにSSAO計算してもあまり変わらない...
+	integration->SetDepthmapResourse(calculateSSAO->GetTextureResource());
 
 	return true;
 }
@@ -873,7 +873,7 @@ void D3DX12Wrapper::Run() {
 		// 画像統合処理→SSAO生成
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
-		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		auto proj = camera->GetProj();
 		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
@@ -908,14 +908,15 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
-		// comBlur 利用終了により、コピー用リソース状態をUAVにする
-		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			comBlur->GetBlurTextureResource().Get(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		);
-		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+		// calculateSSAOにブラーした統合デプスマップを利用する場合はOnにする
+		//// comBlur 利用終了により、コピー用リソース状態をUAVにする
+		//barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		//(
+		//	comBlur->GetBlurTextureResource().Get(),
+		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		//);
+		//_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -1908,7 +1909,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // normal統合
 	gHandle.ptr += buffSize * 2;
 
-	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // depthmap統合
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // SSAO
 	//gHandle.ptr += buffSize;
 	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
