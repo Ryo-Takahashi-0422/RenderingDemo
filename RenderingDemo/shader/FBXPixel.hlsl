@@ -72,7 +72,14 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         normal *= 0.2;
     }
     // 法線画像の結果をレンダーターゲット2に格納する
-    result.normal = float4(normal, 0);
+    if (!normCol.x == 0 && !normCol.y == 0 && !normCol.z == 0)
+    {
+        result.normal = float4(normCol, 1);
+    }
+    else
+    {
+        result.normal = float4(input.normal, 1);
+    }
 
     float bright = dot(abs(input.lightTangentDirection.xyz), normal);
     bright = max(brightMin, bright);

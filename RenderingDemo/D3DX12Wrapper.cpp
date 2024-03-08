@@ -557,11 +557,18 @@ bool D3DX12Wrapper::ResourceInit() {
 	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
 	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
 
-	// 画像統合クラス生成
+	// 画像統合クラスの処理フロー
+	// integrationはthread1,2の統合カラー、法線保有状態になる
+	// depthMapIntegrationでthread1,2のデプスマップ統合
+	// →comBlurでガウシアンブラー
+	// →integrationはthread1,2の統合カラー、法線、デプスマップ保有状態になる
+	// 
+	
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 	comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	integration->SetDepthmapResourse(comBlur->GetBlurTextureResource());
+	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), comBlur->GetBlurTextureResource());
 
 	return true;
 }
@@ -863,9 +870,13 @@ void D3DX12Wrapper::Run() {
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 
+		// 画像統合処理→SSAO生成
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+		auto proj = camera->GetProj();
+		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
+		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 
 		// airのコピー用リソース状態をUAVに戻す
 		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -897,7 +908,7 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
-		// comBlur DrawBackBufferで利用終了により、コピー用リソース状態をUAVにする
+		// comBlur 利用終了により、コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
 			comBlur->GetBlurTextureResource().Get(),
@@ -905,6 +916,16 @@ void D3DX12Wrapper::Run() {
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			calculateSSAO->GetTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
 		_cmdList3->Close();
 		//_cmdList2->Close();
 		

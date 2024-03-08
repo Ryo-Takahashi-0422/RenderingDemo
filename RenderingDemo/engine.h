@@ -100,6 +100,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ComputeBlur.h>
 #include <Integration.h>
 #include <DepthMapIntegration.h>
+#include <CalculateSSAO.h>
 
 // Sky
 #include <Sky.h>

@@ -257,6 +257,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\CalculateSSAO.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\CollisionPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -425,6 +433,7 @@
     <ClCompile Include="AOGraphicsPipelineSetting.cpp" />
     <ClCompile Include="AOShaderCompile.cpp" />
     <ClCompile Include="Blur.cpp" />
+    <ClCompile Include="CalculateSSAO.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
@@ -490,6 +499,7 @@
     <ClInclude Include="AOGraphicsPipelineSetting.h" />
     <ClInclude Include="AOShaderCompile.h" />
     <ClInclude Include="Blur.h" />
+    <ClInclude Include="CalculateSSAO.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />

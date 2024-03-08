@@ -254,6 +254,7 @@ private:
 	ComputeBlur* comBlur = nullptr;
 	Integration* integration = nullptr;
 	DepthMapIntegration* depthMapIntegration = nullptr;
+	CalculateSSAO* calculateSSAO = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;

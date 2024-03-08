@@ -38,9 +38,9 @@ private:
 	// SRV生成
 	void CreateRenderingSRV();
 
-	ComPtr<ID3D12Resource> renderingResource1 = nullptr; // レンダーターゲット1
-	ComPtr<ID3D12Resource> renderingResource2 = nullptr; // レンダーターゲット2
-	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3
+	ComPtr<ID3D12Resource> renderingResource1 = nullptr; // レンダーターゲット1 カラー画像
+	ComPtr<ID3D12Resource> renderingResource2 = nullptr; // レンダーターゲット2 法線画像
+	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3 デプス画像
 	ComPtr<ID3D12Resource> integratedDepthmap = nullptr; // コンピュートシェーダーにより統合された外部リソース
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
@@ -56,6 +56,7 @@ public:
 	Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap);
 	void Init();
 	void SetDepthmapResourse(ComPtr<ID3D12Resource> _resource);
+	ComPtr<ID3D12Resource> GetNormalResourse() { return  renderingResource2; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };
