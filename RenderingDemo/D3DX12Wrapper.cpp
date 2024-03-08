@@ -536,9 +536,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadowRenderingBlur = new Blur(_dev.Get());
 	shadowRenderingBlur->Init();
 	shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
-
-
-	comBlur = new ComputeBlur(_dev.Get(), shadow->GetShadowMapResource());
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -554,8 +551,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	//resourceManager[0]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	//resourceManager[1]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	// ブラーしたシャドウマップをセット
-	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
-	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	//resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	//resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
 	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
 	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
 	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
@@ -563,6 +560,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	// 画像統合クラス生成
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
+	comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	integration->SetDepthmapResourse(depthMapIntegration->GetTextureResource());
 
 	return true;
@@ -854,7 +852,6 @@ void D3DX12Wrapper::Run() {
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -868,7 +865,8 @@ void D3DX12Wrapper::Run() {
 
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
-		
+		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+
 		// airのコピー用リソース状態をUAVに戻す
 		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
@@ -896,7 +894,7 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
-		// comBlur コピー用リソース状態をUAVにする
+		// デプスマップ統合クラス コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
 			depthMapIntegration->GetTextureResource().Get(),
