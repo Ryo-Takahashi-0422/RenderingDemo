@@ -153,24 +153,6 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraPolygon = new PeraPolygon;
 	peraSetRootSignature = new PeraSetRootSignature;
 	peraShaderCompile = new SettingShaderCompile;
-	//bufferGPLSetting = new PeraGraphicsPipelineSetting(peraLayout/*vertexInputLayout*/);
-	//bufferSetRootSignature = new PeraSetRootSignature;
-	//bufferShaderCompile = new BufferShaderCompile;
-
-	//// ライトマップ関連
-	//lightMapGPLSetting = new LightMapGraphicsPipelineSetting(vertexInputLayout);
-	//lightMapRootSignature = new SetRootSignature;
-	//lightMapShaderCompile = new LightMapShaderCompile;
-
-	//// bloom	
-	//bloomGPLSetting = new PeraGraphicsPipelineSetting(peraLayout);
-	//bloomRootSignature = new PeraSetRootSignature;
-	//bloomShaderCompile = new BloomShaderCompile;
-
-	////AO
-	//aoGPLSetting = new AOGraphicsPipelineSetting(vertexInputLayout);
-	//aoRootSignature = new SetRootSignature;
-	//aoShaderCompile = new AOShaderCompile;
 
 	// Collision
 	collisionRootSignature = new CollisionRootSignature;
@@ -396,32 +378,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	{
 		return false;
 	}
-
-	
-
-	//// 表示用
-	//if (FAILED(bufferSetRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// ライトマップ用
-	//if (FAILED(lightMapRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// bloom
-	//if (FAILED(bloomRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// AO
-	//if (FAILED(aoRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
 	
 // 初期化処理2：シェーダーコンパイル設定
     
@@ -468,30 +424,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psCollisionBlob = colliderBlobs.second;
 	delete collisionShaderCompile;
 	
-	//// 表示用
-	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
-	//if (bufferBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
-	//_vsBackbufferBlob = bufferBlobs.first;
-	//_psBackbufferBlob = bufferBlobs.second;
-
-	//// ライトマップ用
-	//auto lightMapBlobs = lightMapShaderCompile->SetShaderCompile(lightMapRootSignature, _lightMapVSBlob, _lightMapPSBlob);
-	//if (lightMapBlobs.first == nullptr) return false;
-	//_lightMapVSBlob = lightMapBlobs.first;
-	//_lightMapPSBlob = lightMapBlobs.second; // こちらはnullptr
-
-	//// bloom
-	//auto bloomBlobs = bloomShaderCompile->SetPeraShaderCompile(bloomRootSignature, _bloomVSBlob, _bloomPSBlob);
-	//if (bloomBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
-	//_bloomVSBlob = bloomBlobs.first; // こちらはnullpt
-	//_bloomPSBlob = bloomBlobs.second;
-
-	//// AO
-	//auto aoBlobs = aoShaderCompile->SetShaderCompile(aoRootSignature, _aoVSBlob, _aoPSBlob);
-	//if (aoBlobs.first == nullptr or aoBlobs.second == nullptr) return false;
-	//_aoVSBlob = aoBlobs.first; // こちらはnullpt
-	//_aoPSBlob = aoBlobs.second;
-
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
@@ -501,18 +433,6 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧ用
 	result = peraGPLSetting->CreateGPStateWrapper(_dev, peraSetRootSignature, _vsMBlob, _psMBlob);
-
-	//// 表示用
-	//result = bufferGPLSetting->CreateGPStateWrapper(_dev, bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
-
-	//// ライトマップ用
-	//result = lightMapGPLSetting->CreateGPStateWrapper(_dev, lightMapRootSignature, _lightMapVSBlob, _lightMapPSBlob);
-
-	//// for shrinked bloom creating
-	//result = bloomGPLSetting->CreateGPStateWrapper(_dev, bloomRootSignature, _bloomVSBlob, _bloomPSBlob);
-
-	//// AO
-	//result = aoGPLSetting->CreateGPStateWrapper(_dev, aoRootSignature, _aoVSBlob, _aoPSBlob);
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
@@ -540,17 +460,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	}
 	delete textureLoader;
 	delete textureTransporter;
-	//// ガウシアンぼかし用ウェイト、バッファー作成、マッピング、ディスクリプタヒープ作成、ビュー作成まで
-	//auto weights = Utility::GetGaussianWeight(8, 5.0f);
-	//bufferHeapCreator[i]->CreateConstBufferOfGaussian(_dev, weights);
-	//mappingExecuter[i]->MappingGaussianWeight(weights);
-	////bufferHeapCreator->CreateEffectHeap(_dev);
-	////viewCreator->CreateCBV4GaussianView(_dev);
 
-	//// マルチパス用ビュー作成
+	// マルチパス用ビュー作成
 	peraPolygon->CreatePeraView(_dev);
-	//viewCreator[i]->CreateRTV4Multipasses(_dev);
-	//viewCreator[i]->CreateSRV4Multipasses(_dev);
 
 // 初期化処理9：フェンスの生成
 // 初期化処理10：イベントハンドルの作成
@@ -563,13 +475,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	{
 		return false;
 	}	
-
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	bufferHeapCreator[i]->CreateBuff4Imgui(_dev, settingImgui->GetPostSettingSize());
-	//	viewCreator[i]->CreateCBV4ImguiPostSetting(_dev);
-	//	mappingExecuter[i]->MappingPostSetting();
-	//}
 
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
@@ -631,9 +536,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadowRenderingBlur = new Blur(_dev.Get());
 	shadowRenderingBlur->Init();
 	shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
-
-
-	comBlur = new ComputeBlur(_dev.Get(), shadow->GetShadowMapResource());
 	
 	// resourceManager[0]のみに格納...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -649,11 +551,24 @@ bool D3DX12Wrapper::ResourceInit() {
 	//resourceManager[0]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	//resourceManager[1]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	// ブラーしたシャドウマップをセット
-	resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
-	resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	//resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	//resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
 	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
 	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
 	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
+
+	// 画像統合クラスの処理フロー
+	// integrationはthread1,2の統合カラー、法線保有状態になる
+	// depthMapIntegrationでthread1,2のデプスマップ統合
+	// →comBlurでガウシアンブラー
+	// →integrationはthread1,2の統合カラー、法線、デプスマップ保有状態になる
+	// 
+	
+	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
+	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
+	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
+	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ブラーかけずにSSAO計算してもあまり変わらない...
+	integration->SetDepthmapResourse(calculateSSAO->GetTextureResource());
 
 	return true;
 }
@@ -927,23 +842,6 @@ void D3DX12Wrapper::Run() {
 			resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 		}
 
-
-		//for (int i = 0; i < strModelNum; ++i)
-		//{
-		//	DrawLightMap(i, cbv_srv_Size); // draw lightmap
-		//	DrawPeraPolygon(i); // draw background polygon
-		//    SetSelfShadowLight(i);			
-		//	SetSelfShadowSwitch(i);
-		//	SetBloomSwitch(i);
-		//}
-		
-		//DrawModel(0, cbv_srv_Size); // draw pmd model
-
-		//for (int i = 1; i < strModelNum; ++i)
-		//{
-		//	DrawModel4AO(i, cbv_srv_Size); // draw pmd model for AO to hand over Depth, Normal map.
-		//}
-
 		//DrawShrinkTextureForBlur(0, cbv_srv_Size); // draw shrink buffer
 		//if (settingImgui->GetSSAOBool())
 		//{
@@ -961,7 +859,6 @@ void D3DX12Wrapper::Run() {
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -973,7 +870,14 @@ void D3DX12Wrapper::Run() {
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 
-		
+		// 画像統合処理→SSAO生成
+		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
+		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+		auto proj = camera->GetProj();
+		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
+		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+
 		// airのコピー用リソース状態をUAVに戻す
 		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
@@ -992,10 +896,10 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
-		// comBlur コピー用リソース状態をテクスチャとして読み込める状態にする
+		// デプスマップ統合クラス コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
-			comBlur->GetBlurTextureResource().Get(),
+			depthMapIntegration->GetTextureResource().Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 		);
@@ -1003,8 +907,27 @@ void D3DX12Wrapper::Run() {
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
-		_cmdList3->Close();
 
+		// calculateSSAOにブラーした統合デプスマップを利用する場合はOnにする
+		//// comBlur 利用終了により、コピー用リソース状態をUAVにする
+		//barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		//(
+		//	comBlur->GetBlurTextureResource().Get(),
+		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		//);
+		//_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			calculateSSAO->GetTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+
+		_cmdList3->Close();
 		//_cmdList2->Close();
 		
 		//コマンドキューの実行
@@ -1165,24 +1088,37 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		//int fbxIndex = num;
 		auto localCmdList = m_batchSubmit[num];
 
-		//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
+		// マルチターゲットリソースバリア処理
+		//color
 		D3D12_RESOURCE_BARRIER barrierDescFBX = {};
 		barrierDescFBX.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrierDescFBX.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrierDescFBX.Transition.Subresource = 0;
+		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		// normal
+		D3D12_RESOURCE_BARRIER barrierDescNorm = {};
+		barrierDescNorm.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDescNorm.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrierDescNorm.Transition.Subresource = 0;
+		barrierDescNorm.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrierDescNorm.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
+		// スレッド毎に参照先を分ける
 		if (num == 0)
 		{
 			barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff().Get();
+			barrierDescNorm.Transition.pResource = resourceManager[0]->GetNormalRenderingBuff().Get();
 		}
 		else if (num == 1)
 		{
 			barrierDescFBX.Transition.pResource = resourceManager[0]->GetRenderingBuff2().Get();
+			barrierDescNorm.Transition.pResource = resourceManager[0]->GetNormalRenderingBuff2().Get();
 		}
-		barrierDescFBX.Transition.Subresource = 0;
-		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
 		//リソースバリア：リソースへの複数のアクセスを同期する必要があることをドライバーに通知
 		localCmdList->ResourceBarrier(1, &barrierDescFBX);
+		localCmdList->ResourceBarrier(1, &barrierDescNorm);
 		
 		// モデル描画
 		localCmdList->RSSetViewports(1, viewPort);
@@ -1195,8 +1131,42 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		handleFBX.ptr += num * inc;
 
-		localCmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
+
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handles[2];
+		uint32_t offset = 0; // start from No.2 RTV
+		for (auto& handle : handles)
+		{
+			handle.InitOffsetted(handleFBX, inc * offset);
+			offset += 2;
+		}
+		localCmdList->OMSetRenderTargets(2, handles, false, &dsvhFBX);
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+
+		//
+		//	// レンダーターゲットと深度ステンシル(両方シェーダーが認識出来ないビュー)はCPU記述子ハンドルを設定してパイプラインに直バインド
+		//	// なのでこの二種類のビューはマッピングしなかった
+		//	//_cmdList->OMSetRenderTargets(2, rtvs/*&handle*/, false, &dsvh);
+		//	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
+		//
+		//	//画面クリア
+		//	float clearColor[4];// = { 0.1f, 0.1f, 0.2f, 1.0f };
+		//	
+		//	for (int i = 0; i < 4; ++i)
+		//	{
+		//		clearColor[i] = SetBackGroundColor(i);
+		//	}
+		//	_cmdList->ClearRenderTargetView(handles[0], clearColor, 0, nullptr);
+		//	_cmdList->ClearRenderTargetView(handles[1], clearColor, 0, nullptr);
+		//	clearColor[0] = 0;
+		//	clearColor[1] = 0;
+		//	clearColor[2] = 0;
+		//	_cmdList->ClearRenderTargetView(handles[2], clearColor, 0, nullptr);
+
+
+
+		//localCmdList->OMSetRenderTargets(1, &handleFBX, false, &dsvhFBX);
+		//localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 
 		//画面クリア
 		float clearColor[4];
@@ -1205,7 +1175,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		clearColor[2] = 1.0f;
 		clearColor[3] = 1.0f;
 
-		localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);
+		/*localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);*/
+		localCmdList->ClearRenderTargetView(handles[0], clearColor, 0, nullptr);
+		localCmdList->ClearRenderTargetView(handles[1], clearColor, 0, nullptr);
 
 		int lastSRVSetNum = 0;
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
@@ -1258,6 +1230,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 						charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 					}
 
@@ -1334,20 +1307,20 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 8;
+			dHandle.ptr += cbv_srv_Size * 8; // airアドレスまで飛ぶ
 
 			int textureindex = 2;
-			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // air
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // air (ptr num9)
 			++textureindex;
 			dHandle.ptr += cbv_srv_Size;
 
-			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // vsm
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // vsm (ptr num10)
 			++textureindex;
 			dHandle.ptr += cbv_srv_Size;
 
-			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap (ptr num11)
 			++textureindex;
-			dHandle.ptr += cbv_srv_Size;
+			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像2個分の領域は使わないので飛ばす。マジックアンバー化していてややこしい...
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
@@ -1471,11 +1444,15 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		//	idxOffset += m.indiceNum;
 		//}
 
-
+		// マルチターゲットリソースバリア処理
 		// color
 		barrierDescFBX.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrierDescFBX.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		localCmdList->ResourceBarrier(1, &barrierDescFBX);
+		// normal
+		barrierDescNorm.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrierDescNorm.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		localCmdList->ResourceBarrier(1, &barrierDescNorm);
 		localCmdList->Close();
 
 		SetEvent(m_workerFinishedRenderFrame[num]); // end drawing.
@@ -1530,112 +1507,9 @@ void D3DX12Wrapper::DrawCollider(int modelNum)
 		_cmdList->IASetVertexBuffers(0, 1, collisionManager->GetBoxVBV2());
 		_cmdList->IASetIndexBuffer(collisionManager->GetCharacterSphereColliderIBVs());
 		_cmdList->DrawIndexedInstanced(144, 1, 0, 0, 0);
-		//_cmdList->DrawInstanced(26, 1, 0, 0);
 	}
-
-	////ディスクリプタヒープ設定およびディスクリプタヒープとルートパラメータの関連付け	
-	//_cmdList->SetDescriptorHeaps(1, resourceManager[fbxIndex]->GetSRVHeap().GetAddressOf());
-
-	//auto dHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	//_cmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-	//dHandle.ptr += buffSize * 2;
-	//_cmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
 }
 
-//void D3DX12Wrapper::DrawLightMap(unsigned int modelNum, UINT buffSize)
-//{
-//	constexpr uint32_t shadow_difinition = 1024;
-//	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, shadow_difinition, shadow_difinition);
-//	_cmdList->RSSetViewports(1, &vp);
-//	CD3DX12_RECT rc(0, 0, shadow_difinition, shadow_difinition);
-//	_cmdList->RSSetScissorRects(1, &rc);
-//
-//	auto dsvh = bufferHeapCreator[modelNum]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-//
-//	_cmdList->SetPipelineState(lightMapGPLSetting->GetPipelineState().Get());
-//	_cmdList->SetGraphicsRootSignature(lightMapRootSignature->GetRootSignature().Get());
-//
-//	dsvh.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-//	_cmdList->OMSetRenderTargets(0, nullptr, false, &dsvh);
-//	_cmdList->ClearDepthStencilView(dsvh, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
-//	//画面クリア
-//	//_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
-//	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	_cmdList->IASetVertexBuffers(0, 1, viewCreator[modelNum]->GetVbView());
-//
-//	_cmdList->IASetIndexBuffer(viewCreator[modelNum]->GetIbView());
-//
-//	_cmdList->SetDescriptorHeaps(1, bufferHeapCreator[modelNum]->GetCBVSRVHeap().GetAddressOf());
-//	_cmdList->SetGraphicsRootDescriptorTable
-//	(
-//		0, // バインドのスロット番号
-//		bufferHeapCreator[modelNum]->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart()
-//	);
-//
-//	auto materialHandle2 = bufferHeapCreator[modelNum]->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-//	auto inc2 = buffSize;
-//	auto materialHInc2 = inc2 * 5; // 行列cbv + (material cbv+テクスチャsrv+sph srv+spa srv+toon srv)
-//	materialHandle2.ptr += inc2; // この処理の直前に行列用CBVをｺﾏﾝﾄﾞﾘｽﾄにセットしたため
-//	unsigned int idxOffset2 = 0;
-//
-//	for (auto m : pmdMaterialInfo[modelNum]->materials)
-//	{
-//		_cmdList->SetGraphicsRootDescriptorTable(1, materialHandle2);
-//		//インデックス付きインスタンス化されたプリミティブを描画
-//		_cmdList->DrawIndexedInstanced(m.indiceNum, 1, idxOffset2, 0, 0); // instanceid 0:通常、1:影
-//
-//		materialHandle2.ptr += materialHInc2;
-//		idxOffset2 += m.indiceNum;
-//	}
-//
-//	//_cmdList->DrawIndexedInstanced(pmdMaterialInfo[modelNum]->vertNum, 1, 0, 0, 0);
-//
-//	// ライトマップ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
-//	D3D12_RESOURCE_BARRIER barrierDesc4LightMap = CD3DX12_RESOURCE_BARRIER::Transition
-//	(
-//		bufferHeapCreator[modelNum]->GetLightMapBuff().Get(),
-//		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-//		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-//	);
-//	_cmdList->ResourceBarrier(1, &barrierDesc4LightMap);
-//}
-//
-//void D3DX12Wrapper::DrawPeraPolygon(unsigned int modelNum)
-//{
-//	//// マルチパス1パス目
-//
-//	D3D12_RESOURCE_BARRIER barrierDesc4Multi = CD3DX12_RESOURCE_BARRIER::Transition
-//	(
-//		bufferHeapCreator[modelNum]->GetMultipassBuff().Get(),
-//		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-//		D3D12_RESOURCE_STATE_RENDER_TARGET
-//	);
-//	_cmdList->ResourceBarrier(1, &barrierDesc4Multi);
-//
-//	_cmdList->RSSetViewports(1, prepareRenderingWindow->GetViewPortPointer());
-//	_cmdList->RSSetScissorRects(1, prepareRenderingWindow->GetRectPointer());
-//
-//	auto rtvHeapPointer = bufferHeapCreator[modelNum]->GetMultipassRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-//	_cmdList->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
-//	_cmdList->ClearRenderTargetView(rtvHeapPointer, clearColor, 0, nullptr);
-//	_cmdList->SetGraphicsRootSignature(peraSetRootSignature->GetRootSignature().Get());
-//	// no need SetDescriptorHeaps, SetGraphicsRootDescriptorTable, because it only needs rendering.
-//
-//	_cmdList->SetPipelineState(peraGPLSetting->GetPipelineState().Get());
-//	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-//	_cmdList->IASetVertexBuffers(0, 1, peraPolygon->GetVBView());
-//	_cmdList->DrawInstanced(4, 1, 0, 0);
-//
-//	// ﾏﾙﾁﾊﾟｽﾘｿｰｽﾊﾞﾘｱ元に戻す
-//	barrierDesc4Multi = CD3DX12_RESOURCE_BARRIER::Transition
-//	(
-//		bufferHeapCreator[modelNum]->GetMultipassBuff().Get(),
-//		D3D12_RESOURCE_STATE_RENDER_TARGET,
-//		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-//	);
-//	_cmdList->ResourceBarrier(1, &barrierDesc4Multi);
-//}
-//
 //void D3DX12Wrapper::DrawModel(unsigned int modelNum, UINT buffSize)
 //{
 //	//リソースバリアの準備。ｽﾜｯﾌﾟﾁｪｰﾝﾊﾞｯｸﾊﾞｯﾌｧは..._COMMONを初期状態とする決まり。これはcolor
@@ -2025,29 +1899,37 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 
 	// 元
-	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, /*resourceManager[0]*/integration->GetSRVHeap().GetAddressOf());
 
-	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+	gHandle = /*resourceManager[0]*/integration->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // color統合
 	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // normal統合
+	gHandle.ptr += buffSize * 2;
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // SSAO
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

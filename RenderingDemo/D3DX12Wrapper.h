@@ -252,6 +252,9 @@ private:
 	Blur* shadowRenderingBlur = nullptr;
 	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
+	Integration* integration = nullptr;
+	DepthMapIntegration* depthMapIntegration = nullptr;
+	CalculateSSAO* calculateSSAO = nullptr;
 	
 	//★★★コライダーdebug用
 	int debugNum = 2;

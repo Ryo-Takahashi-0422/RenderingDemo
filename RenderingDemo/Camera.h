@@ -41,6 +41,7 @@ private:
 
 	XMFLOAT3 orbitPos{ 0, 0, 0 };
 	XMMATRIX orbitView = XMMatrixIdentity();
+	XMMATRIX m_invVP;
 public:
 
 	Camera();
@@ -53,6 +54,7 @@ public:
 	XMFLOAT3 GetCameraPos() { return eye; };	
 	XMMATRIX GetWorld() { return world; };
 	XMMATRIX GetView() { return view; };
+	XMMATRIX GetInvView() { return m_invVP; };
 	XMMATRIX GetProj() { return proj; };
 	Frustum GetFrustum() { return frustum; };
 	XMMATRIX CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir);

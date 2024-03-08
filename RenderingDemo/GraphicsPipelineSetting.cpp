@@ -62,10 +62,11 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicsPipelineSetting::SetGPL(
 
 	gpipeLine.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 
-	gpipeLine.NumRenderTargets = 3;
-	gpipeLine.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model
-	gpipeLine.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM; // normal
-	gpipeLine.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM; // shrinkedbloom
+	gpipeLine.NumRenderTargets = 4;
+	gpipeLine.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // model thread1
+	gpipeLine.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM; // model thread2
+	gpipeLine.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM; // normal map thread1
+	gpipeLine.RTVFormats[3] = DXGI_FORMAT_R8G8B8A8_UNORM; // normal map thread2
 
 	gpipeLine.SampleDesc.Count = 1; //1サンプル/ピクセル
 	gpipeLine.SampleDesc.Quality = 0;

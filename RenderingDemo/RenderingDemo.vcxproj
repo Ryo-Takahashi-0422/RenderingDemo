@@ -161,6 +161,7 @@
     <None Include="shader\CollisionHeader.hlsli" />
     <None Include="shader\Definition.hlsli" />
     <None Include="shader\FBXHeader.hlsli" />
+    <None Include="shader\IntegrationHeader.hlsli" />
     <None Include="shader\PeraHeader.hlsli" />
     <None Include="shader\Shadow.hlsli" />
     <None Include="shader\SkyHeader.hlsli" />
@@ -256,6 +257,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\CalculateSSAO.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\CollisionPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -280,6 +289,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\DepthMapIntegration.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\FBXPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">FBXPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -294,6 +311,22 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">FBXVS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shader\IntegrationPixel.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ps_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shader\IntegrationVertex.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="shader\PeraPixel.hlsl">
@@ -400,6 +433,7 @@
     <ClCompile Include="AOGraphicsPipelineSetting.cpp" />
     <ClCompile Include="AOShaderCompile.cpp" />
     <ClCompile Include="Blur.cpp" />
+    <ClCompile Include="CalculateSSAO.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ColliderGraphicsPipelineSetting.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
@@ -410,11 +444,13 @@
     <ClCompile Include="BufferHeapCreator.cpp" />
     <ClCompile Include="BufferShaderCompile.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
+    <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
     <ClCompile Include="IGraphicsPipelineSetting.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputLayoutBase.cpp" />
+    <ClCompile Include="Integration.cpp" />
     <ClCompile Include="LightMapGraphicsPipelineSetting.cpp" />
     <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
@@ -463,6 +499,7 @@
     <ClInclude Include="AOGraphicsPipelineSetting.h" />
     <ClInclude Include="AOShaderCompile.h" />
     <ClInclude Include="Blur.h" />
+    <ClInclude Include="CalculateSSAO.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColliderGraphicsPipelineSetting.h" />
     <ClInclude Include="CollisionManager.h" />
@@ -473,12 +510,14 @@
     <ClInclude Include="BufferHeapCreator.h" />
     <ClInclude Include="BufferShaderCompile.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
+    <ClInclude Include="DepthMapIntegration.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />
     <ClInclude Include="IGraphicsPipelineSetting.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputLayoutBase.h" />
+    <ClInclude Include="Integration.h" />
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />

@@ -87,6 +87,9 @@
     <None Include="shader\BlurHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="shader\IntegrationHeader.hlsli">
+      <Filter>Shader\Rebuild</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AOPixelShader.hlsl">
@@ -168,6 +171,18 @@
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
     <FxCompile Include="shader\ComputeBlur.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\IntegrationPixel.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\IntegrationVertex.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\DepthMapIntegration.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\CalculateSSAO.hlsl">
       <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>
@@ -335,6 +350,15 @@
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
     <ClCompile Include="ComputeBlur.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="Integration.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthMapIntegration.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="CalculateSSAO.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -508,6 +532,15 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="ComputeBlur.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="Integration.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthMapIntegration.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="CalculateSSAO.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

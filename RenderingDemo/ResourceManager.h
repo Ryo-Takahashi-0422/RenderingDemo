@@ -20,8 +20,10 @@ struct FBXSceneMatrix
 	XMMATRIX shadowPosInvMatrix;
 	XMMATRIX shadowView;
 	XMFLOAT3 eyePos;
-	float pad;
+	float pad0;
 	XMFLOAT3 sunDIr;
+	float pad1;
+	XMFLOAT3 charaPos;
 
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off
@@ -52,6 +54,8 @@ private:
 	ComPtr<ID3D12Resource> shadowmapBuffer = nullptr; // シャドウマップ描画結果
 	ComPtr<ID3D12Resource> renderingBuff = nullptr; // rendering model buffer
 	ComPtr<ID3D12Resource> renderingBuff2 = nullptr; // rendering model buffer
+	ComPtr<ID3D12Resource> normalMapBuff = nullptr; // 法線マップ
+	ComPtr<ID3D12Resource> normalMapBuff2 = nullptr; // 法線マップ
 	ComPtr<ID3D12Resource> matrixBuff = nullptr; // matrix buffer
 	
 	const int mappingSize = 32; // mapping size
@@ -117,8 +121,10 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetRTVHeap() { return rtvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap() { return dsvHeap; };
-	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; };
-	ComPtr<ID3D12Resource> GetRenderingBuff2() { return renderingBuff2; };
+	ComPtr<ID3D12Resource> GetRenderingBuff() { return renderingBuff; }; // カラーレンダリング結果　スレッド1
+	ComPtr<ID3D12Resource> GetRenderingBuff2() { return renderingBuff2; }; // カラーレンダリング結果　スレッド2
+	ComPtr<ID3D12Resource> GetNormalRenderingBuff() { return normalMapBuff; }; // 法線画像レンダリング結果　スレッド1
+	ComPtr<ID3D12Resource> GetNormalRenderingBuff2() { return normalMapBuff2; }; // 法線画像レンダリング結果　スレッド2
 	ComPtr<ID3D12Resource> GetDepthBuff() { return depthBuff; };
 	ComPtr<ID3D12Resource> GetDepthBuff2() { return depthBuff2; };
 	ComPtr<ID3D12Resource> GetAirBuff() { return airBuffer; };

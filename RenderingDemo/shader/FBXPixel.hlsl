@@ -1,8 +1,8 @@
 #include "FBXHeader.hlsli"
 
-float4 FBXPS(Output input) : SV_TARGET
+PixelOutput FBXPS(Output input) : SV_TARGET
 {
-    float4 result;
+    PixelOutput result;
        
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
@@ -19,19 +19,31 @@ float4 FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 1.0f;
-    unsigned int biNormalWeight = 0.3; // 0でUVシームが多少目立たなくなる
+    float tangentWeight = 0.0f;
+    float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.3f;
     float brightEmpha = 4.5f;
     
     float Dot = dot(input.worldNormal, sunDIr);
     float nor = saturate(abs(Dot) + 0.5f);
     
+    float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
+    //float3 ray = normalize(input.svpos.xyz - eyePos);
+    float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
+    float3 speclur = dot(reflection, -input.ray);
+    speclur = saturate(speclur);
+    speclur *= speclurColor;
+    //speclur = pow(speclur, 2);
+    speclur *= -sunDIr.y/* * 0.5f*/;
+    
     if (input.isChara)
     {
-        brightEmpha = 1.3f;
+        brightEmpha = 0.7f;
         nor += 0.75f;
-        brightMin = 0.2f;
+        brightMin = 0.35f;
+        speclur = pow(speclur, 2);
+        tangentWeight = 1.0f;
+        biNormalWeight = 0.3;
     }
     input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     
@@ -49,7 +61,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
     float3 adjustDir = -sunDIr;
     adjustDir.z *= -1;    
-    float rotatedNormDot = dot(adjustDir, rotatedNorm);
+    float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
     float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
@@ -58,6 +70,15 @@ float4 FBXPS(Output input) : SV_TARGET
     if (lz - 0.01f > shadowValue.x && input.isChara)
     {
         normal *= 0.2;
+    }
+    // 法線画像の結果をレンダーターゲット2に格納する
+    if (!normCol.x == 0 && !normCol.y == 0 && !normCol.z == 0)
+    {
+        result.normal = float4(normCol, 1);
+    }
+    else
+    {
+        result.normal = float4(input.normal, 1);
     }
 
     float bright = dot(abs(input.lightTangentDirection.xyz), normal);
@@ -73,7 +94,7 @@ float4 FBXPS(Output input) : SV_TARGET
     float4 col = colormap.Sample(smp, input.uv);
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
-    result = float4(bright * col.x, bright * col.y, bright * col.z, 1);
+    result.col = float4(bright * col.x, bright * col.y, bright * col.z, 1);
     
     // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
     // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
@@ -83,6 +104,13 @@ float4 FBXPS(Output input) : SV_TARGET
     }
     rotatedNormDot *= -1;
     bool isSpecial = vsmSample.w;
+    // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
+    // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
+    // 特定の位置で調節してごまかすしかない。根本的に影が貫通しない処理を再設計する必要がある。
+    if (charaPos.z < -5.5f || charaPos.z > 5.4f)
+    {
+        isSpecial = false;
+    }
    
     if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
@@ -90,20 +118,21 @@ float4 FBXPS(Output input) : SV_TARGET
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);              
-        float3 shadowColor = result.xyz * 0.3f * nor;
+        float3 shadowColor = result.col.xyz * 0.3f * nor;
         
         // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
         if (input.isChara && isSpecial)
         {
             shadowColor *= (1.9f + rotatedNormDot * rotatedNormDot) * max(-sunDIr.y, 0.85f);
-            shadowColor.x = min(shadowColor.x, result.x);
-            shadowColor.y = min(shadowColor.y, result.y);
-            shadowColor.z = min(shadowColor.z, result.z);
+            shadowColor.x = min(shadowColor.x, result.col.x);
+            shadowColor.y = min(shadowColor.y, result.col.y);
+            shadowColor.z = min(shadowColor.z, result.col.z);
         }
-        result.xyz = lerp(shadowColor, result.xyz, litFactor);
+        result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
+        speclur *= litFactor;
     }
     
-
+    //return float4(speclur, 1);
         
     float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
@@ -115,8 +144,8 @@ float4 FBXPS(Output input) : SV_TARGET
     //    float md = shadowPos.z - depth;
     //    float litFactor = var / (var + md * md);
 
-    //    float3 shadowColor = result.xyz * 0.3f * nor;
-    //    result.xyz = lerp(shadowColor, result.xyz, litFactor);
+    //    float3 shadowColor = result.col.xyz * 0.3f * nor;
+    //    result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         
         
     //}
@@ -126,7 +155,12 @@ float4 FBXPS(Output input) : SV_TARGET
         shadowFactor = max(0.3f, (-sunDIr.y + 0.3f));
     }
     
-    result = result * shadowFactor + float4(inScatter, 0);
+    // 色情報をレンダーターゲット1に格納する
+    result.col = result.col * shadowFactor + float4(inScatter, 0) + float4(speclur, 0);
     
-    return result;;
+
+    
+    //result.xyz += speclur.xyz;
+    
+    return result;
 }

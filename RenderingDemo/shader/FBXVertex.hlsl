@@ -128,6 +128,8 @@ uint index : SV_VertexID)
     output.screenPosition = output.svpos;
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldÇÕíPà çsóÒÇ»ÇÃÇ≈èÊéZÇµÇ»Ç¢
     output.worldNormal = normalize(mul(world, norm).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
+    
+    output.ray = normalize(pos.xyz - eyePos);
 
     return output;
 }

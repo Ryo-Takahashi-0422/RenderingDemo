@@ -234,7 +234,7 @@ XMMATRIX Camera::CalculateOribitView(XMFLOAT3 _charaPos, XMMATRIX _charaDir)
 
 	auto vp = XMMatrixMultiply(orbitView, proj);
 	auto invVP = XMMatrixInverse(nullptr, vp);/*XMMatrixMultiply(invView, invProj)*/;
-
+	m_invVP = invVP;
 	auto topLeftN = XMVector4Transform(topLeftNear, invVP);
 	topLeftN /= topLeftN.m128_f32[3];
 	auto topLeftF = XMVector4Transform(topLeftFar, invVP);

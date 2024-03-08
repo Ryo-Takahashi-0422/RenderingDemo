@@ -317,10 +317,32 @@ HRESULT ResourceManager::CreateRTV()
 	);
 	if (result != S_OK) return result;
 
+	result = _dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&depthClearValue,
+		IID_PPV_ARGS(normalMapBuff.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
+	result = _dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&depthClearValue,
+		IID_PPV_ARGS(normalMapBuff2.ReleaseAndGetAddressOf())
+	);
+	if (result != S_OK) return result;
+
 	// create RTV
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.NumDescriptors = 2; // ★★★
+	rtvHeapDesc.NumDescriptors = 4; // ★★★
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 
@@ -345,6 +367,26 @@ HRESULT ResourceManager::CreateRTV()
 	_dev->CreateRenderTargetView//リソースデータ(_backBuffers)にアクセスするためのレンダーターゲットビューをhandleアドレスに作成
 	(
 		renderingBuff2.Get(),
+		&rtvDesc,
+		handle
+	);
+
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	// 法線画像 スレッド1
+	_dev->CreateRenderTargetView
+	(
+		normalMapBuff.Get(),
+		&rtvDesc,
+		handle
+	);
+
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	// 法線画像 スレッド2
+	_dev->CreateRenderTargetView
+	(
+		normalMapBuff2.Get(),
 		&rtvDesc,
 		handle
 	);
@@ -419,7 +461,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {}; // SRV用ディスクリプタヒープ
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.NumDescriptors = 11 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-11:skyとImGuiとsunとairとvsmとshadowmap, 12-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
+	srvHeapDesc.NumDescriptors = 13 + phongInfos.size() + textureNum; // 1:Matrix(world, view, proj)(1), 2-3:rendering result(1),(2), 4-5:depth*2, 6-11:skyとImGuiとsunとairとvsmとshadowmap, 12-13 法線画像 thread1,2 14-x:phongInfosサイズ(読み込むモデルにより変動), x-:texture数(読み込むモデルにより変動)
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.NodeMask = 0;
 
@@ -486,9 +528,26 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	handle.ptr += inc * 6; // sky, ImGui,sun, Air, vsm, shadowmap分空けておく
+	handle.ptr += inc * 7; // sky, ImGui,sun, Air, vsm, shadowmap分空けておく
 
-	// 12-x:Phong Material Parameters
+	// 12:法線画像 スレッド1描画先
+	_dev->CreateShaderResourceView
+	(
+		normalMapBuff.Get(),
+		&srvDesc,
+		handle
+	);
+
+	// 13:法線画像 スレッド2描画先
+	handle.ptr += inc;
+	_dev->CreateShaderResourceView
+	(
+		normalMapBuff2.Get(),
+		&srvDesc,
+		handle
+	);
+
+	// 14-x:Phong Material Parameters
 	for (int i = 0; i < phongInfos.size(); ++i)
 	{
 		auto& resource = materialParamBuffContainer[i];

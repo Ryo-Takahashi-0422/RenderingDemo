@@ -1,6 +1,6 @@
 #pragma once
 
-class ComputeBlur
+class DepthMapIntegration
 {
 private:
     // 解像度関連
@@ -29,11 +29,6 @@ private:
 
     // 初期化
     void Init();
-    // コマンドの生成
-    //HRESULT CreateCommand();
-    void SetGaussianData();
-    // ガウシアンブラーウェイト
-    float* mappedweight = nullptr;
 
     // デバイス
     ID3D12Device* _dev = nullptr;
@@ -48,8 +43,8 @@ private:
     // ヒープ
     ID3D12DescriptorHeap* heap = nullptr;
     // リソース
-    ComPtr<ID3D12Resource> depthmapResource = nullptr;
-    ComPtr<ID3D12Resource> gaussianResource = nullptr;
+    ComPtr<ID3D12Resource> depthmapResource1 = nullptr;
+    ComPtr<ID3D12Resource> depthmapResource2 = nullptr;
     ComPtr<ID3D12Resource> outputTextureResource = nullptr;
     ComPtr<ID3D12Resource> copyTextureResource = nullptr;
     // コマンドアロケータ
@@ -58,9 +53,9 @@ private:
     ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 
 public:
-    ComputeBlur(ID3D12Device* dev, ComPtr<ID3D12Resource> _depthmapResource);
-    ~ComputeBlur();
-    ComPtr<ID3D12Resource> GetBlurTextureResource() { return copyTextureResource; };
+    DepthMapIntegration(ID3D12Device* dev, ComPtr<ID3D12Resource> _depthmapResource1, ComPtr<ID3D12Resource> _depthmapResource2);
+    ~DepthMapIntegration();
+    ComPtr<ID3D12Resource> GetTextureResource() { return copyTextureResource; };
     // 実行
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);
