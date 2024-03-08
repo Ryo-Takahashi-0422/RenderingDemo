@@ -528,7 +528,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		handle
 	);
 
-	handle.ptr += inc * 6; // sky, ImGui,sun, Air, vsm, shadowmap分空けておく
+	handle.ptr += inc * 7; // sky, ImGui,sun, Air, vsm, shadowmap分空けておく
 
 	// 12:法線画像 スレッド1描画先
 	_dev->CreateShaderResourceView

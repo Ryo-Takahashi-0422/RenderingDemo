@@ -64,48 +64,48 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[4].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[4].DescriptorTable.NumDescriptorRanges = 1;
 	rootParam[4].DescriptorTable.pDescriptorRanges = &descTableRange[4];
 	rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 
 	rootParam[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[5].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[5].DescriptorTable.NumDescriptorRanges = 1;
 	rootParam[5].DescriptorTable.pDescriptorRanges = &descTableRange[5];
 	rootParam[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[6].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[6].DescriptorTable.NumDescriptorRanges = 1;
 	rootParam[6].DescriptorTable.pDescriptorRanges = &descTableRange[6];
 	rootParam[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[7].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[7].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[7].DescriptorTable.pDescriptorRanges = &descTableRange[7];
 	rootParam[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[8].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[8].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[8].DescriptorTable.pDescriptorRanges = &descTableRange[8];
 	rootParam[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[9].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[9].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[9].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[9].DescriptorTable.pDescriptorRanges = &descTableRange[9];
 	rootParam[9].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[10].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[10].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[10].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[10].DescriptorTable.pDescriptorRanges = &descTableRange[10];
 	rootParam[10].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[11].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[11].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[11].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[11].DescriptorTable.pDescriptorRanges = &descTableRange[11];
 	rootParam[11].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[12].DescriptorTable.NumDescriptorRanges = 1; // ライトマップ用
+	rootParam[12].DescriptorTable.NumDescriptorRanges = 1; 
 	rootParam[12].DescriptorTable.pDescriptorRanges = &descTableRange[12];
 	rootParam[12].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 

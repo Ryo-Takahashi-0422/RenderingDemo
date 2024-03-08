@@ -76,10 +76,14 @@ PixelOutput ps_main(vsOutput input) : SV_TARGET
     else if (threadOneDepth < threadTwoDepth)
     {
         result.color = tex.Sample(smp, input.uv);
+        result.normal = normal1.Sample(smp, input.uv);
+        result.depth = float4(threadOneDepth, threadOneDepth, threadOneDepth, 0);
     }
     else
     {
         result.color = tex2.Sample(smp, input.uv);
+        result.normal = normal2.Sample(smp, input.uv);
+        result.depth = float4(threadTwoDepth, threadTwoDepth, threadTwoDepth, 0);
     }
    
     float3 col = result.color.rgb;

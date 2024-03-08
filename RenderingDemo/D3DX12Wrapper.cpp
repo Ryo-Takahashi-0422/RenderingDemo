@@ -1276,7 +1276,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			auto dHandle = dHandles[fbxIndex];
 			localCmdList->SetGraphicsRootDescriptorTable(0, dHandle); // WVP Matrix(Numdescriptor : 1)
-			dHandle.ptr += cbv_srv_Size * 8;
+			dHandle.ptr += cbv_srv_Size * 8; // airアドレスまで飛ぶ
 
 			int textureindex = 2;
 			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // air (ptr num9)
@@ -1289,7 +1289,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap (ptr num11)
 			++textureindex;
-			dHandle.ptr += cbv_srv_Size * 2; // 法線画像2個分の領域は出力用で、入力としては使わないので飛ばす
+			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像2個分の領域は使わないので飛ばす。マジックアンバー化していてややこしい...
 			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];

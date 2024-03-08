@@ -44,44 +44,45 @@ HRESULT Integration::CreateRootSignature()
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1; // phong material info
     rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2];
-    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[3].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[3].DescriptorTable.pDescriptorRanges = &descTableRange[3];
-    rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[4].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[4].DescriptorTable.pDescriptorRanges = &descTableRange[4];
-    rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[5].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[5].DescriptorTable.pDescriptorRanges = &descTableRange[5];
-    rootParam[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[6].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[6].DescriptorTable.pDescriptorRanges = &descTableRange[6];
-    rootParam[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[7].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[7].DescriptorTable.pDescriptorRanges = &descTableRange[7];
-    rootParam[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootParam[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[8].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[8].DescriptorTable.pDescriptorRanges = &descTableRange[8];
-    rootParam[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     rootSignatureDesc.NumParameters = 9;
