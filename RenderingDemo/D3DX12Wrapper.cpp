@@ -561,7 +561,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 	comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
-	integration->SetDepthmapResourse(depthMapIntegration->GetTextureResource());
+	integration->SetDepthmapResourse(comBlur->GetBlurTextureResource());
 
 	return true;
 }
@@ -885,15 +885,6 @@ void D3DX12Wrapper::Run() {
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
-		// comBlur コピー用リソース状態をUAVにする
-		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			comBlur->GetBlurTextureResource().Get(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		);
-		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-
 		// デプスマップ統合クラス コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
@@ -905,8 +896,16 @@ void D3DX12Wrapper::Run() {
 
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
-		_cmdList3->Close();
 
+		// comBlur DrawBackBufferで利用終了により、コピー用リソース状態をUAVにする
+		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			comBlur->GetBlurTextureResource().Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+		_cmdList3->Close();
 		//_cmdList2->Close();
 		
 		//コマンドキューの実行
@@ -1878,29 +1877,37 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 
 	// 元
-	_cmdList3->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, /*resourceManager[0]*/integration->GetSRVHeap().GetAddressOf());
 
-	gHandle = resourceManager[0]->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
+	gHandle = /*resourceManager[0]*/integration->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // color統合
 	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // normal統合
+	gHandle.ptr += buffSize * 2;
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // depthmap統合
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // sponza全体のレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // connanのレンダリング結果
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); //  sponza全体のデプスマップ
 
-	gHandle.ptr += buffSize;
-	_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // connanのデプスマップ
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // Sky
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(5, gHandle); // imgui
+
+	//gHandle.ptr += buffSize;
+	//_cmdList3->SetGraphicsRootDescriptorTable(6, gHandle); // sun
 
 	_cmdList3->SetPipelineState(bBPipeline);
 
