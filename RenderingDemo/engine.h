@@ -98,6 +98,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ColliderGraphicsPipelineSetting.h>
 #include <Blur.h>
 #include <ComputeBlur.h>
+#include <Integration.h>
 
 // Sky
 #include <Sky.h>

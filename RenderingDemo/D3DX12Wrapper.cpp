@@ -153,24 +153,6 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraPolygon = new PeraPolygon;
 	peraSetRootSignature = new PeraSetRootSignature;
 	peraShaderCompile = new SettingShaderCompile;
-	//bufferGPLSetting = new PeraGraphicsPipelineSetting(peraLayout/*vertexInputLayout*/);
-	//bufferSetRootSignature = new PeraSetRootSignature;
-	//bufferShaderCompile = new BufferShaderCompile;
-
-	//// ライトマップ関連
-	//lightMapGPLSetting = new LightMapGraphicsPipelineSetting(vertexInputLayout);
-	//lightMapRootSignature = new SetRootSignature;
-	//lightMapShaderCompile = new LightMapShaderCompile;
-
-	//// bloom	
-	//bloomGPLSetting = new PeraGraphicsPipelineSetting(peraLayout);
-	//bloomRootSignature = new PeraSetRootSignature;
-	//bloomShaderCompile = new BloomShaderCompile;
-
-	////AO
-	//aoGPLSetting = new AOGraphicsPipelineSetting(vertexInputLayout);
-	//aoRootSignature = new SetRootSignature;
-	//aoShaderCompile = new AOShaderCompile;
 
 	// Collision
 	collisionRootSignature = new CollisionRootSignature;
@@ -396,32 +378,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	{
 		return false;
 	}
-
-	
-
-	//// 表示用
-	//if (FAILED(bufferSetRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// ライトマップ用
-	//if (FAILED(lightMapRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// bloom
-	//if (FAILED(bloomRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
-
-	//// AO
-	//if (FAILED(aoRootSignature->SetRootsignatureParam(_dev)))
-	//{
-	//	return false;
-	//}
 	
 // 初期化処理2：シェーダーコンパイル設定
     
@@ -468,30 +424,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psCollisionBlob = colliderBlobs.second;
 	delete collisionShaderCompile;
 	
-	//// 表示用
-	//auto bufferBlobs = bufferShaderCompile->SetPeraShaderCompile(bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
-	//if (bufferBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
-	//_vsBackbufferBlob = bufferBlobs.first;
-	//_psBackbufferBlob = bufferBlobs.second;
-
-	//// ライトマップ用
-	//auto lightMapBlobs = lightMapShaderCompile->SetShaderCompile(lightMapRootSignature, _lightMapVSBlob, _lightMapPSBlob);
-	//if (lightMapBlobs.first == nullptr) return false;
-	//_lightMapVSBlob = lightMapBlobs.first;
-	//_lightMapPSBlob = lightMapBlobs.second; // こちらはnullptr
-
-	//// bloom
-	//auto bloomBlobs = bloomShaderCompile->SetPeraShaderCompile(bloomRootSignature, _bloomVSBlob, _bloomPSBlob);
-	//if (bloomBlobs.first == nullptr or bufferBlobs.second == nullptr) return false;
-	//_bloomVSBlob = bloomBlobs.first; // こちらはnullpt
-	//_bloomPSBlob = bloomBlobs.second;
-
-	//// AO
-	//auto aoBlobs = aoShaderCompile->SetShaderCompile(aoRootSignature, _aoVSBlob, _aoPSBlob);
-	//if (aoBlobs.first == nullptr or aoBlobs.second == nullptr) return false;
-	//_aoVSBlob = aoBlobs.first; // こちらはnullpt
-	//_aoPSBlob = aoBlobs.second;
-
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
@@ -501,18 +433,6 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧ用
 	result = peraGPLSetting->CreateGPStateWrapper(_dev, peraSetRootSignature, _vsMBlob, _psMBlob);
-
-	//// 表示用
-	//result = bufferGPLSetting->CreateGPStateWrapper(_dev, bufferSetRootSignature, _vsBackbufferBlob, _psBackbufferBlob);
-
-	//// ライトマップ用
-	//result = lightMapGPLSetting->CreateGPStateWrapper(_dev, lightMapRootSignature, _lightMapVSBlob, _lightMapPSBlob);
-
-	//// for shrinked bloom creating
-	//result = bloomGPLSetting->CreateGPStateWrapper(_dev, bloomRootSignature, _bloomVSBlob, _bloomPSBlob);
-
-	//// AO
-	//result = aoGPLSetting->CreateGPStateWrapper(_dev, aoRootSignature, _aoVSBlob, _aoPSBlob);
 
 // 初期化処理5：コマンドリスト生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
@@ -540,17 +460,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	}
 	delete textureLoader;
 	delete textureTransporter;
-	//// ガウシアンぼかし用ウェイト、バッファー作成、マッピング、ディスクリプタヒープ作成、ビュー作成まで
-	//auto weights = Utility::GetGaussianWeight(8, 5.0f);
-	//bufferHeapCreator[i]->CreateConstBufferOfGaussian(_dev, weights);
-	//mappingExecuter[i]->MappingGaussianWeight(weights);
-	////bufferHeapCreator->CreateEffectHeap(_dev);
-	////viewCreator->CreateCBV4GaussianView(_dev);
 
-	//// マルチパス用ビュー作成
+	// マルチパス用ビュー作成
 	peraPolygon->CreatePeraView(_dev);
-	//viewCreator[i]->CreateRTV4Multipasses(_dev);
-	//viewCreator[i]->CreateSRV4Multipasses(_dev);
 
 // 初期化処理9：フェンスの生成
 // 初期化処理10：イベントハンドルの作成
@@ -563,13 +475,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	{
 		return false;
 	}	
-
-	//for (int i = 0; i < strModelNum; ++i)
-	//{
-	//	bufferHeapCreator[i]->CreateBuff4Imgui(_dev, settingImgui->GetPostSettingSize());
-	//	viewCreator[i]->CreateCBV4ImguiPostSetting(_dev);
-	//	mappingExecuter[i]->MappingPostSetting();
-	//}
 
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
@@ -654,6 +559,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
 	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
 	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
+
+	// 画像統合クラス生成
+	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 
 	return true;
 }
@@ -927,23 +835,6 @@ void D3DX12Wrapper::Run() {
 			resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 		}
 
-
-		//for (int i = 0; i < strModelNum; ++i)
-		//{
-		//	DrawLightMap(i, cbv_srv_Size); // draw lightmap
-		//	DrawPeraPolygon(i); // draw background polygon
-		//    SetSelfShadowLight(i);			
-		//	SetSelfShadowSwitch(i);
-		//	SetBloomSwitch(i);
-		//}
-		
-		//DrawModel(0, cbv_srv_Size); // draw pmd model
-
-		//for (int i = 1; i < strModelNum; ++i)
-		//{
-		//	DrawModel4AO(i, cbv_srv_Size); // draw pmd model for AO to hand over Depth, Normal map.
-		//}
-
 		//DrawShrinkTextureForBlur(0, cbv_srv_Size); // draw shrink buffer
 		//if (settingImgui->GetSSAOBool())
 		//{
@@ -973,6 +864,7 @@ void D3DX12Wrapper::Run() {
 			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
 		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 
+		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		
 		// airのコピー用リソース状態をUAVに戻す
 		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition

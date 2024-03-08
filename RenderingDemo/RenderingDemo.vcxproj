@@ -161,6 +161,7 @@
     <None Include="shader\CollisionHeader.hlsli" />
     <None Include="shader\Definition.hlsli" />
     <None Include="shader\FBXHeader.hlsli" />
+    <None Include="shader\IntegrationHeader.hlsli" />
     <None Include="shader\PeraHeader.hlsli" />
     <None Include="shader\Shadow.hlsli" />
     <None Include="shader\SkyHeader.hlsli" />
@@ -296,6 +297,22 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shader\IntegrationPixel.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ps_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shader\IntegrationVertex.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vs_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shader\PeraPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ps</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -415,6 +432,7 @@
     <ClCompile Include="IGraphicsPipelineSetting.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputLayoutBase.cpp" />
+    <ClCompile Include="Integration.cpp" />
     <ClCompile Include="LightMapGraphicsPipelineSetting.cpp" />
     <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
@@ -479,6 +497,7 @@
     <ClInclude Include="IGraphicsPipelineSetting.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputLayoutBase.h" />
+    <ClInclude Include="Integration.h" />
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
