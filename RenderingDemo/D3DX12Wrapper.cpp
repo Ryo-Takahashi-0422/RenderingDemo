@@ -155,9 +155,9 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraShaderCompile = new SettingShaderCompile;
 
 	// Collision
-	collisionRootSignature = new CollisionRootSignature;
-	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
-	collisionShaderCompile = new SettingShaderCompile;
+	//collisionRootSignature = new CollisionRootSignature;
+	//colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(peraLayout);
+	//collisionShaderCompile = new SettingShaderCompile;
 	delete peraLayout;
 
 	////デバイス取得
@@ -373,11 +373,11 @@ bool D3DX12Wrapper::ResourceInit() {
 		return false;
 	}
 
-	// ｺﾗｲﾀﾞｰ用
-	if (FAILED(collisionRootSignature->SetRootsignatureParam(_dev)))
-	{
-		return false;
-	}
+	//// ｺﾗｲﾀﾞｰ用
+	//if (FAILED(collisionRootSignature->SetRootsignatureParam(_dev)))
+	//{
+	//	return false;
+	//}
 	
 // 初期化処理2：シェーダーコンパイル設定
     
@@ -412,24 +412,24 @@ bool D3DX12Wrapper::ResourceInit() {
 	_psMBlob = mBlobs.second;
 	delete peraShaderCompile;
 
-	// コライダー描画用
-	std::string collisionVs = "CollisionVertex.hlsl";
-	std::string collisionPs = "CollisionPixel.hlsl";
-	auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
-	auto colliderBlobs = collisionShaderCompile->CollisionSetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
-		collisionPathPair.first, "vs",
-		collisionPathPair.second, "ps");
-	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
-	_vsCollisionBlob = colliderBlobs.first;
-	_psCollisionBlob = colliderBlobs.second;
-	delete collisionShaderCompile;
+	//// コライダー描画用
+	//std::string collisionVs = "CollisionVertex.hlsl";
+	//std::string collisionPs = "CollisionPixel.hlsl";
+	//auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
+	//auto colliderBlobs = collisionShaderCompile->CollisionSetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
+	//	collisionPathPair.first, "vs",
+	//	collisionPathPair.second, "ps");
+	//if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
+	//_vsCollisionBlob = colliderBlobs.first;
+	//_psCollisionBlob = colliderBlobs.second;
+	//delete collisionShaderCompile;
 	
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
 	
-	// コライダー用
-	result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
+	//// コライダー用
+	//result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧ用
 	result = peraGPLSetting->CreateGPStateWrapper(_dev, peraSetRootSignature, _vsMBlob, _psMBlob);
@@ -1417,7 +1417,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			{
 				auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 				collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-				DrawCollider(fbxIndex);
+				collisionManager->Execution(localCmdList.Get(), fbxIndex);
+				//DrawCollider(fbxIndex);
 			}
 		}
 

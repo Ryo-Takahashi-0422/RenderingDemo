@@ -93,9 +93,9 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ResourceManager.h>
 #include <TextureTransporter.h>
 #include <Input.h>
-#include <CollisionManager.h>
 #include <CollisionRootSignature.h>
 #include <ColliderGraphicsPipelineSetting.h>
+#include <CollisionManager.h>
 #include <Blur.h>
 #include <ComputeBlur.h>
 #include <Integration.h>

@@ -13,9 +13,20 @@ struct OBBVertices
 class CollisionManager
 {
 private:
+	HRESULT Init();
 	ComPtr<ID3D12Device> dev = nullptr;
 	std::vector<ResourceManager*> resourceManager;
-	void Init();
+
+	PeraLayout* layout = nullptr;
+	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
+	CollisionRootSignature* collisionRootSignature = nullptr;
+	SettingShaderCompile* collisionShaderCompile = nullptr;
+	
+	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
+	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
+
+	
+	void CreateInfo();
 
 	BoundingOrientedBox box1;
 	std::vector<BoundingOrientedBox> boxes;
@@ -94,4 +105,6 @@ public:
 
 	ComPtr<ID3D12DescriptorHeap> GetMatrixHeap() { return matrixHeap; };
 	void SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj);
+
+	void Execution(ID3D12GraphicsCommandList* _cmdList, int modelNum);
 };

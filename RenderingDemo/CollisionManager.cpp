@@ -6,14 +6,46 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 	dev = _dev;
 	resourceManager = _resourceManagers;
 	Init();
+	CreateInfo();
 	CreateMatrixHeap();
 	CreateMatrixResources();
 	CreateMatrixView();
 	MappingMatrix();
 }
 
+HRESULT CollisionManager::Init()
+{
+	layout = new PeraLayout;
+	collisionRootSignature = new CollisionRootSignature;
+	colliderGraphicsPipelineSetting = new ColliderGraphicsPipelineSetting(layout);
+	collisionShaderCompile = new SettingShaderCompile;
+
+	// ｺﾗｲﾀﾞｰ用
+	if (FAILED(collisionRootSignature->SetRootsignatureParam(dev)))
+	{
+		return false;
+	}
+
+	// コライダー描画用
+	std::string collisionVs = "CollisionVertex.hlsl";
+	std::string collisionPs = "CollisionPixel.hlsl";
+	auto collisionPathPair = Utility::GetHlslFilepath(collisionVs, collisionPs);
+	auto colliderBlobs = collisionShaderCompile->CollisionSetShaderCompile(collisionRootSignature, _vsCollisionBlob, _psCollisionBlob,
+		collisionPathPair.first, "vs",
+		collisionPathPair.second, "ps");
+	if (colliderBlobs.first == nullptr or colliderBlobs.second == nullptr) return false;
+	_vsCollisionBlob = colliderBlobs.first;
+	_psCollisionBlob = colliderBlobs.second;
+	delete collisionShaderCompile;
+
+	// コライダー用
+	auto result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
+
+	return result;
+}
+
 // TODO : 1. シェーダーを分けて、ボーンマトリックスとの乗算をなくす&エッジのみ着色したボックスとして表示する、2. 8頂点の位置を正す 3. 複数のメッシュ(障害物)とキャラクターメッシュを判別して処理出来るようにする
-void CollisionManager::Init()
+void CollisionManager::CreateInfo()
 {
 	auto vertmap1 = resourceManager[0]->/*GetIndiceAndVertexInfo()*/GetIndiceAndVertexInfoOfOBB();
 	auto it = vertmap1.begin();
@@ -446,6 +478,40 @@ void CollisionManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj
 	mappedMatrix->world = _world;
 	mappedMatrix->view = _view;
 	mappedMatrix->proj= _proj;
+}
+
+void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList, int modelNum)
+{
+	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());
+	_cmdList->SetDescriptorHeaps(1, matrixHeap.GetAddressOf());
+	auto gHandle = matrixHeap->GetGPUDescriptorHandleForHeapStart();
+	_cmdList->SetGraphicsRootDescriptorTable(0, gHandle);
+
+	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());
+
+	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP/*D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP*/);
+
+	if (modelNum == 0)
+	{
+		//頂点バッファーのCPU記述子ハンドルを設定
+		for (int i = 0; i < oBBVertices.size(); ++i)
+		{
+			_cmdList->IASetVertexBuffers(0, 1, &boxVBVs[i]);
+			// インデックスバッファーのビューを設定
+			_cmdList->IASetIndexBuffer(&boxIBVs[i]);
+			_cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+
+			//_cmdList->DrawInstanced(8, 1, 0, 0);
+		}
+	}
+
+	else
+	{
+		_cmdList->IASetVertexBuffers(0, 1, &boxVBV2);
+		_cmdList->IASetIndexBuffer(&sphereIBV);
+		_cmdList->DrawIndexedInstanced(144, 1, 0, 0, 0);
+	}
 }
 
 //void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
