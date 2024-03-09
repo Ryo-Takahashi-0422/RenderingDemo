@@ -1415,7 +1415,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			
 			if (num == 0)
 			{
-				//DrawCollider(fbxIndex);
+				auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
+				collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
+				DrawCollider(fbxIndex);
 			}
 		}
 
@@ -1481,7 +1483,9 @@ void D3DX12Wrapper::DrawCollider(int modelNum)
 	//_cmdList->ClearRenderTargetView(handle, clearColor, 0, nullptr);
 
 	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());
-	//_cmdList->SetDescriptorHeaps(1, resourceManager[0]->GetSRVHeap().GetAddressOf());
+	_cmdList->SetDescriptorHeaps(1, collisionManager->GetMatrixHeap().GetAddressOf());
+	auto gHandle = collisionManager->GetMatrixHeap()->GetGPUDescriptorHandleForHeapStart();
+	_cmdList->SetGraphicsRootDescriptorTable(0, gHandle);
 
 	_cmdList->SetPipelineState(colliderGraphicsPipelineSetting->GetPipelineState().Get());
 

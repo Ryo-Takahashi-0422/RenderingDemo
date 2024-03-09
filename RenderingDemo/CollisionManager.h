@@ -56,6 +56,21 @@ private:
 
 	static const size_t CORNER_COUNT = 8;
 
+	HRESULT CreateMatrixHeap();
+	HRESULT CreateMatrixResources();
+	void CreateMatrixView();
+	HRESULT MappingMatrix();
+	ComPtr<ID3D12Resource> matrixBuff = nullptr; // index mapped buffer
+	ComPtr<ID3D12DescriptorHeap> matrixHeap = nullptr; // RTV用ディスクリプタヒープ
+	struct CollisionMatrix
+	{
+		XMMATRIX world;
+		XMMATRIX view;
+		XMMATRIX proj;
+	};
+
+	CollisionMatrix* mappedMatrix = nullptr;
+
 public:
 	CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
 
@@ -76,4 +91,7 @@ public:
 	D3D12_INDEX_BUFFER_VIEW* GetBoxIBVs(int index) { return &boxIBVs[index]; }; // ★
 	D3D12_INDEX_BUFFER_VIEW* GetCharacterSphereColliderIBVs() { return &sphereIBV; }; // ★
 	int GetOBBNum() { return oBBVertices.size(); };
+
+	ComPtr<ID3D12DescriptorHeap> GetMatrixHeap() { return matrixHeap; };
+	void SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj);
 };

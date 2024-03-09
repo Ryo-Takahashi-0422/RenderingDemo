@@ -6,6 +6,10 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 	dev = _dev;
 	resourceManager = _resourceManagers;
 	Init();
+	CreateMatrixHeap();
+	CreateMatrixResources();
+	CreateMatrixView();
+	MappingMatrix();
 }
 
 // TODO : 1. シェーダーを分けて、ボーンマトリックスとの乗算をなくす&エッジのみ着色したボックスとして表示する、2. 8頂点の位置を正す 3. 複数のメッシュ(障害物)とキャラクターメッシュを判別して処理出来るようにする
@@ -384,6 +388,64 @@ void CollisionManager::CreateSpherePoints(const XMFLOAT3& center, float Radius)
 	sphereColliderIndices.push_back(25);
 	sphereColliderIndices.push_back(24);
 	sphereColliderIndices.push_back(17);
+}
+
+HRESULT CollisionManager::CreateMatrixHeap()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {}; // SRV用ディスクリプタヒープ
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapDesc.NumDescriptors = 1; // matrix
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.NodeMask = 0;
+
+	auto result = dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(matrixHeap.ReleaseAndGetAddressOf()));
+	return result;
+}
+
+HRESULT CollisionManager::CreateMatrixResources()
+{
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(CollisionMatrix) + 0xff) & ~0xff);
+
+	auto result = dev->CreateCommittedResource
+	(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadヒープでのリソース初期状態はこのタイプが公式ルール
+		nullptr,
+		IID_PPV_ARGS(matrixBuff.ReleaseAndGetAddressOf())
+	);
+
+	return result;
+}
+
+void CollisionManager::CreateMatrixView()
+{
+	auto handle = matrixHeap->GetCPUDescriptorHandleForHeapStart();
+
+	// frustum用view
+	D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+	desc.BufferLocation = matrixBuff->GetGPUVirtualAddress();
+	desc.SizeInBytes = matrixBuff->GetDesc().Width;
+	dev->CreateConstantBufferView
+	(
+		&desc,
+		handle
+	);
+}
+
+HRESULT CollisionManager::MappingMatrix()
+{
+	auto result = matrixBuff->Map(0, nullptr, (void**)&mappedMatrix);
+	return result;
+}
+
+void CollisionManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj)
+{
+	mappedMatrix->world = _world;
+	mappedMatrix->view = _view;
+	mappedMatrix->proj= _proj;
 }
 
 //void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)
