@@ -40,7 +40,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     float div = 0.0f;
     float ao = 0.0f;
     float3 norm = normalize((normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0).xyz * 2) - 1);
-    const int trycnt = 48;
+    const int trycnt = 32;
     const float radius = 0.05f;
     
     if (dp < 1.0f)

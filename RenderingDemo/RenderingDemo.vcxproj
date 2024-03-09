@@ -455,6 +455,7 @@
     <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
+    <ClCompile Include="OBBManager.cpp" />
     <ClCompile Include="ParticipatingMedia.cpp" />
     <ClCompile Include="Shadow.cpp" />
     <ClCompile Include="Sky.cpp" />
@@ -521,6 +522,7 @@
     <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
     <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
+    <ClInclude Include="OBBManager.h" />
     <ClInclude Include="ParticipatingMedia.h" />
     <ClInclude Include="Shadow.h" />
     <ClInclude Include="Sky.h" />

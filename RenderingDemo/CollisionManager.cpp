@@ -480,7 +480,12 @@ void CollisionManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj
 	mappedMatrix->proj= _proj;
 }
 
-void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList, int modelNum)
+void CollisionManager::SetCharaPos(XMFLOAT3 _charaPos)
+{
+	charaPos = _charaPos;
+}
+
+void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList)
 {
 	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());
 	_cmdList->SetDescriptorHeaps(1, matrixHeap.GetAddressOf());
@@ -492,26 +497,12 @@ void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList, int modelN
 	//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP/*D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP*/);
 
-	if (modelNum == 0)
-	{
-		//頂点バッファーのCPU記述子ハンドルを設定
-		for (int i = 0; i < oBBVertices.size(); ++i)
-		{
-			_cmdList->IASetVertexBuffers(0, 1, &boxVBVs[i]);
-			// インデックスバッファーのビューを設定
-			_cmdList->IASetIndexBuffer(&boxIBVs[i]);
-			_cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-
-			//_cmdList->DrawInstanced(8, 1, 0, 0);
-		}
-	}
-
-	else
-	{
-		_cmdList->IASetVertexBuffers(0, 1, &boxVBV2);
-		_cmdList->IASetIndexBuffer(&sphereIBV);
-		_cmdList->DrawIndexedInstanced(144, 1, 0, 0, 0);
-	}
+	mappedMatrix->world.r[3].m128_f32[0] = charaPos.x;
+	//mappedMatrix->world.r[3].m128_f32[1] = charaPos.y;
+	mappedMatrix->world.r[3].m128_f32[2] = charaPos.z;
+	_cmdList->IASetVertexBuffers(0, 1, &boxVBV2);
+	_cmdList->IASetIndexBuffer(&sphereIBV);
+	_cmdList->DrawIndexedInstanced(144, 1, 0, 0, 0);
 }
 
 //void CollisionManager::StoreIndiceOfOBB(std::map<int, std::vector<std::pair<float, int>>> res, int loopCnt, int index)

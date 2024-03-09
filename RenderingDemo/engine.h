@@ -96,6 +96,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <CollisionRootSignature.h>
 #include <ColliderGraphicsPipelineSetting.h>
 #include <CollisionManager.h>
+#include <OBBManager.h>
 #include <Blur.h>
 #include <ComputeBlur.h>
 #include <Integration.h>

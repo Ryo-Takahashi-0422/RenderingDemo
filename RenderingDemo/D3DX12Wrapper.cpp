@@ -593,6 +593,7 @@ void D3DX12Wrapper::Run() {
 
 	// 衝突判定準備
 	collisionManager = new CollisionManager(_dev, resourceManager);
+	oBBManager = new OBBManager(_dev, resourceManager);
 	//connanDirection = resourceManager[1]->GetMappedMatrix()->world;
 	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
 	XMVECTOR det;
@@ -686,8 +687,6 @@ void D3DX12Wrapper::Run() {
 		itMaterialAndTextureNames.push_back(itMaterialAndTextureName);
 		int matTexSize = materialAndTexturenameInfo[fbxIndex].size();
 		matTexSizes.push_back(matTexSize);
-
-
 	}
 
 	int index = 0;
@@ -961,10 +960,7 @@ void D3DX12Wrapper::Run() {
 
 	//delete bufferGPLSetting;
 	//delete bufferShaderCompile;
-	
-	delete lightMapGPLSetting;	
-	delete lightMapShaderCompile;
-	
+
 	delete textureTransporter;
 
 	UnregisterClass(prepareRenderingWindow->GetWNDCCLASSEX().lpszClassName, prepareRenderingWindow->GetWNDCCLASSEX().hInstance);
@@ -978,8 +974,6 @@ void D3DX12Wrapper::Run() {
 
 	
 	//delete prepareRenderingWindow;
-	delete aoShaderCompile;
-	delete aoGPLSetting;
 
 	delete peraGPLSetting;
 
@@ -1132,7 +1126,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		/*localCmdList->ClearRenderTargetView(handleFBX, clearColor, 0, nullptr);*/
 		localCmdList->ClearRenderTargetView(handles[0], clearColor, 0, nullptr);
 		localCmdList->ClearRenderTargetView(handles[1], clearColor, 0, nullptr);
-
+		XMFLOAT3 charaPos = {0,0,0};
 		int lastSRVSetNum = 0;
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{
@@ -1153,7 +1147,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					// start character with idle animation
 					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 
-					XMFLOAT3 charaPos;
+					
 					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 					charaPos.y = 1.5;
 					charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
@@ -1367,13 +1361,22 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			}
 			
-			// コライダー描画
-			if (num == 0)
-			{
-				auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
-				collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-				collisionManager->Execution(localCmdList.Get(), fbxIndex);
-			}
+
+		}
+		// コライダー描画 thread1でキャラクタースフィア、thread2でOBBを描画する
+		if (num == 0)
+		{
+			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
+			collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
+			collisionManager->SetCharaPos(charaPos);
+			collisionManager->Execution(localCmdList.Get());
+
+		}
+		else
+		{
+			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
+			oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
+			oBBManager->Execution(localCmdList.Get());
 		}
 
 		// マルチターゲットリソースバリア処理
