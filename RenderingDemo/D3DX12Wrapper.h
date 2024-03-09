@@ -147,11 +147,6 @@ private:
 	/*FBXInfoManager fbxInfoManager;*/
 	std::vector<ResourceManager*> resourceManager;
 	CollisionManager* collisionManager = nullptr;
-	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
-	CollisionRootSignature* collisionRootSignature = nullptr;
-	SettingShaderCompile* collisionShaderCompile = nullptr;
-	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
-	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
 	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
 	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
@@ -222,8 +217,6 @@ private:
 	//size_t indiceSize = 0;
 	//D3D12_GPU_DESCRIPTOR_HANDLE tHandle;
 	D3D12_RESOURCE_BARRIER barrierDescFBX = {};
-
-	void DrawCollider(int modelNum);
 
 	// 描画パイプラインに共通して必要なデータ
 	short modelPathSize;
