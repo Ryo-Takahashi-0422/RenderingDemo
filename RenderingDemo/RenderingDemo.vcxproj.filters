@@ -361,6 +361,9 @@
     <ClCompile Include="CalculateSSAO.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
+    <ClCompile Include="OBBManager.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -541,6 +544,9 @@
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
     <ClInclude Include="CalculateSSAO.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="OBBManager.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

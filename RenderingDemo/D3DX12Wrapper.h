@@ -26,17 +26,7 @@ private:
 
 	ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
 	GraphicsPipelineSetting* gPLSetting = nullptr;
-	//std::vector<BufferHeapCreator*> bufferHeapCreator;
 	TextureTransporter* textureTransporter;
-	//std::vector<MappingExecuter*> mappingExecuter;
-	//std::vector<ViewCreator*> viewCreator;
-
-	//std::vector<DirectX::TexMetadata*> metaData;
-	//std::vector<DirectX::Image*> img;
-	//std::vector<DirectX::TexMetadata*> toonMetaData;
-	//std::vector<DirectX::Image*> toonImg;
-
-
 
 	// コピーコンストラクタ
 	D3DX12Wrapper(const D3DX12Wrapper& x) { };
@@ -47,21 +37,8 @@ private:
 	SetRootSignature* setRootSignature = nullptr;
 	SettingShaderCompile* settingShaderCompile = nullptr;
 	VertexInputLayout* vertexInputLayout = nullptr;
-	//std::vector<PMDMaterialInfo*> pmdMaterialInfo;
-	//std::vector<VMDMotionInfo*> vmdMotionInfo;
-	//std::vector<PMDActor*> pmdActor;
 	PrepareRenderingWindow* prepareRenderingWindow = nullptr;	
 	TextureLoader* textureLoader = nullptr;
-
-	//std::map<int, std::vector<DirectX::XMMATRIX>*> boneMatrices;
-	//std::map<int, std::map<std::string, BoneNode>> bNodeTable;
-	//unsigned int _duration; // アニメーションの最大フレーム番号
-
-	//void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
-	//void UpdateVMDMotion(std::map<std::string, BoneNode> bNodeTable, 
-	//std::unordered_map<std::string, std::vector<KeyFrame>> motionData);
-
-	//float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	// ﾏﾙﾁﾊﾟｽ関連
 	PeraGraphicsPipelineSetting* peraGPLSetting = nullptr;
@@ -69,33 +46,6 @@ private:
 	PeraPolygon* peraPolygon = nullptr;
 	PeraSetRootSignature* peraSetRootSignature = nullptr;
 	/*PeraShaderCompile*/SettingShaderCompile* peraShaderCompile = nullptr;
-	//PeraGraphicsPipelineSetting* bufferGPLSetting = nullptr;
-	//PeraSetRootSignature* bufferSetRootSignature = nullptr;
-
-	//BufferShaderCompile* bufferShaderCompile = nullptr;
-
-	// ライトマップ関連
-	LightMapGraphicsPipelineSetting* lightMapGPLSetting = nullptr;
-	SetRootSignature* lightMapRootSignature = nullptr;
-	LightMapShaderCompile* lightMapShaderCompile = nullptr;
-	ComPtr<ID3D10Blob> _lightMapVSBlob = nullptr; // ライトマップ用頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _lightMapPSBlob = nullptr; // ライトマップ用ピクセルシェーダーオブジェクト格納用
-	//XMFLOAT4 _planeNormalVec;
-	//XMFLOAT3 lightVec;
-	
-	// bloom	
-	PeraGraphicsPipelineSetting* bloomGPLSetting = nullptr;
-	PeraSetRootSignature* bloomRootSignature = nullptr;
-	BloomShaderCompile* bloomShaderCompile = nullptr;
-	ComPtr<ID3D10Blob> _bloomVSBlob = nullptr; // bloom用頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _bloomPSBlob = nullptr; // bloom用ピクセルシェーダーオブジェクト格納用
-	
-	// AO
-	AOShaderCompile* aoShaderCompile = nullptr;
-	AOGraphicsPipelineSetting* aoGPLSetting = nullptr;
-	SetRootSignature* aoRootSignature = nullptr;
-	ComPtr<ID3D10Blob> _aoVSBlob = nullptr; // AO用頂点シェーダーオブジェクト格納用
-	ComPtr<ID3D10Blob> _aoPSBlob = nullptr; // AO用ピクセルシェーダーオブジェクト格納用
 
 	// Imgui
 	SettingImgui* settingImgui = nullptr;
@@ -107,11 +57,6 @@ private:
 	void SetFoVSwitch();
 	void SetSSAOSwitch();
 	void SetBloomColor();
-
-	//DirectX::XMVECTOR light;
-	//DirectX::XMVECTOR eyePos;
-	//DirectX::XMVECTOR targetPos;
-	//DirectX::XMVECTOR upVec;
 
 	// Effekseer
 	EffekseerRenderer::RendererRef _efkRenderer = nullptr; // effect renderer
@@ -147,11 +92,7 @@ private:
 	/*FBXInfoManager fbxInfoManager;*/
 	std::vector<ResourceManager*> resourceManager;
 	CollisionManager* collisionManager = nullptr;
-	ColliderGraphicsPipelineSetting* colliderGraphicsPipelineSetting = nullptr;
-	CollisionRootSignature* collisionRootSignature = nullptr;
-	SettingShaderCompile* collisionShaderCompile = nullptr;
-	ComPtr<ID3D10Blob> _vsCollisionBlob = nullptr; // コライダー描画用
-	ComPtr<ID3D10Blob> _psCollisionBlob = nullptr; // コライダー描画用
+	OBBManager* oBBManager = nullptr;
 	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
 	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
@@ -222,9 +163,7 @@ private:
 	//size_t indiceSize = 0;
 	//D3D12_GPU_DESCRIPTOR_HANDLE tHandle;
 	D3D12_RESOURCE_BARRIER barrierDescFBX = {};
-
-	void DrawCollider(int modelNum);
-
+	XMFLOAT3 charaPos = { 0,0,0 };
 	// 描画パイプラインに共通して必要なデータ
 	short modelPathSize;
 	const D3D12_VIEWPORT* viewPort = nullptr;
