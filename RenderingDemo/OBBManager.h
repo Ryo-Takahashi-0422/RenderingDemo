@@ -75,6 +75,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> matrixHeap = nullptr; // RTV用ディスクリプタヒープ
 	struct CollisionMatrix
 	{
+		XMMATRIX rotation;
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX proj;

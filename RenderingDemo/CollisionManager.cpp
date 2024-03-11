@@ -486,6 +486,11 @@ void CollisionManager::SetCharaPos(XMFLOAT3 _charaPos)
 	charaPos = _charaPos;
 }
 
+void CollisionManager::SetRotation(XMMATRIX _rotation)
+{
+	mappedMatrix->rotation = _rotation;
+}
+
 void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList)
 {
 	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());

@@ -339,6 +339,7 @@ HRESULT OBBManager::MappingMatrix()
 
 void OBBManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj)
 {
+	mappedMatrix->rotation = XMMatrixIdentity();
 	mappedMatrix->world = _world;
 	mappedMatrix->view = _view;
 	mappedMatrix->proj = _proj;

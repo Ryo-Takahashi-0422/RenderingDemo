@@ -6,6 +6,7 @@ struct Output
 
 cbuffer SceneBuffer : register(b0) // •ÏŠ·s—ñ
 {
+    matrix rotation;
     matrix world; // world matrix
     matrix view; // view matrix
     matrix proj; // projection matrix
