@@ -88,7 +88,7 @@ void CollisionManager::CreateInfo()
 		{
 			//XMStoreFloat3(&point, XMVectorAdd(CenterOfMass, XMVector3Transform(XMVectorSubtract(XMLoadFloat3(&point), CenterOfMass), localTransitionAndRotation[itVertMap->first])));
 			XMStoreFloat3(&point, XMVector3Transform(XMLoadFloat3(&point), localTransitionAndRotation[itVertMap->first]));
-			point.z *= -1;
+			//point.z *= -1;
 			boxPoints[itVertMap->first].push_back(point);
 		}
 
@@ -99,6 +99,7 @@ void CollisionManager::CreateInfo()
 	for (int i = 0; i < vertMaps.size(); ++i)
 	{
 		BoundingOrientedBox::CreateFromPoints(boxes[i], itBoxPoints->second.size(), itBoxPoints->second.data(), (size_t)sizeof(XMFLOAT3));
+		//boxes[i].Center.x *= -1;
 		++itBoxPoints;
 	}
 
@@ -291,7 +292,7 @@ void CollisionManager::MoveCharacterBoundingBox(double speed, XMMATRIX charaDire
 	tempCenterPos.m128_f32[3] = 1;
 
 	// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
-	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, -speed), charaDirection);
+	auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, speed), charaDirection);
 	moveMatrix.r[0].m128_f32[0] = 1;
 	moveMatrix.r[0].m128_f32[2] = 0;
 	moveMatrix.r[2].m128_f32[0] = 0;
@@ -591,17 +592,30 @@ bool CollisionManager::OBBCollisionCheck()
 	return result;
 }
 
-void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex)
+XMFLOAT3 CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex, XMVECTOR v, XMFLOAT3 charaPos)
 {
 	XMFLOAT3 boxCenterPos = collidedOBB.Center;
 	XMVECTOR boxCenterVec = XMLoadFloat3(&collidedOBB.Center);
 	BoundingSphere reserveSphere = bSphere; // 操作キャラクターコリジョンを動かす前の情報を残しておく
+	bSphere.Center.x = charaPos.x;
+	bSphere.Center.z = charaPos.z;
 	auto sCenter = bSphere.Center;
 	MoveCharacterBoundingBox(forwardSpeed, characterDirection); // move collider for collision test
 
 	if (OBBCollisionCheck()/*collisionManager->GetBoundingBox1()[debugNum].Contains(collisionManager->GetBoundingSphere()) == 0*/)
 	{
-		resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+		//resourceManager[fbxIndex]->GetMappedMatrix()->world *= XMMatrixTranslation(0, 0, -forwardSpeed);
+		resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = v.m128_f32[0];
+		resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = v.m128_f32[1];
+		resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = v.m128_f32[2];
+
+		charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+		charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+		resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
+		bSphere.Center.x = charaPos.x;
+		bSphere.Center.z = charaPos.z;
+		return charaPos;
 	}
 
 	else
@@ -909,22 +923,39 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 		if (collidedPlanes.size() == 1)
 		{
 			// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-			for (int i = 0; i < boxes.size(); ++i)
-			{
-				boxes[i].Center.x += moveMatrix.r[3].m128_f32[0];
-				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
-				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
-			}
+			//for (int i = 0; i < boxes.size(); ++i)
+			//{
+			//	boxes[i].Center.x += moveMatrix.r[3].m128_f32[0];
+			//	boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
+			//	boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
+			//}
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
+			moveMatrix.r[3].m128_f32[0] *= -1;
+			moveMatrix.r[3].m128_f32[2] *= -1;
 			moveMatrix *= characterDirection;
+
 			moveMatrix.r[0].m128_f32[0] = 1;
 			moveMatrix.r[0].m128_f32[2] = 0;
 			moveMatrix.r[2].m128_f32[0] = 0;
 			moveMatrix.r[2].m128_f32[2] = 1;
 
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+			//v = XMVector4Transform(v, moveMatrix);
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = v.m128_f32[0];
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = v.m128_f32[1];
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = v.m128_f32[2];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] += moveMatrix.r[3].m128_f32[1];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2];
+
+			charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+			charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+			resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
+			bSphere.Center.x = charaPos.x;
+			bSphere.Center.z = charaPos.z;
+			return charaPos;
 		}
 
 		// 角に接触している場合
@@ -954,22 +985,38 @@ void CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, XMMAT
 			//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
 			moveMatrix.r[3].m128_f32[2] = slideCol.m128_f32[2];
 			// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
-			for (int i = 0; i < boxes.size(); ++i)
-			{
-				boxes[i].Center.x += moveMatrix.r[3].m128_f32[0];
-				boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
-				boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
-			}
+			//for (int i = 0; i < boxes.size(); ++i)
+			//{
+			//	boxes[i].Center.x += moveMatrix.r[3].m128_f32[0];
+			//	boxes[i].Center.y += moveMatrix.r[3].m128_f32[1];
+			//	boxes[i].Center.z -= moveMatrix.r[3].m128_f32[2];
+			//}
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
+			//moveMatrix.r[3].m128_f32[0] *= -1;
+			moveMatrix.r[3].m128_f32[2] *= -1;
 			moveMatrix *= characterDirection;
 			moveMatrix.r[0].m128_f32[0] = 1;
 			moveMatrix.r[0].m128_f32[2] = 0;
 			moveMatrix.r[2].m128_f32[0] = 0;
 			moveMatrix.r[2].m128_f32[2] = 1;
 
-			resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = v.m128_f32[0];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = v.m128_f32[1];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = v.m128_f32[2];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] += moveMatrix.r[3].m128_f32[1];
+			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2];
+
+			charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+			charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+			resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
+			bSphere.Center.x = charaPos.x;
+			bSphere.Center.z = charaPos.z;
+			return charaPos;
 		}
 	}
 	

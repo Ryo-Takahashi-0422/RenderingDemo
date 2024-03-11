@@ -832,10 +832,10 @@ void D3DX12Wrapper::Run() {
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
+		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // ★shadowを利用
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -1171,15 +1171,39 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						moveMatrix.r[2].m128_f32[2] = 1;
 						worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
 
-						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = worldVec.m128_f32[0];
-						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
-						resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
+						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = worldVec.m128_f32[0];
+						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
+						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
+						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 
-						charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-						charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+						//charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+						//charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
+						//resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
+
+
+						
+						
+						//// デブスマップを読み込み可能状態に変更する
+						//D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+						//(
+						//    shadow->GetShadowMapResource().Get(),
+						//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+						//	D3D12_RESOURCE_STATE_DEPTH_WRITE
+						//);
+						//localCmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
+						////shadow->SetBoneMatrix(resourceManager[fbxIndex]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
+						//shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+						//// コピー用リソース状態をSkyLUT.hlslで読み込める状態にする
+						//D3D12_RESOURCE_BARRIER barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+						//(
+						//	air->GetAirTextureResource().Get(),
+						//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+						//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+						//);
+						//localCmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
+						//air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
 					}
 
 					// Left Key
@@ -1363,7 +1387,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			
 
 		}
-		// コライダー描画 thread1でキャラクタースフィア、thread2でOBBを描画する
+		// コライダー描画 thread1(num=0)でキャラクタースフィア、thread2でOBBを描画する
 		if (num == 0)
 		{
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();

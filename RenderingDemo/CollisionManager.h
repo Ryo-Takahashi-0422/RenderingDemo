@@ -98,7 +98,7 @@ public:
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
 	bool OBBCollisionCheck();
-	void OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
+	XMFLOAT3 OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex, XMVECTOR v, XMFLOAT3 charaPos );
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBVs(int index) { return &boxVBVs[index]; }; // Åö
 	D3D12_INDEX_BUFFER_VIEW* GetBoxIBVs(int index) { return &boxIBVs[index]; }; // Åö
 	D3D12_INDEX_BUFFER_VIEW* GetCharacterSphereColliderIBVs() { return &sphereIBV; }; // Åö
