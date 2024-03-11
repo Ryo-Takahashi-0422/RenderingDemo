@@ -932,9 +932,9 @@ XMFLOAT3 CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, X
 
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
-			moveMatrix.r[3].m128_f32[0] *= -1;
+			//moveMatrix.r[3].m128_f32[0] *= -1;
 			moveMatrix.r[3].m128_f32[2] *= -1;
-			moveMatrix *= characterDirection;
+			//moveMatrix *= characterDirection;
 
 			moveMatrix.r[0].m128_f32[0] = 1;
 			moveMatrix.r[0].m128_f32[2] = 0;
@@ -981,7 +981,7 @@ XMFLOAT3 CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, X
 			slideCol *= adjustSpeed;
 
 			moveMatrix.r[3].m128_f32[0] = slideCol.m128_f32[0];
-			moveMatrix.r[3].m128_f32[0] *= -1;
+			//moveMatrix.r[3].m128_f32[0] *= -1;
 			//moveMatrix.r[3].m128_f32[1] += centerToCenter.m128_f32[1];
 			moveMatrix.r[3].m128_f32[2] = slideCol.m128_f32[2];
 			// Z軸がFBX(-Z前方)モデルに対して反転している。モデルの向きを+Z前方にしたいが一旦このままで実装を進める
@@ -995,17 +995,17 @@ XMFLOAT3 CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, X
 			// オブジェクトはシェーダーで描画されているのでworld変換行列の影響を受けている。moveMatrixはキャラクターの進行方向と逆にするため-1掛け済なので、
 			// 更にキャラクターの向きを掛けてwolrd空間におきてキャラクターの逆の向きにオブジェクトが流れるようにする
 			//moveMatrix.r[3].m128_f32[0] *= -1;
-			moveMatrix.r[3].m128_f32[2] *= -1;
-			moveMatrix *= characterDirection;
+			//moveMatrix.r[3].m128_f32[2] *= -1;
+			//moveMatrix *= characterDirection;
 			moveMatrix.r[0].m128_f32[0] = 1;
 			moveMatrix.r[0].m128_f32[2] = 0;
 			moveMatrix.r[2].m128_f32[0] = 0;
 			moveMatrix.r[2].m128_f32[2] = 1;
 
 			//resourceManager[fbxIndex]->GetMappedMatrix()->world *= moveMatrix;
-			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = v.m128_f32[0];
-			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = v.m128_f32[1];
-			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = v.m128_f32[2];
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = v.m128_f32[0];
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = v.m128_f32[1];
+			//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = v.m128_f32[2];
 			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] += moveMatrix.r[3].m128_f32[0];
 			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] += moveMatrix.r[3].m128_f32[1];
 			resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] += moveMatrix.r[3].m128_f32[2];
