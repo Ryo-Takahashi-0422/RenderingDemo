@@ -79,6 +79,7 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX proj;
+		bool isDraw;
 	};
 
 	CollisionMatrix* mappedMatrix = nullptr;
@@ -109,6 +110,7 @@ public:
 	void SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj);
 	void SetCharaPos(XMFLOAT3 _charaPos);
 	void SetRotation(XMMATRIX _rotation);
+	void SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList);
 
 	void Execution(ID3D12GraphicsCommandList* _cmdList);
 };

@@ -113,6 +113,20 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Draw"))
+	{
+		if (ImGui::Checkbox("Sponza", &sponzaBox))
+		{
+			sponzaDraw = sponzaBox;
+		}
+		if (ImGui::Checkbox("Collider", &colliderBox))
+		{
+			colliderDraw = colliderBox;
+		}
+
+		ImGui::TreePop();
+	}
+
 	// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 	//if (ImGui::TreeNode("ShadowFactor"))
 	//{

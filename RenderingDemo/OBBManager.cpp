@@ -350,6 +350,15 @@ void OBBManager::SetCharaPos(XMFLOAT3 _charaPos)
 	charaPos = _charaPos;
 }
 
+void OBBManager::SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList)
+{
+	mappedMatrix->isDraw = _isDraw;
+	if (_isDraw)
+	{
+		Execution(_cmdList);
+	}
+}
+
 void OBBManager::Execution(ID3D12GraphicsCommandList* _cmdList)
 {
 	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());

@@ -34,7 +34,7 @@ uint index : SV_VertexID)
     lightPos.z = adjustDirValue * sunDIr.z;
     output.light = lightPos;
     
-    if (boneweight1[0] == 0 && /*boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 &&*/ boneweight2[2] == 0)
+    if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
         moveObj = false;
         bm[0][0] = 1;

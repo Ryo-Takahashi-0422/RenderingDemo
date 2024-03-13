@@ -24,7 +24,7 @@ struct FBXSceneMatrix
 	XMFLOAT3 sunDIr;
 	float pad1;
 	XMFLOAT3 charaPos;
-
+	bool sponzaDraw;
 	//float lightVec[3]; // vector of light from imgui
 	//bool isSelfShadow; // Self Shadow on/off
 };

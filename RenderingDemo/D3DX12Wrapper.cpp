@@ -1128,6 +1128,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		localCmdList->ClearRenderTargetView(handles[1], clearColor, 0, nullptr);
 		XMFLOAT3 charaPos = {0,0,0};
 		int lastSRVSetNum = 0;
+
+		resourceManager[num]->GetMappedMatrix()->sponzaDraw = settingImgui->GetSponzaBoxChanged();
+
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
@@ -1389,12 +1392,15 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			
 
 		}
+
+		bool colliderDraw = settingImgui->GetCollisionBoxChanged();
 		// コライダー描画 thread1(num=0)でキャラクタースフィア、thread2でOBBを描画する
 		if (num == 0)
 		{
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 			collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 			collisionManager->SetCharaPos(charaPos);
+			collisionManager->SetDraw(colliderDraw, localCmdList.Get());
 			//collisionManager->Execution(localCmdList.Get());
 
 		}
@@ -1402,6 +1408,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		{
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 			oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
+			oBBManager->SetDraw(colliderDraw, localCmdList.Get());
 			//oBBManager->Execution(localCmdList.Get());
 		}
 

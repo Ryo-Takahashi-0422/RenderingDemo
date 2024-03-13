@@ -491,6 +491,15 @@ void CollisionManager::SetRotation(XMMATRIX _rotation)
 	mappedMatrix->rotation = _rotation;
 }
 
+void CollisionManager::SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList)
+{
+	mappedMatrix->isDraw = _isDraw;
+	if (_isDraw)
+	{
+		Execution(_cmdList);
+	}
+}
+
 void CollisionManager::Execution(ID3D12GraphicsCommandList* _cmdList)
 {
 	_cmdList->SetGraphicsRootSignature(collisionRootSignature->GetRootSignature().Get());
