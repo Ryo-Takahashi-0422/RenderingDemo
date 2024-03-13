@@ -127,6 +127,10 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			airDraw = airBox;
 		}
+		if (ImGui::Checkbox("SSAO", &ssaoBox))
+		{
+			ssaoDraw = ssaoBox;
+		}
 
 		ImGui::TreePop();
 	}

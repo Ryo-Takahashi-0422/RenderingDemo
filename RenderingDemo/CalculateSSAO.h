@@ -60,6 +60,7 @@ private:
         XMMATRIX invView;
         XMMATRIX proj;
         XMMATRIX invProj;
+        bool isDraw;
 
     };
     Matrix4Cal* matrix4Cal = nullptr;
@@ -72,4 +73,5 @@ public:
     // é¿çs
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);
+    void SetDraw(bool _isDraw);
 };

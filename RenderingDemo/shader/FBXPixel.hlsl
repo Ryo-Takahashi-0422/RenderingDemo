@@ -21,7 +21,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     float tangentWeight = 0.0f;
     float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
-    float brightMin = 0.3f;
+    float brightMin = 0.4f;
     float brightEmpha = 4.5f;
     
     float Dot = dot(input.worldNormal, sunDIr);
@@ -40,7 +40,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     {
         brightEmpha = 0.7f;
         nor += 0.75f;
-        brightMin = 0.35f;
+        //brightMin = 0.35f;
         speclur = pow(speclur, 2);
         tangentWeight = 1.0f;
         biNormalWeight = 0.3;
@@ -74,7 +74,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // 法線画像の結果をレンダーターゲット2に格納する
     if (!normCol.x == 0 && !normCol.y == 0 && !normCol.z == 0)
     {
-        result.normal = float4(normCol, 1);
+        result.normal = float4(normal, 1);
     }
     else
     {
