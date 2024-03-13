@@ -60,6 +60,9 @@ private:
 	bool colliderBox = false;
 	bool colliderDraw = false;
 
+	bool airBox = true;
+	bool airDraw = true;
+
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
 	HRESULT Init(ComPtr<ID3D12Device> _dev,	PrepareRenderingWindow* pRWindow);
@@ -99,6 +102,7 @@ public:
 	//Draw
 	bool GetSponzaBoxChanged() { return sponzaDraw; };
 	bool GetCollisionBoxChanged() { return colliderDraw; };
+	bool GetAirBoxChanged() { return airDraw; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

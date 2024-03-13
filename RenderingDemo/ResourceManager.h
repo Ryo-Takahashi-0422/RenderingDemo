@@ -8,11 +8,6 @@ struct FBXSceneMatrix
 	XMMATRIX view; // view matrix
 	XMMATRIX proj; // projection matri
 	XMMATRIX oProj;
-	//XMMATRIX lightCamera; // view from light(view * projection)
-	//XMMATRIX shadow; // shadow matrix
-	//XMFLOAT3 eye; // position of camera
-	//XMMATRIX invProj; // inverse projection matrix
-	//XMMATRIX invView; // inverted view matrix
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
 
 	XMMATRIX rotation;
@@ -25,8 +20,10 @@ struct FBXSceneMatrix
 	float pad1;
 	XMFLOAT3 charaPos;
 	bool sponzaDraw;
-	//float lightVec[3]; // vector of light from imgui
-	//bool isSelfShadow; // Self Shadow on/off
+	bool dummy0;
+	bool dummy1;
+	bool dummy2;
+	bool airDraw;
 };
 
 class ResourceManager
@@ -153,8 +150,6 @@ public:
 	std::map <std::string, std::map<int, std::map<int, XMMATRIX>>> GetAnimationNameAndBoneNameWithTranslationMatrix() { return animationNameAndBoneNameWithTranslationMatrix; };
 
 	bool GetIsAnimationModel() { return isAnimationModel; };
-	//XMFLOAT3 GetLocalRotationFloat() { return localRotationFloat; };
-	//std::map<std::string, std::pair<XMFLOAT3, XMFLOAT3>> GetLocalPosAndRotOfMesh() { return localPosAndRotOfMesh; };
 	std::map<std::string, XMMATRIX> GetLocalMatrixOfOBB() { return localMatrix4OBB; }; // メッシュ毎のローカル座標・回転を取得可能
 
 	std::vector<std::pair<std::string, VertexInfo>> GetIndiceAndVertexInfoOfOBB() { return vertexListOfOBB; };
@@ -170,5 +165,7 @@ public:
 	int GetDescriptorNum() { return descriptorNum; };
 	FBXSceneMatrix* GetMappedMatrixPointer() { return mappedMatrix; };
 	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);
+
+	void SetAirDraw(bool _isDraw);
 };
 

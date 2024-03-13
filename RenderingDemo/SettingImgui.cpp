@@ -123,6 +123,10 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			colliderDraw = colliderBox;
 		}
+		if (ImGui::Checkbox("Air", &airBox))
+		{
+			airDraw = airBox;
+		}
 
 		ImGui::TreePop();
 	}

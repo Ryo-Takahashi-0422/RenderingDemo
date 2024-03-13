@@ -832,7 +832,11 @@ void D3DX12Wrapper::Run() {
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
+		bool airDraw = settingImgui->GetAirBoxChanged();
+		if (airDraw)
+		{
+			air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
+		}		
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // ★shadowを利用
@@ -856,14 +860,16 @@ void D3DX12Wrapper::Run() {
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 
 		// airのコピー用リソース状態をUAVに戻す
-		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			resourceManager[0]->GetAirBuff().Get(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		);
-		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-
+		if (airDraw)
+		{
+			auto barrierDescOfAirCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+			(
+				resourceManager[0]->GetAirBuff().Get(),
+				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+				D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+			);
+			_cmdList3->ResourceBarrier(1, &barrierDescOfAirCopyDestTexture);
+		}
 		// シャドウマップを深度書き込み可能な状態に戻す
 		auto barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
 		(
@@ -874,7 +880,7 @@ void D3DX12Wrapper::Run() {
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 
 		// デプスマップ統合クラス コピー用リソース状態をUAVにする
-		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
+		auto barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
 			depthMapIntegration->GetTextureResource().Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
@@ -1130,6 +1136,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		int lastSRVSetNum = 0;
 
 		resourceManager[num]->GetMappedMatrix()->sponzaDraw = settingImgui->GetSponzaBoxChanged();
+		resourceManager[num]->GetMappedMatrix()->airDraw = settingImgui->GetAirBoxChanged();
+
 
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{

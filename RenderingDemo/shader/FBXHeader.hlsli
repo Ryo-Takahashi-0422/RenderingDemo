@@ -53,6 +53,7 @@ cbuffer SceneBuffer : register(b0) // •ÏŠ·s—ñ
     float3 sunDIr;
     float3 charaPos;
     bool sponza;
+    bool airDraw;
     //float3 lightVec;
     //bool isSelfShadow;
 };

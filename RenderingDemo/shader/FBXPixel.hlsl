@@ -156,7 +156,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     
     // 色情報をレンダーターゲット1に格納する
-    result.col = result.col * shadowFactor + float4(inScatter, 0) + float4(speclur, 0);
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + float4(speclur, 0);
     
 
     
