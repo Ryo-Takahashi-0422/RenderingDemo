@@ -1247,13 +1247,13 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					sky->ChangeSceneMatrix(leftSpinMatrix);
 				}
 
-				// Up Arrow Key
-				if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
-					sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
-					sky->ChangeSceneMatrix(angleUpMatrix);
-				}
+				//// Up Arrow Key
+				//if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
+				//{
+				//	resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
+				//	sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
+				//	sky->ChangeSceneMatrix(angleUpMatrix);
+				//}
 
 				// W Key
 				if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
@@ -1395,14 +1395,14 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 			collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 			collisionManager->SetCharaPos(charaPos);
-			collisionManager->Execution(localCmdList.Get());
+			//collisionManager->Execution(localCmdList.Get());
 
 		}
 		else
 		{
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 			oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-			oBBManager->Execution(localCmdList.Get());
+			//oBBManager->Execution(localCmdList.Get());
 		}
 
 		// マルチターゲットリソースバリア処理

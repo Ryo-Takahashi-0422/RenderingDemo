@@ -916,13 +916,13 @@ XMFLOAT3 CollisionManager::OBBCollisionCheckAndTransration(float forwardSpeed, X
 		auto centerToCenter = XMVectorSubtract(XMLoadFloat3(&sCenter), boxCenterVec); // 衝突したOBB中心座標→キャラクターコライダーまでのベクトル
 		centerToCenter = XMVector3Normalize(centerToCenter);
 
-		printf("%f\n", dotPlane1Sphere.m128_f32[0]);
-		printf("%f\n", dotPlane2Sphere.m128_f32[0]);
-		printf("%f\n", dotPlane3Sphere.m128_f32[0]);
-		printf("%f\n", dotPlane4Sphere.m128_f32[0]);
-		printf("%f\n", dotPlane5Sphere.m128_f32[0]);
-		printf("%f\n", dotPlane6Sphere.m128_f32[0]);
-		printf("\n");
+		//printf("%f\n", dotPlane1Sphere.m128_f32[0]);
+		//printf("%f\n", dotPlane2Sphere.m128_f32[0]);
+		//printf("%f\n", dotPlane3Sphere.m128_f32[0]);
+		//printf("%f\n", dotPlane4Sphere.m128_f32[0]);
+		//printf("%f\n", dotPlane5Sphere.m128_f32[0]);
+		//printf("%f\n", dotPlane6Sphere.m128_f32[0]);
+		//printf("\n");
 
 		// 角に接触していない場合
 		if (collidedPlanes.size() == 1)

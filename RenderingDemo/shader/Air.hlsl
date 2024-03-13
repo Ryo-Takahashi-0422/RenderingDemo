@@ -70,7 +70,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             scattering.y = 0.000027f;
             scattering.z = 0.00005f;
             AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
-            break;
+            continue;
         }
         
         float dt = (endT - startT);
