@@ -550,12 +550,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ƒuƒ‰[‚©‚¯‚¸‚ÉSSAOŒvŽZ‚µ‚Ä‚à‚ ‚Ü‚è•Ï‚í‚ç‚È‚¢...
-	integration->SetDepthmapResourse(calculateSSAO->GetTextureResource());
+	integration->SetResourse1(calculateSSAO->GetTextureResource());
 
 	// integrated color blur for ”íŽÊŠE[“x
 	colorIntegraredBlur = new Blur(_dev.Get());
 	colorIntegraredBlur->Init(pair);
 	colorIntegraredBlur->SetRenderingResourse(integration->GetColorResourse());
+	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
 
 	return true;
 }
@@ -1745,12 +1746,15 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	gHandle = integration->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 
 	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // color“‡
-	gHandle.ptr += buffSize;
-
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // normal“‡
 	gHandle.ptr += buffSize * 2;
 
+	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // imgui
+	gHandle.ptr += buffSize;
+
 	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // SSAO
+	gHandle.ptr += buffSize;
+
+	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // blured color
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

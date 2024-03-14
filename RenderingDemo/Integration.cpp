@@ -264,7 +264,7 @@ HRESULT Integration::CreateRenderingHeap()
     // RTV用
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {}; // RTV用ディスクリプタヒープ
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 3; // color, normal, depth(精度不足により使わない)
+    rtvHeapDesc.NumDescriptors = 3; // color, normal, imgui
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
 
@@ -276,7 +276,7 @@ HRESULT Integration::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 4; // color, normal, depth(精度不足により使わない) , 外部統合デプス
+    srvHeapDesc.NumDescriptors = 5; // color, normal, imgui, ssao, blured color
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
@@ -412,9 +412,9 @@ void Integration::CreateRenderingSRV()
     );
 }
 
-void Integration::SetDepthmapResourse(ComPtr<ID3D12Resource> _resource)
+void Integration::SetResourse1(ComPtr<ID3D12Resource> _resource)
 {
-    integratedDepthmap = _resource;
+    shaderResourse1 = _resource;
 
     auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -428,7 +428,29 @@ void Integration::SetDepthmapResourse(ComPtr<ID3D12Resource> _resource)
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     _dev->CreateShaderResourceView
     (
-        integratedDepthmap.Get(),
+        shaderResourse1.Get(),
+        &srvDesc,
+        handle
+    );
+}
+
+void Integration::SetResourse2(ComPtr<ID3D12Resource> _resource)
+{
+    shaderResourse2 = _resource;
+
+    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    handle.ptr += inc * 4;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    _dev->CreateShaderResourceView
+    (
+        shaderResourse2.Get(),
         &srvDesc,
         handle
     );

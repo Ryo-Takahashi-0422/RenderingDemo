@@ -101,7 +101,7 @@ PixelOutput ps_main(vsOutput input) : SV_TARGET
     
     //float4 sun = SimpleGaussianBlur(sunTex, smp, input.uv /*, dx, dy*/);
     result.color.rgb = col;
-    result.color += imgui + sun;
+    result.color += /*imgui + */sun;
     result.imgui = imgui;
     //result.depth = depth;
     return result;
