@@ -83,6 +83,11 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
 
 float4 ps_main(vsOutput input) : SV_TARGET
 {
+    if(!sw)
+    {
+        return tex.Sample(smp, input.texCoord);
+    }
+    
     float w, h, levels;
     tex.GetDimensions(0, w, h, levels);
     float dx = 1.0f / w;

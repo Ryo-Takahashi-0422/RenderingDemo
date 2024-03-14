@@ -34,8 +34,8 @@ private:
 	PostSetting* mappedPostSetting = nullptr;
 
 	// sun
-	float sunAngleX = 360.0f;
-	float sunAngleY = 90.0f;
+	float sunAngleX = 340.0f;
+	float sunAngleY = 70.0f;
 
 	//sky
 	int skyResX = 64;
@@ -65,6 +65,9 @@ private:
 
 	bool ssaoBox = true;
 	bool ssaoDraw = true;
+
+	bool fovBox = true;
+	bool fovDraw = true;
 
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
@@ -107,6 +110,7 @@ public:
 	bool GetCollisionBoxChanged() { return colliderDraw; };
 	bool GetAirBoxChanged() { return airDraw; };
 	bool GetSSAOBoxChanged() { return ssaoDraw; };
+	bool GetFOVBoxChanged() { return fovDraw; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

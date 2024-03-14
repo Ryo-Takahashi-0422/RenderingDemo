@@ -8,11 +8,11 @@ float4 ps(Output input) : SV_TARGET
     float dx = 1.0f / w;
     float dy = 1.0f / h;
     
-    float y = 0.0f; // focus distance
+    float focus = 0.0f; // focus distance
     float dp = depthMap.Sample(smp, input.uv);
     dp = pow(dp, 20.0); // Calculation between small values (y-dp) isn't effective. 'dp' should be emphasized enough before (y-dp).
     
-    float depthDiff = abs(y - dp);
+    float depthDiff = abs(focus - dp);
     depthDiff = pow(depthDiff, 2.0f);
     
     float4 retColor[2];

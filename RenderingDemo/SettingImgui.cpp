@@ -131,6 +131,10 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			ssaoDraw = ssaoBox;
 		}
+		if (ImGui::Checkbox("FOV", &fovBox))
+		{
+			fovDraw = fovBox;
+		}
 
 		ImGui::TreePop();
 	}
