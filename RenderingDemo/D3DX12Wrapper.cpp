@@ -500,6 +500,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	camera->CalculateFrustum();
 	camera->SetDummyFrustum();
 	camera->MoveCamera(0, XMMatrixIdentity()); // camera view行列初期化　無ければ太陽の初期位置に影響する
+	camera->CalculateOribitView(XMFLOAT3(0, 1.5, 0), connanDirection); // orbitviewの初期化。処理がない場合、起動時にairが正しく描画されない。
+
 	sky->SetFrustum(camera->GetFrustum());
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
@@ -564,6 +566,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	colorIntegraredBlur->SetSwitch(true);
 	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
 	integration->SetResourse3(depthMapIntegration->GetTextureResource());
+
 	return true;
 }
 
