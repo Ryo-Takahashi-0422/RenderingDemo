@@ -423,7 +423,7 @@ void Integration::SetResourse1(ComPtr<ID3D12Resource> _resource)
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Format = /*DXGI_FORMAT_R32G32B32A32_FLOAT*/shaderResourse1.Get()->GetDesc().Format;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     _dev->CreateShaderResourceView
@@ -445,7 +445,7 @@ void Integration::SetResourse2(ComPtr<ID3D12Resource> _resource)
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.Format = /*DXGI_FORMAT_R8G8B8A8_UNORM*/shaderResourse2.Get()->GetDesc().Format;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     _dev->CreateShaderResourceView
@@ -467,7 +467,7 @@ void Integration::SetResourse3(ComPtr<ID3D12Resource> _resource)
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.Format = /*DXGI_FORMAT_R32_FLOAT*/shaderResourse3.Get()->GetDesc().Format;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     _dev->CreateShaderResourceView

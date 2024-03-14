@@ -344,12 +344,11 @@ void Blur::SetGaussianData()
 void Blur::SetRenderingResourse(ComPtr<ID3D12Resource> _RenderingRsource)
 {
     blurResource = _RenderingRsource;
-
     auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM/*DXGI_FORMAT_R32_FLOAT*/;
+    srvDesc.Format = /*DXGI_FORMAT_R8G8B8A8_UNORM*/blurResource.Get()->GetDesc().Format;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 

@@ -550,7 +550,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ブラーかけずにSSAO計算してもあまり変わらない...
-	integration->SetResourse1(calculateSSAO->GetTextureResource());
+	ssaoBlur = new Blur(_dev.Get());
+	ssaoBlur->Init(pair);
+	ssaoBlur->SetRenderingResourse(calculateSSAO->GetTextureResource());
+	integration->SetResourse1(/*calculateSSAO->GetTextureResource()*/ssaoBlur->GetBlurResource());
 
 	// integrated color blur for 被写界深度
 	colorIntegraredBlur = new Blur(_dev.Get());
@@ -870,6 +873,7 @@ void D3DX12Wrapper::Run() {
 		calculateSSAO->SetDraw(settingImgui->GetSSAOBoxChanged());
 		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
+		ssaoBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 
 		// airのコピー用リソース状態をUAVに戻す
 		if (airDraw)
