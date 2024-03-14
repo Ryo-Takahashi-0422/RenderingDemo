@@ -1,10 +1,10 @@
-Texture2D<float4> tex : register(t0); // sponza描画
-Texture2D<float4> tex2 : register(t1); // キャラクター描画
-Texture2D<float4> ssaoTex : register(t2); // sponzaデプスマップ
-Texture2D<float4> connanDepthmap : register(t3); // キャラクターデプスマップ
-Texture2D<float4> sky : register(t4); // skyLUT
-Texture2D<float4> imguiWindow : register(t5); // skyLUT
-Texture2D<float4> sunTex : register(t6); // skyLUT
+Texture2D<float4> colorTex : register(t0);
+Texture2D<float4> imguiTex : register(t1);
+Texture2D<float4> ssaoTex : register(t2);
+Texture2D<float4> bluredColor : register(t3);
+Texture2D<float4> depthMap : register(t4);
+//Texture2D<float4> imguiWindow : register(t5); // skyLUT
+//Texture2D<float4> sunTex : register(t6); // skyLUT
 
 SamplerState smp : register(s0); // サンプラー
 

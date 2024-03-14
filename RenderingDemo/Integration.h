@@ -40,8 +40,10 @@ private:
 
 	ComPtr<ID3D12Resource> renderingResource1 = nullptr; // レンダーターゲット1 カラー画像
 	ComPtr<ID3D12Resource> renderingResource2 = nullptr; // レンダーターゲット2 法線画像
-	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3 デプス画像
-	ComPtr<ID3D12Resource> integratedDepthmap = nullptr; // コンピュートシェーダーにより統合された外部リソース
+	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3 imgui画像
+	ComPtr<ID3D12Resource> shaderResourse1 = nullptr; // 外部リソース1 ssao
+	ComPtr<ID3D12Resource> shaderResourse2 = nullptr; // 外部リソース2 blured color
+	ComPtr<ID3D12Resource> shaderResourse3 = nullptr; // 外部リソース3 depth
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
@@ -55,8 +57,12 @@ private:
 public:
 	Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap);
 	void Init();
-	void SetDepthmapResourse(ComPtr<ID3D12Resource> _resource);
+	void SetResourse1(ComPtr<ID3D12Resource> _resource);
+	void SetResourse2(ComPtr<ID3D12Resource> _resource);
+	void SetResourse3(ComPtr<ID3D12Resource> _resource);
+	ComPtr<ID3D12Resource> GetColorResourse() { return  renderingResource1; };
 	ComPtr<ID3D12Resource> GetNormalResourse() { return  renderingResource2; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
+	std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
 };

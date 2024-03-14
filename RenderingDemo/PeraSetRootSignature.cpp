@@ -37,7 +37,7 @@ HRESULT PeraSetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 	descTableRange[10].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10); // shirinked Model
 	descTableRange[11].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11); // AO
 	descTableRange[12].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12); // imgui
-	descTableRange[13].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // imgui PostSetting
+	descTableRange[13].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); //
 
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParam[0].DescriptorTable.NumDescriptorRanges = 1;

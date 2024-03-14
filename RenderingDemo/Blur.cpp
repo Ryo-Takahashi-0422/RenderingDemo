@@ -6,10 +6,13 @@ Blur::Blur(ID3D12Device* dev)
     _dev = dev;
 }
 
-void Blur::Init()
+void Blur::Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution)
 {
+    width = resolution.first;
+    height = resolution.second;
+
     CreateRootSignature();
-    ShaderCompile();
+    ShaderCompile(vsps);
     SetInputLayout();
     CreateGraphicPipeline();
 
@@ -25,8 +28,9 @@ HRESULT Blur::CreateRootSignature()
     stSamplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     //ディスクリプタテーブルのスロット設定
-    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // shadow rendering
-    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // shadow rendering
+    descTableRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // target texture
+    descTableRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // gaussian blur weight
+    descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // blur switch
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -38,8 +42,13 @@ HRESULT Blur::CreateRootSignature()
     rootParam[1].DescriptorTable.pDescriptorRanges = &descTableRange[1];
     rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[2].DescriptorTable.pDescriptorRanges = &descTableRange[2];
+    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 2;
+    rootSignatureDesc.NumParameters = 3;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -67,11 +76,9 @@ HRESULT Blur::CreateRootSignature()
 }
 
 //  シェーダー設定
-HRESULT Blur::ShaderCompile()
+HRESULT Blur::ShaderCompile(std::pair<LPWSTR, LPWSTR> vsps)
 {
-    std::string vs = "BlurVertex.hlsl";
-    std::string ps = "BlurPixel.hlsl";
-    auto pair = Utility::GetHlslFilepath(vs, ps);
+    auto pair = vsps;
 
     auto result = D3DCompileFromFile
     (
@@ -234,8 +241,8 @@ HRESULT Blur::CreateRenderingHeap()
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
 
-    // shadowRendering用
-    srvHeapDesc.NumDescriptors = 2;
+    // rendering用
+    srvHeapDesc.NumDescriptors = 3;
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(renderingHeap.ReleaseAndGetAddressOf()));
 
     return result;
@@ -309,6 +316,25 @@ void Blur::CreateRenderingSRV()
     );
 }
 
+void Blur::SetRenderingResourse(ComPtr<ID3D12Resource> _RenderingRsource)
+{
+    blurResource = _RenderingRsource;
+    auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = /*DXGI_FORMAT_R8G8B8A8_UNORM*/blurResource.Get()->GetDesc().Format;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    _dev->CreateShaderResourceView
+    (
+        blurResource.Get(),
+        &srvDesc,
+        handle
+    );
+}
+
 void Blur::SetGaussianData()
 {
     auto weights = Utility::GetGaussianWeight(8, 5.0f);
@@ -343,24 +369,40 @@ void Blur::SetGaussianData()
     gaussianResource->Unmap(0, nullptr);
 }
 
-void Blur::SetRenderingResourse(ComPtr<ID3D12Resource> _RenderingRsource)
+void Blur::SetSwitch(bool _switch)
 {
-    blurResource = _RenderingRsource;
+    auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto desc = CD3DX12_RESOURCE_DESC::Buffer(Utility::AlignmentSize(sizeof(bool), 256));
+    _dev->CreateCommittedResource
+    (
+        &heapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(switchResource.ReleaseAndGetAddressOf())
+    );
 
     auto handle = renderingHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc * 2;
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM/*DXGI_FORMAT_R32_FLOAT*/;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-    _dev->CreateShaderResourceView
+    D3D12_CONSTANT_BUFFER_VIEW_DESC gDesc;
+    gDesc.BufferLocation = switchResource->GetGPUVirtualAddress();
+    gDesc.SizeInBytes = switchResource->GetDesc().Width;
+    _dev->CreateConstantBufferView
     (
-        blurResource.Get(),
-        &srvDesc,
+        &gDesc,
         handle
     );
+
+    switchResource->Map(0, nullptr, (void**)&mappedSwitch);
+    *mappedSwitch = _switch;
+}
+
+void Blur::ChangeSwitch(bool _switch)
+{
+    *mappedSwitch = _switch;
 }
 
 // 実行
@@ -395,10 +437,14 @@ void Blur::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmd
     _cmdList->SetDescriptorHeaps(1, renderingHeap.GetAddressOf());
 
     auto handle = renderingHeap->GetGPUDescriptorHandleForHeapStart();
-    _cmdList->SetGraphicsRootDescriptorTable(0, handle); // shadowMap
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    _cmdList->SetGraphicsRootDescriptorTable(0, handle); // target texture
 
-    handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    handle.ptr += inc;
     _cmdList->SetGraphicsRootDescriptorTable(1, handle); // gaussian weights
+
+    handle.ptr += inc;
+    _cmdList->SetGraphicsRootDescriptorTable(2, handle); // switch
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(3, 1, 0, 0);

@@ -189,6 +189,8 @@ private:
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
 	Blur* shadowRenderingBlur = nullptr;
+	Blur* colorIntegraredBlur = nullptr;
+	Blur* ssaoBlur = nullptr;
 	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
 	Integration* integration = nullptr;

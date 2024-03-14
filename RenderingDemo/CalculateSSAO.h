@@ -74,4 +74,5 @@ public:
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);
     void SetDraw(bool _isDraw);
+    std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
 };
