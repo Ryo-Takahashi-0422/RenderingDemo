@@ -276,7 +276,7 @@ HRESULT Integration::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 5; // color, normal, imgui, ssao, blured color
+    srvHeapDesc.NumDescriptors = 6; // color, normal, imgui, ssao, blured color, depth
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
@@ -451,6 +451,28 @@ void Integration::SetResourse2(ComPtr<ID3D12Resource> _resource)
     _dev->CreateShaderResourceView
     (
         shaderResourse2.Get(),
+        &srvDesc,
+        handle
+    );
+}
+
+void Integration::SetResourse3(ComPtr<ID3D12Resource> _resource)
+{
+    shaderResourse3 = _resource;
+
+    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    handle.ptr += inc * 5;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    _dev->CreateShaderResourceView
+    (
+        shaderResourse3.Get(),
         &srvDesc,
         handle
     );

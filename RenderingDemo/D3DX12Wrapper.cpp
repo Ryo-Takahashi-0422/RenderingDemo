@@ -557,7 +557,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	colorIntegraredBlur->Init(pair);
 	colorIntegraredBlur->SetRenderingResourse(integration->GetColorResourse());
 	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
-
+	integration->SetResourse3(depthMapIntegration->GetTextureResource());
 	return true;
 }
 
@@ -1755,6 +1755,9 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	gHandle.ptr += buffSize;
 
 	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // blured color
+	gHandle.ptr += buffSize;
+
+	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // depth
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

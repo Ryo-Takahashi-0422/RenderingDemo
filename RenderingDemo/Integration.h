@@ -40,9 +40,10 @@ private:
 
 	ComPtr<ID3D12Resource> renderingResource1 = nullptr; // レンダーターゲット1 カラー画像
 	ComPtr<ID3D12Resource> renderingResource2 = nullptr; // レンダーターゲット2 法線画像
-	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3 デプス画像
-	ComPtr<ID3D12Resource> shaderResourse1 = nullptr; // 外部リソース1
-	ComPtr<ID3D12Resource> shaderResourse2 = nullptr; // 外部リソース2
+	ComPtr<ID3D12Resource> renderingResource3 = nullptr; // レンダーターゲット3 imgui画像
+	ComPtr<ID3D12Resource> shaderResourse1 = nullptr; // 外部リソース1 ssao
+	ComPtr<ID3D12Resource> shaderResourse2 = nullptr; // 外部リソース2 blured color
+	ComPtr<ID3D12Resource> shaderResourse3 = nullptr; // 外部リソース3 depth
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr; // RTV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
@@ -58,6 +59,7 @@ public:
 	void Init();
 	void SetResourse1(ComPtr<ID3D12Resource> _resource);
 	void SetResourse2(ComPtr<ID3D12Resource> _resource);
+	void SetResourse3(ComPtr<ID3D12Resource> _resource);
 	ComPtr<ID3D12Resource> GetColorResourse() { return  renderingResource1; };
 	ComPtr<ID3D12Resource> GetNormalResourse() { return  renderingResource2; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
