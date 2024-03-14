@@ -8,7 +8,7 @@ struct PixelOutput
 {
     float4 color : SV_TARGET0; // integrated color
     float4 normal : SV_TARGET1; // integrated normal
-    float4 depth : SV_TARGET2; // integrated depth
+    float4 imgui : SV_TARGET2; // integrated depth
 };
 
 SamplerState smp : register(s0); // ƒTƒ“ƒvƒ‰[

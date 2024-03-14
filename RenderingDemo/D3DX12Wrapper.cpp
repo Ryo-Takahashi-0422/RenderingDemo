@@ -511,9 +511,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
 
+	// vsm blur
 	shadowRenderingBlur = new Blur(_dev.Get());
-	shadowRenderingBlur->Init();
-	shadowRenderingBlur->SetRenderingResourse(/*shadow->GetShadowMapResource()*/shadow->GetShadowRenderingResource());
+	std::string vs = "BlurVertex.hlsl";
+	std::string ps = "BlurPixel.hlsl";
+	auto pair = Utility::GetHlslFilepath(vs, ps);
+	shadowRenderingBlur->Init(pair);
+	shadowRenderingBlur->SetRenderingResourse(shadow->GetShadowRenderingResource());
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
 	resourceManager[0]->SetSunResourceAndCreateView(sun->GetRenderResource());
@@ -547,6 +551,11 @@ bool D3DX12Wrapper::ResourceInit() {
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ƒuƒ‰[‚©‚¯‚¸‚ÉSSAOŒvŽZ‚µ‚Ä‚à‚ ‚Ü‚è•Ï‚í‚ç‚È‚¢...
 	integration->SetDepthmapResourse(calculateSSAO->GetTextureResource());
+
+	// integrated color blur for ”íŽÊŠE[“x
+	colorIntegraredBlur = new Blur(_dev.Get());
+	colorIntegraredBlur->Init(pair);
+	colorIntegraredBlur->SetRenderingResourse(integration->GetColorResourse());
 
 	return true;
 }
@@ -839,7 +848,7 @@ void D3DX12Wrapper::Run() {
 		}		
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // šshadow‚ð—˜—p
+		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // švsm shadow‚ð—˜—p
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -853,6 +862,7 @@ void D3DX12Wrapper::Run() {
 
 		// ‰æ‘œ“‡ˆ—¨SSAO¶¬
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
+		colorIntegraredBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		auto proj = camera->GetProj();

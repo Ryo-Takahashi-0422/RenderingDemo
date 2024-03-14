@@ -6,10 +6,10 @@ Blur::Blur(ID3D12Device* dev)
     _dev = dev;
 }
 
-void Blur::Init()
+void Blur::Init(std::pair<LPWSTR, LPWSTR> vsps)
 {
     CreateRootSignature();
-    ShaderCompile();
+    ShaderCompile(vsps);
     SetInputLayout();
     CreateGraphicPipeline();
 
@@ -67,11 +67,9 @@ HRESULT Blur::CreateRootSignature()
 }
 
 //  シェーダー設定
-HRESULT Blur::ShaderCompile()
+HRESULT Blur::ShaderCompile(std::pair<LPWSTR, LPWSTR> vsps)
 {
-    std::string vs = "BlurVertex.hlsl";
-    std::string ps = "BlurPixel.hlsl";
-    auto pair = Utility::GetHlslFilepath(vs, ps);
+    auto pair = vsps;
 
     auto result = D3DCompileFromFile
     (

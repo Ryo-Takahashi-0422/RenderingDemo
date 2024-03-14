@@ -22,7 +22,7 @@ private:
 	// ルートシグネチャの生成
 	HRESULT CreateRootSignature();
 	// シェーダー設定
-	HRESULT ShaderCompile();
+	HRESULT ShaderCompile(std::pair<LPWSTR, LPWSTR> vsps);
 	void SetInputLayout();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
 	// パイプラインの生成
@@ -55,7 +55,7 @@ private:
 
 public:
 	Blur(ID3D12Device* dev);
-	void Init();
+	void Init(std::pair<LPWSTR, LPWSTR> vsps);
 	void SetRenderingResourse(ComPtr<ID3D12Resource> _renderingRsource);
 	ComPtr<ID3D12Resource> GetBlurResource() { return renderingResource; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
