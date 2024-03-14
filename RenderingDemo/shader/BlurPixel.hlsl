@@ -84,11 +84,11 @@ float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, flo
 float4 ps_main(vsOutput input) : SV_TARGET
 {
     float w, h, levels;
-    shadowRendering.GetDimensions(0, w, h, levels);
+    tex.GetDimensions(0, w, h, levels);
     float dx = 1.0f / w;
     float dy = 1.0f / h;
     
-    float4 blur = /*shadowRendering.Sample(smp, input.texCoord)*/SimpleGaussianBlur(shadowRendering, smp, input.texCoord);
+    float4 blur = /*shadowRendering.Sample(smp, input.texCoord)*/SimpleGaussianBlur(tex, smp, input.texCoord);
     //float4 blur = Get5x5GaussianBlur(shadowRendering, smp, input.texCoord, dx, dy);
     return blur;
 }

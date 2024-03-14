@@ -516,7 +516,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	std::string vs = "BlurVertex.hlsl";
 	std::string ps = "BlurPixel.hlsl";
 	auto pair = Utility::GetHlslFilepath(vs, ps);
-	shadowRenderingBlur->Init(pair);
+	shadowRenderingBlur->Init(pair, shadow->GetResolution());
 	shadowRenderingBlur->SetRenderingResourse(shadow->GetShadowRenderingResource());
 	
 	// resourceManager[0]‚Ì‚Ý‚ÉŠi”[...
@@ -551,13 +551,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ƒuƒ‰[‚©‚¯‚¸‚ÉSSAOŒvŽZ‚µ‚Ä‚à‚ ‚Ü‚è•Ï‚í‚ç‚È‚¢...
 	ssaoBlur = new Blur(_dev.Get());
-	ssaoBlur->Init(pair);
+	ssaoBlur->Init(pair, calculateSSAO->GetResolution());
 	ssaoBlur->SetRenderingResourse(calculateSSAO->GetTextureResource());
 	integration->SetResourse1(/*calculateSSAO->GetTextureResource()*/ssaoBlur->GetBlurResource());
 
 	// integrated color blur for ”íŽÊŠE[“x
 	colorIntegraredBlur = new Blur(_dev.Get());
-	colorIntegraredBlur->Init(pair);
+	colorIntegraredBlur->Init(pair, integration->GetResolution());
 	colorIntegraredBlur->SetRenderingResourse(integration->GetColorResourse());
 	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
 	integration->SetResourse3(depthMapIntegration->GetTextureResource());

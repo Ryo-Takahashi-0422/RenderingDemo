@@ -6,8 +6,11 @@ Blur::Blur(ID3D12Device* dev)
     _dev = dev;
 }
 
-void Blur::Init(std::pair<LPWSTR, LPWSTR> vsps)
+void Blur::Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution)
 {
+    width = resolution.first;
+    height = resolution.second;
+
     CreateRootSignature();
     ShaderCompile(vsps);
     SetInputLayout();

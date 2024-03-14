@@ -48,14 +48,14 @@ private:
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> renderingHeap = nullptr; // rendering用ディスクリプタヒープ
 
-	float width = 4096;
-	float height = 4096;
+	float width/* = 4096*/;
+	float height/* = 4096*/;
 
 	float* mappedweight = nullptr;
 
 public:
 	Blur(ID3D12Device* dev);
-	void Init(std::pair<LPWSTR, LPWSTR> vsps);
+	void Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution);
 	void SetRenderingResourse(ComPtr<ID3D12Resource> _renderingRsource);
 	ComPtr<ID3D12Resource> GetBlurResource() { return renderingResource; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
