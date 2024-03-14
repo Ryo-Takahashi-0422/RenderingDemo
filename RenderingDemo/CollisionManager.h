@@ -75,9 +75,11 @@ private:
 	ComPtr<ID3D12DescriptorHeap> matrixHeap = nullptr; // RTV用ディスクリプタヒープ
 	struct CollisionMatrix
 	{
+		XMMATRIX rotation;
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX proj;
+		bool isDraw;
 	};
 
 	CollisionMatrix* mappedMatrix = nullptr;
@@ -98,7 +100,7 @@ public:
 
 	void MoveCharacterBoundingBox(double speed, XMMATRIX charaDirection);
 	bool OBBCollisionCheck();
-	void OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex);
+	XMFLOAT3 OBBCollisionCheckAndTransration(float forwardSpeed, XMMATRIX characterDirection, int fbxIndex, XMVECTOR v, XMFLOAT3 charaPos );
 	D3D12_VERTEX_BUFFER_VIEW* GetBoxVBVs(int index) { return &boxVBVs[index]; }; // ★
 	D3D12_INDEX_BUFFER_VIEW* GetBoxIBVs(int index) { return &boxIBVs[index]; }; // ★
 	D3D12_INDEX_BUFFER_VIEW* GetCharacterSphereColliderIBVs() { return &sphereIBV; }; // ★
@@ -107,6 +109,8 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetMatrixHeap() { return matrixHeap; };
 	void SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj);
 	void SetCharaPos(XMFLOAT3 _charaPos);
+	void SetRotation(XMMATRIX _rotation);
+	void SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList);
 
 	void Execution(ID3D12GraphicsCommandList* _cmdList);
 };

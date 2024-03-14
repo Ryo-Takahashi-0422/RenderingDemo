@@ -841,3 +841,8 @@ void ResourceManager::SetProjMatrix(XMMATRIX _proj)
 {
 	mappedMatrix->oProj = _proj;
 }
+
+void ResourceManager::SetAirDraw(bool _isDraw)
+{
+	mappedMatrix->airDraw = _isDraw;
+}

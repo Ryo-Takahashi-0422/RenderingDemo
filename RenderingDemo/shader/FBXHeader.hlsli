@@ -43,13 +43,6 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     matrix view; // view matrix
     matrix proj; // projection matrix
     matrix oProj;
-    //matrix lightCamera; // view matrix from light * orthographic projection matrix
-    //matrix shadow; // shadow matrix
-    //float3 eye; // eye(camera) position
-    //matrix invProj; // inverse matrix of projection matrix
-    //matrix invView; // inverted view matrix 
-    //matrix bones[256]; // bone matrix
-    //matrix ReverceMatrixOfInitialPosture[256]; // index number is equal with bones index number
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
     
     matrix rotation;
@@ -59,6 +52,8 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     float3 eyePos;
     float3 sunDIr;
     float3 charaPos;
+    bool sponza;
+    bool airDraw;
     //float3 lightVec;
     //bool isSelfShadow;
 };

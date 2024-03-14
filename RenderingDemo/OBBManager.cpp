@@ -339,6 +339,7 @@ HRESULT OBBManager::MappingMatrix()
 
 void OBBManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj)
 {
+	mappedMatrix->rotation = XMMatrixIdentity();
 	mappedMatrix->world = _world;
 	mappedMatrix->view = _view;
 	mappedMatrix->proj = _proj;
@@ -347,6 +348,15 @@ void OBBManager::SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj)
 void OBBManager::SetCharaPos(XMFLOAT3 _charaPos)
 {
 	charaPos = _charaPos;
+}
+
+void OBBManager::SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList)
+{
+	mappedMatrix->isDraw = _isDraw;
+	if (_isDraw)
+	{
+		Execution(_cmdList);
+	}
 }
 
 void OBBManager::Execution(ID3D12GraphicsCommandList* _cmdList)

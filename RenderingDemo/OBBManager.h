@@ -75,9 +75,11 @@ private:
 	ComPtr<ID3D12DescriptorHeap> matrixHeap = nullptr; // RTV用ディスクリプタヒープ
 	struct CollisionMatrix
 	{
+		XMMATRIX rotation;
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX proj;
+		bool isDraw;
 	};
 
 	CollisionMatrix* mappedMatrix = nullptr;
@@ -105,6 +107,7 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetMatrixHeap() { return matrixHeap; };
 	void SetMatrix(XMMATRIX _world, XMMATRIX _view, XMMATRIX _proj);
 	void SetCharaPos(XMFLOAT3 _charaPos);
+	void SetDraw(bool _isDraw, ID3D12GraphicsCommandList* _cmdList);
 
 	void Execution(ID3D12GraphicsCommandList* _cmdList);
 };

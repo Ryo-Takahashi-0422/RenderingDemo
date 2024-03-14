@@ -53,6 +53,19 @@ private:
 	bool isShadowFactorResChanged = false;
 	std::vector<std::string> itemList = { "16", "512", "1024" };
 
+	// draw
+	bool sponzaBox = true;
+	bool sponzaDraw = true;
+
+	bool colliderBox = false;
+	bool colliderDraw = false;
+
+	bool airBox = true;
+	bool airDraw = true;
+
+	bool ssaoBox = true;
+	bool ssaoDraw = true;
+
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
 	HRESULT Init(ComPtr<ID3D12Device> _dev,	PrepareRenderingWindow* pRWindow);
@@ -88,6 +101,12 @@ public:
 	bool GetIsShadowFactorResolutionChanged() { return isShadowFactorResChanged; };
 	int GetShadowFactorResX() { return shadowFactorResX; };
 	int GetShadowFactorResY() { return shadowFactorResY; };
+
+	//Draw
+	bool GetSponzaBoxChanged() { return sponzaDraw; };
+	bool GetCollisionBoxChanged() { return colliderDraw; };
+	bool GetAirBoxChanged() { return airDraw; };
+	bool GetSSAOBoxChanged() { return ssaoDraw; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };
