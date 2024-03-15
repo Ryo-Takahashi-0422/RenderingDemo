@@ -139,6 +139,25 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("fps"))
+	{
+		isFpsChanged = false;
+
+		if (ImGui::Checkbox("120", &fps0))
+		{
+			fps = 120;
+			fps1 = false;
+			isFpsChanged = true;
+		}
+		if (ImGui::Checkbox("60", &fps1))
+		{
+			fps = 60;
+			fps0 = false;
+			isFpsChanged = true;
+		}
+		ImGui::TreePop();
+	}
+
 	// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
 	//if (ImGui::TreeNode("ShadowFactor"))
 	//{

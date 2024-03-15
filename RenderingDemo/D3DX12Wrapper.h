@@ -3,10 +3,8 @@
 class D3DX12Wrapper
 {
 private:
+	// directx関連
 	static D3DX12Wrapper* instance;
-	std::array<std::string, 3> strModelPath;
-	int strModelNum = 0;
-	//std::string strMotionPath = "";//"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\model\\Motion\\squat2.vmd";
 	ComPtr<ID3D12Device> _dev = nullptr;
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
@@ -28,35 +26,28 @@ private:
 	GraphicsPipelineSetting* gPLSetting = nullptr;
 	TextureTransporter* textureTransporter;
 
-	// コピーコンストラクタ
+	// コピーコンストラクタ禁止
 	D3DX12Wrapper(const D3DX12Wrapper& x) { };
 
-	// 代入演算子
+	// 代入演算子オーバーライド
 	D3DX12Wrapper& operator=(const D3DX12Wrapper&) { return *this; };
 
+	// グラフィックパイプライン関連
 	SetRootSignature* setRootSignature = nullptr;
 	SettingShaderCompile* settingShaderCompile = nullptr;
 	VertexInputLayout* vertexInputLayout = nullptr;
 	PrepareRenderingWindow* prepareRenderingWindow = nullptr;	
 	TextureLoader* textureLoader = nullptr;
 
-	// ﾏﾙﾁﾊﾟｽ関連
+	// バックバッファ描画関連
 	PeraGraphicsPipelineSetting* peraGPLSetting = nullptr;
 	PeraLayout* peraLayout = nullptr;
 	PeraPolygon* peraPolygon = nullptr;
 	PeraSetRootSignature* peraSetRootSignature = nullptr;
-	/*PeraShaderCompile*/SettingShaderCompile* peraShaderCompile = nullptr;
+	SettingShaderCompile* peraShaderCompile = nullptr;
 
 	// Imgui
 	SettingImgui* settingImgui = nullptr;
-	void SetFov();
-	float SetBackGroundColor(int rgbaNum);
-	void SetSelfShadowLight(int modelNum);
-	void SetSelfShadowSwitch(int modelNum);
-	void SetBloomSwitch(int modelNum);
-	void SetFoVSwitch();
-	void SetSSAOSwitch();
-	void SetBloomColor();
 
 	// Effekseer
 	EffekseerRenderer::RendererRef _efkRenderer = nullptr; // effect renderer
@@ -77,29 +68,18 @@ private:
 	void DrawSpriteFont();
 
 	// draw method
-	void DrawLightMap(unsigned int modelNum, UINT buffSize); // draw light map
-	void DrawModel(unsigned int modelNum, UINT buffSize); // draw pmd model
-	void DrawShrinkTextureForBlur(unsigned int modelNum, UINT buffSize); // draw blur texture
-	void DrawPeraPolygon(unsigned int modelNum); // draw background polygon	
-	void DrawAmbientOcclusion(unsigned int modelNum, UINT buffSize); // draw ambient occlusion
 	void DrawBackBuffer(UINT buffSize); // draw back buffers
-	void DrawModel4AO(unsigned int modelNum, UINT buffSize);
 
 	// Matrix
 	XMMATRIX projMat;
 
 	// Rebuild
-	/*FBXInfoManager fbxInfoManager;*/
 	std::vector<ResourceManager*> resourceManager;
 	CollisionManager* collisionManager = nullptr;
 	OBBManager* oBBManager = nullptr;
-	//BoundingSphere* characterBSphere = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
-	//XMMATRIX connanDirectionUntilCollision = XMMatrixIdentity(); // キャラクターが衝突するまでの方向監視変数。衝突状態から抜け出すのに利用し、抜け出した直後にconnanDirectionで更新する。
 	Camera* camera = nullptr;
-
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
-	//ComPtr<ID3D12Resource> backBufferResource = nullptr;
 	Input* input = nullptr;
 	std::vector< std::string> modelPath;
 	std::pair<std::string, int> idleMotionDataNameAndMaxFrame;
@@ -112,14 +92,14 @@ private:
 	bool inputUp = false;
 	void AllKeyBoolFalse();
 
-	/*double forwardSpeed = -0.05;*/
-	double forwardSpeed = -0.026/* * 15*/;
+	double forwardSpeed = -0.026;
 	double turnSpeed = 5;
 	XMMATRIX leftSpinMatrix = XMMatrixIdentity();
 	XMMATRIX rightSpinMatrix = XMMatrixIdentity();
 	XMMATRIX angleUpMatrix = XMMatrixIdentity();
-	double sneakCorrectNum = 0.049;
-	// 
+	void SetMatrixByFPSChange(int fpsVal);
+	float MIN_FREAM_TIME;
+ 
 	struct ThreadParameter
 	{
 		int threadIndex;
@@ -127,7 +107,7 @@ private:
 	int threadNum = 2;
 	ThreadParameter m_threadParameters[2];
 	HANDLE m_threadHandles[2];
-	// Synchronization objects.
+	// Synchronization objects
 	HANDLE m_workerBeginRenderFrame[2];
 	HANDLE m_workerFinishedRenderFrame[2];
 	HANDLE m_workerSyncronize[2];
@@ -136,8 +116,6 @@ private:
 
 	// DrawFBX用データ
 	UINT cbv_srv_Size;
-	//D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX;
-	//D3D12_CPU_DESCRIPTOR_HANDLE handleFBX;
 	ID3D12RootSignature* fBXRootsignature = nullptr;
 	ID3D12PipelineState* fBXPipeline = nullptr;
 	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
@@ -146,22 +124,13 @@ private:
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> dHandles;
 	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer; // ★静的データ構造であるstd::arrayへの置き換えは可能か？	
 	std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> itIndiceFirsts;
-	//::vector<std::pair<std::string, VertexInfo>>::iterator itIndiceFirst;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>> phongInfos;
 	std::vector<std::vector<std::pair<std::string, PhongInfo>>::iterator> itPhonsInfos;
-	//std::vector<std::pair<std::string, PhongInfo>>::iterator itPhonsInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>> materialAndTexturenameInfo;
 	std::vector<std::vector<std::pair<std::string, std::string>>::iterator> itMaterialAndTextureNames;
 	std::map<int, std::vector<int>> textureIndexes;
-	//std::vector<std::pair<std::string, std::string>>::iterator itMaterialAndTextureName;
 	std::vector<int> matTexSizes;
-	//int ofst = 0;
-	//short indiceContainerSize = 0;
-	//int itMATCnt = 0;
-	//int matTexSize = 0;
-	//int textureTableStartIndex = 0;
-	//size_t indiceSize = 0;
-	//D3D12_GPU_DESCRIPTOR_HANDLE tHandle;
+
 	D3D12_RESOURCE_BARRIER barrierDescFBX = {};
 	XMFLOAT3 charaPos = { 0,0,0 };
 	// 描画パイプラインに共通して必要なデータ
@@ -188,19 +157,15 @@ private:
 	Sun* sun = nullptr;	
 	Shadow* shadow = nullptr;
 	Air* air = nullptr;
+
+	// post effect関連
 	Blur* shadowRenderingBlur = nullptr;
 	Blur* colorIntegraredBlur = nullptr;
 	Blur* ssaoBlur = nullptr;
-	//Blur* airBlur = nullptr;
 	ComputeBlur* comBlur = nullptr;
 	Integration* integration = nullptr;
 	DepthMapIntegration* depthMapIntegration = nullptr;
 	CalculateSSAO* calculateSSAO = nullptr;
-	
-	//★★★コライダーdebug用
-	int debugNum = 2;
-
-
 
 public:
 
@@ -211,7 +176,6 @@ public:
 
 	static D3DX12Wrapper* GetInstance() 
 	{ 
-		/*return instance; */
 		static D3DX12Wrapper instance;        // スタティク変数として Singleton オブジェクトを生成
 		return &instance;
 	};
@@ -245,5 +209,4 @@ public:
 
 	//デストラクタ
 	~D3DX12Wrapper();
-
 };
