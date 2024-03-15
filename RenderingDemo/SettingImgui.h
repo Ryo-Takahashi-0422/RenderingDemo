@@ -71,9 +71,11 @@ private:
 
 	// fps
 	bool isFpsChanged = false;
-	int fps = 120;
-	bool fps0 = true;
-	bool fps1 = false;
+	float fps = 120.0f;
+	bool fps30 = false;
+	bool fps60 = false;
+	bool fps90 = false;
+	bool fps120 = true;
 
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
@@ -120,7 +122,7 @@ public:
 
 	// fps
 	bool GetIsFpsChanged() { return isFpsChanged; };
-	int GetFPS() { return fps; };
+	float GetFPS() { return fps; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

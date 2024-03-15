@@ -139,22 +139,46 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("fps"))
+	if (ImGui::TreeNode("Max FPS"))
 	{
 		isFpsChanged = false;
 
-		if (ImGui::Checkbox("120", &fps0))
+		if (ImGui::Checkbox("30", &fps30))
 		{
-			fps = 120;
-			fps1 = false;
+			fps = 30.0f;
+			fps60 = false;
+			fps90 = false;
+			fps120 = false;
 			isFpsChanged = true;
 		}
-		if (ImGui::Checkbox("60", &fps1))
+
+		if (ImGui::Checkbox("60", &fps60))
 		{
-			fps = 60;
-			fps0 = false;
+			fps = 60.0f;
+			fps30 = false;
+			fps90 = false;
+			fps120 = false;
 			isFpsChanged = true;
 		}
+
+		if (ImGui::Checkbox("90", &fps90))
+		{
+			fps = 90.0f;
+			fps30 = false;
+			fps60 = false;
+			fps120 = false;
+			isFpsChanged = true;
+		}
+
+		if (ImGui::Checkbox("120", &fps120))
+		{
+			fps = 120.0f;
+			fps30 = false;
+			fps60 = false;
+			fps90 = false;
+			isFpsChanged = true;
+		}
+
 		ImGui::TreePop();
 	}
 

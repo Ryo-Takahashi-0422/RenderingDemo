@@ -540,15 +540,20 @@ bool D3DX12Wrapper::ResourceInit() {
 
 void D3DX12Wrapper::SetMatrixByFPSChange(int fpsVal)
 {
+	// 初期化
+	forwardSpeed = -0.026;
+	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
+	rightSpinMatrix = XMMatrixInverse(nullptr, leftSpinMatrix);
+
 	auto _fps = fpsVal;
-	auto ratio = 120 / _fps;
+	float ratio = 120.0f / _fps;
 	forwardSpeed *= ratio;
 	MIN_FREAM_TIME = 1.0f / _fps;
 
 	Matrix3d leftSpinEigen;
 	Vector3d axis;
 	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(/*M_PI*/PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
 	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -559,7 +564,7 @@ void D3DX12Wrapper::SetMatrixByFPSChange(int fpsVal)
 	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
 	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-/*M_PI*/PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinEigen = AngleAxisd(-PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
 	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
 	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
 	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
@@ -611,9 +616,7 @@ void D3DX12Wrapper::Run() {
 		}
 	}
 
-	//auto ratio = 120 / _fps;
-	//forwardSpeed *= ratio;
-
+	// fps設定
 	float fps = 0;
 	float frameTime = 0;
 	LARGE_INTEGER timeStart;
@@ -624,55 +627,10 @@ void D3DX12Wrapper::Run() {
 	collisionManager = new CollisionManager(_dev, resourceManager);
 	oBBManager = new OBBManager(_dev, resourceManager);
 
-	// 回転速度計算
-	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
-	XMVECTOR det;
-	rightSpinMatrix = XMMatrixInverse(&det, leftSpinMatrix);
-
+	// fps設定より前進・回転速度の計算を行う
 	auto fpsValue = settingImgui->GetFPS();
 	SetMatrixByFPSChange(fpsValue);
-	//const float MIN_FREAM_TIME = 1.0f / fpsValue;
-	////★eigen test
-	//Matrix3d leftSpinEigen;
-	//Vector3d axis;
-	//axis << 0, 1, 0;  //y軸を指定
-	//leftSpinEigen = AngleAxisd(/*M_PI*/PI*0.006f* ratio, axis);  //Z軸周りに90度反時計回りに回転
-	//leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	//leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	//leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	//leftSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	//leftSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	//leftSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	//leftSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	//leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	//leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-
-	//leftSpinEigen = AngleAxisd(-/*M_PI*/PI*0.006f* ratio, axis);  //Z軸周りに90度反時計回りに回転
-	//rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	//rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	//rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	//rightSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	//rightSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	//rightSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	//rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	//rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	//rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-
-	//angleUpMatrix = XMMatrixRotationX(turnSpeed);
-	//Matrix3d angleUp;
-	//Vector3d axisX;
-	//axisX << 1, 0, 0;
-	//angleUp = AngleAxisd(/*M_PI*/PI * 0.006f, axisX);
-	//angleUpMatrix.r[0].m128_f32[0] = angleUp(0, 0);
-	//angleUpMatrix.r[0].m128_f32[1] = angleUp(0, 1);
-	//angleUpMatrix.r[0].m128_f32[2] = angleUp(0, 2);
-	//angleUpMatrix.r[1].m128_f32[0] = angleUp(1, 0);
-	//angleUpMatrix.r[1].m128_f32[1] = angleUp(1, 1);
-	//angleUpMatrix.r[1].m128_f32[2] = angleUp(1, 2);
-	//angleUpMatrix.r[2].m128_f32[0] = angleUp(2, 0);
-	//angleUpMatrix.r[2].m128_f32[1] = angleUp(2, 1);
-	//angleUpMatrix.r[2].m128_f32[2] = angleUp(2, 2);
-
+	bool isFpsChanged = false;
 
 	// メインループに入る前に精度を取得
 	if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時は未対応
@@ -768,7 +726,15 @@ void D3DX12Wrapper::Run() {
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // 以降は解像度に変更がある場合のみ描画する
 	sun->ChangeSceneMatrix(XMMatrixIdentity());
 	while (true)
-	{		
+	{	
+		isFpsChanged = settingImgui->GetIsFpsChanged();
+		if (isFpsChanged)
+		{
+			fpsValue = settingImgui->GetFPS();
+			SetMatrixByFPSChange(fpsValue);
+			isFpsChanged = false;
+		}
+
 		// 現時間を取得
 		QueryPerformanceCounter(&timeEnd);
 		// (現時間 - 前フレームの時間) / 周波数 = 経過時間(秒単位)
