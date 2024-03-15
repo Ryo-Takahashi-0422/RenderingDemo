@@ -111,13 +111,6 @@ bool D3DX12Wrapper::PrepareRendering() {
 //{
 //#endif
 
-	strModelPath =
-	{
-		"C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBXConnan_Walking.fbx"
-	};
-
-	strModelNum = strModelPath.size();
-
 	// SetRootSignatureBaseクラスのインスタンス化
 	setRootSignature = new SetRootSignature;	
 
@@ -312,27 +305,13 @@ void D3DX12Wrapper::EffekseerInit()
 		1.0f,
 		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10"
 	);
-	
-
-
 	/*_efkHandle = _efkManager->Play(_effect, 0, 0, 0);*/
-
 }
 
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
-	
-
-	// 0 texture model
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\BattleField.txt");
-
-	// 3 texture model
-	//modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Ziggrat.txt");
 
 	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Sponza.bin");
-
-	// 4 textures model
-	/*modelPath.push_back("C:\\Users\\RyoTaka\\Documents\\RenderingDemoRebuild\\FBX\\Connan.txt");*/
 	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Connan.bin");
 	
 	resourceManager.resize(modelPath.size());
@@ -348,10 +327,8 @@ bool D3DX12Wrapper::ResourceInit() {
 		fbxInfoManager.Init(modelPath[i]);
 		
 		// FBX resource creation
-		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);
-		
-		resourceManager[i]->Init(camera);
-		
+		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);		
+		resourceManager[i]->Init(camera);		
 	}
 	
 	// TextureTransporterクラスのインスタンス化
@@ -405,9 +382,6 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
 	result = gPLSetting->CreateGPStateWrapper(_dev, setRootSignature, _vsBlob, _psBlob);
-	
-	//// コライダー用
-	//result = colliderGraphicsPipelineSetting->CreateGPStateWrapper(_dev, collisionRootSignature, _vsCollisionBlob, _psCollisionBlob);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧ用
 	result = peraGPLSetting->CreateGPStateWrapper(_dev, peraSetRootSignature, _vsMBlob, _psMBlob);
@@ -445,7 +419,6 @@ bool D3DX12Wrapper::ResourceInit() {
 // 初期化処理9：フェンスの生成
 // 初期化処理10：イベントハンドルの作成
 // 初期化処理11：GPUの処理完了待ち
-
 // Imgui独自の初期設定
 	settingImgui = new SettingImgui;
 
@@ -475,7 +448,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
 
-	skyLUT = new SkyLUT(_dev.Get()/*, _fence.Get()*/, shadowFactorResource.Get());
+	skyLUT = new SkyLUT(_dev.Get(), shadowFactorResource.Get());
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -489,9 +462,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	skyLUTBuffer.sunIntensity.z = 1.0f;
 	skyLUT->SetSkyLUTBuffer(skyLUTBuffer);
 	skyLUT->SetSkyLUTResolution();
-
-	//shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
-	//skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
 
 	auto skyLUTResource = skyLUT->GetSkyLUTRenderingResource();
 	sky = new Sky(_dev.Get(), _fence.Get(), skyLUTResource.Get());
@@ -547,8 +517,6 @@ bool D3DX12Wrapper::ResourceInit() {
 	// depthMapIntegrationでthread1,2のデプスマップ統合
 	// →comBlurでガウシアンブラー
 	// →integrationはthread1,2の統合カラー、法線、デプスマップ保有状態になる
-	// 
-	
 	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
@@ -570,12 +538,52 @@ bool D3DX12Wrapper::ResourceInit() {
 	return true;
 }
 
+void D3DX12Wrapper::SetMatrixByFPSChange(int fpsVal)
+{
+	// 初期化
+	forwardSpeed = -0.026;
+	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
+	rightSpinMatrix = XMMatrixInverse(nullptr, leftSpinMatrix);
+
+	auto _fps = fpsVal;
+	float ratio = 120.0f / _fps;
+	forwardSpeed *= ratio;
+	MIN_FREAM_TIME = 1.0f / _fps;
+
+	Matrix3d leftSpinEigen;
+	Vector3d axis;
+	axis << 0, 1, 0;  //y軸を指定
+	leftSpinEigen = AngleAxisd(PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
+	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
+	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
+	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
+	leftSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
+	leftSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
+	leftSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
+	leftSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
+	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
+	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
+
+	leftSpinEigen = AngleAxisd(-PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
+	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
+	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
+	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
+	rightSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
+	rightSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
+	rightSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
+	rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
+	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
+	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
+}
+
 void D3DX12Wrapper::Run() {
 	MSG msg = {};
 	cbv_srv_Size = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//// エフェクトの再生
 	//_efkHandle = _efkManager->Play(_effect, 0, 0, 0);
+
+	// モーション設定
 	for (int i = 0; i < modelPath.size(); ++i)
 	{
 		if (resourceManager[i]->GetIsAnimationModel())
@@ -603,79 +611,36 @@ void D3DX12Wrapper::Run() {
 					runMotionDataNameAndMaxFrame.second = it->second[0].size();
 				}
 			}
-			
-			//resourceManager[i]->MotionUpdate(motionNames.at(""), motion->second[0].size());
 
 			resourceManager[i]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
 		}
 	}
 
-	// 衝突判定準備
-	collisionManager = new CollisionManager(_dev, resourceManager);
-	oBBManager = new OBBManager(_dev, resourceManager);
-	//connanDirection = resourceManager[1]->GetMappedMatrix()->world;
-	leftSpinMatrix = XMMatrixRotationY(-turnSpeed);
-	XMVECTOR det;
-	rightSpinMatrix = XMMatrixInverse(&det, leftSpinMatrix);//XMMatrixRotationY(turnSpeed);
-	//box2 = collisionManager->GetBoundingSpherePointer();
-
-	//★eigen test
-	Matrix3d leftSpinEigen;
-	Vector3d axis;
-	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(/*M_PI*/PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
-	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	leftSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	leftSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	leftSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	leftSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-
-	leftSpinEigen = AngleAxisd(-/*M_PI*/PI*0.006f, axis);  //Z軸周りに90度反時計回りに回転
-	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	rightSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	rightSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	rightSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
-
-	angleUpMatrix = XMMatrixRotationX(turnSpeed);
-	Matrix3d angleUp;
-	Vector3d axisX;
-	axisX << 1, 0, 0;
-	angleUp = AngleAxisd(/*M_PI*/PI * 0.006f, axisX);
-	angleUpMatrix.r[0].m128_f32[0] = angleUp(0, 0);
-	angleUpMatrix.r[0].m128_f32[1] = angleUp(0, 1);
-	angleUpMatrix.r[0].m128_f32[2] = angleUp(0, 2);
-	angleUpMatrix.r[1].m128_f32[0] = angleUp(1, 0);
-	angleUpMatrix.r[1].m128_f32[1] = angleUp(1, 1);
-	angleUpMatrix.r[1].m128_f32[2] = angleUp(1, 2);
-	angleUpMatrix.r[2].m128_f32[0] = angleUp(2, 0);
-	angleUpMatrix.r[2].m128_f32[1] = angleUp(2, 1);
-	angleUpMatrix.r[2].m128_f32[2] = angleUp(2, 2);
-
-	const float MIN_FREAM_TIME = 1.0f / 120;
+	// fps設定
 	float fps = 0;
 	float frameTime = 0;
 	LARGE_INTEGER timeStart;
 	LARGE_INTEGER timeEnd;
 	LARGE_INTEGER timeFreq;
-	// メインループに入る前に精度を取得しておく
+
+	// 衝突判定準備
+	collisionManager = new CollisionManager(_dev, resourceManager);
+	oBBManager = new OBBManager(_dev, resourceManager);
+
+	// fps設定より前進・回転速度の計算を行う
+	auto fpsValue = settingImgui->GetFPS();
+	SetMatrixByFPSChange(fpsValue);
+	bool isFpsChanged = false;
+
+	// メインループに入る前に精度を取得
 	if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時は未対応
 		return;
 	}
-	// 1度取得しておく(初回計算用)
+	// 初回計算用
 	QueryPerformanceCounter(&timeStart);
 	modelPathSize = modelPath.size();
 	DWORD sleepTime;
 
-	//std::vector<std::pair<std::string, VertexInfo>> indiceContainer;
 	for (int fbxIndex = 0; fbxIndex < modelPathSize; ++fbxIndex) // ★ムーブセマンティクスによりポインタ所有権の移行を試す→Optimized C++ P215 空vectorとresourceManagerのswapでメモリ開放試す
 	{
 		auto vbView = resourceManager[fbxIndex]->GetVbView();
@@ -761,20 +726,26 @@ void D3DX12Wrapper::Run() {
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // 以降は解像度に変更がある場合のみ描画する
 	sun->ChangeSceneMatrix(XMMatrixIdentity());
 	while (true)
-	{		
-		// 今の時間を取得
+	{	
+		isFpsChanged = settingImgui->GetIsFpsChanged();
+		if (isFpsChanged)
+		{
+			fpsValue = settingImgui->GetFPS();
+			SetMatrixByFPSChange(fpsValue);
+			isFpsChanged = false;
+		}
+
+		// 現時間を取得
 		QueryPerformanceCounter(&timeEnd);
-		// (今の時間 - 前フレームの時間) / 周波数 = 経過時間(秒単位)
+		// (現時間 - 前フレームの時間) / 周波数 = 経過時間(秒単位)
 		frameTime = static_cast<float>(timeEnd.QuadPart - timeStart.QuadPart) / static_cast<float>(timeFreq.QuadPart);
 
 		if (frameTime < MIN_FREAM_TIME) { // 時間に余裕がある場合
 		// ミリ秒に変換
 			sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);
-
 			timeBeginPeriod(1); // 分解能を上げる(Sleep精度向上)
 			Sleep(sleepTime);
 			timeEndPeriod(1);   // 戻す
-
 			continue;
 		}
 
@@ -793,7 +764,6 @@ void D3DX12Wrapper::Run() {
 			break;
 		}
 
-		//auto k = _swapChain->GetCurrentBackBufferIndex();
 		settingImgui->DrawImGUI(_dev, _cmdList);
 
 		// 太陽の位置を更新
@@ -837,15 +807,6 @@ void D3DX12Wrapper::Run() {
 			sky->ChangeSceneResolution(settingImgui->GetSkyResX(), settingImgui->GetSkyResY());
 			resourceManager[0]->SetSkyResourceAndCreateView(sky->GetSkyLUTRenderingResource());
 		}
-
-		//DrawShrinkTextureForBlur(0, cbv_srv_Size); // draw shrink buffer
-		//if (settingImgui->GetSSAOBool())
-		//{
-		//	DrawAmbientOcclusion(0, cbv_srv_Size); // draw AO	
-		//}
-		//SetFoVSwitch();
-		//SetSSAOSwitch();
-		//SetBloomColor();
 		
 		// カメラはキャラクター移動に追従する。太陽はワールド原点(0,0,0)注視の角度指定*100の位置に固定されているため、太陽描画時はビルボード乗算→カメラ位置(追従位置)へ平行移動→太陽方向へ平行移動とする。
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
@@ -867,8 +828,6 @@ void D3DX12Wrapper::Run() {
 			SetEvent(m_workerBeginRenderFrame[i]);			
 		}
 		WaitForMultipleObjects(threadNum, m_workerFinishedRenderFrame, TRUE, INFINITE); // DrawBackBufferにおけるドローコール直前に置いてもfpsは改善せず...
-			// SetEvent(m_workerBeginRenderFrame[1]); // Tell each worker to start drawing.
-		//WaitForSingleObject(m_workerFinishedRenderFrame[bbIdx], INFINITE);
 
 		// 画像統合処理→SSAO生成
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
@@ -914,16 +873,6 @@ void D3DX12Wrapper::Run() {
 		AllKeyBoolFalse();
 		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
 
-		// calculateSSAOにブラーした統合デプスマップを利用する場合はOnにする
-		//// comBlur 利用終了により、コピー用リソース状態をUAVにする
-		//barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-		//(
-		//	comBlur->GetBlurTextureResource().Get(),
-		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		//);
-		//_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-
 		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
 		(
@@ -939,9 +888,6 @@ void D3DX12Wrapper::Run() {
 		//コマンドキューの実行
 		ID3D12CommandList* cmdLists[] = { _cmdList.Get(), _cmdList2.Get(), _cmdList3.Get() };
 		_cmdQueue->ExecuteCommandLists(3, cmdLists);
-
-		//ID3D12CommandList* cmdLists2[] = { _cmdList2.Get() };
-		//_cmdQueue->ExecuteCommandLists(1, cmdLists2);
 
 		//ID3D12FenceのSignalはCPU側のフェンスで即時実行
 		//ID3D12CommandQueueのSignalはGPU側のフェンスで
@@ -967,22 +913,10 @@ void D3DX12Wrapper::Run() {
 
 		_cmdAllocator3->Reset();
 		_cmdList3->Reset(_cmdAllocator3.Get(), nullptr);
-		//_cmdList->Reset(_cmdAllocator.Get(), nullptr);//コマンドリストを、新しいコマンドリストが作成されたかのように初期状態にリセット
-		//_cmdAllocator2->Reset();
-		
-	
-		//// update by imgui
-		//SetFov();
 
-		//resourceManager[1]->GetMappedMatrix()->world *= XMMatrixRotationY(0.005f);
-		//resourceManager->GetMappedMatrix()->world *= XMMatrixTranslation(0,0,0.03f);
-
-		//フリップしてレンダリングされたイメージをユーザーに表示
+		//フリップしてレンダリングされたイメージを表示
 		_swapChain->Present(1, 0);	
 		bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
-		// ★★★交互にワーカースレッドに処理をさせるのではなく、一つ先のフレームも並列で処理させるようにしたい。
-
-		
 
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
@@ -1028,6 +962,7 @@ void D3DX12Wrapper::AllKeyBoolFalse()
 	inputUp = false;
 }
 
+// Microsoftのdirectx sampleより
 // Initialize threads and events.
 void D3DX12Wrapper::LoadContexts()
 {
@@ -1132,8 +1067,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		handleFBX.ptr += num * inc;
 
-
-
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handles[2];
 		uint32_t offset = 0; // start from No.2 RTV
 		for (auto& handle : handles)
@@ -1143,7 +1076,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		}
 		localCmdList->OMSetRenderTargets(2, handles, false, &dsvhFBX);
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
-
 
 		//画面クリア
 		float clearColor[4];
@@ -1161,7 +1093,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 		resourceManager[num]->GetMappedMatrix()->sponzaDraw = settingImgui->GetSponzaBoxChanged();
 		resourceManager[num]->GetMappedMatrix()->airDraw = settingImgui->GetAirBoxChanged();
 
-
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
@@ -1176,12 +1107,10 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				if (input->CheckKey(DIK_RIGHT)) inputRight = true;
 				if (input->CheckKey(DIK_UP)) inputUp = true;
 
-				if (resourceManager[fbxIndex]->GetIsAnimationModel())
+				if (resourceManager[fbxIndex]->GetIsAnimationModel()) // 20240315時点の処理ではresourceManager[1]に限定される。
 				{
 					// start character with idle animation
-					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
-
-					
+					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);					
 					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 					charaPos.y = 1.5;
 					charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
@@ -1190,7 +1119,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 					if (inputW)
 					{
 						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-
 						XMVECTOR worldVec;
 						worldVec.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
 						worldVec.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
@@ -1204,40 +1132,9 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						moveMatrix.r[2].m128_f32[0] = 0;
 						moveMatrix.r[2].m128_f32[2] = 1;
 						worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
-
-						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0] = worldVec.m128_f32[0];
-						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1] = worldVec.m128_f32[1];
-						//resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2] = worldVec.m128_f32[2];
 						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
-
-						//charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-						//charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						//resourceManager[fbxIndex]->GetMappedMatrix()->charaPos = charaPos;
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
-
-
-						
-						
-						//// デブスマップを読み込み可能状態に変更する
-						//D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-						//(
-						//    shadow->GetShadowMapResource().Get(),
-						//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-						//	D3D12_RESOURCE_STATE_DEPTH_WRITE
-						//);
-						//localCmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
-						////shadow->SetBoneMatrix(resourceManager[fbxIndex]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
-						//shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-						//// コピー用リソース状態をSkyLUT.hlslで読み込める状態にする
-						//D3D12_RESOURCE_BARRIER barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
-						//(
-						//	air->GetAirTextureResource().Get(),
-						//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-						//	D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-						//);
-						//localCmdList->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
-						//air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
 					}
 
 					// Left Key
@@ -1249,6 +1146,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						collisionManager->SetRotation(connanDirection);
+						sun->ChangeSceneMatrix(rightSpinMatrix);
+						sky->ChangeSceneMatrix(rightSpinMatrix);
 					}
 
 					// Right Key
@@ -1260,40 +1159,14 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						collisionManager->SetRotation(connanDirection);
+						sun->ChangeSceneMatrix(leftSpinMatrix);
+						sky->ChangeSceneMatrix(leftSpinMatrix);
 					}
 				}
-
-				// Left Arrow Key
-				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-					sun->ChangeSceneMatrix(rightSpinMatrix);
-					sky->ChangeSceneMatrix(rightSpinMatrix);
-				}
-
-				// Right Arrow Key
-				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-					sun->ChangeSceneMatrix(leftSpinMatrix);
-					sky->ChangeSceneMatrix(leftSpinMatrix);
-				}
-
-				//// Up Arrow Key
-				//if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				//{
-				//	resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
-				//	sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
-				//	sky->ChangeSceneMatrix(angleUpMatrix);
-				//}
 
 				// W Key
 				if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					// 当たり判定処理
-					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 				}
 			}
@@ -1329,14 +1202,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap (ptr num11)
 			++textureindex;
 			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像2個分の領域は使わないので飛ばす。マジックアンバー化していてややこしい...
-			//localCmdList->DrawInstanced(resourceManager->GetVertexTotalNum(), 1, 0, 0);
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
 			auto ofst = 0;
 			ofst += itIndiceFirst->second.indices.size() * num;
 			itIndiceFirst += num;
 			int indiceContainerSize = indiceContainer[fbxIndex].size();
-
 
 			auto itPhonsInfo = itPhonsInfos[fbxIndex];
 			itPhonsInfo += num;
@@ -1418,10 +1289,20 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				itMaterialAndTextureName += textureIndexes[fbxIndex][i + 1];
 				itMATCnt += textureIndexes[fbxIndex][i + 1];
 				textureTableStartIndex = texStartIndex; // init
+			}
+
+			// resourceManager[0]はsponzaモデルの情報を保持しており、[1]はキャラクターモデルの情報を保持している。
+			// 先に[0]のview行列が計算されるので、[0]にもその結果を反映させることでsponzaが回転操作に合わせてキャラクターと同様に(キャラクター回りをオービット)回転するようになる。
+			// num == 0 && fbxIndex == 1で処理が重複しないようにしている。なお重複しても特に問題はない。
+			if (inputLeft)
+			{
+				resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 
 			}
-			
-
+			if (inputRight)
+			{
+				resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+			}
 		}
 
 		bool colliderDraw = settingImgui->GetCollisionBoxChanged();
@@ -1432,15 +1313,12 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 			collisionManager->SetCharaPos(charaPos);
 			collisionManager->SetDraw(colliderDraw, localCmdList.Get());
-			//collisionManager->Execution(localCmdList.Get());
-
 		}
 		else
 		{
 			auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
 			oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 			oBBManager->SetDraw(colliderDraw, localCmdList.Get());
-			//oBBManager->Execution(localCmdList.Get());
 		}
 
 		// マルチターゲットリソースバリア処理
@@ -1560,7 +1438,6 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 {
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
-	//auto localCmdList = m_batchSubmit[bbIdx];
 
 	_cmdList3->RSSetViewports(1, viewPort);
 	_cmdList3->RSSetScissorRects(1, rect);

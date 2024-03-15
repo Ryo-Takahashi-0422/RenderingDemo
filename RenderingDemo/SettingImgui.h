@@ -69,6 +69,14 @@ private:
 	bool fovBox = true;
 	bool fovDraw = true;
 
+	// fps
+	bool isFpsChanged = false;
+	float fps = 120.0f;
+	bool fps30 = false;
+	bool fps60 = false;
+	bool fps90 = false;
+	bool fps120 = true;
+
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
 	HRESULT Init(ComPtr<ID3D12Device> _dev,	PrepareRenderingWindow* pRWindow);
@@ -111,6 +119,10 @@ public:
 	bool GetAirBoxChanged() { return airDraw; };
 	bool GetSSAOBoxChanged() { return ssaoDraw; };
 	bool GetFOVBoxChanged() { return fovDraw; };
+
+	// fps
+	bool GetIsFpsChanged() { return isFpsChanged; };
+	float GetFPS() { return fps; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };
