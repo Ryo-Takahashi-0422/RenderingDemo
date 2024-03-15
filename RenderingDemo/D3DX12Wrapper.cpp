@@ -1107,7 +1107,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				if (input->CheckKey(DIK_RIGHT)) inputRight = true;
 				if (input->CheckKey(DIK_UP)) inputUp = true;
 
-				if (resourceManager[fbxIndex]->GetIsAnimationModel())
+				if (resourceManager[fbxIndex]->GetIsAnimationModel()) // 20240315時点の処理ではresourceManager[1]に限定される。
 				{
 					// start character with idle animation
 					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);					
@@ -1146,6 +1146,8 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						collisionManager->SetRotation(connanDirection);
+						sun->ChangeSceneMatrix(rightSpinMatrix);
+						sky->ChangeSceneMatrix(rightSpinMatrix);
 					}
 
 					// Right Key
@@ -1157,40 +1159,14 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						collisionManager->SetRotation(connanDirection);
+						sun->ChangeSceneMatrix(leftSpinMatrix);
+						sky->ChangeSceneMatrix(leftSpinMatrix);
 					}
 				}
-
-				// Left Arrow Key
-				if (inputLeft && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-					sun->ChangeSceneMatrix(rightSpinMatrix);
-					sky->ChangeSceneMatrix(rightSpinMatrix);
-				}
-
-				// Right Arrow Key
-				if (inputRight && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-					sun->ChangeSceneMatrix(leftSpinMatrix);
-					sky->ChangeSceneMatrix(leftSpinMatrix);
-				}
-
-				//// Up Arrow Key
-				//if (inputUp && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				//{
-				//	resourceManager[fbxIndex]->GetMappedMatrix()->view *= angleUpMatrix;
-				//	sun->ChangeSceneMatrix(XMMatrixInverse(nullptr, angleUpMatrix));
-				//	sky->ChangeSceneMatrix(angleUpMatrix);
-				//}
 
 				// W Key
 				if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
 				{
-					// 当たり判定処理
-					//collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, num);
 					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 				}
 			}
@@ -1313,6 +1289,19 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				itMaterialAndTextureName += textureIndexes[fbxIndex][i + 1];
 				itMATCnt += textureIndexes[fbxIndex][i + 1];
 				textureTableStartIndex = texStartIndex; // init
+			}
+
+			// resourceManager[0]はsponzaモデルの情報を保持しており、[1]はキャラクターモデルの情報を保持している。
+			// 先に[0]のview行列が計算されるので、[0]にもその結果を反映させることでsponzaが回転操作に合わせてキャラクターと同様に(キャラクター回りをオービット)回転するようになる。
+			// num == 0 && fbxIndex == 1で処理が重複しないようにしている。なお重複しても特に問題はない。
+			if (inputLeft)
+			{
+				resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+
+			}
+			if (inputRight)
+			{
+				resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
 			}
 		}
 
