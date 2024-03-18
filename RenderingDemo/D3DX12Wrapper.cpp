@@ -925,11 +925,15 @@ void D3DX12Wrapper::Run() {
 		bool isShadowResChanged = settingImgui->GetIsShadowResolutionChanged();
 		if (isShadowResChanged)
 		{
+			// shadowはskyのような解像度変更→リソース作り変えの手段にするとfence値がバグるためインスタンス新規生成で対応している
+			shadow = nullptr;
 			shadow = new Shadow(_dev.Get(), settingImgui->GetShadowResX(), settingImgui->GetShadowResY());
 			shadow->Init();
 			shadow->SetVertexAndIndexInfo(vbViews, ibViews, itIndiceFirsts, indiceContainer);
 			shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
 			shadow->SetRotationMatrix(connanDirection);
+			// airは直後にあるshadowRenderingBlurのようにリソースポインタ変更で対応すると描画が崩れるので新規生成で対応している
+			air = nullptr;
 			air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 			air->SetFrustum(camera->GetFrustum());
 			air->SetParticipatingMedia(calculatedParticipatingMedia);

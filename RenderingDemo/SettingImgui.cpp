@@ -117,20 +117,26 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isShadowResChanged = false;
 
-		if (ImGui::RadioButton("4096*4096", &is4K))
+		if (ImGui::Checkbox("4096*4096", &is4K))
 		{
+			is1K = false;
+			is2K = false;
 			isShadowResChanged = true;
 			shadowResX = 4096;
 			shadowResY = 4096;
 		}
-		if (ImGui::RadioButton("2048*2048", &is2K))
+		if (ImGui::Checkbox("2048*2048", &is2K))
 		{
+			is1K = false;
+			is4K = false;
 			isShadowResChanged = true;
 			shadowResX = 2048;
 			shadowResY = 2048;
 		}
-		if (ImGui::RadioButton("1024*1024", &is1K))
+		if (ImGui::Checkbox("1024*1024", &is1K))
 		{
+			is2K = false;
+			is4K = false;
 			isShadowResChanged = true;
 			shadowResX = 1024;
 			shadowResY = 1024;

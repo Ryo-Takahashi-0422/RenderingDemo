@@ -516,30 +516,6 @@ void Shadow::UpdateWorldMatrix()
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
 }
 
-void Shadow::ChangeSceneResolution(int _width, int _height)
-{
-    width = _width;
-    height = _height;
-
-    RecreatreSource();
-}
-
-void Shadow::RecreatreSource()
-{
-    renderingResource->Release();
-    renderingResource = nullptr;
-    depthBuff->Release();
-    depthBuff = nullptr;
-    rtvHeap->Release();
-    rtvHeap = nullptr;
-    srvHeap->Release();
-    srvHeap = nullptr;
-    dsvHeap->Release();
-    dsvHeap = nullptr;
-
-    RenderingSet();
-}
-
 // é¿çs
 void Shadow::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {    

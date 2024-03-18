@@ -532,8 +532,3 @@ void Air::SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT
     m_SceneInfo->depthLength = depthLengthVal;
     m_SceneInfo->distanceLimit = distanceLimitValue;
 }
-
-void Air::SetShadowmapResource(ComPtr<ID3D12Resource> _shadowMapRsource)
-{
-    shadowMapResource = _shadowMapRsource;
-}

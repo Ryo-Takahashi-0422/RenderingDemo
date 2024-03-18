@@ -78,15 +78,7 @@ private:
 	float height;
 
 	void UpdateWorldMatrix();
-
-	//struct SceneInfo
-	//{
-	//	XMMATRIX world; // world matrix
-	//	int width;
-	//	int height;
-	//};
-	//SceneInfo* scneMatrix = nullptr;
-	void RecreatreSource();
+	
 
 public:
 	Shadow(ID3D12Device* dev, int _width, int _height);
@@ -103,6 +95,6 @@ public:
 	XMMATRIX GetShadowPosInvMatrix() { return XMMatrixInverse(nullptr, mappedMatrix->world); };
 	XMMATRIX GetShadowView() { return mappedMatrix->view; };
 	std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
-	void ChangeSceneResolution(int _width, int _height);
+	//void ChangeSceneResolution(int _width, int _height);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };
