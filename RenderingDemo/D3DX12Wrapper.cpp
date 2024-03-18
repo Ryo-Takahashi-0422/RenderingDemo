@@ -440,6 +440,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
+	settingImgui->SetAirParam(calculatedParticipatingMedia);
 
 	sun = new Sun(_dev.Get(), camera);
 	sun->Init();
@@ -482,7 +483,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
-
+	
 	// vsm blur
 	shadowRenderingBlur = new Blur(_dev.Get());
 	std::string vs = "BlurVertex.hlsl";
@@ -793,6 +794,14 @@ void D3DX12Wrapper::Run() {
 		//	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		//	skyLUT->SetBarrierSWTrue();
 		//}
+		// Air‚ÌParticipating Media‚É•ÏX‚ª‚ ‚éê‡‚Ìˆ—
+		if (settingImgui->GetIsAirParamChanged())
+		{
+			ParticipatingMedia* changedMedia = new ParticipatingMedia;
+			changedMedia = settingImgui->GetParticipatingMediaParam();
+			auto c = participatingMedia.SetAndcalculateUnit(changedMedia);
+			air->SetParticipatingMedia(c);
+		}
 
 		// SkyLUT‚Ì‰ð‘œ“x‚É•ÏX‚ª‚ ‚éê‡‚Ìˆ—
 		if (settingImgui->GetIsSkyLUTResolutionChanged())

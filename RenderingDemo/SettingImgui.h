@@ -1,4 +1,5 @@
 #pragma once
+#include <ParticipatingMedia.h>
 
 struct PostSetting
 {
@@ -36,6 +37,11 @@ private:
 	// sun
 	float sunAngleX = 340.0f;
 	float sunAngleY = 70.0f;
+
+	// air param
+	ParticipatingMedia m_Media;
+	ParticipatingMedia* exp_Media = nullptr;
+	bool isAirParamChanged = false;
 
 	//sky
 	int skyResX = 64;
@@ -103,6 +109,10 @@ public:
 	float GetSunAngleX() { return sunAngleX; };
 	float GetSunAngleY() { return sunAngleY; };
 
+	// air param
+	bool GetIsAirParamChanged() { return isAirParamChanged; };
+	ParticipatingMedia* GetParticipatingMediaParam() { return exp_Media; };
+
 	// sky resolutiuon
 	bool GetIsSkyResolutionChanged() { return isSkyResChanged; };
 	int GetSkyResX() { return skyResX; };
@@ -137,5 +147,6 @@ public:
 	bool GetIsFpsChanged() { return isFpsChanged; };
 	float GetFPS() { return fps; };
 
+	void SetAirParam(ParticipatingMedia media);
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };
