@@ -25,7 +25,14 @@ float4 ps(Output input) : SV_TARGET
     float4 imgui = imguiTex.Sample(smp, input.uv);
     float4 ssao = ssaoTex.Sample(smp, input.uv);
     
-    ret += imgui;
+    float imguiTotal = 0.0f;
+    imguiTotal = imgui.x + imgui.y + imgui.z;
+    if (imguiTotal != 0)
+    {
+        return imgui * 2.0f;
+    }
+    
+    //ret += imgui;
     ret = lerp(ret * 0.5f, ret, ssao.x);
     return ret;
 }
