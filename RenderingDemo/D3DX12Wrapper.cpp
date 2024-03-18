@@ -794,6 +794,7 @@ void D3DX12Wrapper::Run() {
 		//	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get());
 		//	skyLUT->SetBarrierSWTrue();
 		//}
+		
 		// AirのParticipating Mediaに変更がある場合の処理
 		if (settingImgui->GetIsAirParamChanged())
 		{
@@ -801,6 +802,15 @@ void D3DX12Wrapper::Run() {
 			changedMedia = settingImgui->GetParticipatingMediaParam();
 			auto c = participatingMedia.SetAndcalculateUnit(changedMedia);
 			air->SetParticipatingMedia(c);
+		}
+
+		//SkyLUTのParticipating Mediaに変更がある場合の処理
+		if (settingImgui->GetIsSkyLUTParamChanged())
+		{
+			ParticipatingMedia* changedMedia = new ParticipatingMedia;
+			changedMedia = settingImgui->GetPMediaParam4SkyLUT();
+			auto c = participatingMedia.SetAndcalculateUnit(changedMedia);
+			skyLUT->SetParticipatingMedia(c);
 		}
 
 		// SkyLUTの解像度に変更がある場合の処理

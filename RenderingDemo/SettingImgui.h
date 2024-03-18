@@ -43,6 +43,11 @@ private:
 	ParticipatingMedia* exp_Media = nullptr;
 	bool isAirParamChanged = false;
 
+	// skyLUT param
+	ParticipatingMedia sky_Media;
+	ParticipatingMedia* exp_skyMedia = nullptr;
+	bool isSkyParamChanged = false;
+
 	//sky
 	int skyResX = 64;
 	int skyResY = 64;
@@ -112,6 +117,10 @@ public:
 	// air param
 	bool GetIsAirParamChanged() { return isAirParamChanged; };
 	ParticipatingMedia* GetParticipatingMediaParam() { return exp_Media; };
+
+	// skyLUT param
+	bool GetIsSkyLUTParamChanged() { return isSkyParamChanged; };
+	ParticipatingMedia* GetPMediaParam4SkyLUT() { return exp_skyMedia; };
 
 	// sky resolutiuon
 	bool GetIsSkyResolutionChanged() { return isSkyResChanged; };

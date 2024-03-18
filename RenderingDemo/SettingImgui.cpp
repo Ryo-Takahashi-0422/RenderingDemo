@@ -53,7 +53,10 @@ HRESULT SettingImgui::Init
 	}
 
 	exp_Media = new ParticipatingMedia;
-	exp_Media->rayleighScattering = m_Media.rayleighScattering;
+	//exp_Media->rayleighScattering = m_Media.rayleighScattering;
+
+	exp_skyMedia = new ParticipatingMedia;
+	//exp_skyMedia->rayleighScattering = m_Media.rayleighScattering;
 
 	return S_OK;
 }
@@ -92,6 +95,25 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		isAirParamChanged |= ImGui::SliderFloat("altitudeOfOzone", &exp_Media->altitudeOfOzone, 0, 100);
 		isAirParamChanged |= ImGui::SliderFloat("groundRadius", &exp_Media->groundRadius, 0, 100000);
 		isAirParamChanged |= ImGui::SliderFloat("atomosphereRadius", &exp_Media->atomosphereRadius, 0, 100000);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("SkyLUT Parameter"))
+	{
+		isSkyParamChanged = false;
+
+		isSkyParamChanged |= ImGui::SliderFloat3("rayleighScattering", &exp_skyMedia->rayleighScattering.x, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("mieScattering", &exp_skyMedia->mieScattering, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("mieAbsorption", &exp_skyMedia->mieAbsorption, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat3("ozoneAbsorption", &exp_skyMedia->ozoneAbsorption.x, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("asymmetryParameter", &exp_skyMedia->asymmetryParameter, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfRayleigh", &exp_skyMedia->altitudeOfRayleigh, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfMie", &exp_skyMedia->altitudeOfMie, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("halfWidthOfOzone", &exp_skyMedia->halfWidthOfOzone, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfOzone", &exp_skyMedia->altitudeOfOzone, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("groundRadius", &exp_skyMedia->groundRadius, 0, 100000);
+		isSkyParamChanged |= ImGui::SliderFloat("atomosphereRadius", &exp_skyMedia->atomosphereRadius, 0, 100000);
 
 		ImGui::TreePop();
 	}
