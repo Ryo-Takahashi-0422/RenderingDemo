@@ -405,6 +405,26 @@ void Blur::ChangeSwitch(bool _switch)
     *mappedSwitch = _switch;
 }
 
+void Blur::ChangeSceneResolution(int _width, int _height)
+{
+    width = _width;
+    height = _height;
+
+    RecreatreSource();
+}
+
+void Blur::RecreatreSource()
+{
+    renderingResource->Release();
+    renderingResource = nullptr;
+    rtvHeap->Release();
+    rtvHeap = nullptr;
+    srvHeap->Release();
+    srvHeap = nullptr;
+
+    RenderingSet();
+}
+
 // é¿çs
 void Blur::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {

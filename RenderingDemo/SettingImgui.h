@@ -1,4 +1,5 @@
 #pragma once
+#include <ParticipatingMedia.h>
 
 struct PostSetting
 {
@@ -37,6 +38,16 @@ private:
 	float sunAngleX = 340.0f;
 	float sunAngleY = 70.0f;
 
+	// air param
+	ParticipatingMedia m_Media;
+	ParticipatingMedia* exp_Media = nullptr;
+	bool isAirParamChanged = false;
+
+	// skyLUT param
+	ParticipatingMedia sky_Media;
+	ParticipatingMedia* exp_skyMedia = nullptr;
+	bool isSkyParamChanged = false;
+
 	//sky
 	int skyResX = 64;
 	int skyResY = 64;
@@ -46,6 +57,11 @@ private:
 	int skyLUTResX = 1024;
 	int skyLUTResY = 1024;
 	bool isSkyLUTResChanged = false;
+
+	// shadow resolutuion
+	int shadowResX = 4096;
+	int shadowResY = 4096;
+	bool isShadowResChanged = false;
 
 	// shadowFavtor
 	int shadowFactorResX = 1024;
@@ -98,15 +114,31 @@ public:
 	float GetSunAngleX() { return sunAngleX; };
 	float GetSunAngleY() { return sunAngleY; };
 
-	// sky
+	// air param
+	bool GetIsAirParamChanged() { return isAirParamChanged; };
+	ParticipatingMedia* GetParticipatingMediaParam() { return exp_Media; };
+
+	// skyLUT param
+	bool GetIsSkyLUTParamChanged() { return isSkyParamChanged; };
+	ParticipatingMedia* GetPMediaParam4SkyLUT() { return exp_skyMedia; };
+
+	// sky resolutiuon
 	bool GetIsSkyResolutionChanged() { return isSkyResChanged; };
 	int GetSkyResX() { return skyResX; };
 	int GetSkyResY() { return skyResY; };
 
-	// skyLUT
+	// skyLUT resolutiuon
 	bool GetIsSkyLUTResolutionChanged() { return isSkyLUTResChanged; };
 	int GetSkyLUTResX() { return skyLUTResX; };
 	int GetSkyLUTResY() { return skyLUTResY; };
+
+	// shadow resolutiuon
+	bool GetIsShadowResolutionChanged() { return isShadowResChanged; };
+	bool is4K = true;
+	bool is2K = false;
+	bool is1K = false;
+	int GetShadowResX() { return shadowResX; };
+	int GetShadowResY() { return shadowResY; };
 
 	// shadowFactor
 	bool GetIsShadowFactorResolutionChanged() { return isShadowFactorResChanged; };
@@ -124,5 +156,6 @@ public:
 	bool GetIsFpsChanged() { return isFpsChanged; };
 	float GetFPS() { return fps; };
 
+	void SetAirParam(ParticipatingMedia media);
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 };

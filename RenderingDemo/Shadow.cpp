@@ -1,9 +1,11 @@
 #include <stdafx.h>
 #include <Shadow.h>
 
-Shadow::Shadow(ID3D12Device* dev)
+Shadow::Shadow(ID3D12Device* dev, int _width, int _height)
 {
     _dev = dev;
+    width = _width;
+    height = _height;
 }
 
 void Shadow::Init()

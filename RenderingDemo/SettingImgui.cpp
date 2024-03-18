@@ -12,6 +12,7 @@ HRESULT SettingImgui::Init
 	PrepareRenderingWindow* pRWindow
 )
 {
+	//m_Media = new ParticipatingMedia();
 	CreateSRVDHeap(_dev);
 	CreateRTVDHeap(_dev);
 	CreateRenderResource(_dev, pRWindow->GetWindowWidth(), pRWindow->GetWindowHeight());
@@ -51,6 +52,12 @@ HRESULT SettingImgui::Init
 		return E_FAIL;
 	}
 
+	exp_Media = new ParticipatingMedia;
+	//exp_Media->rayleighScattering = m_Media.rayleighScattering;
+
+	exp_skyMedia = new ParticipatingMedia;
+	//exp_skyMedia->rayleighScattering = m_Media.rayleighScattering;
+
 	return S_OK;
 }
 
@@ -65,49 +72,102 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	//ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
 
 	//ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
-	if (ImGui::TreeNode("Sun"))
+	if (ImGui::TreeNode("Sun Angle"))
 	{
 		ImGui::SliderFloat("Sun Angle X", &sunAngleX, 0, 360);
 		ImGui::SliderFloat("Sun Angle Y", &sunAngleY, 0, 90);
-		//ImGui::InputFloat("Sun Intensity", &sunIntensity_);
-		//ImGui::InputFloat("Sun Disk Size", &sunDiskSize_, 0, 0, 8);
-		//if (ImGui::InputInt("Sun Disk Segments", &sunDiskSegments_))
-		//{
-		//	sunDiskSegments_ = (std::max)(sunDiskSegments_, 1);
-		//	sunRenderer_.setSunDiskSegments(sunDiskSegments_);
-		//}
-		//ImGui::ColorEdit3("Sun Color", &sunColor_.x);
+
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Air Parameter"))
+	{
+		isAirParamChanged = false;
 
-	if (ImGui::TreeNode("Sky"))
+		isAirParamChanged |= ImGui::SliderFloat3("rayleighScattering", &exp_Media->rayleighScattering.x, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("mieScattering", &exp_Media->mieScattering, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("mieAbsorption", &exp_Media->mieAbsorption, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat3("ozoneAbsorption", &exp_Media->ozoneAbsorption.x, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("asymmetryParameter", &exp_Media->asymmetryParameter, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfRayleigh", &exp_Media->altitudeOfRayleigh, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfMie", &exp_Media->altitudeOfMie, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("halfWidthOfOzone", &exp_Media->halfWidthOfOzone, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfOzone", &exp_Media->altitudeOfOzone, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("groundRadius", &exp_Media->groundRadius, 0, 100000);
+		isAirParamChanged |= ImGui::SliderFloat("atomosphereRadius", &exp_Media->atomosphereRadius, 0, 100000);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("SkyLUT Parameter"))
+	{
+		isSkyParamChanged = false;
+
+		isSkyParamChanged |= ImGui::SliderFloat3("rayleighScattering", &exp_skyMedia->rayleighScattering.x, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("mieScattering", &exp_skyMedia->mieScattering, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("mieAbsorption", &exp_skyMedia->mieAbsorption, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat3("ozoneAbsorption", &exp_skyMedia->ozoneAbsorption.x, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("asymmetryParameter", &exp_skyMedia->asymmetryParameter, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfRayleigh", &exp_skyMedia->altitudeOfRayleigh, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfMie", &exp_skyMedia->altitudeOfMie, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("halfWidthOfOzone", &exp_skyMedia->halfWidthOfOzone, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("altitudeOfOzone", &exp_skyMedia->altitudeOfOzone, 0, 100);
+		isSkyParamChanged |= ImGui::SliderFloat("groundRadius", &exp_skyMedia->groundRadius, 0, 100000);
+		isSkyParamChanged |= ImGui::SliderFloat("atomosphereRadius", &exp_skyMedia->atomosphereRadius, 0, 100000);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Sky Resolution"))
 	{
 		isSkyResChanged = false;
 
-		if (ImGui::SliderInt("Sky Resolution X", &skyResX, 1, 1024))
-		{
-			isSkyResChanged = true;
-		}
-		if (ImGui::SliderInt("Sky Resolution Y", &skyResY, 1, 1024))
-		{
-			isSkyResChanged = true;
-		}
+		isSkyResChanged |= ImGui::SliderInt("Sky Resolution X", &skyResX, 1, 1024);
+		isSkyResChanged |= ImGui::SliderInt("Sky Resolution Y", &skyResY, 1, 1024);
 		
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Sky LUT"))
+	if (ImGui::TreeNode("Sky LUT Resolution"))
 	{
 		isSkyLUTResChanged = false;
 
-		if (ImGui::SliderInt("SkyLUT Resolution X", &skyLUTResX, 1, 1024))
+		isSkyLUTResChanged |= ImGui::SliderInt("SkyLUT Resolution X", &skyLUTResX, 1, 1024);
+		isSkyLUTResChanged |= ImGui::SliderInt("SkyLUT Resolution Y", &skyLUTResY, 1, 1024);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Shadow Resolution"))
+	{
+		isShadowResChanged = false;
+
+		if (ImGui::Checkbox("4096*4096", &is4K))
 		{
-			isSkyLUTResChanged = true;
+			is1K = false;
+			is2K = false;
+			is4K = true;
+			isShadowResChanged = true;
+			shadowResX = 4096;
+			shadowResY = 4096;
 		}
-		if (ImGui::SliderInt("SkyLUT Resolution Y", &skyLUTResY, 1, 1024))
+		if (ImGui::Checkbox("2048*2048", &is2K))
 		{
-			isSkyLUTResChanged = true;
+			is1K = false;
+			is2K = true;
+			is4K = false;
+			isShadowResChanged = true;
+			shadowResX = 2048;
+			shadowResY = 2048;
+		}
+		if (ImGui::Checkbox("1024*1024", &is1K))
+		{
+			is1K = true;
+			is2K = false;
+			is4K = false;
+			isShadowResChanged = true;
+			shadowResX = 1024;
+			shadowResY = 1024;
 		}
 
 		ImGui::TreePop();
@@ -182,96 +242,8 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
-	// Shadow Factorの解像度変更はプログラムがクラッシュするため一時封印
-	//if (ImGui::TreeNode("ShadowFactor"))
-	//{
-	//	isShadowFactorResChanged = false;
-
-	//	//if (ImGui::SliderInt("ShadowFactor Resolution X", &shadowFactorResX, 16, 1024))
-	//	//{
-	//	//	isShadowFactorResChanged = true;
-	//	//}
-	//	//if (ImGui::SliderInt("ShadowFactor Resolution Y", &shadowFactorResY, 16, 1024))
-	//	//{
-	//	//	isShadowFactorResChanged = true;
-	//	//}
-
-	//	/*std::vector<std::string> itemList = {"16", "512", "1024"};*/
-	//	static const char* s_currentItem = nullptr;
-	//	if (ImGui::BeginCombo("Combo", s_currentItem)) {
-	//		for (int i = 0; i < itemList.size(); ++i) {
-	//			const bool is_selected = (s_currentItem == itemList[i].c_str());
-	//			if (ImGui::Selectable(itemList[i].c_str(), is_selected))
-	//				s_currentItem = itemList[i].c_str();
-	//			if (is_selected)
-	//			{
-	//				shadowFactorResY = std::atoi(itemList[i].c_str());
-	//				isShadowFactorResChanged = true;
-	//			}
-	//		}
-	//		ImGui::EndCombo();
-	//	}
-
-	//	ImGui::TreePop();
-	//}
-
-
-	//static bool blnFoV = false;
-	//ImGui::Checkbox("Field of View on/off", &blnFoV);
-	//isFoV = blnFoV;
-
-	//static bool blnSSAO = false;
-	//ImGui::Checkbox("SSAO on/off", &blnSSAO);
-	//isSSAO = blnSSAO;
-
-	//static bool blnShadowmap = false;
-	//ImGui::Checkbox("Self Shadow on/off", &blnShadowmap);
-	//isSelfShadowOn = blnShadowmap;
-
-	//static bool blnBloom = false;
-	//ImGui::Checkbox("Bloom on/off", &blnBloom);
-	//isBloomOn = blnBloom;
-
-	//static bool blnEffect = false;
-	//ImGui::Checkbox("Effect on/off", &blnEffect);
-	//isEffectOn = blnEffect;
-
-	//constexpr float pi = 3.141592653589f;
-	//static float fov = XM_PIDIV2;
-	//ImGui::SliderFloat("Field Of View", &fov, pi / 6.0f, pi * 5.0f / 6.0f);
-	//fovValueExp = fov;
-
-	//static float lightVec[3] = { -1.0f, 1.0f, -0.5f };
-	//// lightVec.x
-	//ImGui::SliderFloat("Light Vector.x", &lightVec[0], 1.0f, -1.0f);
-	//// lightVec.y
-	//ImGui::SliderFloat("Light Vector.y", &lightVec[1], 1.0f, -1.0f);
-	//// lightVec.y
-	//ImGui::SliderFloat("Light Vector.z", &lightVec[2], 1.0f, -1.0f);
-	//for (int i = 0; i < 3; ++i)
-	//{
-	//	lightVecExp[i] = lightVec[i];
-	//}
-
-	//static float bgCol[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
-	//ImGui::ColorPicker4("BackGround Color", bgCol, ImGuiColorEditFlags_::ImGuiColorEditFlags_PickerHueWheel |
-	//	ImGuiColorEditFlags_::ImGuiColorEditFlags_AlphaBar);
-	//for (int i = 0; i < 4; ++i)
-	//{
-	//	bgColorExp[i] = bgCol[i];
-	//}
-
-	//static float bloomCol[3] = {};
-	//ImGui::ColorPicker3("bloom color", bloomCol/*, ImGuiColorEditFlags_::ImGuiColorEditFlags_InputRGB*/);
-	//for (int i = 0; i < 3; ++i)
-	//{
-	//	bloomExp[i] = bloomCol[i];
-	//}
-
 	ImGui::End();
-
 	ImGui::Render();
-
 
 	D3D12_RESOURCE_BARRIER barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -367,4 +339,19 @@ void SettingImgui::CreateRTV(ComPtr<ID3D12Device> _dev)
 		&rtvViewDesc,
 		handle
 	);
+}
+
+void SettingImgui::SetAirParam(ParticipatingMedia media)
+{
+	m_Media.rayleighScattering = media.rayleighScattering;
+	m_Media.mieScattering = media.mieScattering;
+	m_Media.mieAbsorption = media.mieAbsorption;
+	m_Media.ozoneAbsorption = media.ozoneAbsorption;
+	m_Media.asymmetryParameter = media.asymmetryParameter;
+	m_Media.altitudeOfRayleigh = media.altitudeOfRayleigh;
+	m_Media.altitudeOfMie = media.altitudeOfMie;
+	m_Media.halfWidthOfOzone = media.halfWidthOfOzone;
+	m_Media.altitudeOfOzone = media.altitudeOfOzone;
+	m_Media.groundRadius = media.groundRadius;
+	m_Media.atomosphereRadius = media.atomosphereRadius;
 }
