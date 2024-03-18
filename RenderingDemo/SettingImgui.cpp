@@ -81,7 +81,17 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isAirParamChanged = false;
 
-		isAirParamChanged |= ImGui::SliderFloat3("rayleighScattering", &exp_Media->rayleighScattering.x, 0, 50);
+		isAirParamChanged |= ImGui::SliderFloat3("rayleighScattering", &exp_Media->rayleighScattering.x, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("mieScattering", &exp_Media->mieScattering, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("mieAbsorption", &exp_Media->mieAbsorption, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat3("ozoneAbsorption", &exp_Media->ozoneAbsorption.x, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("asymmetryParameter", &exp_Media->asymmetryParameter, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfRayleigh", &exp_Media->altitudeOfRayleigh, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfMie", &exp_Media->altitudeOfMie, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("halfWidthOfOzone", &exp_Media->halfWidthOfOzone, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("altitudeOfOzone", &exp_Media->altitudeOfOzone, 0, 100);
+		isAirParamChanged |= ImGui::SliderFloat("groundRadius", &exp_Media->groundRadius, 0, 100000);
+		isAirParamChanged |= ImGui::SliderFloat("atomosphereRadius", &exp_Media->atomosphereRadius, 0, 100000);
 
 		ImGui::TreePop();
 	}
