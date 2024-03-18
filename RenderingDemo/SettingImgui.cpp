@@ -81,7 +81,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	}
 
 
-	if (ImGui::TreeNode("Sky"))
+	if (ImGui::TreeNode("Sky Resolution"))
 	{
 		isSkyResChanged = false;
 
@@ -97,7 +97,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Sky LUT"))
+	if (ImGui::TreeNode("Sky LUT Resolution"))
 	{
 		isSkyLUTResChanged = false;
 
@@ -108,6 +108,32 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		if (ImGui::SliderInt("SkyLUT Resolution Y", &skyLUTResY, 1, 1024))
 		{
 			isSkyLUTResChanged = true;
+		}
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Shadow Resolution"))
+	{
+		isShadowResChanged = false;
+
+		if (ImGui::RadioButton("4096*4096", &is4K))
+		{
+			isShadowResChanged = true;
+			shadowResX = 4096;
+			shadowResY = 4096;
+		}
+		if (ImGui::RadioButton("2048*2048", &is2K))
+		{
+			isShadowResChanged = true;
+			shadowResX = 2048;
+			shadowResY = 2048;
+		}
+		if (ImGui::RadioButton("1024*1024", &is1K))
+		{
+			isShadowResChanged = true;
+			shadowResX = 1024;
+			shadowResY = 1024;
 		}
 
 		ImGui::TreePop();

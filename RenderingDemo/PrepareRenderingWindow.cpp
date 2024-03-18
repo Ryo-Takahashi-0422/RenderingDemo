@@ -101,6 +101,30 @@ void PrepareRenderingWindow::SetViewportAndRect()
 	scissorRect.left = 0; //切り抜き左座標
 	scissorRect.right = scissorRect.left + window_width; //切り抜き右座標
 	scissorRect.bottom = scissorRect.top + window_height; //切り抜き下座標
+
+	// 画面サイズ変更トライ
+	//float x = 1.0f;
+	//float y = 1.0f;
+
+	//float viewWidthRatio = 1024.0f / 1920.0f;
+	//float viewHeightRatio = 1024.0f / 1080.0f;
+	//x = viewWidthRatio / viewHeightRatio;
+	////y = viewHeightRatio / viewWidthRatio;
+
+	//viewport = {};
+	//viewport.Width = window_width * x;
+	//viewport.Height = window_height * y;
+	//viewport.TopLeftX = window_width * (1.0f - x) / 2.0f;
+	//viewport.TopLeftY = window_height * (1.0f - y) / 2.0f;
+	//viewport.MaxDepth = 1.0f;
+	//viewport.MinDepth = 0.0f;
+
+	//scissorRect = {};
+	//scissorRect.top = static_cast<LONG>(viewport.TopLeftY); //切り抜き上座標
+	//scissorRect.left = static_cast<LONG>(viewport.TopLeftX); //切り抜き左座標
+	//scissorRect.right = static_cast<LONG>(viewport.TopLeftX + viewport.Width); //切り抜き右座標
+	//scissorRect.bottom = static_cast<LONG>(viewport.TopLeftY + viewport.Height); //切り抜き下座標
+	
 }
 
 void PrepareRenderingWindow::ResizeWindow()

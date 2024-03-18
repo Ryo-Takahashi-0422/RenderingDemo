@@ -91,4 +91,5 @@ public:
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetFrustum(Frustum _frustum);
     void SetSceneInfo(XMMATRIX _sunViewMatrix, XMMATRIX _sunProjMatrix, XMFLOAT3 _eyePos, XMFLOAT3 sunDirection);
+    void SetShadowmapResource(ComPtr<ID3D12Resource> _shadowMapRsource);
 };

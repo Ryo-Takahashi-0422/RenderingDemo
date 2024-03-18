@@ -476,7 +476,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	sun->SetShadowFactorResource(shadowFactorResource.Get());
 
-	shadow = new Shadow(_dev.Get());
+	shadow = new Shadow(_dev.Get(), 4096, 4096);
 	shadow->Init();
 	
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
@@ -810,8 +810,10 @@ void D3DX12Wrapper::Run() {
 		
 		// カメラはキャラクター移動に追従する。太陽はワールド原点(0,0,0)注視の角度指定*100の位置に固定されているため、太陽描画時はビルボード乗算→カメラ位置(追従位置)へ平行移動→太陽方向へ平行移動とする。
 		sun->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
 		shadow->SetBoneMatrix(resourceManager[1]->GetMappedMatrixPointer()); // シャドウマップでのキャラクターアニメーション処理に利用する
 		shadow->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+
 		bool airDraw = settingImgui->GetAirBoxChanged();
 		if (airDraw)
 		{
@@ -894,6 +896,7 @@ void D3DX12Wrapper::Run() {
 		//コマンドキューに対する他のすべての操作が完了した後にフェンス更新
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
+		auto ii = _fence->GetCompletedValue();
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
 			
@@ -904,7 +907,7 @@ void D3DX12Wrapper::Run() {
 			//イベントハンドルを閉じる
 			CloseHandle(event);
 		}
-
+		ii = _fence->GetCompletedValue();
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 
@@ -918,6 +921,24 @@ void D3DX12Wrapper::Run() {
 		_swapChain->Present(1, 0);	
 		bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 
+		// shadow解像度の変更時処理 コード構成的にshadow描画直前に記述したいが、そうすると解像度変更時に一瞬暗転するためバックバッファのフリップ後に記述している。
+		bool isShadowResChanged = settingImgui->GetIsShadowResolutionChanged();
+		if (isShadowResChanged)
+		{
+			shadow = new Shadow(_dev.Get(), settingImgui->GetShadowResX(), settingImgui->GetShadowResY());
+			shadow->Init();
+			shadow->SetVertexAndIndexInfo(vbViews, ibViews, itIndiceFirsts, indiceContainer);
+			shadow->SetMoveMatrix(resourceManager[1]->GetMappedMatrix()->world);
+			shadow->SetRotationMatrix(connanDirection);
+			air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
+			air->SetFrustum(camera->GetFrustum());
+			air->SetParticipatingMedia(calculatedParticipatingMedia);
+
+			shadowRenderingBlur->SetRenderingResourse(shadow->GetShadowRenderingResource());
+
+			resourceManager[0]->SetAirResourceAndCreateView(air->GetAirTextureResource());
+			resourceManager[1]->SetAirResourceAndCreateView(air->GetAirTextureResource());
+		}
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
 

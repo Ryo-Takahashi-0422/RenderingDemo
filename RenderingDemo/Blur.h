@@ -55,6 +55,8 @@ private:
 	float* mappedweight = nullptr;
 	bool* mappedSwitch = nullptr;
 
+	void RecreatreSource();
+
 public:
 	Blur(ID3D12Device* dev);
 	void Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution);
@@ -62,5 +64,6 @@ public:
 	void SetSwitch(bool _switch);
 	void ChangeSwitch(bool _switch);
 	ComPtr<ID3D12Resource> GetBlurResource() { return renderingResource; };
+	void ChangeSceneResolution(int _width, int _height);
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };

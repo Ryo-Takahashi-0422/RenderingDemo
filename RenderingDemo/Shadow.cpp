@@ -1,9 +1,11 @@
 #include <stdafx.h>
 #include <Shadow.h>
 
-Shadow::Shadow(ID3D12Device* dev)
+Shadow::Shadow(ID3D12Device* dev, int _width, int _height)
 {
     _dev = dev;
+    width = _width;
+    height = _height;
 }
 
 void Shadow::Init()
@@ -512,6 +514,30 @@ void Shadow::UpdateWorldMatrix()
 {
     mappedMatrix->rotation = XMMatrixMultiply(mappedMatrix->world, m_rotationMatrix);
     mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
+}
+
+void Shadow::ChangeSceneResolution(int _width, int _height)
+{
+    width = _width;
+    height = _height;
+
+    RecreatreSource();
+}
+
+void Shadow::RecreatreSource()
+{
+    renderingResource->Release();
+    renderingResource = nullptr;
+    depthBuff->Release();
+    depthBuff = nullptr;
+    rtvHeap->Release();
+    rtvHeap = nullptr;
+    srvHeap->Release();
+    srvHeap = nullptr;
+    dsvHeap->Release();
+    dsvHeap = nullptr;
+
+    RenderingSet();
 }
 
 // é¿çs
