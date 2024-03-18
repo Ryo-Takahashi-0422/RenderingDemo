@@ -121,6 +121,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			is1K = false;
 			is2K = false;
+			is4K = true;
 			isShadowResChanged = true;
 			shadowResX = 4096;
 			shadowResY = 4096;
@@ -128,6 +129,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		if (ImGui::Checkbox("2048*2048", &is2K))
 		{
 			is1K = false;
+			is2K = true;
 			is4K = false;
 			isShadowResChanged = true;
 			shadowResX = 2048;
@@ -135,6 +137,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		}
 		if (ImGui::Checkbox("1024*1024", &is1K))
 		{
+			is1K = true;
 			is2K = false;
 			is4K = false;
 			isShadowResChanged = true;
