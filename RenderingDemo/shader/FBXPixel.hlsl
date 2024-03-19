@@ -107,7 +107,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
     // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
     // 特定の位置で調節してごまかすしかない。根本的に影が貫通しない処理を再設計する必要がある。
-    if (charaPos.z < -5.5f || charaPos.z > 5.4f)
+    if (charaPos.z < -6.5f || charaPos.z > 6.4f)
     {
         isSpecial = false;
     }

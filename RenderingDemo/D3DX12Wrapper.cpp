@@ -915,7 +915,6 @@ void D3DX12Wrapper::Run() {
 		//コマンドキューに対する他のすべての操作が完了した後にフェンス更新
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
-		auto ii = _fence->GetCompletedValue();
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
 			
@@ -926,7 +925,7 @@ void D3DX12Wrapper::Run() {
 			//イベントハンドルを閉じる
 			CloseHandle(event);
 		}
-		ii = _fence->GetCompletedValue();
+
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 
