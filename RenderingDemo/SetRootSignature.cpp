@@ -131,11 +131,12 @@ HRESULT SetRootSignature::SetRootsignatureParam(ComPtr<ID3D12Device> _dev) {
 		IID_PPV_ARGS(_rootSignature.ReleaseAndGetAddressOf())
 	);
 
-	_rootSigBlob->Release();
+	//_rootSigBlob->Release();
 
 	return S_OK;
 }
 
 SetRootSignature::~SetRootSignature()
 {
+	// ComPtr‰ð•ú‚Ì‚Ý
 }

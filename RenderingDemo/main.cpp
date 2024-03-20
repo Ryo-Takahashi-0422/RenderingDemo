@@ -5,11 +5,11 @@
 int main() {
 #ifdef _DEBUG
 	PIXLoadLatestWinPixGpuCapturerLibrary();
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 //#include<Windows.h>
 //int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-//
-
+//	
 
 	D3DX12Wrapper::D3DX12Wrapper();
 	Camera::Camera();
@@ -34,5 +34,10 @@ int main() {
 	
 	wrapper->Run();
 	//app.Terminate();
+	//delete wrapper;
+	wrapper->CleanMemory();
+	//delete wrapper;
+	wrapper->DeleteInstance();
+	wrapper = nullptr;
 	return 0;
 }

@@ -25,11 +25,16 @@ D3DX12Wrapper::D3DX12Wrapper()
 	instance = this;
 };
 
-// 後処理
-void D3DX12Wrapper::Terminate()
+void D3DX12Wrapper::DeleteInstance()
 {
+	instance = nullptr;
 
-};
+#ifdef _DEBUG
+	_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
+	//_debugDevice->Release();
+	//_debugDevice = nullptr;
+#endif
+}
 
 D3DX12Wrapper::~D3DX12Wrapper()
 {
@@ -99,6 +104,9 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 			break;//生成可能なバージョンが見つかったらループ中断
 		}
 	}
+#ifdef _DEBUG
+	_dev->QueryInterface(_debugDevice.GetAddressOf());
+#endif
 
 	_fenceVal = 0;
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence./*ReleaseAnd*/GetAddressOf()));
@@ -122,7 +130,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	// GraphicsPipelineSettingクラスのインスタンス化
 	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
-	delete vertexInputLayout;
+	vertexInputLayout = nullptr;
 
 	// レンダリングウィンドウ設定
 	prepareRenderingWindow = new PrepareRenderingWindow;
@@ -147,7 +155,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraSetRootSignature = new PeraSetRootSignature;
 	peraShaderCompile = new SettingShaderCompile;
 
-	delete peraLayout;
+	peraLayout = nullptr;
 
 	////デバイス取得
 	//auto hdc = GetDC(prepareRenderingWindow->GetHWND());
@@ -268,45 +276,45 @@ bool D3DX12Wrapper::PipelineInit(){
 	return true;
 }
 
-void D3DX12Wrapper::EffekseerInit()
-{
-	_efkManager = Effekseer::Manager::Create(8000);
-	// DirectXは左手系のため、これに合わせる
-	_efkManager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
-
-	auto graphicsDevice = EffekseerRendererDX12::CreateGraphicsDevice(_dev.Get(), _cmdQueue.Get(), 2);
-	
-	auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	_efkRenderer = EffekseerRendererDX12::Create(graphicsDevice, &format, 1, DXGI_FORMAT_UNKNOWN, false, 8000);
-	_efkMemoryPool = EffekseerRenderer::CreateSingleFrameMemoryPool(_efkRenderer->GetGraphicsDevice());
-	_efkCmdList = EffekseerRenderer::CreateCommandList(_efkRenderer->GetGraphicsDevice(), _efkMemoryPool);
-
-	_efkRenderer->SetCommandList(_efkCmdList);
-
-	// 描画モジュールの設定
-	_efkManager->SetSpriteRenderer(_efkRenderer->CreateSpriteRenderer());
-	_efkManager->SetRibbonRenderer(_efkRenderer->CreateRibbonRenderer());
-	_efkManager->SetRingRenderer(_efkRenderer->CreateRingRenderer());
-	_efkManager->SetTrackRenderer(_efkRenderer->CreateTrackRenderer());
-	_efkManager->SetModelRenderer(_efkRenderer->CreateModelRenderer());
-
-	// テクスチャ、モデル、カーブ、マテリアルローダーの設定する。
-	// ユーザーが独自で拡張できる。現在はファイルから読み込んでいる。
-	_efkManager->SetTextureLoader(_efkRenderer->CreateTextureLoader());
-	_efkManager->SetModelLoader(_efkRenderer->CreateModelLoader());
-	_efkManager->SetMaterialLoader(_efkRenderer->CreateMaterialLoader());
-	_efkManager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
-
-	// エフェクト自体の設定
-	_effect = Effekseer::Effect::Create
-	(
-		_efkManager,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
-		1.0f,
-		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10"
-	);
-	/*_efkHandle = _efkManager->Play(_effect, 0, 0, 0);*/
-}
+//void D3DX12Wrapper::EffekseerInit()
+//{
+//	_efkManager = Effekseer::Manager::Create(8000);
+//	// DirectXは左手系のため、これに合わせる
+//	_efkManager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
+//
+//	auto graphicsDevice = EffekseerRendererDX12::CreateGraphicsDevice(_dev.Get(), _cmdQueue.Get(), 2);
+//	
+//	auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
+//	_efkRenderer = EffekseerRendererDX12::Create(graphicsDevice, &format, 1, DXGI_FORMAT_UNKNOWN, false, 8000);
+//	_efkMemoryPool = EffekseerRenderer::CreateSingleFrameMemoryPool(_efkRenderer->GetGraphicsDevice());
+//	_efkCmdList = EffekseerRenderer::CreateCommandList(_efkRenderer->GetGraphicsDevice(), _efkMemoryPool);
+//
+//	_efkRenderer->SetCommandList(_efkCmdList);
+//
+//	// 描画モジュールの設定
+//	_efkManager->SetSpriteRenderer(_efkRenderer->CreateSpriteRenderer());
+//	_efkManager->SetRibbonRenderer(_efkRenderer->CreateRibbonRenderer());
+//	_efkManager->SetRingRenderer(_efkRenderer->CreateRingRenderer());
+//	_efkManager->SetTrackRenderer(_efkRenderer->CreateTrackRenderer());
+//	_efkManager->SetModelRenderer(_efkRenderer->CreateModelRenderer());
+//
+//	// テクスチャ、モデル、カーブ、マテリアルローダーの設定する。
+//	// ユーザーが独自で拡張できる。現在はファイルから読み込んでいる。
+//	_efkManager->SetTextureLoader(_efkRenderer->CreateTextureLoader());
+//	_efkManager->SetModelLoader(_efkRenderer->CreateModelLoader());
+//	_efkManager->SetMaterialLoader(_efkRenderer->CreateMaterialLoader());
+//	_efkManager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
+//
+//	// エフェクト自体の設定
+//	_effect = Effekseer::Effect::Create
+//	(
+//		_efkManager,
+//		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10\\SimpleLaser.efk",
+//		1.0f,
+//		(const EFK_CHAR*)L"C:\\Users\\RyoTaka\Documents\\RenderingDemoRebuild\\EffekseerTexture\\10"
+//	);
+//	/*_efkHandle = _efkManager->Play(_effect, 0, 0, 0);*/
+//}
 
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
@@ -365,7 +373,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
+
 	delete settingShaderCompile;
+	settingShaderCompile = nullptr;
 
 	// バックバッファ描画用
 	std::string bufferVs = "PeraVertex.hlsl";
@@ -377,7 +387,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
+
 	delete peraShaderCompile;
+	peraShaderCompile = nullptr;
 
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
@@ -410,8 +422,9 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-	delete textureLoader;
+	textureLoader = nullptr;
 	delete textureTransporter;
+	textureTransporter = nullptr;
 
 	// マルチパス用ビュー作成
 	peraPolygon->CreatePeraView(_dev);
@@ -726,6 +739,7 @@ void D3DX12Wrapper::Run() {
 	XMFLOAT3 sunDir;
 	shadowFactor->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // 以降は解像度に変更がある場合のみ描画する
 	sun->ChangeSceneMatrix(XMMatrixIdentity());
+
 	while (true)
 	{	
 		isFpsChanged = settingImgui->GetIsFpsChanged();
@@ -839,7 +853,7 @@ void D3DX12Wrapper::Run() {
 			air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
 		}		
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), viewPort, rect);
 		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // ★vsm shadowを利用
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -915,7 +929,6 @@ void D3DX12Wrapper::Run() {
 		//コマンドキューに対する他のすべての操作が完了した後にフェンス更新
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
-		auto ii = _fence->GetCompletedValue();
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
 			
@@ -926,7 +939,7 @@ void D3DX12Wrapper::Run() {
 			//イベントハンドルを閉じる
 			CloseHandle(event);
 		}
-		ii = _fence->GetCompletedValue();
+
 		_cmdAllocator->Reset();//コマンド アロケーターに関連付けられているメモリを再利用する
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 
@@ -964,37 +977,115 @@ void D3DX12Wrapper::Run() {
 		}
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
+}
 
-	//delete bufferGPLSetting;
-	//delete bufferShaderCompile;
-
-	delete textureTransporter;
-
+void D3DX12Wrapper::CleanMemory()
+{
 	UnregisterClass(prepareRenderingWindow->GetWNDCCLASSEX().lpszClassName, prepareRenderingWindow->GetWNDCCLASSEX().hInstance);
 
-
-	delete textureLoader;
-
-
-	delete settingShaderCompile;
 	delete gPLSetting;
+	gPLSetting = nullptr;
 
-	
-	//delete prepareRenderingWindow;
+	prepareRenderingWindow = nullptr;
 
 	delete peraGPLSetting;
+	peraGPLSetting = nullptr;
 
 	delete peraPolygon;
-	delete peraShaderCompile;	
+	peraPolygon = nullptr;
 
 	delete settingImgui;
+	settingImgui = nullptr;
 
-	//delete bufferSetRootSignature;
-	//delete lightMapRootSignature;
-	//delete setRootSignature;
-	//delete peraSetRootSignature;
+	delete setRootSignature;
+	setRootSignature = nullptr;
 
-	delete fBXPipeline;
+	delete peraSetRootSignature;
+	peraSetRootSignature = nullptr;
+
+	delete collisionManager;
+	collisionManager = nullptr;
+
+	delete oBBManager;
+	oBBManager = nullptr;
+
+	camera->CleanMemory();
+	camera = nullptr;
+
+	input = nullptr;
+	fBXRootsignature = nullptr;
+	fBXPipeline = nullptr;
+	viewPort = nullptr;
+	rect = nullptr;
+	bBRootsignature = nullptr;
+	bBPipeline = nullptr;
+
+	delete sky;
+	sky = nullptr;
+
+	delete skyLUT;
+	skyLUT = nullptr;
+
+	delete shadowFactor;
+	shadowFactor = nullptr;
+
+	delete sun;
+	sun = nullptr;
+
+	delete shadow;
+	shadow = nullptr;
+
+	delete air;
+	air = nullptr;
+
+	delete shadowRenderingBlur;
+	shadowRenderingBlur = nullptr;
+
+	delete colorIntegraredBlur;
+	colorIntegraredBlur = nullptr;
+
+	delete ssaoBlur;
+	ssaoBlur = nullptr;
+
+	delete comBlur;
+	comBlur = nullptr;
+
+	delete integration;
+	integration = nullptr;
+
+	delete depthMapIntegration;
+	depthMapIntegration = nullptr;
+
+	delete calculateSSAO;
+	calculateSSAO = nullptr;
+
+	for (auto& rm : resourceManager)
+	{
+		delete rm;
+		rm = nullptr;
+	}
+
+	resourceManager.clear();
+	vbViews.clear();
+	ibViews.clear();
+
+	// 以下のようなComPtr類はデストラクタでメモリ解放されるので処理不要
+	//_dev->Release();
+	
+	handle.ptr = 0;
+
+	dHandles.clear();
+	srvHeapAddresses.clear();
+	rtvHeapPointer.ptr = 0;
+	gHandle.ptr = 0;
+
+	//indiceContainer.clear();
+	//itIndiceFirsts.clear();
+	//phongInfos.clear();
+	//itPhonsInfos.clear();
+	//materialAndTexturenameInfo.clear();
+	//itMaterialAndTextureNames.clear();
+
 }
 
 void D3DX12Wrapper::AllKeyBoolFalse()

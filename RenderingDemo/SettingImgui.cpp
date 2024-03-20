@@ -4,7 +4,12 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 
-//float SettingImgui::fov;
+SettingImgui::~SettingImgui()
+{
+	mappedPostSetting = nullptr;
+	exp_Media = nullptr;
+	exp_skyMedia = nullptr;
+}
 
 HRESULT SettingImgui::Init
 (

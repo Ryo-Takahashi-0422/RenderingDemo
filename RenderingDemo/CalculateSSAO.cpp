@@ -7,6 +7,15 @@ CalculateSSAO::CalculateSSAO(ID3D12Device* _dev, ComPtr<ID3D12Resource> _normalm
 }
 CalculateSSAO::~CalculateSSAO()
 {
+    _dev->Release();
+    _dev = nullptr;
+    pipeLine->Release();
+    pipeLine = nullptr;
+    heap->Release();
+    heap = nullptr;
+
+    matrixResource->Unmap(0, nullptr);
+    matrix4Cal = nullptr;
 }
 
 // ‰Šú‰»
@@ -78,7 +87,7 @@ HRESULT CalculateSSAO::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }
@@ -283,7 +292,6 @@ void CalculateSSAO::Mapping()
     );
 
     matrixResource->Map(0, nullptr, (void**)&matrix4Cal);
-    //std::copy(weights.begin(), weights.end(), mappedweight);
 }
 
 void CalculateSSAO::SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _proj, XMMATRIX _invProj)

@@ -6,6 +6,9 @@ private:
 	// directx関連
 	static D3DX12Wrapper* instance;
 	ComPtr<ID3D12Device> _dev = nullptr;
+#ifdef _DEBUG
+	ComPtr<ID3D12DebugDevice> _debugDevice = nullptr;
+#endif
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
@@ -50,22 +53,22 @@ private:
 	SettingImgui* settingImgui = nullptr;
 
 	// Effekseer
-	EffekseerRenderer::RendererRef _efkRenderer = nullptr; // effect renderer
-	Effekseer::ManagerRef _efkManager = nullptr; // effect manager
-	Effekseer::RefPtr<EffekseerRenderer::SingleFrameMemoryPool> _efkMemoryPool = nullptr; // memory pool
-	Effekseer::RefPtr<EffekseerRenderer::CommandList> _efkCmdList = nullptr; // for DirectX12, Vulkan
-	Effekseer::EffectRef _effect = nullptr; // entity of effect(effect file)
-	Effekseer::Handle _efkHandle; // effect handle(exceuted effect address)
-	Effekseer::Matrix44 fkViewMat;
-	Effekseer::Matrix44 fkProjMat;
-	void DrawEffect();
+	//EffekseerRenderer::RendererRef _efkRenderer = nullptr; // effect renderer
+	//Effekseer::ManagerRef _efkManager = nullptr; // effect manager
+	//Effekseer::RefPtr<EffekseerRenderer::SingleFrameMemoryPool> _efkMemoryPool = nullptr; // memory pool
+	//Effekseer::RefPtr<EffekseerRenderer::CommandList> _efkCmdList = nullptr; // for DirectX12, Vulkan
+	//Effekseer::EffectRef _effect = nullptr; // entity of effect(effect file)
+	//Effekseer::Handle _efkHandle; // effect handle(exceuted effect address)
+	//Effekseer::Matrix44 fkViewMat;
+	//Effekseer::Matrix44 fkProjMat;
+	//void DrawEffect();
 
 	// DirectXTK
-	GraphicsMemory* _gmemory = nullptr; // ｸﾞﾗﾌｨｯｸｽﾒﾓﾘｵﾌﾞｼﾞｪｸﾄ
-	SpriteFont* _spriteFont = nullptr; // フォント表示用オブジェクト
-	SpriteBatch* _spriteBatch = nullptr; // スプライト表示用オブジェクト
-	void DirectXTKInit();
-	void DrawSpriteFont();
+	//GraphicsMemory* _gmemory = nullptr; // ｸﾞﾗﾌｨｯｸｽﾒﾓﾘｵﾌﾞｼﾞｪｸﾄ
+	//SpriteFont* _spriteFont = nullptr; // フォント表示用オブジェクト
+	//SpriteBatch* _spriteBatch = nullptr; // スプライト表示用オブジェクト
+	//void DirectXTKInit();
+	//void DrawSpriteFont();
 
 	// draw method
 	void DrawBackBuffer(UINT buffSize); // draw back buffers
@@ -209,4 +212,7 @@ public:
 
 	//デストラクタ
 	~D3DX12Wrapper();
+
+	void CleanMemory();
+	void DeleteInstance();
 };

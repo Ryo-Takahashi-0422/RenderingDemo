@@ -12,8 +12,21 @@ Air::Air(ID3D12Device* _dev, ID3D12Fence* _fence, ComPtr<ID3D12Resource> _shadow
 }
 Air::~Air()
 {
-    //D3D12_RANGE range{ 0, 1 };
-    //participatingMediaResource->Unmap(0, &range);
+    dev->Release();
+    dev = nullptr;
+    pipeLine->Release();
+    pipeLine = nullptr;
+    heap->Release();
+    heap = nullptr;
+
+    participatingMediaResource->Unmap(0, nullptr);
+    m_Media = nullptr;
+
+    frustumResource->Unmap(0, nullptr);
+    m_Frustum = nullptr;
+
+    sceneInfoResource->Unmap(0, nullptr);
+    m_SceneInfo = nullptr;
 }
 
 // ‰Šú‰»
@@ -98,7 +111,7 @@ HRESULT Air::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

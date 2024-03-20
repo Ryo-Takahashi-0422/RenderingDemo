@@ -18,5 +18,5 @@ public:
 	ComPtr<ID3DBlob> GetRootSigBlob() { return _rootSigBlob; };
 	ComPtr<ID3DBlob> GetErrorBlob() { return _errorBlob; };
 	ComPtr<ID3D12RootSignature> GetRootSignature() { return _rootSignature; };
-	//~PeraSetRootSignature();
+	~PeraSetRootSignature();
 };

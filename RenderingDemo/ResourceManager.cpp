@@ -13,11 +13,41 @@ ResourceManager::ResourceManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxIn
 
 ResourceManager::~ResourceManager()
 {
-	delete m_Camera;
+	_fbxInfoManager = nullptr;
+	_prepareRenderingWindow = nullptr;
+	textureLoader = nullptr;
+	m_Camera = nullptr;
 
-	delete mappedVertPos;
-	delete mappedIdx;
-	delete mappedMatrix;
+	mappedVertPos = nullptr; // unmapçœ
+	mappedIdx = nullptr; // unmapçœ
+
+	matrixBuff->Unmap(0, nullptr);
+	mappedMatrix = nullptr;
+
+	materialParamBuffContainer.clear();
+	mappedPhoneContainer.clear();
+
+	textureUploadBuff.clear();
+	textureReadBuff.clear();
+	
+	mappedImgContainer.clear();
+	textureMetaData.clear();
+	textureImg.clear();
+
+	//for (auto& phong : mappedPhoneContainer)
+	//{
+	//	phong = nullptr;
+	//}
+
+	//for (auto& container : mappedImgContainer)
+	//{
+	//	container = nullptr; // unmapçœ
+	//}
+
+	//for (auto& img : textureImg)
+	//{
+	//	img = nullptr;
+	//}
 }
 
 HRESULT ResourceManager::Init(Camera* _camera)

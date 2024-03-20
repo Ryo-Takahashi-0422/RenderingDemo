@@ -72,3 +72,8 @@ void TextureTransporter::TransportPMDMaterialTexture(
 		}
 	}
 }
+
+TextureTransporter::~TextureTransporter()
+{
+	resourceManager = nullptr;
+}

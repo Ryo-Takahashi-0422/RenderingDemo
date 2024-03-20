@@ -56,6 +56,7 @@ private:
 
 public:
 	Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap);
+	~Integration();
 	void Init();
 	void SetResourse1(ComPtr<ID3D12Resource> _resource);
 	void SetResourse2(ComPtr<ID3D12Resource> _resource);

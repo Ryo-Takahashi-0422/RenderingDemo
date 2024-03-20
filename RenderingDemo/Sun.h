@@ -6,7 +6,7 @@ private:
 
 	// デバイス
 	ComPtr<ID3D12Device> _dev;
-	Camera* _camera;
+	Camera* _camera = nullptr;
 	// ルートシグネチャ関連
 	CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
 	CD3DX12_DESCRIPTOR_RANGE descTableRange[2] = {};
@@ -95,6 +95,7 @@ private:
 
 public:
 	Sun(ID3D12Device* dev, Camera* camera);
+	~Sun();
 	void Init();
 	void CalculateBillbordMatrix();
 	XMFLOAT3 CalculateDirectionFromDegrees(float angleX, float angleY);

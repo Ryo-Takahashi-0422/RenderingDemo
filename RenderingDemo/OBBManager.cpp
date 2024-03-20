@@ -13,6 +13,33 @@ OBBManager::OBBManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> 
 	MappingMatrix();
 }
 
+OBBManager::~OBBManager()
+{
+	delete layout;
+	layout = nullptr;
+
+	delete colliderGraphicsPipelineSetting;
+	colliderGraphicsPipelineSetting = nullptr;
+
+	free(collisionRootSignature);
+	collisionRootSignature = nullptr;
+
+	collisionShaderCompile = nullptr;
+
+	mappedBox2 = nullptr;
+	mappedIdx.clear();
+	mappedMatrix = nullptr;
+
+	for (auto& buff : boxBuffs)
+	{
+		buff->Unmap(0, nullptr);
+	}
+	for (auto& obb : mappedOBBs)
+	{
+		obb = nullptr;
+	}
+}
+
 HRESULT OBBManager::Init()
 {
 	layout = new PeraLayout;

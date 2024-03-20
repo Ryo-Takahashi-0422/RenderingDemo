@@ -13,6 +13,7 @@ private:
 
 public:
 	ColliderGraphicsPipelineSetting(PeraLayout* _vertexInputLayout);
+	~ColliderGraphicsPipelineSetting();
 	HRESULT CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
 		CollisionRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob);
 

@@ -1,6 +1,11 @@
 #include <stdafx.h>
 #include <PeraPolygon.h>
 
+PeraPolygon::~PeraPolygon()
+{
+	mappedPera = nullptr;
+}
+
 void PeraPolygon::CreatePeraView(ComPtr<ID3D12Device> _dev)
 {
 	auto peraHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);

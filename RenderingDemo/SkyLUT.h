@@ -73,9 +73,9 @@ private:
     // シェーダー情報
     //ComPtr<ID3DBlob> shader;
     // コンピュート用パイプライン
-    ComPtr<ID3D12PipelineState> pipelineState;
+    ComPtr<ID3D12PipelineState> pipelineState = nullptr;
     // ヒープ
-    ComPtr<ID3D12DescriptorHeap> rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
     ComPtr<ID3D12DescriptorHeap> cbvsrvHeap = nullptr;
     ComPtr<ID3D12DescriptorHeap> skyLUTHeap = nullptr;
     // リソース

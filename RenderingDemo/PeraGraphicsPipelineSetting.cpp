@@ -12,6 +12,7 @@ PeraGraphicsPipelineSetting::PeraGraphicsPipelineSetting(PeraLayout* _vertexInpu
 
 PeraGraphicsPipelineSetting::~PeraGraphicsPipelineSetting()
 {
+	vertexInputLayout = nullptr;
 }
 
 HRESULT PeraGraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
