@@ -36,7 +36,8 @@ int main() {
 	//app.Terminate();
 	//delete wrapper;
 	wrapper->CleanMemory();
-	delete wrapper;
+	//delete wrapper;
+	wrapper->DeleteInstance();
 	wrapper = nullptr;
 	return 0;
 }

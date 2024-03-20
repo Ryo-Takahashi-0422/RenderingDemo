@@ -8,8 +8,12 @@ ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev)
 }
 ShadowFactor::~ShadowFactor()
 {
+    // ComPtr実装クラスはComPtrとして扱わないと以下のようにデストラクタ対応が必要になり面倒...
+    _dev->Release();
     _dev = nullptr;
+    pipeLine->Release();
     pipeLine = nullptr;
+    heap->Release();
     heap = nullptr;
     participatingMediaResource->Unmap(0, nullptr);
     m_Media = nullptr;

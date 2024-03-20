@@ -7,8 +7,11 @@ CalculateSSAO::CalculateSSAO(ID3D12Device* _dev, ComPtr<ID3D12Resource> _normalm
 }
 CalculateSSAO::~CalculateSSAO()
 {
+    _dev->Release();
     _dev = nullptr;
+    pipeLine->Release();
     pipeLine = nullptr;
+    heap->Release();
     heap = nullptr;
 
     matrixResource->Unmap(0, nullptr);

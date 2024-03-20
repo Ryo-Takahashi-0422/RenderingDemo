@@ -21,7 +21,7 @@ CollisionManager::~CollisionManager()
 	delete colliderGraphicsPipelineSetting;
 	colliderGraphicsPipelineSetting = nullptr;
 
-	free(collisionRootSignature);
+	delete collisionRootSignature;
 	collisionRootSignature = nullptr;
 
 	collisionShaderCompile = nullptr;
@@ -30,6 +30,21 @@ CollisionManager::~CollisionManager()
 	mappedBox2 = nullptr;
 	mappedIdx.clear();
 	mappedMatrix = nullptr;
+
+	for (auto& buff : boxBuffs)
+	{
+		buff->Unmap(0, nullptr);
+	}
+	for (auto& obb : mappedOBBs)
+	{
+		obb = nullptr;
+	}
+
+	//for (auto& rm : resourceManager)
+	//{
+	//	delete rm;
+	//	rm = nullptr;
+	//}
 }
 
 HRESULT CollisionManager::Init()

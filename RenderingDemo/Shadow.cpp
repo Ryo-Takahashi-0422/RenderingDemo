@@ -12,6 +12,9 @@ Shadow::~Shadow()
 {
     matrixResource->Unmap(0, nullptr);
     mappedMatrix = nullptr;
+
+    vbViews.clear();
+    ibViews.clear();
 }
 
 void Shadow::Init()

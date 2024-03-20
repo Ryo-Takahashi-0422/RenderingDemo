@@ -11,6 +11,11 @@ ColliderGraphicsPipelineSetting::ColliderGraphicsPipelineSetting(PeraLayout* _ve
 	}
 }
 
+ColliderGraphicsPipelineSetting::~ColliderGraphicsPipelineSetting()
+{
+	vertexInputLayout = nullptr;
+}
+
 HRESULT ColliderGraphicsPipelineSetting::CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
 	CollisionRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob)
 {

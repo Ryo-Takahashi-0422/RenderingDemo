@@ -29,6 +29,15 @@ OBBManager::~OBBManager()
 	mappedBox2 = nullptr;
 	mappedIdx.clear();
 	mappedMatrix = nullptr;
+
+	for (auto& buff : boxBuffs)
+	{
+		buff->Unmap(0, nullptr);
+	}
+	for (auto& obb : mappedOBBs)
+	{
+		obb = nullptr;
+	}
 }
 
 HRESULT OBBManager::Init()

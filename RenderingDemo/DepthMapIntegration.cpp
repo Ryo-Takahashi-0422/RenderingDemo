@@ -7,9 +7,13 @@ DepthMapIntegration::DepthMapIntegration(ID3D12Device* _dev, ComPtr<ID3D12Resour
 }
 DepthMapIntegration::~DepthMapIntegration()
 {
+    _dev->Release();
     _dev = nullptr;
+    pipeLine->Release();
     pipeLine = nullptr;
+    heap->Release();
     heap = nullptr;
+    
 }
 
 // ‰Šú‰»

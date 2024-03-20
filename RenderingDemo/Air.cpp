@@ -12,8 +12,11 @@ Air::Air(ID3D12Device* _dev, ID3D12Fence* _fence, ComPtr<ID3D12Resource> _shadow
 }
 Air::~Air()
 {
+    dev->Release();
     dev = nullptr;
+    pipeLine->Release();
     pipeLine = nullptr;
+    heap->Release();
     heap = nullptr;
 
     participatingMediaResource->Unmap(0, nullptr);
