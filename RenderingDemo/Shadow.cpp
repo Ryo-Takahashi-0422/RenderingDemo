@@ -8,6 +8,12 @@ Shadow::Shadow(ID3D12Device* dev, int _width, int _height)
     height = _height;
 }
 
+Shadow::~Shadow()
+{
+    matrixResource->Unmap(0, nullptr);
+    mappedMatrix = nullptr;
+}
+
 void Shadow::Init()
 {
     CreateRootSignature();
@@ -58,7 +64,7 @@ HRESULT Shadow::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

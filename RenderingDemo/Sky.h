@@ -35,9 +35,8 @@ class Sky
 
 
     // デバイス
-    ComPtr<ID3D12Device> _dev;
-    // フェンス
-    ComPtr<ID3D12Fence> fence = nullptr;
+    ComPtr<ID3D12Device> _dev = nullptr;
+
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
     CD3DX12_DESCRIPTOR_RANGE descTableRange[3] = {};
@@ -51,15 +50,15 @@ class Sky
     // シェーダー情報
     //ComPtr<ID3DBlob> shader;
     // コンピュート用パイプライン
-    ComPtr<ID3D12PipelineState> pipelineState;
+    ComPtr<ID3D12PipelineState> pipelineState = nullptr;
     // ヒープ
-    ComPtr<ID3D12DescriptorHeap> rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
     ComPtr<ID3D12DescriptorHeap> skyHeap = nullptr;
     ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr;
     // リソース
-    ComPtr<ID3D12Resource> renderingResource;
-    ComPtr<ID3D12Resource> frustumResource;
-    ComPtr<ID3D12Resource> skyLUTResource;
+    ComPtr<ID3D12Resource> renderingResource = nullptr;
+    ComPtr<ID3D12Resource> frustumResource = nullptr;
+    ComPtr<ID3D12Resource> skyLUTResource = nullptr;
     ComPtr<ID3D12Resource> worldMatrixResource = nullptr;
 
     float width = 64;
@@ -81,7 +80,7 @@ public:
     Sky(ID3D12Device* dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource);
     ~Sky();
     void SetFrustum(Frustum _frustum);
-    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
+    void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 
     void ChangeSkyLUTResourceAndView(ID3D12Resource* _skyLUTRsource); // skyLUTの解像度に変更がある場合はそのリソースから作り変えているため、参照先のリソースを新たに設定して且つviewも設定し直す
     void SetSceneInfo(XMMATRIX _world);

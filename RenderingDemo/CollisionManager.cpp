@@ -13,6 +13,25 @@ CollisionManager::CollisionManager(ComPtr<ID3D12Device> _dev, std::vector<Resour
 	MappingMatrix();
 }
 
+CollisionManager::~CollisionManager()
+{
+	delete layout;
+	layout = nullptr;
+
+	delete colliderGraphicsPipelineSetting;
+	colliderGraphicsPipelineSetting = nullptr;
+
+	free(collisionRootSignature);
+	collisionRootSignature = nullptr;
+
+	collisionShaderCompile = nullptr;
+
+	mappedSphereIdx = nullptr;
+	mappedBox2 = nullptr;
+	mappedIdx.clear();
+	mappedMatrix = nullptr;
+}
+
 HRESULT CollisionManager::Init()
 {
 	layout = new PeraLayout;

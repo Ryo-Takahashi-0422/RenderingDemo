@@ -12,6 +12,7 @@ private:
 	int count = 0;
 public:
 	GraphicsPipelineSetting(VertexInputLayout* _vertexInputLayout);
+	~GraphicsPipelineSetting();
 	HRESULT CreateGPStateWrapper(ComPtr<ID3D12Device> _dev,
 		SetRootSignature* setRootSignature, ComPtr<ID3D10Blob> _vsBlob, ComPtr<ID3D10Blob> _psBlob);
 

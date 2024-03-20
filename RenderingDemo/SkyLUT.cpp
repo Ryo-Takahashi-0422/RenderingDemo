@@ -13,7 +13,11 @@ SkyLUT::SkyLUT(ID3D12Device* _dev, /*ID3D12Fence* _fence, */ID3D12Resource* _sha
 
 SkyLUT::~SkyLUT()
 {
-    //D3D12_RANGE range{ 0, 1 };
+    participatingMediaResource->Unmap(0, nullptr);
+    m_Media = nullptr;
+
+    skyLUTBufferResource->Unmap(0, nullptr);
+    m_SkyLUT = nullptr;
 }
 
 // ‰Šú‰»
@@ -78,7 +82,7 @@ HRESULT SkyLUT::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

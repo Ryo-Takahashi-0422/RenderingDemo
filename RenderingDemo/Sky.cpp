@@ -11,7 +11,11 @@ Sky::Sky(ID3D12Device* _dev, ID3D12Fence* _fence, ID3D12Resource* _skyLUTRsource
 
 Sky::~Sky()
 {
-    //D3D12_RANGE range{ 0, 1 };
+    frustumResource->Unmap(0, nullptr);
+    worldMatrixResource->Unmap(0, nullptr);
+    m_Frustum = nullptr;    
+    scneMatrix = nullptr;
+
 }
 
 // 初期化
@@ -76,7 +80,9 @@ HRESULT Sky::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    // プログラム終了時にデストラクタ呼び出しを行うが、その際にComPtrが一つずつ参照確認を行ってくれる。それ以前に以下のようにReleaseすることでclient.hのInternalRelease()でのRelease()実行に失敗してクラッシュする。
+    // つまり、Release()はComPtrにお任せするべき
+    //rootSigBlob->Release();
 
     return result;
 }
@@ -496,7 +502,7 @@ void Sky::RecreatreSource()
 }
 
 // 実行
-void Sky::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void Sky::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (

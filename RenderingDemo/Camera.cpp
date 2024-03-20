@@ -18,6 +18,12 @@ Camera::~Camera()
 	delete prepareRenderingWindow;
 }
 
+void Camera::CleanMemory()
+{
+	instance = nullptr;
+	prepareRenderingWindow = nullptr;
+}
+
 void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 {
 	prepareRenderingWindow = _prepareRenderingWindow;

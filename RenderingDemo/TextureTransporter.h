@@ -27,4 +27,6 @@ public:
 		std::vector<ComPtr<ID3D12Resource>> uploadBuff,
 		std::vector<ComPtr<ID3D12Resource>> readBuff
 	);
+
+	~TextureTransporter();
 };

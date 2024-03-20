@@ -8,8 +8,11 @@ ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev)
 }
 ShadowFactor::~ShadowFactor()
 {
-    //D3D12_RANGE range{ 0, 1 };
-    //participatingMediaResource->Unmap(0, &range);
+    _dev = nullptr;
+    pipeLine = nullptr;
+    heap = nullptr;
+    participatingMediaResource->Unmap(0, nullptr);
+    m_Media = nullptr;
 }
 
 // ‰Šú‰»
@@ -70,7 +73,7 @@ HRESULT ShadowFactor::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

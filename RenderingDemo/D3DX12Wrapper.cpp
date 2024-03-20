@@ -99,6 +99,9 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 			break;//生成可能なバージョンが見つかったらループ中断
 		}
 	}
+#ifdef _DEBUG
+	_dev->QueryInterface(_debugDevice.GetAddressOf());
+#endif
 
 	_fenceVal = 0;
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence./*ReleaseAnd*/GetAddressOf()));
@@ -122,7 +125,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	// GraphicsPipelineSettingクラスのインスタンス化
 	gPLSetting = new GraphicsPipelineSetting(vertexInputLayout);
-	delete vertexInputLayout;
+	vertexInputLayout = nullptr;
 
 	// レンダリングウィンドウ設定
 	prepareRenderingWindow = new PrepareRenderingWindow;
@@ -147,7 +150,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	peraSetRootSignature = new PeraSetRootSignature;
 	peraShaderCompile = new SettingShaderCompile;
 
-	delete peraLayout;
+	peraLayout = nullptr;
 
 	////デバイス取得
 	//auto hdc = GetDC(prepareRenderingWindow->GetHWND());
@@ -365,7 +368,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
-	delete settingShaderCompile;
+	settingShaderCompile = nullptr;
 
 	// バックバッファ描画用
 	std::string bufferVs = "PeraVertex.hlsl";
@@ -377,7 +380,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
-	delete peraShaderCompile;
+	peraShaderCompile = nullptr;
 
 // 初期化処理3：頂点入力レイアウトの作成及び
 // 初期化処理4：パイプライン状態オブジェクト(PSO)のDesc記述してオブジェクト作成
@@ -410,8 +413,9 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-	delete textureLoader;
+	textureLoader = nullptr;
 	delete textureTransporter;
+	textureTransporter = nullptr;
 
 	// マルチパス用ビュー作成
 	peraPolygon->CreatePeraView(_dev);
@@ -839,7 +843,7 @@ void D3DX12Wrapper::Run() {
 			air->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get()); // ★shadowを利用
 		}		
 		skyLUT->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
-		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect);
+		sky->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), viewPort, rect);
 		shadowRenderingBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList.Get(), _fenceVal, viewPort, rect); // ★vsm shadowを利用
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
@@ -963,37 +967,68 @@ void D3DX12Wrapper::Run() {
 		}
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
+}
 
-	//delete bufferGPLSetting;
-	//delete bufferShaderCompile;
-
-	delete textureTransporter;
-
+void D3DX12Wrapper::CleanMemory()
+{
 	UnregisterClass(prepareRenderingWindow->GetWNDCCLASSEX().lpszClassName, prepareRenderingWindow->GetWNDCCLASSEX().hInstance);
 
-
-	delete textureLoader;
-
-
-	delete settingShaderCompile;
 	delete gPLSetting;
+	gPLSetting = nullptr;
 
-	
-	//delete prepareRenderingWindow;
+	prepareRenderingWindow = nullptr;
 
 	delete peraGPLSetting;
+	peraGPLSetting = nullptr;
 
 	delete peraPolygon;
-	delete peraShaderCompile;	
+	peraPolygon = nullptr;
 
 	delete settingImgui;
+	settingImgui = nullptr;
 
-	//delete bufferSetRootSignature;
-	//delete lightMapRootSignature;
-	//delete setRootSignature;
-	//delete peraSetRootSignature;
+	setRootSignature = nullptr;
 
-	delete fBXPipeline;
+	peraSetRootSignature = nullptr;
+
+	delete collisionManager;
+	collisionManager = nullptr;
+
+	delete oBBManager;
+	oBBManager = nullptr;
+
+	camera->CleanMemory();
+	camera = nullptr;
+
+	input = nullptr;
+	fBXRootsignature = nullptr;
+	fBXPipeline = nullptr;
+	viewPort = nullptr;
+	rect = nullptr;
+	bBRootsignature = nullptr;
+	bBPipeline = nullptr;
+
+	delete sky;
+	sky = nullptr;
+
+	delete skyLUT;
+	skyLUT = nullptr;
+
+	delete shadowFactor;
+	shadowFactor = nullptr;
+
+	delete sun;
+	sun = nullptr;
+
+	delete shadow;
+	shadow = nullptr;
+
+	delete air;
+	air = nullptr;
+
+#ifdef _DEBUG
+	_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
+#endif
 }
 
 void D3DX12Wrapper::AllKeyBoolFalse()

@@ -38,7 +38,7 @@ LRESULT CALLBACK PrepareRenderingWindow::StaticWndProc(HWND hwnd, UINT msg, WPAR
 	switch (msg)
 	{
 	case WM_DESTROY: // process when the window is closed
-		MessageBox(hwnd, TEXT("Thanks for starting"),
+		MessageBox(hwnd, TEXT("quit the application"),
 			TEXT("quit the application"), MB_ICONINFORMATION);
 		PostQuitMessage(0);
 		return 0;

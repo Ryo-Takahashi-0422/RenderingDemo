@@ -23,5 +23,6 @@ private:
 
 public:
 	void CreatePeraView(ComPtr<ID3D12Device> _dev);
+	~PeraPolygon();
 	D3D12_VERTEX_BUFFER_VIEW* GetVBView();
 };

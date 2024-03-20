@@ -7,6 +7,14 @@ Sun::Sun(ID3D12Device* dev, Camera* camera)
     _camera = camera;
 }
 
+Sun::~Sun()
+{
+    _camera = nullptr;
+    mappedVertPos = nullptr;
+    mappedIdx = nullptr;
+    mappedMatrix = nullptr;
+}
+
 void Sun::Init()
 {
 	CreateSunVertex();
@@ -218,7 +226,7 @@ HRESULT Sun::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

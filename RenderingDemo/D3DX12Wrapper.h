@@ -6,6 +6,9 @@ private:
 	// directx関連
 	static D3DX12Wrapper* instance;
 	ComPtr<ID3D12Device> _dev = nullptr;
+#ifdef _DEBUG
+	ComPtr<ID3D12DebugDevice> _debugDevice;
+#endif
 	ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 	ComPtr<IDXGISwapChain4> _swapChain = nullptr;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator = nullptr;
@@ -209,4 +212,6 @@ public:
 
 	//デストラクタ
 	~D3DX12Wrapper();
+
+	void CleanMemory();
 };

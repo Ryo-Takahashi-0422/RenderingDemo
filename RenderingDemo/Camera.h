@@ -69,4 +69,6 @@ public:
 	void CalculateFrustum();
 	XMFLOAT3 GetOrbitCameraPos() { return orbitPos; };
 	XMMATRIX GetOrbitView() { return orbitView; };
+
+	void CleanMemory();
 };

@@ -87,7 +87,7 @@ private:
 
 public:
 	OBBManager(ComPtr<ID3D12Device> _dev, std::vector<ResourceManager*> _resourceManagers);
-
+	~OBBManager();
 	std::vector<BoundingOrientedBox> GetBoundingBox1() { return boxes; };
 	BoundingOrientedBox* GetBoundingBox1Pointer() { return &boxes[2]; };
 
