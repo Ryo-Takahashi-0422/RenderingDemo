@@ -174,3 +174,8 @@ std::pair<ComPtr<ID3D10Blob>, ComPtr<ID3D10Blob>> SettingShaderCompile::Collisio
 	blobs.second = _psBlob;
 	return blobs;
 }
+
+SettingShaderCompile::~SettingShaderCompile()
+{
+	// ComPtr‰ð•ú‚Ì‚Ý
+}

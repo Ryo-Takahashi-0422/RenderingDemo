@@ -368,6 +368,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (blobs.first == nullptr or blobs.second == nullptr) return false;
 	_vsBlob = blobs.first;
 	_psBlob = blobs.second;	
+
+	delete settingShaderCompile;
 	settingShaderCompile = nullptr;
 
 	// バックバッファ描画用
@@ -380,6 +382,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
+
+	delete peraShaderCompile;
 	peraShaderCompile = nullptr;
 
 // 初期化処理3：頂点入力レイアウトの作成及び
@@ -987,8 +991,10 @@ void D3DX12Wrapper::CleanMemory()
 	delete settingImgui;
 	settingImgui = nullptr;
 
+	delete setRootSignature;
 	setRootSignature = nullptr;
 
+	delete peraSetRootSignature;
 	peraSetRootSignature = nullptr;
 
 	delete collisionManager;
@@ -1025,6 +1031,38 @@ void D3DX12Wrapper::CleanMemory()
 
 	delete air;
 	air = nullptr;
+
+	delete shadowRenderingBlur;
+	shadowRenderingBlur = nullptr;
+
+	delete colorIntegraredBlur;
+	colorIntegraredBlur = nullptr;
+
+	delete ssaoBlur;
+	ssaoBlur = nullptr;
+
+	delete comBlur;
+	comBlur = nullptr;
+
+	delete integration;
+	integration = nullptr;
+
+	delete depthMapIntegration;
+	depthMapIntegration = nullptr;
+
+	delete calculateSSAO;
+	calculateSSAO = nullptr;
+
+	resourceManager.clear();
+	vbViews.clear();
+	ibViews.clear();
+
+	//indiceContainer.clear();
+	//itIndiceFirsts.clear();
+	//phongInfos.clear();
+	//itPhonsInfos.clear();
+	//materialAndTexturenameInfo.clear();
+	//itMaterialAndTextureNames.clear();
 
 #ifdef _DEBUG
 	_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);

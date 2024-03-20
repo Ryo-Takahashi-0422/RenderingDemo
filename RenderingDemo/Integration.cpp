@@ -9,6 +9,12 @@ Integration::Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap)
     Init();
 }
 
+Integration::~Integration()
+{
+    // ComtPtr対応のみ
+    // =nullptrのみだとrootSigBlob->Release();でのComPtr Release失敗によるエラーがでないことから、ComPtr利用の場合はデストラクタ必須と認識する
+}
+
 void Integration::Init()
 {
     CreateRootSignature();
@@ -107,7 +113,7 @@ HRESULT Integration::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

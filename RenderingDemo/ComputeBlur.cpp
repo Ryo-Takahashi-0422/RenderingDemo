@@ -7,6 +7,10 @@ ComputeBlur::ComputeBlur(ID3D12Device* _dev, ComPtr<ID3D12Resource> _depthmapRes
 }
 ComputeBlur::~ComputeBlur()
 {
+    _dev = nullptr;
+    pipeLine = nullptr;
+    heap = nullptr;
+    mappedweight = nullptr; // unmapÏ
 }
 
 // ‰Šú‰»
@@ -72,7 +76,7 @@ HRESULT ComputeBlur::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

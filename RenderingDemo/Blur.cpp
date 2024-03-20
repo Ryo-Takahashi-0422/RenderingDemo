@@ -6,6 +6,14 @@ Blur::Blur(ID3D12Device* dev)
     _dev = dev;
 }
 
+Blur::~Blur()
+{
+    mappedweight = nullptr; // unmapÏ
+
+    switchResource->Unmap(0, nullptr);
+    mappedSwitch = nullptr;
+}
+
 void Blur::Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution)
 {
     width = resolution.first;
@@ -70,7 +78,7 @@ HRESULT Blur::CreateRootSignature()
         IID_PPV_ARGS(rootSignature.ReleaseAndGetAddressOf())
     );
 
-    rootSigBlob->Release();
+    //rootSigBlob->Release();
 
     return result;
 }

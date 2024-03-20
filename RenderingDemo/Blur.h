@@ -59,6 +59,7 @@ private:
 
 public:
 	Blur(ID3D12Device* dev);
+	~Blur();
 	void Init(std::pair<LPWSTR, LPWSTR> vsps, std::pair<float, float> resolution);
 	void SetRenderingResourse(ComPtr<ID3D12Resource> _renderingRsource);
 	void SetSwitch(bool _switch);
