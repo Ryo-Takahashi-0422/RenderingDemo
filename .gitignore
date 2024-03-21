@@ -2,7 +2,7 @@ model/
 .xls
 .xlsx
 .vs
-Debug/
+.pdb
 RenderingDemo/x64
 EffekseerTexture/
 DirectX12_Play/
