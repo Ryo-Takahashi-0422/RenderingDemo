@@ -387,16 +387,14 @@
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
     <ClCompile Include="ComputeBlur.cpp" />
-    <ClCompile Include="D3DX12Wrapper.cpp" />
-    <ClCompile Include="BufferHeapCreator.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
+    <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Integration.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MappingExecuter.cpp" />
     <ClCompile Include="OBBManager.cpp" />
     <ClCompile Include="ParticipatingMedia.cpp" />
     <ClCompile Include="Shadow.cpp" />
@@ -407,8 +405,6 @@
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
     <ClCompile Include="PeraSetRootSignature.cpp" />
-    <ClCompile Include="PMDActor.cpp" />
-    <ClCompile Include="PMDMaterialInfo.cpp" />
     <ClCompile Include="PrepareRenderingWindow.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SetRootSignature.cpp" />
@@ -425,8 +421,6 @@
     <ClCompile Include="TextureTransporter.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="VertexInputLayout.cpp" />
-    <ClCompile Include="ViewCreator.cpp" />
-    <ClCompile Include="VMDMotionInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h" />
@@ -445,16 +439,14 @@
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />
     <ClInclude Include="ComputeBlur.h" />
-    <ClInclude Include="D3DX12Wrapper.h" />
-    <ClInclude Include="BufferHeapCreator.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
+    <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="DepthMapIntegration.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Integration.h" />
-    <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="OBBManager.h" />
     <ClInclude Include="ParticipatingMedia.h" />
     <ClInclude Include="Shadow.h" />
@@ -465,10 +457,7 @@
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />
     <ClInclude Include="PeraSetRootSignature.h" />
-    <ClInclude Include="PMDActor.h" />
-    <ClInclude Include="PMDMaterialInfo.h" />
     <ClInclude Include="PrepareRenderingWindow.h" />
-    <ClInclude Include="ReadData.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SetRootSignature.h" />
     <ClInclude Include="SettingImgui.h" />
@@ -479,8 +468,6 @@
     <ClInclude Include="TextureTransporter.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="VertexInputLayout.h" />
-    <ClInclude Include="ViewCreator.h" />
-    <ClInclude Include="VMDMotionInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

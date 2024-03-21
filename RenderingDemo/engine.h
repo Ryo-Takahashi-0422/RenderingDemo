@@ -24,13 +24,12 @@
 #include <unordered_map>
 #include <algorithm>
 #include <array>
-//#include <ReadData.h>
 #include <stdlib.h>
 #include <fstream>
 
 //eigen
 #define _USE_MATH_DEFINES
-#include <iostream>  // たぶん絶対必要
+#include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
 #include <math.h> // sin cos とか
@@ -52,20 +51,12 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>
 #include <Utility.h>
-#include <PMDMaterialInfo.h>
 #include <PrepareRenderingWindow.h>
 #include <SetRootSignature.h>
 #include <SettingShaderCompile.h>
-#include <VMDMotionInfo.h>
-#include <PMDActor.h>
 
 #include <GraphicsPipelineSetting.h>
 #include <TextureLoader.h>
-#include <BufferHeapCreator.h>
-
-#include <MappingExecuter.h>
-#include <ViewCreator.h>
-//#include <sstream>
 
 #include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
 #include <PeraLayout.h>
