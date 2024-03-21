@@ -211,12 +211,6 @@
     <ClCompile Include="GraphicsPipelineSetting.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="IGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="InputLayoutBase.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
@@ -376,12 +370,6 @@
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="GraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="IGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="InputLayoutBase.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="MappingExecuter.h">

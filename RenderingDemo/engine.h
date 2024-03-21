@@ -50,7 +50,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #pragma comment(lib, "DirectXTK12.lib")
 
 //#include <AppD3DX12.h>
-#include <InputLayoutBase.h>
+//#include <InputLayoutBase.h>
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>
 #include <Utility.h>
@@ -61,7 +61,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <SettingShaderCompile.h>
 #include <VMDMotionInfo.h>
 #include <PMDActor.h>
-#include <IGraphicsPipelineSetting.h>
+
 #include <GraphicsPipelineSetting.h>
 #include <TextureLoader.h>
 #include <BufferHeapCreator.h>

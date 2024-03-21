@@ -411,9 +411,7 @@
     <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
-    <ClCompile Include="IGraphicsPipelineSetting.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="InputLayoutBase.cpp" />
     <ClCompile Include="Integration.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
@@ -474,9 +472,7 @@
     <ClInclude Include="engine.h" />
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />
-    <ClInclude Include="IGraphicsPipelineSetting.h" />
     <ClInclude Include="Input.h" />
-    <ClInclude Include="InputLayoutBase.h" />
     <ClInclude Include="Integration.h" />
     <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="OBBManager.h" />
