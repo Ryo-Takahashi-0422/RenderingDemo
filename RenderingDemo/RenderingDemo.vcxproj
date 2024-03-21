@@ -153,7 +153,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="AOShaderHeader.hlsli" />
     <None Include="BasicShaderHeader.hlsli" />
     <None Include="BufferHeader.hlsli" />
     <None Include="shader\AtmosphericModel.hlsli" />
@@ -169,22 +168,6 @@
     <None Include="shader\SunHeader.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="AOPixelShader.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SsaoPs</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SsaoPs</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="AOVertexShader.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AoVS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AoVS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
     <FxCompile Include="BasicPixelShader.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">BasicPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -201,14 +184,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="BloomPixelShader.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">BloomPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">BloomPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
     <FxCompile Include="BufferPixel.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">psBuffer</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -222,14 +197,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vsBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="LightMapShader.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LightMapVS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LightMapVS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
@@ -430,8 +397,6 @@
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Air.cpp" />
-    <ClCompile Include="AOGraphicsPipelineSetting.cpp" />
-    <ClCompile Include="AOShaderCompile.cpp" />
     <ClCompile Include="Blur.cpp" />
     <ClCompile Include="CalculateSSAO.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -440,7 +405,6 @@
     <ClCompile Include="CollisionRootSignature.cpp" />
     <ClCompile Include="ComputeBlur.cpp" />
     <ClCompile Include="D3DX12Wrapper.cpp" />
-    <ClCompile Include="BloomShaderCompile.cpp" />
     <ClCompile Include="BufferHeapCreator.cpp" />
     <ClCompile Include="BufferShaderCompile.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
@@ -451,8 +415,6 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputLayoutBase.cpp" />
     <ClCompile Include="Integration.cpp" />
-    <ClCompile Include="LightMapGraphicsPipelineSetting.cpp" />
-    <ClCompile Include="LightMapShaderCompile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MappingExecuter.cpp" />
     <ClCompile Include="OBBManager.cpp" />
@@ -497,8 +459,6 @@
     <ClInclude Include="..\imgui\imstb_textedit.h" />
     <ClInclude Include="..\imgui\imstb_truetype.h" />
     <ClInclude Include="Air.h" />
-    <ClInclude Include="AOGraphicsPipelineSetting.h" />
-    <ClInclude Include="AOShaderCompile.h" />
     <ClInclude Include="Blur.h" />
     <ClInclude Include="CalculateSSAO.h" />
     <ClInclude Include="Camera.h" />
@@ -507,7 +467,6 @@
     <ClInclude Include="CollisionRootSignature.h" />
     <ClInclude Include="ComputeBlur.h" />
     <ClInclude Include="D3DX12Wrapper.h" />
-    <ClInclude Include="BloomShaderCompile.h" />
     <ClInclude Include="BufferHeapCreator.h" />
     <ClInclude Include="BufferShaderCompile.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
@@ -519,8 +478,6 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputLayoutBase.h" />
     <ClInclude Include="Integration.h" />
-    <ClInclude Include="LightMapGraphicsPipelineSetting.h" />
-    <ClInclude Include="LightMapShaderCompile.h" />
     <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="OBBManager.h" />
     <ClInclude Include="ParticipatingMedia.h" />

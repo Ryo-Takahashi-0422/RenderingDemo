@@ -45,9 +45,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="AOShaderHeader.hlsli">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="BasicShaderHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
@@ -92,28 +89,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="AOPixelShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="AOVertexShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
     <FxCompile Include="BasicPixelShader.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="BasicVertexShader.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="BloomPixelShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
     <FxCompile Include="BufferPixel.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="BufferVertex.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="LightMapShader.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
@@ -211,15 +196,6 @@
     <ClCompile Include="FBXInfoManager.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
-    <ClCompile Include="AOGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="AOShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="BloomShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="BufferHeapCreator.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
@@ -239,12 +215,6 @@
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="InputLayoutBase.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="LightMapGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="LightMapShaderCompile.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -390,15 +360,6 @@
     <ClInclude Include="..\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="AOGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="AOShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="BloomShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="BufferHeapCreator.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
@@ -421,12 +382,6 @@
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="InputLayoutBase.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="LightMapGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="LightMapShaderCompile.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="MappingExecuter.h">
