@@ -27,17 +27,9 @@
 #include <stdlib.h>
 #include <fstream>
 
-//eigen
-#define _USE_MATH_DEFINES
-#include <iostream>
-#include <Eigen/Dense>
-#include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
-#include <math.h> // sin cos とか
-using namespace Eigen;
-
 // Effekseer
-#include <Effekseer.h>
-#include <EffekseerRendererDx12.h>
+//#include <Effekseer.h>
+//#include <EffekseerRendererDx12.h>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -58,7 +50,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <GraphicsPipelineSetting.h>
 #include <TextureLoader.h>
 
-#include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
+#include <PeraPolygon.h>
 #include <PeraLayout.h>
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
