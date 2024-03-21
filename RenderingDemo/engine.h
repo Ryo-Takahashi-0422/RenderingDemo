@@ -55,6 +55,10 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
 
+//#include "imgui.h"
+//#include "imgui_impl_win32.h"
+//#include "imgui_impl_dx12.h"
+
 #include <SettingImgui.h>
 
 // Rebuild
