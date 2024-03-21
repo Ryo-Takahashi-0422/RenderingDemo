@@ -45,9 +45,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicShaderHeader.hlsli">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -86,12 +83,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="BasicVertexShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
       <Filter>Shader\Sky</Filter>
     </FxCompile>
