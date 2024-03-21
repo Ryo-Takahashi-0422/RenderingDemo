@@ -40,4 +40,10 @@ namespace Utility
 
 	// hlslのファイルパス作成
 	std::pair<LPWSTR, LPWSTR> GetHlslFilepath(std::string _vsName, std::string _psName);
+
+	// テクスチャフォルダへのパス作成
+	std::string GetTextureFilepath();
+
+	// モデルバイナリファイルへのパス作成
+	std::string GetModelFilepath();
 };

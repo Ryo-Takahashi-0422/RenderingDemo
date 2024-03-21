@@ -319,8 +319,12 @@ bool D3DX12Wrapper::PipelineInit(){
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
 
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Sponza.bin");
-	modelPath.push_back("C:\\Users\\RyoTaka\\Desktop\\Connan.bin");
+	// 端末毎のモデルパスを取得して格納する
+	auto path = Utility::GetModelFilepath();
+	auto path_Sponza = path + "\\Sponza.bin";
+	auto path_Connan = path + "\\Connan.bin";
+	modelPath.push_back(path_Sponza);
+	modelPath.push_back(path_Connan);
 	
 	resourceManager.resize(modelPath.size());
 	FBXInfoManager fbxInfoManager;

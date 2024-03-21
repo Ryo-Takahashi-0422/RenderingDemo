@@ -154,3 +154,51 @@ std::pair<LPWSTR, LPWSTR> Utility::GetHlslFilepath(std::string _vsName, std::str
 
 	return output;
 }
+
+std::string Utility::GetTextureFilepath()
+{
+	// 実行ファイルのパス取得
+	TCHAR tPath[_MAX_PATH];
+	GetModuleFileName(NULL, tPath, _MAX_PATH);
+
+	const size_t textSize = _MAX_PATH;
+	char cPath[textSize];
+	WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
+
+	int eraseNum;
+#ifdef _DEBUG
+	eraseNum = 28;
+#else 
+	eraseNum = 30;
+#endif
+	std::string s = &cPath[0];
+	s.erase(s.size() - eraseNum, eraseNum);
+
+	std::string path = s + "\\texture";
+
+	return path;
+}
+
+std::string Utility::GetModelFilepath()
+{
+	// 実行ファイルのパス取得
+	TCHAR tPath[_MAX_PATH];
+	GetModuleFileName(NULL, tPath, _MAX_PATH);
+
+	const size_t textSize = _MAX_PATH;
+	char cPath[textSize];
+	WideCharToMultiByte(CP_ACP, 0, tPath, -1, cPath, textSize, NULL, NULL);
+
+	int eraseNum;
+#ifdef _DEBUG
+	eraseNum = 28;
+#else 
+	eraseNum = 30;
+#endif
+	std::string s = &cPath[0];
+	s.erase(s.size() - eraseNum, eraseNum);
+
+	std::string path = s + "\\model_bin";
+
+	return path;
+}
