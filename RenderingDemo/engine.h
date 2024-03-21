@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <array>
-#include <ReadData.h>
+//#include <ReadData.h>
 #include <stdlib.h>
 #include <fstream>
 
@@ -54,7 +54,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <Utility.h>
 #include <PMDMaterialInfo.h>
 #include <PrepareRenderingWindow.h>
-//#include <SetRootSignatureBase.h>
 #include <SetRootSignature.h>
 #include <SettingShaderCompile.h>
 #include <VMDMotionInfo.h>
@@ -66,8 +65,7 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 
 #include <MappingExecuter.h>
 #include <ViewCreator.h>
-#include <sstream>
-//#include <AppD3DX12.h>
+//#include <sstream>
 
 #include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
 #include <PeraLayout.h>
