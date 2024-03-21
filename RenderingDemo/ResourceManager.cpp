@@ -282,6 +282,16 @@ HRESULT ResourceManager::Init(Camera* _camera)
 	textureImgPixelValue.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
+	// 別端末でも読み込み出来るようにテクスチャファイルパスを書き換える。テクスチャはC:\Users\<usernamee>\Documents\RenderingDemoRebuild\textureに格納している
+	std::string texturePath = Utility::GetTextureFilepath();
+	for (auto& path : materialAndTexturePath)
+	{
+		auto index = path.second.rfind("\\");
+
+		path.second = path.second.erase(0, index);
+		path.second = texturePath + path.second;
+	}
+
 	mappedImgContainer.resize(texNum);
 	for (int i = 0; i < materialAndTexturePath.size(); ++i)
 	{
@@ -298,13 +308,6 @@ HRESULT ResourceManager::Init(Camera* _camera)
 	{
 		isAnimationModel = true;
 	}
-
-	_fbxInfoManager = nullptr;
-	delete _fbxInfoManager;
-	_prepareRenderingWindow = nullptr;
-	delete _prepareRenderingWindow;
-	textureLoader = nullptr;
-	delete textureLoader;
 }
 
 HRESULT ResourceManager::CreateRTV()
