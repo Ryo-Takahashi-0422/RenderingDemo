@@ -49,14 +49,12 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <ResourceUploadBatch.h> // DirectXTK関連のリソース使用に必要
 #pragma comment(lib, "DirectXTK12.lib")
 
-//#include <AppD3DX12.h>
-//#include <InputLayoutBase.h>
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>
 #include <Utility.h>
 #include <PMDMaterialInfo.h>
 #include <PrepareRenderingWindow.h>
-#include <SetRootSignatureBase.h>
+//#include <SetRootSignatureBase.h>
 #include <SetRootSignature.h>
 #include <SettingShaderCompile.h>
 #include <VMDMotionInfo.h>
@@ -75,7 +73,6 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <PeraLayout.h>
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
-#include <BufferShaderCompile.h>
 
 #include <SettingImgui.h>
 

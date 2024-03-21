@@ -48,9 +48,6 @@
     <None Include="BasicShaderHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="BufferHeader.hlsli">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -93,12 +90,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="BasicVertexShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="BufferPixel.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="BufferVertex.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
@@ -199,9 +190,6 @@
     <ClCompile Include="BufferHeapCreator.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="BufferShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
@@ -239,9 +227,6 @@
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="SetRootSignature.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="SetRootSignatureBase.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="SettingImgui.cpp">
@@ -357,9 +342,6 @@
     <ClInclude Include="BufferHeapCreator.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
-    <ClInclude Include="BufferShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="CreateD3DX12ResourceBuffer.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
@@ -400,9 +382,6 @@
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="SetRootSignature.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="SetRootSignatureBase.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="SettingImgui.h">

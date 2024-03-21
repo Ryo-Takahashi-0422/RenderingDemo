@@ -154,7 +154,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli" />
-    <None Include="BufferHeader.hlsli" />
     <None Include="shader\AtmosphericModel.hlsli" />
     <None Include="shader\BlurHeader.hlsli" />
     <None Include="shader\CollisionHeader.hlsli" />
@@ -181,22 +180,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">BasicVS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="BufferPixel.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">psBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">psBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="BufferVertex.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vsBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vsBuffer</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
@@ -406,7 +389,6 @@
     <ClCompile Include="ComputeBlur.cpp" />
     <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="BufferHeapCreator.cpp" />
-    <ClCompile Include="BufferShaderCompile.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
     <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
@@ -430,7 +412,6 @@
     <ClCompile Include="PrepareRenderingWindow.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SetRootSignature.cpp" />
-    <ClCompile Include="SetRootSignatureBase.cpp" />
     <ClCompile Include="SettingImgui.cpp" />
     <ClCompile Include="SettingShaderCompile.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -466,7 +447,6 @@
     <ClInclude Include="ComputeBlur.h" />
     <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="BufferHeapCreator.h" />
-    <ClInclude Include="BufferShaderCompile.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
     <ClInclude Include="DepthMapIntegration.h" />
     <ClInclude Include="engine.h" />
@@ -491,7 +471,6 @@
     <ClInclude Include="ReadData.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SetRootSignature.h" />
-    <ClInclude Include="SetRootSignatureBase.h" />
     <ClInclude Include="SettingImgui.h" />
     <ClInclude Include="SettingShaderCompile.h" />
     <ClInclude Include="stdafx.h" />
