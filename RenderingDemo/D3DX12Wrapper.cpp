@@ -1,17 +1,22 @@
 #include <stdafx.h>
 #include <D3DX12Wrapper.h>
 
-#pragma comment(lib, "DirectXTex.lib")
+#ifdef _DEBUG
+#pragma comment(lib, "DirectXTexDebug.lib")
+#else
+#pragma comment(lib, "DirectXTexRelease.lib")
+#endif
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 // effekseer
-#pragma comment(lib, "EffekseerRendererDx12.lib")
-#pragma comment(lib, "Effekseer.lib")
-#pragma comment(lib, "LLGI.lib")
-#pragma comment(lib, "EffekseerRendererCommon.lib")
-#pragma comment(lib, "EffekseerRendererLLGI.lib")
+//#pragma comment(lib, "EffekseerRendererDx12.lib")
+//#pragma comment(lib, "Effekseer.lib")
+//#pragma comment(lib, "LLGI.lib")
+//#pragma comment(lib, "EffekseerRendererCommon.lib")
+//#pragma comment(lib, "EffekseerRendererLLGI.lib")
 
 
 using namespace DirectX;
@@ -568,30 +573,24 @@ void D3DX12Wrapper::SetMatrixByFPSChange(int fpsVal)
 	forwardSpeed *= ratio;
 	MIN_FREAM_TIME = 1.0f / _fps;
 
-	Matrix3d leftSpinEigen;
-	Vector3d axis;
-	axis << 0, 1, 0;  //y軸を指定
-	leftSpinEigen = AngleAxisd(PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
-	leftSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	leftSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	leftSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	leftSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	leftSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	leftSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	leftSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	leftSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	leftSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
 
-	leftSpinEigen = AngleAxisd(-PI * 0.006f * ratio, axis);  //Z軸周りに90度反時計回りに回転
-	rightSpinMatrix.r[0].m128_f32[0] = leftSpinEigen(0, 0);
-	rightSpinMatrix.r[0].m128_f32[1] = leftSpinEigen(0, 1);
-	rightSpinMatrix.r[0].m128_f32[2] = leftSpinEigen(0, 2);
-	rightSpinMatrix.r[1].m128_f32[0] = leftSpinEigen(1, 0);
-	rightSpinMatrix.r[1].m128_f32[1] = leftSpinEigen(1, 1);
-	rightSpinMatrix.r[1].m128_f32[2] = leftSpinEigen(1, 2);
-	rightSpinMatrix.r[2].m128_f32[0] = leftSpinEigen(2, 0);
-	rightSpinMatrix.r[2].m128_f32[1] = leftSpinEigen(2, 1);
-	rightSpinMatrix.r[2].m128_f32[2] = leftSpinEigen(2, 2);
+	XMMATRIX origin = XMMatrixIdentity();
+	origin.r[0].m128_f32[0] = 0.99982235237812678;
+	origin.r[0].m128_f32[1] = 0.0f;
+	origin.r[0].m128_f32[2] = -0.018848439857690965;
+
+	origin.r[1].m128_f32[0] = 0.0f;
+	origin.r[1].m128_f32[1] = 1.0f;
+	origin.r[1].m128_f32[2] = 0.0f;
+
+	origin.r[2].m128_f32[0] = 0.018848439857690965;
+	origin.r[2].m128_f32[1] = 0.0f;
+	origin.r[2].m128_f32[2] = 0.99982235237812678;
+
+	origin *= ratio;
+
+	leftSpinMatrix = XMMatrixRotationY(-PI * 0.006f * ratio);
+	rightSpinMatrix = XMMatrixRotationY(PI * 0.006f * ratio);
 }
 
 void D3DX12Wrapper::Run() {

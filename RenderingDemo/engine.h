@@ -27,26 +27,18 @@
 #include <stdlib.h>
 #include <fstream>
 
-//eigen
-#define _USE_MATH_DEFINES
-#include <iostream>
-#include <Eigen/Dense>
-#include <Eigen/Geometry> //EigenのGeometry関連の関数を使う場合，これが必要
-#include <math.h> // sin cos とか
-using namespace Eigen;
-
 // Effekseer
-#include <Effekseer.h>
-#include <EffekseerRendererDx12.h>
+//#include <Effekseer.h>
+//#include <EffekseerRendererDx12.h>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
 using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata*, ScratchImage&)>;
 
 // DirectXTK
-#include <SpriteFont.h> // 文字列表示に必要
+//#include <SpriteFont.h> // 文字列表示に必要
 #include <ResourceUploadBatch.h> // DirectXTK関連のリソース使用に必要
-#pragma comment(lib, "DirectXTK12.lib")
+//#pragma comment(lib, "DirectXTK12.lib")
 
 #include <VertexInputLayout.h>
 #include <CreateD3DX12ResourceBuffer.h>
@@ -58,10 +50,16 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <GraphicsPipelineSetting.h>
 #include <TextureLoader.h>
 
-#include <PeraPolygon.h> // ﾏﾙﾁﾊﾟｽテスト用
+#include <PeraPolygon.h>
 #include <PeraLayout.h>
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
+
+// imgui (#define...がないと怒られる。書かない場合、settingImgui上段の""includeで読み込み可能)
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx12.h>
 
 #include <SettingImgui.h>
 
