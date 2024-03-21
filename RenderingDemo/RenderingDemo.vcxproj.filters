@@ -48,9 +48,6 @@
     <None Include="BasicShaderHeader.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="BufferHeader.hlsli">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="shader\SunHeader.hlsli">
       <Filter>Shader\Sky</Filter>
     </None>
@@ -93,12 +90,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="BasicVertexShader.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="BufferPixel.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="BufferVertex.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\SunPixel.hlsl">
@@ -196,31 +187,13 @@
     <ClCompile Include="FBXInfoManager.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
-    <ClCompile Include="BufferHeapCreator.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="BufferShaderCompile.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="CreateD3DX12ResourceBuffer.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="D3DX12Wrapper.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="GraphicsPipelineSetting.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="IGraphicsPipelineSetting.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="InputLayoutBase.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="MappingExecuter.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="PeraGraphicsPipelineSetting.cpp">
@@ -235,19 +208,10 @@
     <ClCompile Include="PeraSetRootSignature.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
-    <ClCompile Include="PMDActor.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="PMDMaterialInfo.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
     <ClCompile Include="PrepareRenderingWindow.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="SetRootSignature.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="SetRootSignatureBase.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="SettingImgui.cpp">
@@ -269,12 +233,6 @@
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="VertexInputLayout.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="ViewCreator.cpp">
-      <Filter>ソース ファイル\Origin</Filter>
-    </ClCompile>
-    <ClCompile Include="VMDMotionInfo.cpp">
       <Filter>ソース ファイル\Origin</Filter>
     </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
@@ -334,6 +292,9 @@
     <ClCompile Include="OBBManager.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
+    <ClCompile Include="CreateD3DX12ResourceBuffer.cpp">
+      <Filter>ソース ファイル\Origin</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -360,15 +321,6 @@
     <ClInclude Include="..\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="BufferHeapCreator.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="BufferShaderCompile.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="CreateD3DX12ResourceBuffer.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="D3DX12Wrapper.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
@@ -376,15 +328,6 @@
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="GraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="IGraphicsPipelineSetting.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="InputLayoutBase.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="MappingExecuter.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="PeraGraphicsPipelineSetting.h">
@@ -399,22 +342,10 @@
     <ClInclude Include="PeraSetRootSignature.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
-    <ClInclude Include="PMDActor.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="PMDMaterialInfo.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="PrepareRenderingWindow.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
-    <ClInclude Include="ReadData.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
     <ClInclude Include="SetRootSignature.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="SetRootSignatureBase.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="SettingImgui.h">
@@ -436,12 +367,6 @@
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="VertexInputLayout.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="ViewCreator.h">
-      <Filter>ヘッダー ファイル\Origin</Filter>
-    </ClInclude>
-    <ClInclude Include="VMDMotionInfo.h">
       <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
     <ClInclude Include="FBXInfoManager.h">
@@ -503,6 +428,9 @@
     </ClInclude>
     <ClInclude Include="OBBManager.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateD3DX12ResourceBuffer.h">
+      <Filter>ヘッダー ファイル\Origin</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

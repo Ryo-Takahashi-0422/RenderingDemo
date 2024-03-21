@@ -154,7 +154,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli" />
-    <None Include="BufferHeader.hlsli" />
     <None Include="shader\AtmosphericModel.hlsli" />
     <None Include="shader\BlurHeader.hlsli" />
     <None Include="shader\CollisionHeader.hlsli" />
@@ -181,22 +180,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">BasicVS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="BufferPixel.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">psBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">psBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="BufferVertex.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vsBuffer</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vsBuffer</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
@@ -404,19 +387,14 @@
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRootSignature.cpp" />
     <ClCompile Include="ComputeBlur.cpp" />
-    <ClCompile Include="D3DX12Wrapper.cpp" />
-    <ClCompile Include="BufferHeapCreator.cpp" />
-    <ClCompile Include="BufferShaderCompile.cpp" />
     <ClCompile Include="CreateD3DX12ResourceBuffer.cpp" />
+    <ClCompile Include="D3DX12Wrapper.cpp" />
     <ClCompile Include="DepthMapIntegration.cpp" />
     <ClCompile Include="FBXInfoManager.cpp" />
     <ClCompile Include="GraphicsPipelineSetting.cpp" />
-    <ClCompile Include="IGraphicsPipelineSetting.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="InputLayoutBase.cpp" />
     <ClCompile Include="Integration.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MappingExecuter.cpp" />
     <ClCompile Include="OBBManager.cpp" />
     <ClCompile Include="ParticipatingMedia.cpp" />
     <ClCompile Include="Shadow.cpp" />
@@ -427,12 +405,9 @@
     <ClCompile Include="PeraLayout.cpp" />
     <ClCompile Include="PeraPolygon.cpp" />
     <ClCompile Include="PeraSetRootSignature.cpp" />
-    <ClCompile Include="PMDActor.cpp" />
-    <ClCompile Include="PMDMaterialInfo.cpp" />
     <ClCompile Include="PrepareRenderingWindow.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SetRootSignature.cpp" />
-    <ClCompile Include="SetRootSignatureBase.cpp" />
     <ClCompile Include="SettingImgui.cpp" />
     <ClCompile Include="SettingShaderCompile.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -446,8 +421,6 @@
     <ClCompile Include="TextureTransporter.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="VertexInputLayout.cpp" />
-    <ClCompile Include="ViewCreator.cpp" />
-    <ClCompile Include="VMDMotionInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h" />
@@ -466,19 +439,14 @@
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="CollisionRootSignature.h" />
     <ClInclude Include="ComputeBlur.h" />
-    <ClInclude Include="D3DX12Wrapper.h" />
-    <ClInclude Include="BufferHeapCreator.h" />
-    <ClInclude Include="BufferShaderCompile.h" />
     <ClInclude Include="CreateD3DX12ResourceBuffer.h" />
+    <ClInclude Include="D3DX12Wrapper.h" />
     <ClInclude Include="DepthMapIntegration.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="FBXInfoManager.h" />
     <ClInclude Include="GraphicsPipelineSetting.h" />
-    <ClInclude Include="IGraphicsPipelineSetting.h" />
     <ClInclude Include="Input.h" />
-    <ClInclude Include="InputLayoutBase.h" />
     <ClInclude Include="Integration.h" />
-    <ClInclude Include="MappingExecuter.h" />
     <ClInclude Include="OBBManager.h" />
     <ClInclude Include="ParticipatingMedia.h" />
     <ClInclude Include="Shadow.h" />
@@ -489,13 +457,9 @@
     <ClInclude Include="PeraLayout.h" />
     <ClInclude Include="PeraPolygon.h" />
     <ClInclude Include="PeraSetRootSignature.h" />
-    <ClInclude Include="PMDActor.h" />
-    <ClInclude Include="PMDMaterialInfo.h" />
     <ClInclude Include="PrepareRenderingWindow.h" />
-    <ClInclude Include="ReadData.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SetRootSignature.h" />
-    <ClInclude Include="SetRootSignatureBase.h" />
     <ClInclude Include="SettingImgui.h" />
     <ClInclude Include="SettingShaderCompile.h" />
     <ClInclude Include="stdafx.h" />
@@ -504,8 +468,6 @@
     <ClInclude Include="TextureTransporter.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="VertexInputLayout.h" />
-    <ClInclude Include="ViewCreator.h" />
-    <ClInclude Include="VMDMotionInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
