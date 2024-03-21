@@ -122,13 +122,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(EFK_ROOT_DIR)\Effekseer;$(EFK_ROOT_DIR)\Effekseer\Effekseer;$(EFK_ROOT_DIR)\EffekseerRendererDX12;$(EFK_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_ROOT_DIR)\EffekseerRendererCommon;$(DirectXTK_hpp);$(MSBuildProjectDirectory)\packages\WinPixEventRuntime.1.0.230302001\Include\WinPixEventRuntime;%(AdditionalIncludeDirectories);$(MSBuildProjectDirectory)\ext;$(MSBuildProjectDirectory)\ext\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(EFK_ROOT_DIR)\Effekseer;$(EFK_ROOT_DIR)\Effekseer\Effekseer;$(EFK_ROOT_DIR)\EffekseerRendererDX12;$(EFK_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_ROOT_DIR)\EffekseerRendererCommon;$(MSBuildProjectDirectory)\packages\WinPixEventRuntime.1.0.230302001\Include\WinPixEventRuntime;%(AdditionalIncludeDirectories);$(MSBuildProjectDirectory)\ext;$(MSBuildProjectDirectory)\ext\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(EFK_ROOT_DIR)\Effekseer\Debug;$(EFK_ROOT_DIR)\EffekseerRendererDX12\Debug;$(EFK_ROOT_DIR)\3rdParty\LLGI\src\Debug;$(EFK_ROOT_DIR)\EffekseerRendererCommon\Debug;$(EFK_ROOT_DIR)\EffekseerRendererLLGI\Debug;$(DirectXTK_vs2019_lib);$(MSBuildProjectDirectory)\ext;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(EFK_ROOT_DIR)\Effekseer\Debug;$(EFK_ROOT_DIR)\EffekseerRendererDX12\Debug;$(EFK_ROOT_DIR)\3rdParty\LLGI\src\Debug;$(EFK_ROOT_DIR)\EffekseerRendererCommon\Debug;$(EFK_ROOT_DIR)\EffekseerRendererLLGI\Debug;$(MSBuildProjectDirectory)\ext;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(EFK_RELEASE_ROOT_DIR)\Effekseer;$(EFK_RELEASE_ROOT_DIR)\Effekseer\Effekseer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererCommon;$(DirectXTK_hpp);%(AdditionalIncludeDirectories);$(MSBuildProjectDirectory)\ext;$(MSBuildProjectDirectory)\ext\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(EFK_RELEASE_ROOT_DIR)\Effekseer;$(EFK_RELEASE_ROOT_DIR)\Effekseer\Effekseer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererLLGI;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12\EffekseerRenderer;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererCommon;%(AdditionalIncludeDirectories);$(MSBuildProjectDirectory)\ext;$(MSBuildProjectDirectory)\ext\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -149,7 +149,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(DXTEX_DIR)\Bin\Desktop_2019_Win10\x64\Release;$(EFK_RELEASE_ROOT_DIR)\Effekseer\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12\Release;$(EFK_RELEASE_ROOT_DIR)\3rdParty\LLGI\src\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererCommon\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererLLGI\Release;$(DirectXTK_vs2019_lib);$(MSBuildProjectDirectory)\ext;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DXTEX_DIR)\Bin\Desktop_2019_Win10\x64\Release;$(EFK_RELEASE_ROOT_DIR)\Effekseer\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererDX12\Release;$(EFK_RELEASE_ROOT_DIR)\3rdParty\LLGI\src\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererCommon\Release;$(EFK_RELEASE_ROOT_DIR)\EffekseerRendererLLGI\Release;$(MSBuildProjectDirectory)\ext;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

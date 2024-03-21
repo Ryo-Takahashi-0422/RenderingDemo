@@ -55,9 +55,11 @@ using LoadLambda_t = std::function<HRESULT(const std::wstring& path, TexMetadata
 #include <PeraGraphicsPipelineSetting.h>
 #include <PeraSetRootSignature.h>
 
-//#include "imgui.h"
-//#include "imgui_impl_win32.h"
-//#include "imgui_impl_dx12.h"
+// imgui (#define...がないと怒られる。書かない場合、settingImgui上段の""includeで読み込み可能)
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx12.h>
 
 #include <SettingImgui.h>
 
