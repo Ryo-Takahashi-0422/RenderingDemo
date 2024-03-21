@@ -1,17 +1,22 @@
 #include <stdafx.h>
 #include <D3DX12Wrapper.h>
 
-#pragma comment(lib, "DirectXTex.lib")
+#ifdef _DEBUG
+#pragma comment(lib, "DirectXTexDebug.lib")
+#else
+#pragma comment(lib, "DirectXTexRelease.lib")
+#endif
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 // effekseer
-#pragma comment(lib, "EffekseerRendererDx12.lib")
-#pragma comment(lib, "Effekseer.lib")
-#pragma comment(lib, "LLGI.lib")
-#pragma comment(lib, "EffekseerRendererCommon.lib")
-#pragma comment(lib, "EffekseerRendererLLGI.lib")
+//#pragma comment(lib, "EffekseerRendererDx12.lib")
+//#pragma comment(lib, "Effekseer.lib")
+//#pragma comment(lib, "LLGI.lib")
+//#pragma comment(lib, "EffekseerRendererCommon.lib")
+//#pragma comment(lib, "EffekseerRendererLLGI.lib")
 
 
 using namespace DirectX;
