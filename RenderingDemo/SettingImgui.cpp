@@ -211,6 +211,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		if (ImGui::Checkbox("30", &fps30))
 		{
 			fps = 30.0f;
+			fps30 = true;
 			fps60 = false;
 			fps90 = false;
 			fps120 = false;
@@ -221,6 +222,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			fps = 60.0f;
 			fps30 = false;
+			fps60 = true;
 			fps90 = false;
 			fps120 = false;
 			isFpsChanged = true;
@@ -231,6 +233,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 			fps = 90.0f;
 			fps30 = false;
 			fps60 = false;
+			fps90 = true;
 			fps120 = false;
 			isFpsChanged = true;
 		}
@@ -241,6 +244,7 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 			fps30 = false;
 			fps60 = false;
 			fps90 = false;
+			fps120 = true;
 			isFpsChanged = true;
 		}
 
