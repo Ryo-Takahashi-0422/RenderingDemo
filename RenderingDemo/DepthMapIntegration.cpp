@@ -1,8 +1,10 @@
 #include <stdafx.h>
 #include <DepthMapIntegration.h>
 
-DepthMapIntegration::DepthMapIntegration(ID3D12Device* _dev, ComPtr<ID3D12Resource> _depthmapResource1, ComPtr<ID3D12Resource> _depthmapResource2) : _dev(_dev), depthmapResource1(_depthmapResource1), depthmapResource2(_depthmapResource2)
+DepthMapIntegration::DepthMapIntegration(ID3D12Device* _dev, ComPtr<ID3D12Resource> _depthmapResource1, ComPtr<ID3D12Resource> _depthmapResource2, int _width, int _height) : _dev(_dev), depthmapResource1(_depthmapResource1), depthmapResource2(_depthmapResource2)
 {
+    width = _width;
+    height = _height;
     Init();
 }
 DepthMapIntegration::~DepthMapIntegration()

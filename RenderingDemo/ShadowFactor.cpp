@@ -1,8 +1,10 @@
 #include <stdafx.h>
 #include <ShadowFactor.h>
 
-ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence) : _dev(_dev), fence(_fence)
+ShadowFactor::ShadowFactor(ID3D12Device* _dev, ID3D12Fence* _fence, int _width, int _height) : _dev(_dev), fence(_fence)
 {
+    width = _width;
+    height = _height;
     Init();
     //CreateCommand();
 }

@@ -2,12 +2,13 @@
 #include <SkyLUT.h>
 
 
-SkyLUT::SkyLUT(ID3D12Device* _dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource) :
-    _dev(_dev), pipelineState(nullptr), /*cbvsrvHeap(nullptr), skyLUTHeap(nullptr),*/ renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorResource(_shadowFactorRsource),
-    data(nullptr)//, /*_cmdAllocator(nullptr), _cmdList(nullptr), *//*fence(_fence)*/
+SkyLUT::SkyLUT(ID3D12Device* _dev, ID3D12Resource* _shadowFactorRsource, int _width, int _height) :
+    _dev(_dev), pipelineState(nullptr), renderingResource(nullptr), participatingMediaResource(nullptr), shadowFactorResource(_shadowFactorRsource), data(nullptr)
 {
     m_Media = new ParticipatingMedia;
     m_SkyLUT = new SkyLUTBuffer;
+    width = _width;
+    height = _height;
     Init();
 }
 

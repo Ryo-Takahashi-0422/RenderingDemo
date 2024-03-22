@@ -452,6 +452,10 @@ bool D3DX12Wrapper::ResourceInit() {
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
 //	
+
+	auto initialWidth = prepareRenderingWindow->GetWindowWidth();
+	auto initialHeight = prepareRenderingWindow->GetWindowHeight();
+
 	for (auto& reManager : resourceManager)
 	{
 		reManager->ClearReference();
@@ -464,14 +468,14 @@ bool D3DX12Wrapper::ResourceInit() {
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 	settingImgui->SetAirParam(calculatedParticipatingMedia);
 
-	sun = new Sun(_dev.Get(), camera);
+	sun = new Sun(_dev.Get(), camera, initialWidth, initialHeight);
 	sun->Init();
 	
-	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
+	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get(), initialWidth, initialHeight);
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
 
-	skyLUT = new SkyLUT(_dev.Get(), shadowFactorResource.Get());
+	skyLUT = new SkyLUT(_dev.Get(), shadowFactorResource.Get(), initialWidth, initialHeight);
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -540,10 +544,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	// depthMapIntegrationでthread1,2のデプスマップ統合
 	// →comBlurでガウシアンブラー
 	// →integrationはthread1,2の統合カラー、法線、デプスマップ保有状態になる
-	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
-	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
+	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap(), initialWidth, initialHeight);
+	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2(), initialWidth, initialHeight);
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
-	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ブラーかけずにSSAO計算してもあまり変わらない...
+	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource(), initialWidth, initialHeight); // ブラーかけずにSSAO計算してもあまり変わらない...
 	ssaoBlur = new Blur(_dev.Get());
 	ssaoBlur->Init(pair, calculateSSAO->GetResolution());
 	ssaoBlur->SetRenderingResourse(calculateSSAO->GetTextureResource());

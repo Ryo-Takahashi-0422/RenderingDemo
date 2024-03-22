@@ -4,8 +4,8 @@ class ShadowFactor
 {
 private:
     // ‰ð‘œ“xŠÖ˜A
-    int width = 1024;
-    int height = 1024;
+    int width;
+    int height;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
@@ -59,7 +59,7 @@ private:
     ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 
 public:
-    ShadowFactor(ID3D12Device* dev, ID3D12Fence* _fence);
+    ShadowFactor(ID3D12Device* dev, ID3D12Fence* _fence, int _width, int _height);
     ~ShadowFactor();
     void SetParticipatingMedia(ParticipatingMedia media);
     ComPtr<ID3D12Resource> GetShadowFactorTextureResource() { return copyTextureResource; };
