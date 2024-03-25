@@ -1603,18 +1603,24 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 		UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
 		UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
 		// Resize the swap chain to the desired dimensions.
-		DXGI_SWAP_CHAIN_DESC desc = {};
-		_swapChain->GetDesc(&desc);
+
 
 		// ダブルバッファ設計のため、0,1,2といったマジックナンバーを使っている...
 		_backBuffers[0].Reset();
 		_backBuffers[1].Reset();
+
+		DXGI_SWAP_CHAIN_DESC desc = {};
+		_swapChain->GetDesc(&desc);
 		_swapChain->ResizeBuffers(2, clientWidth, clientHeight, desc.BufferDesc.Format, desc.Flags);
+
+		// この処理がないと以下エラーが発生する
+		//A command list, which writes to a swapchain back buffer, may only be executed when that back buffer is the back buffer that will be presented during the next call to Present* .Such a back buffer is also referred to as the “current back buffer”.
+		bbIdx = _swapChain->GetCurrentBackBufferIndex();
 		
 		auto _handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 		for (int idx = 0; idx < 2; idx++)
 		{  
-			result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(_backBuffers[idx].ReleaseAndGetAddressOf()));
+			result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));
 
 			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -1622,7 +1628,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 			_dev->CreateRenderTargetView
 			(
 				_backBuffers[idx].Get(),
-				&rtvDesc,
+				nullptr,
 				_handle
 			);
 

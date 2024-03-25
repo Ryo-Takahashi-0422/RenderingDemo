@@ -118,8 +118,8 @@ void PrepareRenderingWindow::OnSizeChanged(UINT width, UINT height, bool minimiz
 		float x = 1.0f;
 		float y = 1.0f;
 
-		float viewWidthRatio = 800.0f / window_width;
-		float viewHeightRatio = 800.0f / window_height;
+		float viewWidthRatio = 800.0f / (float)window_width;
+		float viewHeightRatio = 800.0f / (float)window_height;
 		if (viewWidthRatio < viewHeightRatio)
 		{
 			// The scaled image's height will fit to the viewport's height and 
@@ -134,6 +134,7 @@ void PrepareRenderingWindow::OnSizeChanged(UINT width, UINT height, bool minimiz
 		}
 
 		D3D12_VIEWPORT m_viewport;
+
 		changeableViewport.Width = window_width * x;
 		changeableViewport.Height = window_height * y;
 		changeableViewport.TopLeftX = window_width * (1.0f - x) / 2.0f;
