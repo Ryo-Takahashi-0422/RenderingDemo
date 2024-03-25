@@ -217,7 +217,7 @@ bool D3DX12Wrapper::PipelineInit(){
 
 //初期化処理４：スワップチェーンの生成
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.Width = /*prepareRenderingWindow->GetWindowWidth()*/1200.0f; // ★★★★★
+	swapChainDesc.Width = prepareRenderingWindow->GetWindowWidth()/*1200.0f*/; // ★★★★★
 	swapChainDesc.Height = prepareRenderingWindow->GetWindowHeight();
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.Stereo = false;
@@ -463,6 +463,8 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	viewPort = prepareRenderingWindow->GetViewPortPointer();
 	rect = prepareRenderingWindow->GetRectPointer();
+	changeableViewport = prepareRenderingWindow->GetChangeableViewPortPointer();
+	changeableRect = prepareRenderingWindow->GetChangeableRectPointer();
 
 	// Sky設定
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
@@ -1581,44 +1583,101 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 
+	bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
 
-
-	float x = 1.0f;
-	float y = 1.0f;
-
-	float viewWidthRatio = 800.0f / 1200.0f;
-	float viewHeightRatio = 800.0f /800.0f;
-	if (viewWidthRatio < viewHeightRatio)
+	if (isWindowSizeChanged)
 	{
-		// The scaled image's height will fit to the viewport's height and 
-		// its width will be smaller than the viewport's width.
-		x = viewWidthRatio / viewHeightRatio;
+
+		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
+		while (_fence->GetCompletedValue() != _fenceVal)
+		{
+
+			auto event = CreateEvent(nullptr, false, false, nullptr);
+			_fence->SetEventOnCompletion(_fenceVal, event);
+			//イベント発生待ち
+			WaitForSingleObject(event, INFINITE);
+			//イベントハンドルを閉じる
+			CloseHandle(event);
+		}
+
+		UINT clientWidth = /*(float)*/prepareRenderingWindow->GetWindowWidth();
+		UINT clientHeight = /*(float)*/prepareRenderingWindow->GetWindowHeight();
+		// Resize the swap chain to the desired dimensions.
+		DXGI_SWAP_CHAIN_DESC desc = {};
+		_swapChain->GetDesc(&desc);
+
+		_backBuffers[0].Reset();
+		_backBuffers[1].Reset();
+
+		_swapChain->ResizeBuffers(2, clientWidth, clientHeight, desc.BufferDesc.Format, desc.Flags);
+
+		
+		auto _handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+		for (int idx = 0; idx < 2; idx++)
+		{  
+			
+
+			result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(_backBuffers[idx].ReleaseAndGetAddressOf()));
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			_dev->CreateRenderTargetView
+			(
+				_backBuffers[idx].Get(),
+				&rtvDesc,
+				_handle
+			);
+
+			_handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		}
+
+		prepareRenderingWindow->SetChangeFinished();
 	}
-	else
-	{
-		// The scaled image's width will fit to the viewport's width and 
-		// its height may be smaller than the viewport's height.
-		y = viewHeightRatio / viewWidthRatio;
-	}
+	//{
+	//	float clientWidth = (float)prepareRenderingWindow->GetWindowWidth();
+	//	float clientHeight = (float)prepareRenderingWindow->GetWindowHeight();
 
-	D3D12_VIEWPORT m_viewport;
-	m_viewport.Width = 1200.0f * x;
-	m_viewport.Height = 800.0f * y;
-	m_viewport.TopLeftX = 1200.0f * (1.0f - x) / 2.0f;
-	m_viewport.TopLeftY = 800.0f * (1.0f - y) / 2.0f;
-	m_viewport.MaxDepth = 1.0f;
-	m_viewport.MinDepth = 0.0f;
+	//	float x = 1.0f;
+	//	float y = 1.0f;
 
-	D3D12_RECT m_Rect = {};
-	m_Rect.top = static_cast<LONG>(m_viewport.TopLeftY); //切り抜き上座標
-	m_Rect.left = static_cast<LONG>(m_viewport.TopLeftX); //切り抜き左座標
-	m_Rect.right = static_cast<LONG>(m_viewport.TopLeftX + m_viewport.Width); //切り抜き右座標
-	m_Rect.bottom = static_cast<LONG>(m_viewport.TopLeftY + m_viewport.Height); //切り抜き下座標
+	//	float viewWidthRatio = 800.0f / 1200.0f;
+	//	float viewHeightRatio = 800.0f / 800.0f;
+	//	if (viewWidthRatio < viewHeightRatio)
+	//	{
+	//		// The scaled image's height will fit to the viewport's height and 
+	//		// its width will be smaller than the viewport's width.
+	//		x = viewWidthRatio / viewHeightRatio;
+	//	}
+	//	else
+	//	{
+	//		// The scaled image's width will fit to the viewport's width and 
+	//		// its height may be smaller than the viewport's height.
+	//		y = viewHeightRatio / viewWidthRatio;
+	//	}
+
+	//	D3D12_VIEWPORT m_viewport;
+	//	m_viewport.Width = 1200.0f * x;
+	//	m_viewport.Height = 800.0f * y;
+	//	m_viewport.TopLeftX = 1200.0f * (1.0f - x) / 2.0f;
+	//	m_viewport.TopLeftY = 800.0f * (1.0f - y) / 2.0f;
+	//	m_viewport.MaxDepth = 1.0f;
+	//	m_viewport.MinDepth = 0.0f;
+
+	//	D3D12_RECT m_Rect = {};
+	//	m_Rect.top = static_cast<LONG>(m_viewport.TopLeftY); //切り抜き上座標
+	//	m_Rect.left = static_cast<LONG>(m_viewport.TopLeftX); //切り抜き左座標
+	//	m_Rect.right = static_cast<LONG>(m_viewport.TopLeftX + m_viewport.Width); //切り抜き右座標
+	//	m_Rect.bottom = static_cast<LONG>(m_viewport.TopLeftY + m_viewport.Height); //切り抜き下座標
+
+	//}
 
 
 
-	_cmdList3->RSSetViewports(1, &m_viewport);
-	_cmdList3->RSSetScissorRects(1, &m_Rect);
+
+	_cmdList3->RSSetViewports(1, /*&m_viewport*/changeableViewport);
+	_cmdList3->RSSetScissorRects(1, /*&m_Rect*/changeableRect);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する

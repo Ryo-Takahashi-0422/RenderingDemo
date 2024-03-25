@@ -141,6 +141,9 @@ private:
 	const D3D12_VIEWPORT* viewPort = nullptr;
 	const D3D12_RECT* rect = nullptr;
 
+	const D3D12_VIEWPORT* changeableViewport = nullptr;
+	const D3D12_RECT* changeableRect = nullptr;
+
 	// DrawBackBuffer‚Å—˜—p‚·‚é
 	UINT bbIdx;
 	ID3D12RootSignature* bBRootsignature = nullptr;
