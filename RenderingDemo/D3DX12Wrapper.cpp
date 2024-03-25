@@ -1584,14 +1584,14 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 
 	bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
-
+	// ウィンドウサイズ変更があった場合の処理
 	if (isWindowSizeChanged)
 	{
-
+		// スワップチェーンのリサイズのため、参照しているリソース(_backBuffers[])を解放してやる必要がある。
+		// そのためにGPUの現フレーム処理が完了するまで(フラッシュ)待つ。
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 		while (_fence->GetCompletedValue() != _fenceVal)
 		{
-
 			auto event = CreateEvent(nullptr, false, false, nullptr);
 			_fence->SetEventOnCompletion(_fenceVal, event);
 			//イベント発生待ち
@@ -1600,24 +1600,20 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 			CloseHandle(event);
 		}
 
-		UINT clientWidth = /*(float)*/prepareRenderingWindow->GetWindowWidth();
-		UINT clientHeight = /*(float)*/prepareRenderingWindow->GetWindowHeight();
+		UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
+		UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
 		// Resize the swap chain to the desired dimensions.
 		DXGI_SWAP_CHAIN_DESC desc = {};
 		_swapChain->GetDesc(&desc);
 
+		// ダブルバッファ設計のため、0,1,2といったマジックナンバーを使っている...
 		_backBuffers[0].Reset();
 		_backBuffers[1].Reset();
-
 		_swapChain->ResizeBuffers(2, clientWidth, clientHeight, desc.BufferDesc.Format, desc.Flags);
-
 		
 		auto _handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-
 		for (int idx = 0; idx < 2; idx++)
 		{  
-			
-
 			result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(_backBuffers[idx].ReleaseAndGetAddressOf()));
 
 			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
@@ -1633,51 +1629,12 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 			_handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		}
 
+		// WIndow管理クラスへ処理完了を通知する
 		prepareRenderingWindow->SetChangeFinished();
 	}
-	//{
-	//	float clientWidth = (float)prepareRenderingWindow->GetWindowWidth();
-	//	float clientHeight = (float)prepareRenderingWindow->GetWindowHeight();
 
-	//	float x = 1.0f;
-	//	float y = 1.0f;
-
-	//	float viewWidthRatio = 800.0f / 1200.0f;
-	//	float viewHeightRatio = 800.0f / 800.0f;
-	//	if (viewWidthRatio < viewHeightRatio)
-	//	{
-	//		// The scaled image's height will fit to the viewport's height and 
-	//		// its width will be smaller than the viewport's width.
-	//		x = viewWidthRatio / viewHeightRatio;
-	//	}
-	//	else
-	//	{
-	//		// The scaled image's width will fit to the viewport's width and 
-	//		// its height may be smaller than the viewport's height.
-	//		y = viewHeightRatio / viewWidthRatio;
-	//	}
-
-	//	D3D12_VIEWPORT m_viewport;
-	//	m_viewport.Width = 1200.0f * x;
-	//	m_viewport.Height = 800.0f * y;
-	//	m_viewport.TopLeftX = 1200.0f * (1.0f - x) / 2.0f;
-	//	m_viewport.TopLeftY = 800.0f * (1.0f - y) / 2.0f;
-	//	m_viewport.MaxDepth = 1.0f;
-	//	m_viewport.MinDepth = 0.0f;
-
-	//	D3D12_RECT m_Rect = {};
-	//	m_Rect.top = static_cast<LONG>(m_viewport.TopLeftY); //切り抜き上座標
-	//	m_Rect.left = static_cast<LONG>(m_viewport.TopLeftX); //切り抜き左座標
-	//	m_Rect.right = static_cast<LONG>(m_viewport.TopLeftX + m_viewport.Width); //切り抜き右座標
-	//	m_Rect.bottom = static_cast<LONG>(m_viewport.TopLeftY + m_viewport.Height); //切り抜き下座標
-
-	//}
-
-
-
-
-	_cmdList3->RSSetViewports(1, /*&m_viewport*/changeableViewport);
-	_cmdList3->RSSetScissorRects(1, /*&m_Rect*/changeableRect);
+	_cmdList3->RSSetViewports(1, changeableViewport);
+	_cmdList3->RSSetScissorRects(1, changeableRect);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -1703,7 +1660,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	_cmdList3->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
 
-	_cmdList3->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	_cmdList3->ClearRenderTargetView(rtvHeapPointer, clearColor, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);

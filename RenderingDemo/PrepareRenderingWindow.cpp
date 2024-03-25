@@ -15,8 +15,6 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 		return 0;
 
 	case WM_SIZE:
-		//RECT windowRect = {};
-		//GetWindowRect(hWnd, &windowRect);
 		RECT clientRect = {};
 		GetClientRect(hWnd, &clientRect);
 		OnSizeChanged(clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, wp == SIZE_MINIMIZED);
@@ -44,20 +42,6 @@ LRESULT CALLBACK PrepareRenderingWindow::StaticWndProc(HWND hwnd, UINT msg, WPAR
 	else {//取得できた場合(ウィンドウ生成後)
 		return This->WndProc(This, hwnd, msg, wparam, lparam);
 	}
-
-	//switch (msg)
-	//{
-	//case WM_DESTROY: // process when the window is closed
-	//	MessageBox(hwnd, TEXT("quit the application"),
-	//		TEXT("quit the application"), MB_ICONINFORMATION);
-	//	PostQuitMessage(0);
-	//	return 0;
-	//// リサイズ処理
-	//case WM_SIZE:
-	//	if (wparam != SIZE_MINIMIZED)
-	//		This->ResizeWindow();
-	//	break;
-	//}
 
 	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
 	return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -114,38 +98,7 @@ void PrepareRenderingWindow::SetViewportAndRect()
 
 	changeableViewport = viewport;
 	changeableRect = scissorRect;
-	// 画面サイズ変更トライ
-	//float x = 1.0f;
-	//float y = 1.0f;
-
-	//float viewWidthRatio = 1024.0f / 1920.0f;
-	//float viewHeightRatio = 1024.0f / 1080.0f;
-	//x = viewWidthRatio / viewHeightRatio;
-	////y = viewHeightRatio / viewWidthRatio;
-
-	//viewport = {};
-	//viewport.Width = window_width * x;
-	//viewport.Height = window_height * y;
-	//viewport.TopLeftX = window_width * (1.0f - x) / 2.0f;
-	//viewport.TopLeftY = window_height * (1.0f - y) / 2.0f;
-	//viewport.MaxDepth = 1.0f;
-	//viewport.MinDepth = 0.0f;
-
-	//scissorRect = {};
-	//scissorRect.top = static_cast<LONG>(viewport.TopLeftY); //切り抜き上座標
-	//scissorRect.left = static_cast<LONG>(viewport.TopLeftX); //切り抜き左座標
-	//scissorRect.right = static_cast<LONG>(viewport.TopLeftX + viewport.Width); //切り抜き右座標
-	//scissorRect.bottom = static_cast<LONG>(viewport.TopLeftY + viewport.Height); //切り抜き下座標
-	
 }
-
-//void PrepareRenderingWindow::SetWindowBounds(int left, int top, int right, int bottom)
-//{
-//	m_windowBounds.left = static_cast<LONG>(left);
-//	m_windowBounds.top = static_cast<LONG>(top);
-//	m_windowBounds.right = static_cast<LONG>(right);
-//	m_windowBounds.bottom = static_cast<LONG>(bottom);
-//}
 
 void PrepareRenderingWindow::OnSizeChanged(UINT width, UINT height, bool minimized)
 {
@@ -194,8 +147,6 @@ void PrepareRenderingWindow::OnSizeChanged(UINT width, UINT height, bool minimiz
 		changeableRect.right = static_cast<LONG>(changeableViewport.TopLeftX + changeableViewport.Width); //切り抜き右座標
 		changeableRect.bottom = static_cast<LONG>(changeableViewport.TopLeftY + changeableViewport.Height); //切り抜き下座標
 	}
-
-
 }
 
 void PrepareRenderingWindow::SetChangeFinished()
