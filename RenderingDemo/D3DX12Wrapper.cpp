@@ -139,7 +139,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 
 	// レンダリングウィンドウ設定
 	prepareRenderingWindow = new PrepareRenderingWindow;
-	prepareRenderingWindow->CreateAppWindow();
+	prepareRenderingWindow->CreateAppWindow(prepareRenderingWindow);
 
 	// TextureLoaderクラスのインスタンス化
 	textureLoader = new TextureLoader;
@@ -217,7 +217,7 @@ bool D3DX12Wrapper::PipelineInit(){
 
 //初期化処理４：スワップチェーンの生成
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.Width = prepareRenderingWindow->GetWindowWidth();
+	swapChainDesc.Width = /*prepareRenderingWindow->GetWindowWidth()*/1200.0f; // ★★★★★
 	swapChainDesc.Height = prepareRenderingWindow->GetWindowHeight();
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.Stereo = false;
@@ -1581,8 +1581,44 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 
-	_cmdList3->RSSetViewports(1, viewPort);
-	_cmdList3->RSSetScissorRects(1, rect);
+
+
+	float x = 1.0f;
+	float y = 1.0f;
+
+	float viewWidthRatio = 800.0f / 1200.0f;
+	float viewHeightRatio = 800.0f /800.0f;
+	if (viewWidthRatio < viewHeightRatio)
+	{
+		// The scaled image's height will fit to the viewport's height and 
+		// its width will be smaller than the viewport's width.
+		x = viewWidthRatio / viewHeightRatio;
+	}
+	else
+	{
+		// The scaled image's width will fit to the viewport's width and 
+		// its height may be smaller than the viewport's height.
+		y = viewHeightRatio / viewWidthRatio;
+	}
+
+	D3D12_VIEWPORT m_viewport;
+	m_viewport.Width = 1200.0f * x;
+	m_viewport.Height = 800.0f * y;
+	m_viewport.TopLeftX = 1200.0f * (1.0f - x) / 2.0f;
+	m_viewport.TopLeftY = 800.0f * (1.0f - y) / 2.0f;
+	m_viewport.MaxDepth = 1.0f;
+	m_viewport.MinDepth = 0.0f;
+
+	D3D12_RECT m_Rect = {};
+	m_Rect.top = static_cast<LONG>(m_viewport.TopLeftY); //切り抜き上座標
+	m_Rect.left = static_cast<LONG>(m_viewport.TopLeftX); //切り抜き左座標
+	m_Rect.right = static_cast<LONG>(m_viewport.TopLeftX + m_viewport.Width); //切り抜き右座標
+	m_Rect.bottom = static_cast<LONG>(m_viewport.TopLeftY + m_viewport.Height); //切り抜き下座標
+
+
+
+	_cmdList3->RSSetViewports(1, &m_viewport);
+	_cmdList3->RSSetScissorRects(1, &m_Rect);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する

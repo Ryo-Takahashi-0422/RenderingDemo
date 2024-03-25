@@ -26,7 +26,7 @@ private:
 	void ResizeWindow();
 
 public:
-	void CreateAppWindow();
+	void CreateAppWindow(PrepareRenderingWindow* pWindow);
 	void SetViewportAndRect();
 	HWND GetHWND() { return hwnd; };
 	WNDCLASSEX GetWNDCCLASSEX() { return w; };

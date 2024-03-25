@@ -5,6 +5,7 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM); // @i
 
 LRESULT PrepareRenderingWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp);
 	switch (msg)
 	{
 	case WM_DESTROY:
@@ -12,6 +13,10 @@ LRESULT PrepareRenderingWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
 			TEXT("quit"), MB_ICONINFORMATION);
 		PostQuitMessage(0);
 		return 0;
+	//case WM_SIZE:
+	//if (wp != SIZE_MINIMIZED)
+	//	ResizeWindow();
+	//break;
 	}
 
 	return DefWindowProc(hWnd, msg, wp, lp);
@@ -35,25 +40,25 @@ LRESULT CALLBACK PrepareRenderingWindow::StaticWndProc(HWND hwnd, UINT msg, WPAR
 		return This->WndProc(hwnd, msg, wparam, lparam);
 	}
 
-	switch (msg)
-	{
-	case WM_DESTROY: // process when the window is closed
-		MessageBox(hwnd, TEXT("quit the application"),
-			TEXT("quit the application"), MB_ICONINFORMATION);
-		PostQuitMessage(0);
-		return 0;
-	// リサイズ処理
-	case WM_SIZE:
-		if (wparam != SIZE_MINIMIZED)
-			This->ResizeWindow();
-		break;
-	}
+	//switch (msg)
+	//{
+	//case WM_DESTROY: // process when the window is closed
+	//	MessageBox(hwnd, TEXT("quit the application"),
+	//		TEXT("quit the application"), MB_ICONINFORMATION);
+	//	PostQuitMessage(0);
+	//	return 0;
+	//// リサイズ処理
+	//case WM_SIZE:
+	//	if (wparam != SIZE_MINIMIZED)
+	//		This->ResizeWindow();
+	//	break;
+	//}
 
 	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-void PrepareRenderingWindow::CreateAppWindow()
+void PrepareRenderingWindow::CreateAppWindow(PrepareRenderingWindow* pWindow)
 {
 	// ウィンドウクラスの生成と初期化
 	w = {};
@@ -65,7 +70,7 @@ void PrepareRenderingWindow::CreateAppWindow()
 	// 上記ウィンドウクラスの登録。WINDCLASSEXとして扱われる。
 	RegisterClassEx(&w);
 
-	RECT wrc = { 0,0,window_width, window_height };
+	RECT wrc = { 0,0,/*window_width*/1200.0f, window_height }; // ★★★★★
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
@@ -80,7 +85,7 @@ void PrepareRenderingWindow::CreateAppWindow()
 		nullptr,//親ウィンドウハンドル
 		nullptr,//メニューハンドル
 		w.hInstance,//呼び出しアプリケーションハンドル
-		nullptr);//追加パラメータ
+		pWindow);//追加パラメータ
 
 	// レンダリングウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
