@@ -68,7 +68,7 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 	INT subWidth = window_width - base_width;
 	INT subHeight = window_height - base_height;
 
-	if (subHeight >= 0)
+	if (subHeight == 0)
 	{
 		if (subWidth > subHeight)
 		{
@@ -79,7 +79,7 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subHeight, -subWidth);
 		}
 	}
-	else
+	else if(subWidth == 0)
 	{
 		if (subWidth > subHeight)
 		{
