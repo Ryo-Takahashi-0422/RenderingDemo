@@ -138,7 +138,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	vertexInputLayout = nullptr;
 
 	// レンダリングウィンドウ設定
-	prepareRenderingWindow = new PrepareRenderingWindow;
+	prepareRenderingWindow = new PrepareRenderingWindow();
 	prepareRenderingWindow->CreateAppWindow(prepareRenderingWindow);
 
 	// TextureLoaderクラスのインスタンス化
@@ -915,7 +915,7 @@ void D3DX12Wrapper::Run() {
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
-		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
+		DrawBackBuffer(cbv_srv_Size);
 
 		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -939,8 +939,7 @@ void D3DX12Wrapper::Run() {
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
 		while (_fence->GetCompletedValue() != _fenceVal)
-		{
-			
+		{			
 			event = CreateEvent(nullptr, false, false, nullptr);
 			_fence->SetEventOnCompletion(_fenceVal, event);
 			//イベント発生待ち
@@ -1602,19 +1601,28 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 		UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
 		UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
-		// Resize the swap chain to the desired dimensions.
-
 
 		// ダブルバッファ設計のため、0,1,2といったマジックナンバーを使っている...
+		// バックバッファ用2つのリソースだけでも実行に影響はない。が、rtvHeapをリセット、cmdallocator/list4を割り当ててリセットしてもwarningが出る。
+		// WinPixGpuCapturer.dll warning: Warning: shared resources HANDLES have been recycled. This may cause incorrect captures.
 		_backBuffers[0].Reset();
 		_backBuffers[1].Reset();
+
+		//rtvHeap->Release();
+		//rtvHeap.Reset();
+		//D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		//rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		//rtvHeapDesc.NumDescriptors = 2;
+		//rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//rtvHeapDesc.NodeMask = 0;
+		//result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.GetAddressOf()));
 
 		DXGI_SWAP_CHAIN_DESC desc = {};
 		_swapChain->GetDesc(&desc);
 		_swapChain->ResizeBuffers(2, clientWidth, clientHeight, desc.BufferDesc.Format, desc.Flags);
 
 		// この処理がないと以下エラーが発生する
-		//A command list, which writes to a swapchain back buffer, may only be executed when that back buffer is the back buffer that will be presented during the next call to Present* .Such a back buffer is also referred to as the “current back buffer”.
+		// A command list, which writes to a swapchain back buffer, may only be executed when that back buffer is the back buffer that will be presented during the next call to Present* .Such a back buffer is also referred to as the “current back buffer”.
 		bbIdx = _swapChain->GetCurrentBackBufferIndex();
 		
 		auto _handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();

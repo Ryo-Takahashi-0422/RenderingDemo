@@ -3,6 +3,49 @@
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM); // @imgui_impl_win32.cpp
 
+PrepareRenderingWindow::PrepareRenderingWindow()
+{
+	//int dispx = GetSystemMetrics(SM_CXSCREEN);
+	//int dispy = GetSystemMetrics(SM_CYSCREEN);
+
+	//if (dispx > dispy)
+	//{
+	//	base_width = dispy;
+	//	base_height = dispy;
+	//}
+	//else if (dispx < dispy)
+	//{
+	//	base_width = dispx;
+	//	base_height = dispx;
+	//}
+	//else
+	//{
+	//	base_width = dispx;
+	//	base_height = dispy;
+	//}
+
+	RECT rect;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+
+	float adjust = 0.95f;
+
+	if (rect.right > rect.bottom)
+	{
+		base_width = rect.bottom * adjust;
+		base_height = rect.bottom * adjust;
+	}
+	else if (rect.right < rect.bottom)
+	{
+		base_width = rect.right * adjust;
+		base_height = rect.right * adjust;
+	}
+	else
+	{
+		base_width = rect.right * adjust;
+		base_height = rect.bottom * adjust;
+	}
+}
+
 LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp);
@@ -59,7 +102,7 @@ void PrepareRenderingWindow::CreateAppWindow(PrepareRenderingWindow* pWindow)
 	// 上記ウィンドウクラスの登録。WINDCLASSEXとして扱われる。
 	RegisterClassEx(&w);
 
-	RECT wrc = { 0,0, window_width/*1200.0f*/, window_height }; // ★★★★★
+	RECT wrc = { 0,0, base_width/*1200.0f*/, base_height }; // ★★★★★
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
@@ -118,8 +161,8 @@ void PrepareRenderingWindow::OnSizeChanged(UINT width, UINT height, bool minimiz
 		float x = 1.0f;
 		float y = 1.0f;
 
-		float viewWidthRatio = 800.0f / (float)window_width;
-		float viewHeightRatio = 800.0f / (float)window_height;
+		float viewWidthRatio = (float)base_width / (float)window_width;
+		float viewHeightRatio = (float)base_height / (float)window_height;
 		if (viewWidthRatio < viewHeightRatio)
 		{
 			// The scaled image's height will fit to the viewport's height and 

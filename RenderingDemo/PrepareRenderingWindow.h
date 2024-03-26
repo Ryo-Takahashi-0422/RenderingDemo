@@ -1,7 +1,7 @@
 #pragma once
 #include <windows.h>
 #define MIN_Window_SIZE 1
-#define BASE_SIZE 800
+#define BASE_SIZE 1440
 
 class PrepareRenderingWindow
 {
@@ -22,6 +22,9 @@ private:
 	UINT window_width = /*1080*/BASE_SIZE; // 画面サイズとテクスチャサイズが異なる場合、特に太陽の位置がずれることに注意 例：1080に対して太陽テクスチャサイズ1024の場合など
 	UINT window_height = /*1080*/BASE_SIZE;
 	
+	UINT base_width;
+	UINT base_height;
+
 	HWND hwnd;
 
 	// シャドウなどのクラスは規定値に基づき解像度を決め、テクスチャを作成する
@@ -38,6 +41,7 @@ private:
 	bool winSizeChanged = false;
 
 public:
+	PrepareRenderingWindow();
 	void CreateAppWindow(PrepareRenderingWindow* pWindow);
 	void SetViewportAndRect();
 	HWND GetHWND() { return hwnd; };
