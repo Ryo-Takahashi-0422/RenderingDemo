@@ -1,7 +1,7 @@
 #include <stdafx.h>
 #include "imgui_impl_win32.h"
 
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM); // @imgui_impl_win32.cpp
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM, INT, INT); // @imgui_impl_win32.cpp
 
 PrepareRenderingWindow::PrepareRenderingWindow()
 {
@@ -48,7 +48,7 @@ PrepareRenderingWindow::PrepareRenderingWindow()
 
 LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp);
+	/*ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, window_width - base_width, window_height - base_height);*/
 	switch (msg)
 	{
 	case WM_DESTROY:
@@ -65,6 +65,32 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 	break;
 	}
 
+	INT subWidth = window_width - base_width;
+	INT subHeight = window_height - base_height;
+
+	if (subHeight >= 0)
+	{
+		if (subWidth > subHeight)
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth, subHeight);
+		}
+		else
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subHeight, -subWidth);
+		}
+	}
+	else
+	{
+		if (subWidth > subHeight)
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, -subHeight, -subWidth);
+		}
+		else
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth, -subHeight);
+		}
+	}
+	//ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, window_width - base_width, window_height - base_height);
 	return DefWindowProc(hWnd, msg, wp, lp);
 }
 
@@ -86,7 +112,7 @@ LRESULT CALLBACK PrepareRenderingWindow::StaticWndProc(HWND hwnd, UINT msg, WPAR
 		return This->WndProc(This, hwnd, msg, wparam, lparam);
 	}
 
-	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
+	ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam, 0, 0);
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 

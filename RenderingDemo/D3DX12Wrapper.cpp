@@ -788,6 +788,16 @@ void D3DX12Wrapper::Run() {
 			break;
 		}
 
+		bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
+		// ウィンドウサイズ変更があった場合の処理
+		if (isWindowSizeChanged)
+		{
+			UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
+			UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
+
+			settingImgui->ChangeResolution(_dev, prepareRenderingWindow, clientWidth, clientHeight);
+			resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
+		}
 		settingImgui->DrawImGUI(_dev, _cmdList);
 
 		// 太陽の位置を更新

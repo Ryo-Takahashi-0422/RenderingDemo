@@ -19,11 +19,11 @@ private:
 
 	
 	WNDCLASSEX w;
-	UINT window_width = /*1080*/BASE_SIZE; // 画面サイズとテクスチャサイズが異なる場合、特に太陽の位置がずれることに注意 例：1080に対して太陽テクスチャサイズ1024の場合など
-	UINT window_height = /*1080*/BASE_SIZE;
+	INT window_width = /*1080*/BASE_SIZE; // 画面サイズとテクスチャサイズが異なる場合、特に太陽の位置がずれることに注意 例：1080に対して太陽テクスチャサイズ1024の場合など
+	INT window_height = /*1080*/BASE_SIZE;
 	
-	UINT base_width;
-	UINT base_height;
+	INT base_width;
+	INT base_height;
 
 	HWND hwnd;
 

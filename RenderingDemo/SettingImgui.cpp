@@ -364,3 +364,51 @@ void SettingImgui::SetAirParam(ParticipatingMedia media)
 	m_Media.groundRadius = media.groundRadius;
 	m_Media.atomosphereRadius = media.atomosphereRadius;
 }
+
+void SettingImgui::ChangeResolution(ComPtr<ID3D12Device> _dev, PrepareRenderingWindow* pRWindow, UINT _width, UINT _height)
+{
+
+	imguiSRVHeap.Reset();
+	imguiRTVHeap.Reset();
+	renderingResource.Reset();
+
+	CreateSRVDHeap(_dev);
+	CreateRTVDHeap(_dev);
+	if (_width > _height)
+	{
+		CreateRenderResource(_dev, _height, _height);
+	}
+	else if (_width < _height)
+	{
+		CreateRenderResource(_dev, _width, _width);
+	}
+	else
+	{
+		CreateRenderResource(_dev, _width, _height);
+	}
+	//CreateRenderResource(_dev, _width, _height);
+	CreateRTV(_dev);
+
+	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplDX12_Shutdown();
+
+	blnResult = ImGui_ImplWin32_Init(pRWindow->GetHWND());
+	if (!blnResult)
+	{
+		assert(0);
+	}
+
+	blnResult = ImGui_ImplDX12_Init
+	(
+		_dev.Get(),
+		3,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		imguiSRVHeap.Get(),
+		imguiSRVHeap->GetCPUDescriptorHandleForHeapStart(),
+		imguiSRVHeap->GetGPUDescriptorHandleForHeapStart()
+	);
+	if (!blnResult)
+	{
+		assert(0);
+	}
+}
