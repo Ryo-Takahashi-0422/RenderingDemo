@@ -1,10 +1,12 @@
 #include <stdafx.h>
 #include <Integration.h>
 
-Integration::Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap)
+Integration::Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap, int _width, int _height)
 {
     _dev = dev;
     _resourceManagerHeap = heap;
+    width = _width;
+    height = _height;
     buffSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     Init();
 }

@@ -49,13 +49,13 @@ private:
 	ComPtr<ID3D12DescriptorHeap> srvHeap = nullptr; // SRV用ディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> _resourceManagerHeap = nullptr; // rendering用ディスクリプタヒープ
 
-	float width = 1024;
-	float height = 1024;
+	float width;
+	float height;
 	UINT buffSize;
 	float clearColor[4] = { 0.0f,0.0f,0.0f,1.0f };
 
 public:
-	Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap);
+	Integration(ID3D12Device* dev, ComPtr<ID3D12DescriptorHeap> heap, int _width, int _height);
 	~Integration();
 	void Init();
 	void SetResourse1(ComPtr<ID3D12Resource> _resource);

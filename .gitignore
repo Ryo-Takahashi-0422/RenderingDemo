@@ -1,8 +1,8 @@
 model/
-.xls
-.xlsx
-.vs
-.pdb
+*.xls
+*.xlsx
+*.vs
+*.pdb
 RenderingDemo/x64
 EffekseerTexture/
 DirectX12_Play/

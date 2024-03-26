@@ -4,8 +4,8 @@ class DepthMapIntegration
 {
 private:
     // âëúìxä÷òA
-    int width = 1024;
-    int height = 1024;
+    int width;
+    int height;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
@@ -53,7 +53,7 @@ private:
     ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 
 public:
-    DepthMapIntegration(ID3D12Device* dev, ComPtr<ID3D12Resource> _depthmapResource1, ComPtr<ID3D12Resource> _depthmapResource2);
+    DepthMapIntegration(ID3D12Device* dev, ComPtr<ID3D12Resource> _depthmapResource1, ComPtr<ID3D12Resource> _depthmapResource2, int _width, int _height);
     ~DepthMapIntegration();
     ComPtr<ID3D12Resource> GetTextureResource() { return copyTextureResource; };
     // é¿çs

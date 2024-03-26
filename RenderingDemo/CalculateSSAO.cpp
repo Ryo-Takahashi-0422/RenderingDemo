@@ -1,8 +1,10 @@
 #include <stdafx.h>
 #include <CalculateSSAO.h>
 
-CalculateSSAO::CalculateSSAO(ID3D12Device* _dev, ComPtr<ID3D12Resource> _normalmapResource, ComPtr<ID3D12Resource> _depthmapResource) : _dev(_dev),normalmapResource(_normalmapResource), depthmapResource(_depthmapResource)
+CalculateSSAO::CalculateSSAO(ID3D12Device* _dev, ComPtr<ID3D12Resource> _normalmapResource, ComPtr<ID3D12Resource> _depthmapResource, int _width, int _height) : _dev(_dev),normalmapResource(_normalmapResource), depthmapResource(_depthmapResource)
 {
+    width = _width;
+    height = _height;
     Init();
 }
 CalculateSSAO::~CalculateSSAO()

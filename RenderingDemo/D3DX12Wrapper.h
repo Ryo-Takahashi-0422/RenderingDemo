@@ -141,6 +141,9 @@ private:
 	const D3D12_VIEWPORT* viewPort = nullptr;
 	const D3D12_RECT* rect = nullptr;
 
+	const D3D12_VIEWPORT* changeableViewport = nullptr;
+	const D3D12_RECT* changeableRect = nullptr;
+
 	// DrawBackBuffer‚Å—˜—p‚·‚é
 	UINT bbIdx;
 	ID3D12RootSignature* bBRootsignature = nullptr;
@@ -148,7 +151,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHeapPointer;
 	D3D12_GPU_DESCRIPTOR_HANDLE gHandle;
 	D3D12_RESOURCE_BARRIER barrierDesc4BackBuffer = {};
-	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	float clearColor[4] = { 0.0,0.0,0.0,1.0 };
 
 	// SkyŠÖ˜A
 	Sky* sky = nullptr;

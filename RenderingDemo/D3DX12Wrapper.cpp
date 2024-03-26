@@ -138,8 +138,8 @@ bool D3DX12Wrapper::PrepareRendering() {
 	vertexInputLayout = nullptr;
 
 	// レンダリングウィンドウ設定
-	prepareRenderingWindow = new PrepareRenderingWindow;
-	prepareRenderingWindow->CreateAppWindow();
+	prepareRenderingWindow = new PrepareRenderingWindow();
+	prepareRenderingWindow->CreateAppWindow(prepareRenderingWindow);
 
 	// TextureLoaderクラスのインスタンス化
 	textureLoader = new TextureLoader;
@@ -217,7 +217,7 @@ bool D3DX12Wrapper::PipelineInit(){
 
 //初期化処理４：スワップチェーンの生成
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.Width = prepareRenderingWindow->GetWindowWidth();
+	swapChainDesc.Width = prepareRenderingWindow->GetWindowWidth()/*1200.0f*/; // ★★★★★
 	swapChainDesc.Height = prepareRenderingWindow->GetWindowHeight();
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.Stereo = false;
@@ -452,6 +452,10 @@ bool D3DX12Wrapper::ResourceInit() {
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
 //	
+
+	auto initialWidth = prepareRenderingWindow->GetWindowWidth();
+	auto initialHeight = prepareRenderingWindow->GetWindowHeight();
+
 	for (auto& reManager : resourceManager)
 	{
 		reManager->ClearReference();
@@ -459,19 +463,21 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	viewPort = prepareRenderingWindow->GetViewPortPointer();
 	rect = prepareRenderingWindow->GetRectPointer();
+	changeableViewport = prepareRenderingWindow->GetChangeableViewPortPointer();
+	changeableRect = prepareRenderingWindow->GetChangeableRectPointer();
 
 	// Sky設定
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
 	settingImgui->SetAirParam(calculatedParticipatingMedia);
 
-	sun = new Sun(_dev.Get(), camera);
+	sun = new Sun(_dev.Get(), camera, initialWidth, initialHeight);
 	sun->Init();
 	
-	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get());
+	shadowFactor = new ShadowFactor(_dev.Get(), _fence.Get(), initialWidth, initialHeight);
 	shadowFactor->SetParticipatingMedia(calculatedParticipatingMedia);
 	auto shadowFactorResource = shadowFactor->GetShadowFactorTextureResource();
 
-	skyLUT = new SkyLUT(_dev.Get(), shadowFactorResource.Get());
+	skyLUT = new SkyLUT(_dev.Get(), shadowFactorResource.Get(), initialWidth, initialHeight);
 	skyLUT->SetParticipatingMedia(calculatedParticipatingMedia);
 	skyLUTBuffer.eyePos.x = camera->GetWorld().r[3].m128_f32[0];
 	skyLUTBuffer.eyePos.y = camera->GetWorld().r[3].m128_f32[1];
@@ -540,10 +546,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	// depthMapIntegrationでthread1,2のデプスマップ統合
 	// →comBlurでガウシアンブラー
 	// →integrationはthread1,2の統合カラー、法線、デプスマップ保有状態になる
-	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap());
-	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2());
+	integration = new Integration(_dev.Get(), resourceManager[0]->GetSRVHeap(), initialWidth, initialHeight);
+	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2(), initialWidth, initialHeight);
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
-	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource()); // ブラーかけずにSSAO計算してもあまり変わらない...
+	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource(), initialWidth, initialHeight); // ブラーかけずにSSAO計算してもあまり変わらない...
 	ssaoBlur = new Blur(_dev.Get());
 	ssaoBlur->Init(pair, calculateSSAO->GetResolution());
 	ssaoBlur->SetRenderingResourse(calculateSSAO->GetTextureResource());
@@ -782,6 +788,16 @@ void D3DX12Wrapper::Run() {
 			break;
 		}
 
+		bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
+		// ウィンドウサイズ変更があった場合の処理
+		if (isWindowSizeChanged)
+		{
+			UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
+			UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
+
+			settingImgui->ChangeResolution(_dev, prepareRenderingWindow, clientWidth, clientHeight);
+			resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
+		}
 		settingImgui->DrawImGUI(_dev, _cmdList);
 
 		// 太陽の位置を更新
@@ -909,7 +925,7 @@ void D3DX12Wrapper::Run() {
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
-		DrawBackBuffer(cbv_srv_Size); // draw back buffer and DirectXTK
+		DrawBackBuffer(cbv_srv_Size);
 
 		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
 		barrierDescOfCopyDestTexture = CD3DX12_RESOURCE_BARRIER::Transition
@@ -933,8 +949,7 @@ void D3DX12Wrapper::Run() {
 		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
 		while (_fence->GetCompletedValue() != _fenceVal)
-		{
-			
+		{			
 			event = CreateEvent(nullptr, false, false, nullptr);
 			_fence->SetEventOnCompletion(_fenceVal, event);
 			//イベント発生待ち
@@ -1577,8 +1592,73 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	bbIdx = _swapChain->GetCurrentBackBufferIndex();//現在のバックバッファをインデックスにて取得
 
-	_cmdList3->RSSetViewports(1, viewPort);
-	_cmdList3->RSSetScissorRects(1, rect);
+	bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
+	// ウィンドウサイズ変更があった場合の処理
+	if (isWindowSizeChanged)
+	{
+		// スワップチェーンのリサイズのため、参照しているリソース(_backBuffers[])を解放してやる必要がある。
+		// そのためにGPUの現フレーム処理が完了するまで(フラッシュ)待つ。
+		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
+		while (_fence->GetCompletedValue() != _fenceVal)
+		{
+			auto event = CreateEvent(nullptr, false, false, nullptr);
+			_fence->SetEventOnCompletion(_fenceVal, event);
+			//イベント発生待ち
+			WaitForSingleObject(event, INFINITE);
+			//イベントハンドルを閉じる
+			CloseHandle(event);
+		}
+
+		UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
+		UINT clientHeight = prepareRenderingWindow->GetWindowHeight();
+
+		// ダブルバッファ設計のため、0,1,2といったマジックナンバーを使っている...
+		// バックバッファ用2つのリソースだけでも実行に影響はない。が、rtvHeapをリセット、cmdallocator/list4を割り当ててリセットしてもwarningが出る。
+		// WinPixGpuCapturer.dll warning: Warning: shared resources HANDLES have been recycled. This may cause incorrect captures.
+		_backBuffers[0].Reset();
+		_backBuffers[1].Reset();
+
+		//rtvHeap->Release();
+		//rtvHeap.Reset();
+		//D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		//rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		//rtvHeapDesc.NumDescriptors = 2;
+		//rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//rtvHeapDesc.NodeMask = 0;
+		//result = _dev->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvHeap.GetAddressOf()));
+
+		DXGI_SWAP_CHAIN_DESC desc = {};
+		_swapChain->GetDesc(&desc);
+		_swapChain->ResizeBuffers(2, clientWidth, clientHeight, desc.BufferDesc.Format, desc.Flags);
+
+		// この処理がないと以下エラーが発生する
+		// A command list, which writes to a swapchain back buffer, may only be executed when that back buffer is the back buffer that will be presented during the next call to Present* .Such a back buffer is also referred to as the “current back buffer”.
+		bbIdx = _swapChain->GetCurrentBackBufferIndex();
+		
+		auto _handle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+		for (int idx = 0; idx < 2; idx++)
+		{  
+			result = _swapChain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			_dev->CreateRenderTargetView
+			(
+				_backBuffers[idx].Get(),
+				nullptr,
+				_handle
+			);
+
+			_handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		}
+
+		// WIndow管理クラスへ処理完了を通知する
+		prepareRenderingWindow->SetChangeFinished();
+	}
+
+	_cmdList3->RSSetViewports(1, changeableViewport);
+	_cmdList3->RSSetScissorRects(1, changeableRect);
 
 	// ﾊﾞｯｸﾊﾞｯﾌｧに描画する
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄに変更する
@@ -1604,7 +1684,7 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	_cmdList3->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
 
-	_cmdList3->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	_cmdList3->ClearRenderTargetView(rtvHeapPointer, clearColor, 0, nullptr);
 
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);

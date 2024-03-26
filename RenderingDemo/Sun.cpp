@@ -1,10 +1,12 @@
 #include <stdafx.h>
 #include <Sun.h>
 
-Sun::Sun(ID3D12Device* dev, Camera* camera)
+Sun::Sun(ID3D12Device* dev, Camera* camera, int _width, int _height)
 {
     _dev = dev;
     _camera = camera;
+    width = _width;
+    height = _height;
 }
 
 Sun::~Sun()

@@ -71,8 +71,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {}; // (Vertex)Indexビュー
 	XMVECTOR* mappedVertPos = nullptr;
 	unsigned int* mappedIdx = nullptr;
-	float width = 1024;
-	float height = 1024;
+	float width;
+	float height;
 
 	struct BillboardMatrix
 	{
@@ -94,7 +94,7 @@ private:
 	float adjustDirValue = 95.0f; // 観測値として65以下だと平行投影ビュー時に太陽位置がある角度においてsponzaにめり込み、シェーディングエラーが発生する
 
 public:
-	Sun(ID3D12Device* dev, Camera* camera);
+	Sun(ID3D12Device* dev, Camera* camera, int _width, int _height);
 	~Sun();
 	void Init();
 	void CalculateBillbordMatrix();

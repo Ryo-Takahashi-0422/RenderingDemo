@@ -88,15 +88,15 @@ private:
     //// コマンドリスト
     //ComPtr<ID3D12GraphicsCommandList> _cmdList;
 
-    UINT64 width = 1024;
-    UINT64 height = 1024;
+    UINT64 width;
+    UINT64 height;
 
     void RecreatreSource();
     bool barrierSW = true; // シャドウファクターの解像度変化および初回の描画時にのみtrue
 
 public:
     //SkyLUT();
-    SkyLUT(ID3D12Device* dev, /*ID3D12Fence* _fence, */ID3D12Resource* _shadowFactorRsource);
+    SkyLUT(ID3D12Device* dev, ID3D12Resource* _shadowFactorRsource, int _width, int _height);
     ~SkyLUT();
     void SetParticipatingMedia(ParticipatingMedia media);
     void SetSkyLUTBuffer(SkyLUTBuffer buffer);

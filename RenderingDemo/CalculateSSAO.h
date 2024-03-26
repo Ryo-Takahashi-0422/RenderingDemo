@@ -4,8 +4,8 @@ class CalculateSSAO
 {
 private:
     // ‰ð‘œ“xŠÖ˜A
-    int width = 1024;
-    int height = 1024;
+    int width;
+    int height;
     int threadIdNum_X = 16;
     int threadIdNum_Y = 16;
 
@@ -66,7 +66,7 @@ private:
     Matrix4Cal* matrix4Cal = nullptr;
 
 public:
-    CalculateSSAO(ID3D12Device* dev, ComPtr<ID3D12Resource> _normalmapResource, ComPtr<ID3D12Resource> _depthmapResource);
+    CalculateSSAO(ID3D12Device* dev, ComPtr<ID3D12Resource> _normalmapResource, ComPtr<ID3D12Resource> _depthmapResource, int _width, int _height);
     ~CalculateSSAO();
     ComPtr<ID3D12Resource> GetTextureResource() { return copyTextureResource; };
     void SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _proj, XMMATRIX _invProj);
