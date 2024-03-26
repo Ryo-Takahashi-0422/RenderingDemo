@@ -65,10 +65,15 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 	break;
 	}
 
+	// 以下はwindowサイズ変更時にimguiの認識するマウスポジションがオフセットする問題に対する対策。これに伴いImGui_ImplWin32_WndProcHandlerをごく一部改造している。
 	INT subWidth = window_width - base_width;
 	INT subHeight = window_height - base_height;
 
-	if (subHeight == 0)
+	if (subWidth == 0 && subHeight == 0)
+	{
+		ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth, subHeight);
+	}
+	else if (subWidth != 0 && subHeight == 0)
 	{
 		if (subWidth > subHeight)
 		{
@@ -79,7 +84,7 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subHeight, -subWidth);
 		}
 	}
-	else if(subWidth == 0)
+	else if(subWidth == 0 && subHeight != 0)
 	{
 		if (subWidth > subHeight)
 		{
@@ -90,6 +95,23 @@ LRESULT PrepareRenderingWindow::WndProc(PrepareRenderingWindow* pWindow, HWND hW
 			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth, -subHeight);
 		}
 	}
+	else if(subWidth == subHeight)
+	{
+		ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth - subHeight, -subHeight - subWidth);
+	}
+	else
+	{
+		if (subWidth > subHeight)
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, subWidth - subHeight, 0);
+		}
+		else
+		{
+			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, 0, subHeight - subWidth);
+		}
+	}
+
+
 	//ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp, window_width - base_width, window_height - base_height);
 	return DefWindowProc(hWnd, msg, wp, lp);
 }
