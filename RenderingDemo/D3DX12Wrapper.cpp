@@ -468,7 +468,6 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// SkyÝ’è
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
-	settingImgui->SetAirParam(calculatedParticipatingMedia);
 
 	sun = new Sun(_dev.Get(), camera, initialWidth, initialHeight);
 	sun->Init();
@@ -510,6 +509,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
+	calculatedParticipatingMedia.mieScattering = 7.8f * 1e-6f;
+	calculatedParticipatingMedia.altitudeOfRayleigh = 350.0f;
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
 	
 	// vsm blur

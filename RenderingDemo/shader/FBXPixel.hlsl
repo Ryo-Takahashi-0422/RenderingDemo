@@ -19,8 +19,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 0.0f;
-    float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
+    float tangentWeight = 1.0f;
+    float biNormalWeight = 1.0f; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.4f;
     float brightEmpha = 4.5f;
     
@@ -72,7 +72,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         normal *= 0.2;
     }
     // 法線画像の結果をレンダーターゲット2に格納する
-    if (!normCol.x == 0 && !normCol.y == 0 && !normCol.z == 0)
+    // キャラの場合はSSAOでシャドウアクメが発生するため1のみ格納
+    if (input.isChara)
+    {
+        result.normal = float4(1, 1, 1, 1);
+    }
+    else if (!normCol.x == 0/* && !normCol.y == 0 && !normCol.z == 0*/)
     {
         result.normal = float4(normal, 1);
     }

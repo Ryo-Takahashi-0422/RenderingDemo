@@ -85,15 +85,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             // x > y = 1, x < y = 0
                 float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1, -1)) * float2(0.5f, -0.5f), 0);
                 float depthDifference = abs(sampleDepth - rpos.z);
-                if (depthDifference > 0.001f)
-                {
-                
-                }
-                else
+                if (depthDifference <= 0.001f)
                 {
                     ao += step(sampleDepth /* + 0.0005f*/ + 0.0004f, rpos.z) * dt * normDiff /* * (1.0 - smoothstep(0.000002f, 0.0007f, depthDifference))*/;
-                }
-            
+                }           
             }
         
             ao /= (float) trycnt;

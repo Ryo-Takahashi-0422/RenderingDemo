@@ -156,7 +156,6 @@ public:
 	bool GetIsFpsChanged() { return isFpsChanged; };
 	float GetFPS() { return fps; };
 
-	void SetAirParam(ParticipatingMedia media);
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 
 	void ChangeResolution(ComPtr<ID3D12Device> _dev, PrepareRenderingWindow* pRWindow, UINT _width, UINT _height);
