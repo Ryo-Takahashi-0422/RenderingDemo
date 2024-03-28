@@ -70,6 +70,7 @@ public:
     ~CalculateSSAO();
     ComPtr<ID3D12Resource> GetTextureResource() { return copyTextureResource; };
     void SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _proj, XMMATRIX _invProj);
+    void SetViewMatrix(XMMATRIX _view);
     // é¿çs
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);

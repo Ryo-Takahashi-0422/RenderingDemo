@@ -81,8 +81,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //}
     else
     {
-        normal = mul(view, input.normal);;
-        result.normal = float4(normal, 1);
+        normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+        result.normal = float4(input.worldNormal, 1);
     }
     
     normal *= -sunDIr.y; // ‘¾—z‚“x‚ª’á‚¢‚Ù‚Ç–Ú—§‚½‚È‚­‚·‚é

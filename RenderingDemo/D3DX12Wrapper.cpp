@@ -892,7 +892,7 @@ void D3DX12Wrapper::Run() {
 		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		auto proj = camera->GetProj();
 		calculateSSAO->SetDraw(settingImgui->GetSSAOBoxChanged());
-		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
+		calculateSSAO->SetInvVPMatrix(camera->/*GetView()*/GetOrbitView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		ssaoBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 
@@ -1289,6 +1289,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
+						calculateSSAO->SetViewMatrix(camera->GetOrbitView());
 					}
 
 					// Left Key
@@ -1302,6 +1303,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
+						calculateSSAO->SetViewMatrix(camera->GetOrbitView());
 					}
 
 					// Right Key
@@ -1315,6 +1317,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
+						calculateSSAO->SetViewMatrix(camera->GetOrbitView());
 					}
 				}
 

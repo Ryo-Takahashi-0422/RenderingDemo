@@ -42,8 +42,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     }
 
     else
-    {
-    
+    {    
         float4 respos = mul( /*mul(*/invProj /*, invView)*/, float4(uv * float2(2, -2) + float2(-1, 1), dp, 1));
         respos.xyz = respos.xyz / respos.w;
     
@@ -55,7 +54,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float div = 0.0f;
         float ao = 0.0f;
         float3 norm = normalize((normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0).xyz * 2) - 1);
-        float3 resNorm = /*mul(view, norm)*/norm;
+        float3 resNorm = mul(view, norm) /*norm*/;
         const int trycnt = 32;
         const float radius = 0.08f;
     
@@ -83,13 +82,13 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 div += dt; // é’ífÇçlÇ¶Ç»Ç¢åãâ Çâ¡éZÇ∑ÇÈ 
             
                 float4 rpos = mul(proj, /* mul(view,*/float4(respos.xyz + omega * radius, 1 /*)*/));                
-                rpos.xyz /= rpos.w;
-                
+                rpos.xyz /= rpos.w;                
             
                 float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1, -1)) * float2(0.5, -0.5), 0).xyz);
+                //oNorm = mul(view, float4(oNorm, 1));
                 oNorm = clamp(oNorm, 0.0f, 1.0f);
-                //oNorm = mul(view, oNorm);
-                float normDiff = (1.0 - dot(oNorm, resNorm));
+                oNorm = mul(view, oNorm);
+                float normDiff = (1.0 - dot(resNorm, oNorm));
                 
                 //float rangeCheck = smoothstep(0.0f, 1.0f, 0.5f / length(respos - rpos));
                 
