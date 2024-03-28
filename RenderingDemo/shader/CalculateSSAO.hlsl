@@ -56,7 +56,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float3 norm = normalize((normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f).xyz * 2.0f) - 1.0f);
         norm = mul(view, norm);
         const int trycnt = 64;
-        const float radius = 0.05f;
+        const float radius = 0.1f;
     
         if (dp < 1.0f)
         {
@@ -86,19 +86,20 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             
                 float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f).xyz);
                 //oNorm = mul(view, float4(oNorm, 1));
-                oNorm = clamp(oNorm, 0.0f, 1.0f);
+                //oNorm = clamp(oNorm, 0.0f, 1.0f);
                 oNorm = mul(view, oNorm);
                 float normDiff = (1.0f - abs(dot(norm, oNorm)));
-                
+                normDiff = smoothstep(0.0f, 1.0f, normDiff);
+                dt = smoothstep(0.0f, 1.0f, dt);
             // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
             // x > y = 1, x < y = 0
                 float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f);
                 float depthDifference = abs(sampleDepth - /*rpos.z*/dp);
                 
                 float rangeCheck = smoothstep(0.0f, 1.0f, 0.05f / length(dp - sampleDepth));
-                if (depthDifference <= 0.0025f)
+                if (depthDifference <= 0.0028f)
                 {
-                    ao += step(sampleDepth /* + 0.0005f*/ + 0.00027f, dp) * dt * normDiff /* * rangeCheck*/;
+                    ao += smoothstep(0, 1, step(sampleDepth /* + 0.0005f*/ + 0.0001f, dp) * dt * normDiff) /* * rangeCheck*/;
                 }           
             }
         
