@@ -55,8 +55,9 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float div = 0.0f;
         float ao = 0.0f;
         float3 norm = normalize((normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0).xyz * 2) - 1);
-        const int trycnt = 64;
-        const float radius = 0.05f;
+        float3 resNorm = /*mul(view, norm)*/norm;
+        const int trycnt = 32;
+        const float radius = 0.08f;
     
         if (dp < 1.0f)
         {
@@ -67,31 +68,42 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rnd3 = random(float2(rnd2, rnd1)) * 2 - 1;
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
                 omega = normalize(omega);
-            
-            // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
-                float dt = dot(norm, omega);
+                
+                // Create TBN matrix
+                //float3 tangent = normalize(omega - resNorm * dot(omega, resNorm));
+                //float3 bitangent = cross(tangent, resNorm);
+                //float3x3 TBN = float3x3(tangent, bitangent, resNorm);
+                //omega = mul(TBN, omega);
+                
+                // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
+                float dt = dot(resNorm, omega);
                 float sgn = sign(dt);
                 omega *= sign(dt);
                 dt *= sgn; // ³‚Ì’l‚É‚µ‚ÄcosƒÆ‚ð“¾‚é            
                 div += dt; // ŽÕ’f‚ðl‚¦‚È‚¢Œ‹‰Ê‚ð‰ÁŽZ‚·‚é 
             
-                float4 rpos = mul(proj, /* mul(view,*/float4(respos.xyz + omega * radius, 1 /*)*/));
+                float4 rpos = mul(proj, /* mul(view,*/float4(respos.xyz + omega * radius, 1 /*)*/));                
                 rpos.xyz /= rpos.w;
+                
             
                 float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1, -1)) * float2(0.5, -0.5), 0).xyz);
-                oNorm = clamp(oNorm, 0, 1);
-                float normDiff = (1.0 - dot(oNorm, norm));
+                oNorm = clamp(oNorm, 0.0f, 1.0f);
+                //oNorm = mul(view, oNorm);
+                float normDiff = (1.0 - dot(oNorm, resNorm));
+                
+                //float rangeCheck = smoothstep(0.0f, 1.0f, 0.5f / length(respos - rpos));
+                
             // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
             // x > y = 1, x < y = 0
                 float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1, -1)) * float2(0.5f, -0.5f), 0);
                 float depthDifference = abs(sampleDepth - rpos.z);
                 if (depthDifference <= 0.001f)
                 {
-                    ao += step(sampleDepth /* + 0.0005f*/ + 0.0004f, rpos.z) * dt * normDiff /* * (1.0 - smoothstep(0.000002f, 0.0007f, depthDifference))*/;
+                    ao += step(sampleDepth /* + 0.0005f*/ + 0.0004f, rpos.z) * dt * normDiff /* * (1 - depthDifference)*/ /* * (1.0 - smoothstep(0.000002f, 0.0007f, depthDifference))*/;
                 }           
             }
         
-            ao /= (float) trycnt;
+            ao /= (float) div;
         //ao = pow(ao, 4);
 
         }
