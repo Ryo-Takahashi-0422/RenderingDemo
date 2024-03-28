@@ -19,8 +19,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 1.0f;
-    float biNormalWeight = 1.0f; // 0でUVシームが多少目立たなくなる
+    float tangentWeight = 0.0f;
+    float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.4f;
     float brightEmpha = 4.5f;
     
@@ -63,7 +63,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     adjustDir.z *= -1;    
     float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
-    float3 normal;
+    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;;
     
     
 
@@ -71,7 +71,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // キャラの場合はSSAOでシャドウアクメが発生するため1のみ格納
     if (input.isChara)
     {
-        normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+        //normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
         result.normal = float4(1, 1, 1, 1);
     }
     //else if (!normCol.x == 0/* && !normCol.y == 0 && !normCol.z == 0*/)
@@ -81,7 +81,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //}
     else
     {
-        normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+        //normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
         result.normal = float4(input.worldNormal, 1);
     }
     
