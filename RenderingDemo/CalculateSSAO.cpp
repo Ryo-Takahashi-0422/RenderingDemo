@@ -304,6 +304,11 @@ void CalculateSSAO::SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _
     matrix4Cal->invProj = _invProj;
 }
 
+void CalculateSSAO::SetViewMatrix(XMMATRIX _view)
+{
+    matrix4Cal->view = _view;
+}
+
 void CalculateSSAO::SetDraw(bool _isDraw)
 {
     matrix4Cal->isDraw = _isDraw;

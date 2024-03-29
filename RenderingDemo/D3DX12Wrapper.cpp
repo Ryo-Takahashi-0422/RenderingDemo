@@ -142,7 +142,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	prepareRenderingWindow->CreateAppWindow(prepareRenderingWindow);
 
 	// TextureLoaderクラスのインスタンス化
-	textureLoader = new TextureLoader;
+	//textureLoader = new TextureLoader;
 
 	//// レンダリングウィンドウ表示
 	//ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
@@ -419,7 +419,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	
 	//ファイル形式毎のテクスチャロード処理
-	textureLoader->LoadTexture();
+	//textureLoader->LoadTexture();
 
 	// テクスチャアップロード
 	for (int i = 0; i < modelPath.size(); ++i)
@@ -431,7 +431,7 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-	textureLoader = nullptr;
+	//textureLoader = nullptr;
 	delete textureTransporter;
 	textureTransporter = nullptr;
 
@@ -468,7 +468,6 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	// Sky設定
 	calculatedParticipatingMedia = participatingMedia.calculateUnit();
-	settingImgui->SetAirParam(calculatedParticipatingMedia);
 
 	sun = new Sun(_dev.Get(), camera, initialWidth, initialHeight);
 	sun->Init();
@@ -510,6 +509,8 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
+	calculatedParticipatingMedia.mieScattering = 7.8f * 1e-6f;
+	calculatedParticipatingMedia.altitudeOfRayleigh = 350.0f;
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
 	
 	// vsm blur
@@ -891,7 +892,7 @@ void D3DX12Wrapper::Run() {
 		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		auto proj = camera->GetProj();
 		calculateSSAO->SetDraw(settingImgui->GetSSAOBoxChanged());
-		calculateSSAO->SetInvVPMatrix(camera->GetView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
+		calculateSSAO->SetInvVPMatrix(camera->/*GetView()*/GetOrbitView(), camera->GetInvView(), proj, XMMatrixInverse(nullptr, proj));
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		ssaoBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 
@@ -1288,6 +1289,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 
 					// Left Key
@@ -1301,6 +1303,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 
 					// Right Key
@@ -1314,6 +1317,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 				}
 

@@ -58,6 +58,8 @@ HRESULT SettingImgui::Init
 	}
 
 	exp_Media = new ParticipatingMedia;
+	exp_Media->mieScattering = 7.8f;
+	exp_Media->altitudeOfRayleigh = 0.35f;
 	//exp_Media->rayleighScattering = m_Media.rayleighScattering;
 
 	exp_skyMedia = new ParticipatingMedia;
@@ -348,21 +350,6 @@ void SettingImgui::CreateRTV(ComPtr<ID3D12Device> _dev)
 		&rtvViewDesc,
 		handle
 	);
-}
-
-void SettingImgui::SetAirParam(ParticipatingMedia media)
-{
-	m_Media.rayleighScattering = media.rayleighScattering;
-	m_Media.mieScattering = media.mieScattering;
-	m_Media.mieAbsorption = media.mieAbsorption;
-	m_Media.ozoneAbsorption = media.ozoneAbsorption;
-	m_Media.asymmetryParameter = media.asymmetryParameter;
-	m_Media.altitudeOfRayleigh = media.altitudeOfRayleigh;
-	m_Media.altitudeOfMie = media.altitudeOfMie;
-	m_Media.halfWidthOfOzone = media.halfWidthOfOzone;
-	m_Media.altitudeOfOzone = media.altitudeOfOzone;
-	m_Media.groundRadius = media.groundRadius;
-	m_Media.atomosphereRadius = media.atomosphereRadius;
 }
 
 void SettingImgui::ChangeResolution(ComPtr<ID3D12Device> _dev, PrepareRenderingWindow* pRWindow, UINT _width, UINT _height)

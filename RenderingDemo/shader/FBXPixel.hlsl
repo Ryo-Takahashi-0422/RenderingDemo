@@ -63,22 +63,33 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     adjustDir.z *= -1;    
     float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
-    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-    normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
+    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;;
     
+    
+
+    // 法線画像の結果をレンダーターゲット2に格納する
+    // キャラの場合はSSAOでシャドウアクメが発生するため1のみ格納
+    if (input.isChara)
+    {
+        //normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+        result.normal = float4(1, 1, 1, 1);
+    }
+    //else if (!normCol.x == 0/* && !normCol.y == 0 && !normCol.z == 0*/)
+    //{
+    //    normal = mul(view, input.normal);
+    //    result.normal = float4(normal, 1);
+    //}
+    else
+    {
+        //normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+        result.normal = float4(input.worldNormal, 1);
+    }
+    
+    normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
     // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
     if (lz - 0.01f > shadowValue.x && input.isChara)
     {
         normal *= 0.2;
-    }
-    // 法線画像の結果をレンダーターゲット2に格納する
-    if (!normCol.x == 0 && !normCol.y == 0 && !normCol.z == 0)
-    {
-        result.normal = float4(normal, 1);
-    }
-    else
-    {
-        result.normal = float4(input.normal, 1);
     }
 
     float bright = dot(abs(input.lightTangentDirection.xyz), normal);
