@@ -142,7 +142,7 @@ bool D3DX12Wrapper::PrepareRendering() {
 	prepareRenderingWindow->CreateAppWindow(prepareRenderingWindow);
 
 	// TextureLoaderクラスのインスタンス化
-	textureLoader = new TextureLoader;
+	//textureLoader = new TextureLoader;
 
 	//// レンダリングウィンドウ表示
 	//ShowWindow(prepareRenderingWindow->GetHWND(), SW_SHOW);
@@ -419,7 +419,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 	
 	//ファイル形式毎のテクスチャロード処理
-	textureLoader->LoadTexture();
+	//textureLoader->LoadTexture();
 
 	// テクスチャアップロード
 	for (int i = 0; i < modelPath.size(); ++i)
@@ -431,7 +431,7 @@ bool D3DX12Wrapper::ResourceInit() {
 				_fence, _fenceVal, resourceManager[i]->GetTextureUploadBuff(), resourceManager[i]->GetTextureReadBuff());
 		}
 	}
-	textureLoader = nullptr;
+	//textureLoader = nullptr;
 	delete textureTransporter;
 	textureTransporter = nullptr;
 

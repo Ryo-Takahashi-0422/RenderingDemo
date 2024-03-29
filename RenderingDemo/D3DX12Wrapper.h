@@ -40,7 +40,7 @@ private:
 	SettingShaderCompile* settingShaderCompile = nullptr;
 	VertexInputLayout* vertexInputLayout = nullptr;
 	PrepareRenderingWindow* prepareRenderingWindow = nullptr;	
-	TextureLoader* textureLoader = nullptr;
+	//TextureLoader* textureLoader = nullptr;
 
 	// バックバッファ描画関連
 	PeraGraphicsPipelineSetting* peraGPLSetting = nullptr;

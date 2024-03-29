@@ -644,7 +644,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	}
 
 	textureMetaData[iterationNum] = new TexMetadata;
-	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
+	//auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
 
 	if (scratchImg.GetImage(0, 0, 0) == nullptr) return;
 	
@@ -673,7 +673,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 
 	auto srcAddress = textureImg[iterationNum]->pixels;
 	auto rowPitch = Utility::AlignmentSize(textureImg[iterationNum]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-	result = textureUploadBuff[iterationNum]->Map(0, nullptr, (void**)&mappedImgContainer[iterationNum]);
+	auto result = textureUploadBuff[iterationNum]->Map(0, nullptr, (void**)&mappedImgContainer[iterationNum]);
 
 	// img:元データの初期アドレス(srcAddress)を元ピッチ分オフセットしながら、補正したピッチ個分(rowPitch)のアドレスを
 	// mappedImgContainer[i]にその数分(rowPitch)オフセットを繰り返しつつコピーしていく
