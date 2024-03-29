@@ -29,7 +29,7 @@ ResourceManager::~ResourceManager()
 
 	textureUploadBuff.clear();
 	textureReadBuff.clear();
-	
+
 	mappedImgContainer.clear();
 	textureMetaData.clear();
 	textureImg.clear();
@@ -123,10 +123,10 @@ HRESULT ResourceManager::Init(Camera* _camera)
 	itFirst = vertMap.begin();
 	// create pos container
 	for (int i = 0; i < vertMap.size(); ++i)
-	{		
+	{
 		meshVertexInfos.push_back(vertMap[i]); // OBB処理用に用意する
 		for (int j = 0; j < itFirst->second.vertices.size(); ++j)
-		{				
+		{
 			verticesPosContainer.push_back(itFirst->second.vertices[j]);
 		}
 		++itFirst;
@@ -445,13 +445,13 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	if (result != S_OK) return result;
 
 	matrixBuff->Map(0, nullptr, (void**)&mappedMatrix); // mapping
-	
+
 	mappedMatrix->world = m_Camera->GetWorld();
 	mappedMatrix->view = m_Camera->GetView();
 	mappedMatrix->proj = m_Camera->GetProj();
 
 	mappedMatrix->rotation = XMMatrixIdentity();
-    
+
 	auto bonesInitialPostureMatrixMap = _fbxInfoManager->GetBonesInitialPostureMatrix();
 	XMVECTOR det;
 	invBonesInitialPostureMatrixMap.resize(bonesInitialPostureMatrixMap.size());
@@ -506,7 +506,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//  1:Matrix(world, view, proj)
-	
+
 	_dev->CreateConstantBufferView
 	(
 		&cbvDesc,
@@ -593,7 +593,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 		(
 			&phongCBVDesc,
 			handle
-		);		
+		);
 	}
 
 	// x-:Texture Read Buffers(n=textureNum)
@@ -616,7 +616,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 
 
 		_dev->CreateShaderResourceView
-		(	
+		(
 			resource.Get(),
 			&textureSRVDesc,
 			handle
@@ -644,10 +644,10 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	}
 
 	textureMetaData[iterationNum] = new TexMetadata;
-	//auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
+	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], scratchImg/*scratchImageContainer[iterationNum]*/);
 
 	if (scratchImg.GetImage(0, 0, 0) == nullptr) return;
-	
+
 	textureImg[iterationNum] = nullptr;
 	textureImg[iterationNum] = new Image;
 	textureImg[iterationNum]->pixels = scratchImg.GetImage(0, 0, 0)->pixels;
@@ -666,14 +666,14 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	else
 	{
 		std::tie(textureUploadBuff[iterationNum], textureReadBuff[iterationNum]) = std::forward_as_tuple(nullptr, nullptr);
-	}	
+	}
 
 	// mapping
 	if (textureUploadBuff[iterationNum] == nullptr) return;
 
 	auto srcAddress = textureImg[iterationNum]->pixels;
 	auto rowPitch = Utility::AlignmentSize(textureImg[iterationNum]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-	auto result = textureUploadBuff[iterationNum]->Map(0, nullptr, (void**)&mappedImgContainer[iterationNum]);
+	result = textureUploadBuff[iterationNum]->Map(0, nullptr, (void**)&mappedImgContainer[iterationNum]);
 
 	// img:元データの初期アドレス(srcAddress)を元ピッチ分オフセットしながら、補正したピッチ個分(rowPitch)のアドレスを
 	// mappedImgContainer[i]にその数分(rowPitch)オフセットを繰り返しつつコピーしていく
