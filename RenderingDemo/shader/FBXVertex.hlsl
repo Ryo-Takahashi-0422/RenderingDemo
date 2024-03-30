@@ -34,8 +34,15 @@ uint index : SV_VertexID)
     lightPos.z = adjustDirValue * sunDIr.z;
     output.light = lightPos;
     
+    // 壁の法線値が-1になりssaoが計算出来くなる問題への対処
+    float4 m_normal = norm;
+    
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
+        m_normal.x *= sign(m_normal.x);
+        //m_normal.y *= sign(m_normal.y);
+        m_normal.z *= sign(m_normal.z);
+        
         moveObj = false;
         bm[0][0] = 1;
         bm[1][1] = 1;
@@ -95,12 +102,6 @@ uint index : SV_VertexID)
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);
-    
-    // 壁の法線値が-1になりssaoが計算出来くなる問題への対処
-    float4 m_normal = norm;
-    m_normal.x *= sign(m_normal.x);
-    //m_normal.y *= sign(m_normal.y);
-    m_normal.z *= sign(m_normal.z);
     
     // 床とキャラクターとのSSAOを無理矢理消す処理。弊害として、床にあらゆるSSAOが発生しなくなる。
     //if (m_normal.y == 1.0f)
