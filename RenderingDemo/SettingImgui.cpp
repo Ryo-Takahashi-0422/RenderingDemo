@@ -58,8 +58,10 @@ HRESULT SettingImgui::Init
 	}
 
 	exp_Media = new ParticipatingMedia;
-	exp_Media->mieScattering = 7.8f;
-	exp_Media->altitudeOfRayleigh = 0.35f;
+	exp_Media->mieScattering = 4.7f;
+	exp_Media->asymmetryParameter = 0.0f;
+	exp_Media->altitudeOfRayleigh = 0.0f;
+	exp_Media->altitudeOfMie = 3.5f;
 	//exp_Media->rayleighScattering = m_Media.rayleighScattering;
 
 	exp_skyMedia = new ParticipatingMedia;

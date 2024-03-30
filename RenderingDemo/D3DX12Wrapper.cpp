@@ -509,8 +509,10 @@ bool D3DX12Wrapper::ResourceInit() {
 	
 	air = new Air(_dev.Get(), _fence.Get(), shadow->GetShadowMapResource(), shadowFactor->GetShadowFactorTextureResource());
 	air->SetFrustum(camera->GetFrustum());
-	calculatedParticipatingMedia.mieScattering = 7.8f * 1e-6f;
-	calculatedParticipatingMedia.altitudeOfRayleigh = 350.0f;
+	calculatedParticipatingMedia.mieScattering = 4.7f * 1e-6f;
+	calculatedParticipatingMedia.asymmetryParameter = 0.0f;
+	calculatedParticipatingMedia.altitudeOfRayleigh = 0.0f;
+	calculatedParticipatingMedia.altitudeOfMie = 3500.0f;
 	air->SetParticipatingMedia(calculatedParticipatingMedia);
 	
 	// vsm blur
