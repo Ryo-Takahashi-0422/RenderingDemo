@@ -95,11 +95,22 @@ uint index : SV_VertexID)
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);
+    
+    // 向かいの壁の法線値が0,0,-1になる問題への対処
+    float4 m_normal = norm;
+    m_normal.z *= sign(m_normal.z);
+    
+    // 床とキャラクターとのSSAOを無理矢理消す処理。弊害として、床にあらゆるSSAOが発生しなくなる。
+    if (m_normal.y == 1.0f)
+    {
+        m_normal.y = 0.0f;
+
+    }
 
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
     mat[1] = float4(binormal, 0.0f);
-    mat[2] = float4(norm);
+    mat[2] = float4(m_normal);
     mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
     mat = transpose(mat);
 
@@ -112,14 +123,14 @@ uint index : SV_VertexID)
     bmTan[2] = bm[2];
     output.tangent = normalize(mul(world, mul(bmTan, tangent)));
     output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
-    output.normal = normalize(mul(world, mul(bmTan, norm)));
+    output.normal = normalize(mul(world, mul(bmTan, m_normal)));
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
-    output.norm = mul(world, norm);
+    output.norm = mul(world, m_normal);
     
     matrix rot = charaRot;
-    output.rotatedNorm = norm;
+    output.rotatedNorm = m_normal;
     output.rotatedNorm = mul(rot, output.rotatedNorm);
 
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
@@ -127,7 +138,7 @@ uint index : SV_VertexID)
     
     output.screenPosition = output.svpos;
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
-    output.worldNormal = normalize(mul(world, norm).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
+    output.worldNormal = normalize(mul(world, m_normal).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
     
     output.ray = normalize(pos.xyz - eyePos);
 

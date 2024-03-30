@@ -63,7 +63,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     adjustDir.z *= -1;    
     float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
-    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;;
+    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     
     
 
@@ -82,7 +82,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     else
     {
         //normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-        result.normal = float4(input.worldNormal, 1);
+        result.normal = float4( input.worldNormal/*input.normal * normVec.z*/, 1);
     }
     
     normal *= -sunDIr.y; // ëæózçÇìxÇ™í·Ç¢ÇŸÇ«ñ⁄óßÇΩÇ»Ç≠Ç∑ÇÈ

@@ -56,7 +56,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float3 norm = normalize(normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f).xyz * 2.0f - 1.0f);
         norm = mul(view, norm);
         const int trycnt = 48;
-        const float radius = 0.1f;
+        const float radius = 0.2f;
     
         if (dp < 1.0f)
         {
@@ -88,21 +88,21 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 //oNorm = mul(view, float4(oNorm, 1));
                 //oNorm = clamp(oNorm, 0.0f, 1.0f);
                 oNorm = mul(view, oNorm);
-                float normDiff = (1.0f - abs(dot(norm, oNorm)));
-                normDiff = smoothstep(0.0f, 1.0f, normDiff);
+                float normDiff = (1.0f - /*abs(*/dot(norm, oNorm))/*)*/;
+                //normDiff = smoothstep(0.0f, 1.0f, normDiff);
                 //normDiff = smoothstep(0.0f, 1.0f, normDiff);
                 //normDiff = smoothstep(0.0f, 1.0f, normDiff);
                 //dt = smoothstep(0.0f, 1.0f, dt);
-                dt = smoothstep(0.0f, 1.0f, dt);
+                //dt = smoothstep(0.0f, 1.0f, dt);
             // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
             // x > y = 1, x < y = 0
                 float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f);
                 float depthDifference = abs(sampleDepth - /*rpos.z*/dp);
                 
-                //float rangeCheck = smoothstep(0.0f, 1.0f, radius / length(dp - sampleDepth));
-                if (depthDifference <= 0.0028f)
+                float rangeCheck = smoothstep(0.0f, 1.0f, radius / length(dp - sampleDepth));
+                if (depthDifference <= /*0.0028f*/0.005f)
                 {
-                    ao += smoothstep(0, 1, step(sampleDepth /* + 0.0005f*/ + 0.0001f, dp) * dt * normDiff);
+                    ao += /*smoothstep(0, 1, */step(sampleDepth /* + 0.0005f*/ + 0.000001f, dp) * dt * normDiff/*)*/;
                 }           
             }
         
@@ -112,7 +112,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         
         result = 1.0f - ao;
-        result = pow(result, 3);
+        result = pow(result, 2);
         //result *= result;
         ssao[DTid.xy] = float4(result, result, result, 0.0f);
     }
