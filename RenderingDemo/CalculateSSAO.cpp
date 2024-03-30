@@ -296,18 +296,18 @@ void CalculateSSAO::Mapping()
     matrixResource->Map(0, nullptr, (void**)&matrix4Cal);
 }
 
-void CalculateSSAO::SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _proj, XMMATRIX _invProj)
+void CalculateSSAO::SetInvVPMatrix(/*XMMATRIX _view, XMMATRIX _invView, */XMMATRIX _proj, XMMATRIX _invProj)
 {
-    matrix4Cal->view = _view;
-    matrix4Cal->invView = _invView;
+    //matrix4Cal->view = _view;
+    //matrix4Cal->invView = _invView;
     matrix4Cal->proj = _proj;
     matrix4Cal->invProj = _invProj;
 }
 
-void CalculateSSAO::SetViewMatrix(XMMATRIX _view)
-{
-    matrix4Cal->view = _view;
-}
+//void CalculateSSAO::SetViewMatrix(XMMATRIX _view)
+//{
+//    matrix4Cal->view = _view;
+//}
 
 void CalculateSSAO::SetDraw(bool _isDraw)
 {

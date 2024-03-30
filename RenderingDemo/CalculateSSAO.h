@@ -56,8 +56,8 @@ private:
 
     struct Matrix4Cal 
     {
-        XMMATRIX view;
-        XMMATRIX invView;
+        //XMMATRIX view;
+        //XMMATRIX invView;
         XMMATRIX proj;
         XMMATRIX invProj;
         bool isDraw;
@@ -69,8 +69,8 @@ public:
     CalculateSSAO(ID3D12Device* dev, ComPtr<ID3D12Resource> _normalmapResource, ComPtr<ID3D12Resource> _depthmapResource, int _width, int _height);
     ~CalculateSSAO();
     ComPtr<ID3D12Resource> GetTextureResource() { return copyTextureResource; };
-    void SetInvVPMatrix(XMMATRIX _view, XMMATRIX _invView, XMMATRIX _proj, XMMATRIX _invProj);
-    void SetViewMatrix(XMMATRIX _view);
+    void SetInvVPMatrix(/*XMMATRIX _view, XMMATRIX _invView, */XMMATRIX _proj, XMMATRIX _invProj);
+    //void SetViewMatrix(XMMATRIX _view);
     // é¿çs
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);

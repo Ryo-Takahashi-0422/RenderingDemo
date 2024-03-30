@@ -5,8 +5,8 @@ SamplerState smp : register(s0); // No.0 sampler
 
 cbuffer Matrix4Cal : register(b0) // gaussian weight
 {
-    matrix view;
-    matrix invView;
+    //matrix view;
+    //matrix invView;
     matrix proj;
     matrix invProj;
     bool isDraw;
