@@ -84,7 +84,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float4 rpos = mul(proj, /* mul(view,*/float4(respos.xyz + omega * radius, 1.0f /*)*/));
                 rpos.xyz /= rpos.w;                
             
-                float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f).xyz);
+                float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f).xyz * 2.0f - 1.0f);
                 //oNorm = mul(view, float4(oNorm, 1));
                 //oNorm = clamp(oNorm, 0.0f, 1.0f);
                 oNorm = mul(view, oNorm);
