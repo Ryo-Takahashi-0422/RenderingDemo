@@ -36,10 +36,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         ssao[DTid.xy] = float4(1.0f, 1.0f, 1.0f, 0.0f);
     }
     // 遠くのオブジェクトは対象外とする
-    else if (dp > 0.975f)
-    {
-        ssao[DTid.xy] = float4(1.0f, 1.0f, 1.0f, 0.0f);
-    }
+    //else if (dp > 0.975f)
+    //{
+    //    ssao[DTid.xy] = float4(1.0f, 1.0f, 1.0f, 0.0f);
+    //}
 
     else
     {    
@@ -53,7 +53,8 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
 
         float div = 0.0f;
         float ao = 0.0f;
-        float3 norm = normalize(normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f).xyz * 2.0f - 1.0f);
+        float3 oriNorm = normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f);
+        float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         norm = mul(view, norm);
         const int trycnt = 48;
         const float radius = 0.2f;
@@ -65,8 +66,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rnd1 = random(float2(i * dx, i * dy)) * 2.0f - 1.0f;
                 float rnd2 = random(float2(rnd1, i * dy)) * 2.0f - 1.0f;
                 float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
+                //float rnd4 = random(float2(rnd3, rnd1)) * 2.0f - 1.0f;
+                //float rnd5 = random(float2(rnd4, rnd3)) * 2.0f - 1.0f;
+                
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
-                omega = normalize(omega);
+                //omega = normalize(omega);
                 
                 // Create TBN matrix
                 //float3 tangent = normalize(omega - norm * dot(omega, norm));
@@ -77,7 +81,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 // 乱数の結果法線の反対側に向いていたら反転
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
-                omega *= sign(dt);
+                omega *= sgn;
                 dt *= sgn; // 正の値にしてcosθを得る            
                 div += dt; // 遮断を考えない結果を加算する 
             
@@ -88,7 +92,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 //oNorm = mul(view, float4(oNorm, 1));
                 //oNorm = clamp(oNorm, 0.0f, 1.0f);
                 oNorm = mul(view, oNorm);
-                float normDiff = (1.0f - /*abs(*/dot(norm, oNorm))/*)*/;
+                float normDiff = (1.0f - abs(dot(norm, oNorm)));
                 //normDiff = smoothstep(0.0f, 1.0f, normDiff);
                 //normDiff = smoothstep(0.0f, 1.0f, normDiff);
                 //normDiff = smoothstep(0.0f, 1.0f, normDiff);
@@ -102,7 +106,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rangeCheck = smoothstep(0.0f, 1.0f, radius / length(dp - sampleDepth));
                 if (depthDifference <= /*0.0028f*/0.005f)
                 {
-                    ao += /*smoothstep(0, 1, */step(sampleDepth /* + 0.0005f*/ + 0.000001f, dp) * dt * normDiff/*)*/;
+                    ao += /*smoothstep(0, 1, */step(sampleDepth /* + 0.0005f*/ + 0.000001f, dp) * (1.0f - dt) * normDiff /*)*/;
                 }           
             }
         
@@ -112,7 +116,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         
         result = 1.0f - ao;
-        result = pow(result, 2);
+        //result = pow(result, 2);
         //result *= result;
         ssao[DTid.xy] = float4(result, result, result, 0.0f);
     }

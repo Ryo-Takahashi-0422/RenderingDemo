@@ -36,6 +36,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //speclur = pow(speclur, 2);
     speclur *= -sunDIr.y/* * 0.5f*/;
     
+    input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     if (input.isChara)
     {
         brightEmpha = 0.7f;
@@ -44,9 +45,13 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         speclur = pow(speclur, 2);
         tangentWeight = 1.0f;
         biNormalWeight = 0.3;
+        result.normal = float4(0, 0, 0, 1);
     }
-    input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     
+    else
+    {
+        result.normal = float4(input.worldNormal/*input.normal * normVec.z*/, 1);
+    }
     // タイリング対応
     int uvX = abs(input.uv.x);
     int uvY = abs(input.uv.y);
@@ -64,26 +69,17 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
     float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-    
-    
-
+      
     // 法線画像の結果をレンダーターゲット2に格納する
     // キャラの場合はSSAOでシャドウアクメが発生するため1のみ格納
-    if (input.isChara)
-    {
-        //normal = rotatedNormDot + input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-        result.normal = float4(1, 1, 1, 1);
-    }
-    //else if (!normCol.x == 0/* && !normCol.y == 0 && !normCol.z == 0*/)
+    //if (input.isChara)
     //{
-    //    normal = mul(view, input.normal);
-    //    result.normal = float4(normal, 1);
+    //    result.normal = float4(0, 0, 0, 1);
     //}
-    else
-    {
-        //normal = input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
-        result.normal = float4( input.worldNormal/*input.normal * normVec.z*/, 1);
-    }
+    //else
+    //{
+    
+    //}
     
     normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
     // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
