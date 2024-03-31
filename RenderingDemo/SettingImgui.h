@@ -93,22 +93,27 @@ private:
 	bool fps90 = false;
 	bool fps120 = true;
 
+	// anti-aliasing
+	bool isAAChanged = false;
+	bool fxaaBox = true;
+	bool fxaaDraw = true;
+
 public:
 	// マルチパスSRV用ディスクリプタヒープの作成
 	HRESULT Init(ComPtr<ID3D12Device> _dev,	PrepareRenderingWindow* pRWindow);
 	~SettingImgui();
 	void DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCommandList> _cmdList);
 
-	float GetFovValue() { return fovValueExp; };
-	float GetBGColor(int num) { return bgColorExp[num]; };
-	float GetLightVector(int num) { return lightVecExp[num]; };
-	float GetBloomValue(int num) { return bloomExp[num]; };
-	bool GetFoVBool() { return isFoV; };
-	bool GetSSAOBool() { return isSSAO; };
-	bool GetShadowmapOnOffBool() { return isSelfShadowOn; };
-	bool GetBloomOnOffBool() { return isBloomOn; };
-	bool GetEffectOnOffBool() { return isEffectOn; };
-	size_t GetPostSettingSize() { return sizeof(PostSetting); };
+	//float GetFovValue() { return fovValueExp; };
+	//float GetBGColor(int num) { return bgColorExp[num]; };
+	//float GetLightVector(int num) { return lightVecExp[num]; };
+	//float GetBloomValue(int num) { return bloomExp[num]; };
+	//bool GetFoVBool() { return isFoV; };
+	//bool GetSSAOBool() { return isSSAO; };
+	//bool GetShadowmapOnOffBool() { return isSelfShadowOn; };
+	//bool GetBloomOnOffBool() { return isBloomOn; };
+	//bool GetEffectOnOffBool() { return isEffectOn; };
+	//size_t GetPostSettingSize() { return sizeof(PostSetting); };
 
 	// sun
 	float GetSunAngleX() { return sunAngleX; };
@@ -155,6 +160,10 @@ public:
 	// fps
 	bool GetIsFpsChanged() { return isFpsChanged; };
 	float GetFPS() { return fps; };
+
+	// anti aliasing
+	bool GetIsFxaaChanged() { return isAAChanged; };
+	bool GetFxaaBoxBoolean() { return fxaaDraw; };
 
 	ComPtr<ID3D12Resource> GetImguiRenderingResource() { return renderingResource; };
 

@@ -172,6 +172,7 @@ private:
 	Integration* integration = nullptr;
 	DepthMapIntegration* depthMapIntegration = nullptr;
 	CalculateSSAO* calculateSSAO = nullptr;
+	PreFxaa* preFxaa = nullptr;
 
 public:
 
