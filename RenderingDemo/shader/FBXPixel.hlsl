@@ -40,12 +40,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     if (input.isChara)
     {
         brightEmpha = 0.7f;
-        nor += 0.75f;
+        nor += 2.1f;
         //brightMin = 0.35f;
         speclur = pow(speclur, 2);
         tangentWeight = 1.0f;
         biNormalWeight = 0.3;
-        result.normal = float4(0, 0, 0, 1);
+        result.normal = float4(1, 1, 1, 1);
     }
     
     else
@@ -143,19 +143,6 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         
     float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
-    //// こちらを利用する場合はsunのprojを透視投影ビューに切り替えを要する
-    //if (shadowPos.z - 0.00001f >= depth) // 時にキャラクターの影に影響している。影の境目が目につく。
-    //{
-    //    float depth_sq = shadowValue.y;
-    //    float var = 0.000000001f;
-    //    float md = shadowPos.z - depth;
-    //    float litFactor = var / (var + md * md);
-
-    //    float3 shadowColor = result.col.xyz * 0.3f * nor;
-    //    result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
-        
-        
-    //}
     
     if (-sunDIr.y <= 0.7f)
     {
@@ -164,8 +151,6 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // 色情報をレンダーターゲット1に格納する
     result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + float4(speclur, 0);
-    
-
     
     //result.xyz += speclur.xyz;
     

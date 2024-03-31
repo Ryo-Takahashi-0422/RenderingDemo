@@ -91,9 +91,9 @@ PixelOutput ps_main(vsOutput input) : SV_TARGET
    
     float3 col = result.color.rgb;
     col = tonemap(col);
-    col = saturate(pow(col, 1 / 2.2));
+    col = saturate(pow(col, 1.0f / 2.6f/*2.2f*/));
     
-    float4 imgui = imguiWindow.Sample(smp, input.uv) / 2;
+    float4 imgui = imguiWindow.Sample(smp, input.uv) / 2.0f;
     //if(imgui.r != 0)
     //{
     //    col = imgui;

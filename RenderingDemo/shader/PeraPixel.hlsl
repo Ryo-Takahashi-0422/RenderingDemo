@@ -33,6 +33,6 @@ float4 ps(Output input) : SV_TARGET
     }
     
     //ret += imgui;
-    ret = lerp(ret * 0.1f, ret, ssao.x);
+    ret = lerp(ret * 0.3f, ret, ssao.x);
     return ret;
 }
