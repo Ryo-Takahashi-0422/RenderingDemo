@@ -45,7 +45,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         speclur = pow(speclur, 2);
         tangentWeight = 1.0f;
         biNormalWeight = 0.3;
-        result.normal = float4(0, 0, 0, 1);
+        result.normal = float4(1, 1, 1, 1);
     }
     
     else

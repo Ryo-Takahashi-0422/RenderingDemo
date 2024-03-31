@@ -55,24 +55,24 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float3 oriNorm = normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f);
         // 床とキャラクターとのSSAOを計算しないための処理1
         // この処理のためにキャラクターの法線出力値は全て0としている
-        if (oriNorm.x + oriNorm.y + oriNorm.z == 0.0f)
+        if (oriNorm.x + oriNorm.y + oriNorm.z == 3.0f)
         {
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         //norm = mul(view, norm);
         const int trycnt = 48;
-        const float radius = 0.15f;
+        const float radius = 0.2f;
     
         if (dp < 1.0f)
         {
             for (int i = 0; i < trycnt; ++i)
             {
                 float rnd1 = random(float2(i * dx, i * dy)) * 2.0f - 1.0f;
-                float rnd2 = random(float2(rnd1, i * dy)) * 2.0f - 1.0f;
+                float rnd2 = random(float2(i * rnd1, i * dy)) * 2.0f - 1.0f;
                 float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;               
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
-                
+
                 // Create TBN matrix
                 //float3 tangent = normalize(omega - norm * dot(omega, norm));
                 //float3 bitangent = cross(tangent, norm);
@@ -100,11 +100,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float depthDifference = abs(sampleDepth - /*rpos.z*/dp);
                 
                 // 床とキャラクターとのSSAOを計算しないための処理2
-                if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 0.0f)
+                if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f)
                 {
                     depthDifference = 1.0f;
                 }
-                if (depthDifference <= /*0.0028f*/0.005f)
+                if (depthDifference <= /*0.0028f*/0.003f)
                 {
                     ao += step(sampleDepth + 0.000001f, dp) * (1.0f - dt) * normDiff;
                 }           
@@ -113,7 +113,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         
         result = 1.0f - ao;
-        //result = pow(result, 2);
+        result = pow(result, 2);
         ssao[DTid.xy] = float4(result, result, result, 0.0f);
     }
 }
