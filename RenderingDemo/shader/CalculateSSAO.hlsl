@@ -62,7 +62,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         //norm = mul(view, norm);
         const int trycnt = 48;
-        const float radius = 0.2f;
+        const float radius = 0.12f;
     
         if (dp < 1.0f)
         {
