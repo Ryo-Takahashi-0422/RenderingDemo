@@ -109,7 +109,7 @@ uint index : SV_VertexID)
     //    m_normal.y = 0.0f;
 
     //}
-
+    m_normal = normalize(m_normal);
     float4x4 mat;
     mat[0] = float4(tangent, 0.0f);
     mat[1] = float4(binormal, 0.0f);

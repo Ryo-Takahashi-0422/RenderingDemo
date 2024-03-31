@@ -53,6 +53,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
 
         float ao = 0.0f;
         float3 oriNorm = normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f);
+        // 床とキャラクターとのSSAOを計算しないための処理1
+        // この処理のためにキャラクターの法線出力値は全て0としている
+        if (oriNorm.x + oriNorm.y + oriNorm.z == 0.0f)
+        {
+            dp = 1.0f;
+        }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         //norm = mul(view, norm);
         const int trycnt = 48;
@@ -82,14 +88,22 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float4 rpos = mul(proj, float4(respos.xyz + omega * radius, 1.0f));
                 rpos.xyz /= rpos.w;                
             
-                float3 oNorm = normalize(normalmap.SampleLevel(smp, (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f).xyz * 2.0f - 1.0f);
-                //oNorm = mul(view, oNorm);
-                float normDiff = (1.0f - abs(dot(norm, oNorm)));
+                float2 sPos = (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f);
+                float3 sOriNorm = normalmap.SampleLevel(smp, sPos, 0.0f).xyz;
+                float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
+
+                //sNorm = mul(view, sNorm);
+                float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // 計算結果が現在の場所の深度より奥に入っているなら遮断されているので加算する
                 float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f);
                 float depthDifference = abs(sampleDepth - /*rpos.z*/dp);
                 
+                // 床とキャラクターとのSSAOを計算しないための処理2
+                if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 0.0f)
+                {
+                    depthDifference = 1.0f;
+                }
                 if (depthDifference <= /*0.0028f*/0.005f)
                 {
                     ao += step(sampleDepth + 0.000001f, dp) * (1.0f - dt) * normDiff;
