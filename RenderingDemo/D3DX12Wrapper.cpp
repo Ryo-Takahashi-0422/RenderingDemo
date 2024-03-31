@@ -567,6 +567,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
 	integration->SetResourse3(depthMapIntegration->GetTextureResource());
 
+	preFxaa = new PreFxaa(_dev.Get(), integration, initialWidth, initialHeight);
+	//preFxaa->SetSRHeapAndSRV(integration->GetSRVHeap());
+
 	return true;
 }
 
@@ -928,6 +931,19 @@ void D3DX12Wrapper::Run() {
 		_cmdList3->ResourceBarrier(1, &barrierDescOfCopyDestTexture);
 
 		AllKeyBoolFalse();
+		// 各モデルのデブスマップを読み込み可能状態に変更する
+		D3D12_RESOURCE_BARRIER barrierDesc4DepthMap2 = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			resourceManager[0]->GetDepthBuff().Get(),
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+		);
+		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
+		preFxaa->Execution(_cmdList3.Get(), viewPort, rect);
+		barrierDesc4DepthMap2.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrierDesc4DepthMap2.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
+		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
 		DrawBackBuffer(cbv_srv_Size);
 
 		// calculateSSAO 利用終了により、コピー用リソース状態をUAVにする
@@ -1676,16 +1692,6 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	);
 	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
 
-	// 各モデルのデブスマップを読み込み可能状態に変更する
-	D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-	(
-		resourceManager[0]->GetDepthBuff().Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	);
-
-	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
-
 	rtvHeapPointer = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHeapPointer.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	_cmdList3->OMSetRenderTargets(1, &rtvHeapPointer, false, /*&dsvh*/nullptr);
@@ -1695,23 +1701,11 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	// 作成したﾃｸｽﾁｬの利用処理
 	_cmdList3->SetGraphicsRootSignature(bBRootsignature);
 
-	_cmdList3->SetDescriptorHeaps(1, integration->GetSRVHeap().GetAddressOf());
+	_cmdList3->SetDescriptorHeaps(1, preFxaa->GetDescriptorHeap().GetAddressOf());
 
-	gHandle = integration->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	gHandle = preFxaa->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 
-	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle); // color統合
-	gHandle.ptr += buffSize * 2;
-
-	_cmdList3->SetGraphicsRootDescriptorTable(1, gHandle); // imgui統合
-	gHandle.ptr += buffSize;
-
-	_cmdList3->SetGraphicsRootDescriptorTable(2, gHandle); // blured ssao
-	gHandle.ptr += buffSize;
-
-	_cmdList3->SetGraphicsRootDescriptorTable(3, gHandle); // blured color
-	gHandle.ptr += buffSize;
-
-	_cmdList3->SetGraphicsRootDescriptorTable(4, gHandle); // depth統合
+	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle);
 
 	_cmdList3->SetPipelineState(bBPipeline);
 
@@ -1720,19 +1714,10 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 
 	_cmdList3->DrawInstanced(4, 1, 0, 0);
 
-	// after all of drawings, DirectXTK drawing is able to be valid.
-	//DrawSpriteFont();
-
 	// ﾊﾞｯｸﾊﾞｯﾌｧ状態をﾚﾝﾀﾞﾘﾝｸﾞﾀｰｹﾞｯﾄから元に戻す
 	barrierDesc4BackBuffer.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrierDesc4BackBuffer.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	_cmdList3->ResourceBarrier(1, &barrierDesc4BackBuffer);
-
-	// 各デブスマップを深度書き込み可能状態に変更する
-	barrierDesc4DepthMap.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barrierDesc4DepthMap.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-
-	_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap);
 }
 
 //void D3DX12Wrapper::DrawEffect()

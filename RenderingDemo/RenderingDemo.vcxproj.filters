@@ -81,6 +81,9 @@
     <None Include="shader\IntegrationHeader.hlsli">
       <Filter>Shader\Rebuild</Filter>
     </None>
+    <None Include="shader\FXAA.hlsl">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\SunPixel.hlsl">
@@ -151,6 +154,9 @@
     </FxCompile>
     <FxCompile Include="shader\CalculateSSAO.hlsl">
       <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\FXAAOutputPixel.hlsl">
+      <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -285,6 +291,9 @@
     </ClCompile>
     <ClCompile Include="ext\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="PreFxaa.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -422,6 +431,9 @@
     </ClInclude>
     <ClInclude Include="ext\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="PreFxaa.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
