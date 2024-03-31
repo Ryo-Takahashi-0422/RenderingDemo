@@ -9,6 +9,12 @@
 #define    EDGE_THRESHOLD g_aTemp[1].y
 #define    EDGE_THRESHOLD_MIN g_aTemp[1].z
 
+cbuffer Infos : register(b0) // from PreFxaa
+{
+    float size;
+    bool isFxaa;
+};
+
 float4 ps_main(Output input) : SV_TARGET
 {
     float2 uv = input.uv;
@@ -19,7 +25,7 @@ float4 ps_main(Output input) : SV_TARGET
         InputFXAATex, // FxaaTex tex,
         InputFXAATex, // FxaaTex fxaaConsole360TexExpBiasNegOne,
         InputFXAATex, // FxaaTex fxaaConsole360TexExpBiasNegTwo,
-        float2(1322, 1322), // FxaaFloat2 fxaaQualityRcpFrame,
+        float2(1.0f / 1000.0f, 1.0f / 1000.0f), // FxaaFloat2 fxaaQualityRcpFrame,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsoleRcpFrameOpt,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsoleRcpFrameOpt2,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsole360RcpFrameOpt2,

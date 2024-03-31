@@ -387,12 +387,12 @@ bool D3DX12Wrapper::ResourceInit() {
 	settingShaderCompile = nullptr;
 
 	// バックバッファ描画用
-	std::string bufferVs = "PeraVertex.hlsl";
-	std::string bufferPs = "PeraPixel.hlsl";
+	std::string bufferVs = "PeraVertex.hlsl"; // PreFxaa.cppと共通
+	std::string bufferPs = "FXAAOutputPixel.hlsl";
 	auto bufferPathPair = Utility::GetHlslFilepath(bufferVs, bufferPs);
 	auto mBlobs = peraShaderCompile->PeraSetShaderCompile(peraSetRootSignature, _vsMBlob, _psMBlob,
 		bufferPathPair.first, "vs",
-		bufferPathPair.second, "ps");
+		bufferPathPair.second, "ps_main");
 	if (mBlobs.first == nullptr or mBlobs.second == nullptr) return false;
 	_vsMBlob = mBlobs.first;
 	_psMBlob = mBlobs.second;
@@ -567,7 +567,13 @@ bool D3DX12Wrapper::ResourceInit() {
 	integration->SetResourse2(colorIntegraredBlur->GetBlurResource());
 	integration->SetResourse3(depthMapIntegration->GetTextureResource());
 
-	preFxaa = new PreFxaa(_dev.Get(), integration, initialWidth, initialHeight);
+	preFxaa = new PreFxaa(_dev.Get(), initialWidth, initialHeight);
+	preFxaa->SetResourse1(integration->GetColorResourse());
+	preFxaa->SetResourse2(integration->GetImguiResourse());
+	preFxaa->SetResourse3(ssaoBlur->GetBlurResource());
+	preFxaa->SetResourse4(colorIntegraredBlur->GetBlurResource());
+	preFxaa->SetResourse5(depthMapIntegration->GetTextureResource());
+	preFxaa->SetExternalView();
 	//preFxaa->SetSRHeapAndSRV(integration->GetSRVHeap());
 
 	return true;

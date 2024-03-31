@@ -63,6 +63,7 @@ public:
 	void SetResourse3(ComPtr<ID3D12Resource> _resource);
 	ComPtr<ID3D12Resource> GetColorResourse() { return  renderingResource1; };
 	ComPtr<ID3D12Resource> GetNormalResourse() { return  renderingResource2; };
+	ComPtr<ID3D12Resource> GetImguiResourse() { return  renderingResource3; };
 	ComPtr<ID3D12DescriptorHeap> GetSRVHeap() { return srvHeap; };
 	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 	std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
