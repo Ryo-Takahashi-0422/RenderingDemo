@@ -574,7 +574,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	preFxaa->SetResourse4(colorIntegraredBlur->GetBlurResource());
 	preFxaa->SetResourse5(depthMapIntegration->GetTextureResource());
 	preFxaa->SetExternalView();
-	//preFxaa->SetSRHeapAndSRV(integration->GetSRVHeap());
+	preFxaa->SetInitialInfos();
 
 	return true;
 }
@@ -1710,8 +1710,11 @@ void D3DX12Wrapper::DrawBackBuffer(UINT buffSize)
 	_cmdList3->SetDescriptorHeaps(1, preFxaa->GetDescriptorHeap().GetAddressOf());
 
 	gHandle = preFxaa->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	_cmdList3->SetGraphicsRootDescriptorTable(0, gHandle);
+	gHandle.ptr += inc;
+	_cmdList3->SetGraphicsRootDescriptorTable(13, gHandle);
 
 	_cmdList3->SetPipelineState(bBPipeline);
 

@@ -25,7 +25,7 @@ float4 ps_main(Output input) : SV_TARGET
         InputFXAATex, // FxaaTex tex,
         InputFXAATex, // FxaaTex fxaaConsole360TexExpBiasNegOne,
         InputFXAATex, // FxaaTex fxaaConsole360TexExpBiasNegTwo,
-        float2(1.0f / 1000.0f, 1.0f / 1000.0f), // FxaaFloat2 fxaaQualityRcpFrame,
+        float2(1.0f / size, 1.0f / size), // FxaaFloat2 fxaaQualityRcpFrame,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsoleRcpFrameOpt,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsoleRcpFrameOpt2,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsole360RcpFrameOpt2,

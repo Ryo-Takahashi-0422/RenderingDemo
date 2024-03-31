@@ -5,13 +5,11 @@
 PreFxaa::PreFxaa(ID3D12Device* _dev, int _width, int _height) :
     _dev(_dev), pipelineState(nullptr), srvHeap(nullptr), renderingResource(nullptr)
 {
+    infos = new Infos;
     width = _width;
     height = _height;
-    infos = new Infos;
-    infos->size = width;
-    infos->isFxaa = false;
     Init();
-    //scneMatrix = new SceneMatrix;
+    //scneMatrix = new SceneMatrix;    
 }
 
 PreFxaa::~PreFxaa()
@@ -28,6 +26,13 @@ void PreFxaa::Init()
     RenderingSet();
 }
 
+void PreFxaa::SetInitialInfos()
+{
+    
+    infos->size = (float)width;
+    infos->isFxaa = true;
+}
+
 // ルートシグネチャ設定
 HRESULT PreFxaa::CreateRootSignature()
 {
@@ -42,7 +47,7 @@ HRESULT PreFxaa::CreateRootSignature()
     descTableRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
     descTableRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
     descTableRange[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-    descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    //descTableRange[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -69,13 +74,8 @@ HRESULT PreFxaa::CreateRootSignature()
     rootParam[4].DescriptorTable.pDescriptorRanges = &descTableRange[4];
     rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    rootParam[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[5].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[5].DescriptorTable.pDescriptorRanges = &descTableRange[5];
-    rootParam[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 6;
+    rootSignatureDesc.NumParameters = 5;
     rootSignatureDesc.pParameters = rootParam;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = stSamplerDesc;
@@ -269,13 +269,13 @@ HRESULT PreFxaa::CreateRenderingHeap()
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     srvHeapDesc.NodeMask = 0;
-    srvHeapDesc.NumDescriptors = 1;
+    srvHeapDesc.NumDescriptors = 2;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.ReleaseAndGetAddressOf()));
 
     // integration出力コピー用してGPU転送
-    srvHeapDesc.NumDescriptors = 7;
+    srvHeapDesc.NumDescriptors = 6;
     result = _dev->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(externalHeap.ReleaseAndGetAddressOf()));
 
     return result;
@@ -363,10 +363,10 @@ void PreFxaa::CreateRenderingSRV()
 
 void PreFxaa::CreateInfoViewAndMapping()
 {
-    auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handle = srvHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    handle.ptr += inc * 6;
+    handle.ptr += inc;
     D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
     desc.BufferLocation = infoResourse->GetGPUVirtualAddress();
     desc.SizeInBytes = infoResourse->GetDesc().Width;
@@ -384,9 +384,6 @@ void PreFxaa::SetResourse1(ComPtr<ID3D12Resource> _resource)
     colorResource = _resource;
 
     auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
-    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    handle.ptr += inc;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -408,7 +405,7 @@ void PreFxaa::SetResourse2(ComPtr<ID3D12Resource> _resource)
     auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    handle.ptr += inc * 2;
+    handle.ptr += inc;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -430,7 +427,7 @@ void PreFxaa::SetResourse3(ComPtr<ID3D12Resource> _resource)
     auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    handle.ptr += inc * 3;
+    handle.ptr += inc * 2;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -452,7 +449,7 @@ void PreFxaa::SetResourse4(ComPtr<ID3D12Resource> _resource)
     auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    handle.ptr += inc * 4;
+    handle.ptr += inc * 3;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -474,7 +471,7 @@ void PreFxaa::SetResourse5(ComPtr<ID3D12Resource> _resource)
     auto handle = externalHeap->GetCPUDescriptorHandleForHeapStart();
     auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    handle.ptr += inc * 5;
+    handle.ptr += inc * 4;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -582,8 +579,6 @@ void PreFxaa::Execution(ID3D12GraphicsCommandList* _cmdList, const D3D12_VIEWPOR
     _cmdList->SetGraphicsRootDescriptorTable(3, handle);
     handle.ptr += inc;
     _cmdList->SetGraphicsRootDescriptorTable(4, handle);
-    handle.ptr += inc;
-    _cmdList->SetGraphicsRootDescriptorTable(5, handle);
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     _cmdList->DrawInstanced(3, 1, 0, 0);

@@ -33,8 +33,8 @@ class PreFxaa
 
     // ルートシグネチャ関連
     CD3DX12_STATIC_SAMPLER_DESC stSamplerDesc[1] = {};
-    CD3DX12_DESCRIPTOR_RANGE descTableRange[6] = {};
-    D3D12_ROOT_PARAMETER rootParam[6] = {};
+    CD3DX12_DESCRIPTOR_RANGE descTableRange[5] = {};
+    D3D12_ROOT_PARAMETER rootParam[5] = {};
     ComPtr<ID3DBlob> rootSigBlob = nullptr; // ルートシグネチャオブジェクト格納用
     ComPtr<ID3DBlob> errorBlob = nullptr; // シェーダー関連エラー格納用
     ComPtr<ID3D10Blob> _vsBlob = nullptr; // 頂点シェーダーオブジェクト格納用
@@ -82,7 +82,7 @@ public:
     void SetResourse4(ComPtr<ID3D12Resource> _resource);
     void SetResourse5(ComPtr<ID3D12Resource> _resource);
     void SetExternalView();
-
+    void SetInitialInfos();
     ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return srvHeap; };
     ComPtr<ID3D12Resource> GetRenderingResource() { return renderingResource; };
 };
