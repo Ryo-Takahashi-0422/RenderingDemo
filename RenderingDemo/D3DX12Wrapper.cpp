@@ -945,6 +945,11 @@ void D3DX12Wrapper::Run() {
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 		);
 		_cmdList3->ResourceBarrier(1, &barrierDesc4DepthMap2);
+
+		if (settingImgui->GetIsFxaaChanged())
+		{
+			preFxaa->SetFxaaDraw(settingImgui->GetFxaaBoxBoolean());
+		}
 		preFxaa->Execution(_cmdList3.Get(), viewPort, rect);
 		barrierDesc4DepthMap2.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrierDesc4DepthMap2.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;

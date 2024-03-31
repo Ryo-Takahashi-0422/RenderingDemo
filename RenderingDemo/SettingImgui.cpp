@@ -255,6 +255,19 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Anti Aliasing"))
+	{
+		isAAChanged = false;
+
+		if (ImGui::Checkbox("FXAA", &fxaaBox))
+		{
+			fxaaDraw = fxaaBox;
+			isAAChanged = true;
+		}
+
+		ImGui::TreePop();
+	}
+
 	ImGui::End();
 	ImGui::Render();
 

@@ -19,7 +19,9 @@ float4 ps_main(Output input) : SV_TARGET
 {
     float2 uv = input.uv;
     FxaaTex InputFXAATex = { smp, colorTex };
-    return FxaaPixelShader(
+    if(isFxaa)
+    {
+        return FxaaPixelShader(
         uv, // FxaaFloat2 pos,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f), // FxaaFloat4 fxaaConsolePosPos,
         InputFXAATex, // FxaaTex tex,
@@ -36,5 +38,11 @@ float4 ps_main(Output input) : SV_TARGET
         0.0f, // FxaaFloat fxaaConsoleEdgeThreshold,
         0.0f, // FxaaFloat fxaaConsoleEdgeThresholdMin,
         FxaaFloat4(0.0f, 0.0f, 0.0f, 0.0f) // FxaaFloat fxaaConsole360ConstDir,
-    );
+        );
+    }
+    else
+    {
+        return colorTex.Sample(smp, input.uv);
+
+    }
 }

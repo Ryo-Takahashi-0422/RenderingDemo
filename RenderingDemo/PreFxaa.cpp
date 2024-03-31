@@ -541,6 +541,11 @@ void PreFxaa::SetExternalView()
     );
 }
 
+void PreFxaa::SetFxaaDraw(bool isDraw)
+{
+    infos->isFxaa = isDraw;
+}
+
 // é¿çs
 void PreFxaa::Execution(ID3D12GraphicsCommandList* _cmdList, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {

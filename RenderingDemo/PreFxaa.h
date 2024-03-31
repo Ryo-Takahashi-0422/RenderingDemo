@@ -83,6 +83,7 @@ public:
     void SetResourse5(ComPtr<ID3D12Resource> _resource);
     void SetExternalView();
     void SetInitialInfos();
+    void SetFxaaDraw(bool isDraw);
     ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return srvHeap; };
     ComPtr<ID3D12Resource> GetRenderingResource() { return renderingResource; };
 };
