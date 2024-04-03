@@ -24,6 +24,9 @@ struct Output
     float index : INDEX;
     float4 rotatedNorm : ROTATED_NORMAL;
     float3 ray : RAY;
+    float4 viewPos : VIEWPOSITION;
+    float4 wPos : WPOS;
+    float3 oriWorldNorm : ORI_WORLD_NORMAL;
     //float3 ray : VECTOR; // 視点ベクトル
     //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
     //float4 tpos : TPOS;
@@ -44,7 +47,7 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     matrix proj; // projection matrix
     matrix oProj;
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
-    
+    matrix invView;
     matrix rotation;
     matrix shadowPosMatrix;
     matrix shadowPosInvMatrix;
