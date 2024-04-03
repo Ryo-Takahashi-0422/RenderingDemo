@@ -27,16 +27,12 @@ struct Output
     float4 viewPos : VIEWPOSITION;
     float4 wPos : WPOS;
     float3 oriWorldNorm : ORI_WORLD_NORMAL;
-    //float3 ray : VECTOR; // 視点ベクトル
-    //uint instNo : SV_InstanceID; // DrawIndexedInstancedのinstance id
-    //float4 tpos : TPOS;
 };
 
 struct PixelOutput
 {
     float4 col : SV_TARGET0; // model color rendering
     float4 normal : SV_TARGET1; // model normal rendering
-    //float4 highLum : SV_TARGET2; // model high luminance rendering
 };
 
 cbuffer SceneBuffer : register(b0) // 変換行列
@@ -57,8 +53,6 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     float3 charaPos;
     bool sponza;
     bool airDraw;
-    //float3 lightVec;
-    //bool isSelfShadow;
 };
 
 cbuffer Material : register(b1)
@@ -73,9 +67,7 @@ cbuffer Material : register(b1)
 }
 
 SamplerState smp : register(s0); // No.0 sampler
-//SamplerState smpToon : register(s1); // No.1 sampler(toon)
-//SamplerComparisonState smpBilinear : register(s2); // No.2 sampler
-//
+
 Texture3D<float4> airmap : register(t0);
 Texture2D<float4> vsmmap : register(t1);
 Texture2D<float4> depthmap : register(t2);
@@ -85,3 +77,50 @@ Texture2D<float4> specularmap : register(t5);
 Texture2D<float4> metalmap : register(t6);
 Texture2D<float> transparentmap : register(t7);
 //Texture2D<float4> toon : register(t5); //No.5 toon texture
+
+// BRDF スペキュラはhttps://zenn.dev/mebiusbox/books/619c81d2fbeafd/viewer/7c1069コードを自環境に修正して算出
+#define PI 3.14/*159265359*/
+#define PI2 6.28/*318530718*/
+#define EPSILON 1e-3/*6*/
+#define LIGHT_MAX 2
+
+struct IncidentLight
+{
+    float3 color;
+    float3 direction;
+    //bool visible;
+};
+
+struct ReflectedLight
+{
+    //float3 directDiffuse;
+    float3 directSpecular;
+};
+
+struct GeometricContext
+{
+    float3 position;
+    float3 normal;
+    float3 viewDir;
+};
+
+struct Material
+{
+    //float3 diffuseColor;
+    float specularRoughness;
+    //float3 specularColor;
+};
+
+struct PointLight
+{
+    float3 position;
+    //float3 color;
+    float distance;
+    //float decay;
+};
+
+//struct DirectionalLight
+//{
+//    float3 direction;
+//    float3 color;
+//};

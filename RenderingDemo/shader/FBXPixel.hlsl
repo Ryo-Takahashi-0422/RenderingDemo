@@ -1,76 +1,26 @@
 #include "FBXHeader.hlsli"
-
-// BRDF スペキュラはhttps://zenn.dev/mebiusbox/books/619c81d2fbeafd/viewer/7c1069コードを自環境に修正して算出
-#define PI 3.14/*159265359*/
-#define PI2 6.28/*318530718*/
-#define EPSILON 1e-6
-
-struct IncidentLight
-{
-    float3 color;
-    float3 direction;
-    bool visible;
-};
-
-struct ReflectedLight
-{
-    float3 directDiffuse;
-    float3 directSpecular;
-    float3 indirectDiffuse;
-    float3 indirectSpecular;
-};
-
-struct GeometricContext
-{
-    float3 position;
-    float3 normal;
-    float3 viewDir;
-};
-
-struct Material
-{
-    float3 diffuseColor;
-    float specularRoughness;
-    float3 specularColor;
-};
-
 // lights
-
 bool testLightInRange(const in float lightDistance, const in float cutoffDistance)
 {
     return any(float2(cutoffDistance == 0.0, lightDistance < cutoffDistance));
 }
 
-float punctualLightIntensityToIrradianceFactor(const in float lightDistance, const in float cutoffDistance, const in float decayExponent)
+float punctualLightIntensityToIrradianceFactor(const in float lightDistance, const in float cutoffDistance/*, const in float decayExponent*/)
 {
-    if (decayExponent > 0.0)
-    {
-        return pow(saturate(-lightDistance / cutoffDistance + 1.0), decayExponent);
-    }
+    //if (decayExponent > 0.0)
+    //{
+        return /*pow(*/saturate(-lightDistance / cutoffDistance + 1.0)/*, decayExponent)*/;
+    //}
   
-    return 1.0;
+    //return 1.0;
 }
 
-struct DirectionalLight
-{
-    float3 direction;
-    float3 color;
-};
-
-void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
-{
-    directLight.color = directionalLight.color;
-    directLight.direction = directionalLight.direction;
-    directLight.visible = true;
-}
-
-struct PointLight
-{
-    float3 position;
-    float3 color;
-    float distance;
-    float decay;
-};
+//void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
+//{
+//    directLight.color = directionalLight.color;
+//    directLight.direction = directionalLight.direction;
+//    directLight.visible = true;
+//}
 
 void getPointDirectLightIrradiance(const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight)
 {
@@ -80,32 +30,28 @@ void getPointDirectLightIrradiance(const in PointLight pointLight, const in Geom
     float lightDistance = length(L);
     if (testLightInRange(lightDistance, pointLight.distance))
     {
-        directLight.color = pointLight.color;
-        directLight.color *= punctualLightIntensityToIrradianceFactor(lightDistance, pointLight.distance, pointLight.decay);
-        directLight.visible = true;
+        directLight.color = float3(1, 1, 1);
+        directLight.color *= punctualLightIntensityToIrradianceFactor(lightDistance, pointLight.distance/*, pointLight.decay*/);
+        //directLight.visible = true;
     }
     else
     {
         directLight.color = float3(0,0,0);
-        directLight.visible = false;
+        //directLight.visible = false;
     }
 }
 
-// light uniforms
-#define LIGHT_MAX 2
-
 // BRDFs
-
 // Normalized Lambert
-float3 DiffuseBRDF(float3 diffuseColor)
-{
-    return diffuseColor / PI;
-}
+//float3 DiffuseBRDF(float3 diffuseColor)
+//{
+//    return diffuseColor / PI;
+//}
 
-float3 F_Schlick(float3 specularColor, float3 H, float3 V)
-{
-    return (specularColor + (1.0 - specularColor) * pow(1.0 - saturate(dot(V, H)), 5.0));
-}
+//float3 F_Schlick(float3 specularColor, float3 H, float3 V)
+//{
+//    return specularColor + (1.0 - specularColor) * (1.0 - saturate(dot(V, H))) /*pow(1.0 - saturate(dot(V, H)), 5.0))*/;
+//}
 
 float D_GGX(float a, float dotNH)
 {
@@ -124,7 +70,7 @@ float G_Smith_Schlick_GGX(float a, float dotNV, float dotNL)
 }
 
 // Cook-Torrance
-float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, float3 specularColor, float roughnessFactor)
+float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, /*float3 specularColor, */float roughnessFactor)
 {
   
     float3 N = geometry.normal;
@@ -142,8 +88,8 @@ float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContex
 
     float D = D_GGX(a, dotNH);
     float G = G_Smith_Schlick_GGX(a, dotNV, dotNL);
-    float3 F = F_Schlick(specularColor, V, H);
-    return (F * (G * D)) / (4.0 * dotNL * dotNV + EPSILON);
+    //float3 F = F_Schlick(specularColor, V, H);
+    return (/*F*/0.5f * (G * D)) / (4.0 * dotNL * dotNV + EPSILON);
 }
 
 // RenderEquations(RE)
@@ -151,25 +97,25 @@ void RE_Direct(const in IncidentLight directLight, const in GeometricContext geo
 {
   
     float dotNL = abs(dot(geometry.normal, directLight.direction));
-    float3 irradiance = dotNL * directLight.color;
+    float irradiance = dotNL * directLight.color;
   
   // punctual light
     irradiance *= PI;
   
-    reflectedLight.directDiffuse += irradiance * DiffuseBRDF(material.diffuseColor);
-    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, material.specularColor, material.specularRoughness);
+    //reflectedLight.directDiffuse += irradiance * DiffuseBRDF(material.diffuseColor);
+    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, /*material.specularColor, */material.specularRoughness);
 }
 
 PixelOutput FBXPS(Output input) : SV_TARGET
 {
-        // タイリング対応
+    // タイリング対応
     int uvX = abs(input.uv.x);
     int uvY = abs(input.uv.y);
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
     
     PixelOutput result;
-    float metallic;
+    //float metallic;
     float roughness;
     float3 albedo;
     
@@ -180,67 +126,45 @@ PixelOutput FBXPS(Output input) : SV_TARGET
   
     float4 col = colormap.Sample(smp, input.uv);
     albedo = col.xyz;
-    metallic = 0.0f;
+    //metallic = 0.0f;
     float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
     roughness = speclurColor.x;
     
     Material material;
-    material.diffuseColor = lerp(albedo, float3(0,0,0), metallic);
-    material.specularColor = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+    //material.diffuseColor = lerp(albedo, float3(0,0,0), metallic);
+    //material.specularColor = /*lerp(*/float3(0.04f, 0.04f, 0.04f)/*, albedo, metallic)*/;
     material.specularRoughness = roughness;
   
   // Lighting  
     ReflectedLight reflectedLight;
-    reflectedLight.directDiffuse = float3(0, 0, 0);
+    //reflectedLight.directDiffuse = float3(0, 0, 0);
     reflectedLight.directSpecular = float3(0, 0, 0);
-    reflectedLight.indirectDiffuse = float3(0, 0, 0);
-    reflectedLight.indirectSpecular = float3(0, 0, 0);
-    float3 emissive = float3(0,0,0);
-    float opacity = 1.0;
+
+    //float3 emissive = float3(0,0,0);
+    //float opacity = 1.0;
   
     IncidentLight directLight;
     
     PointLight pointLights[LIGHT_MAX];
-    pointLights[0].color = float3(1, 1, 1);
+    //pointLights[0].color = float3(1, 1, 1);
     pointLights[0].position = float3(25.0f, 15.0f, /*4.5*/0.0f);
     pointLights[0].distance = 100.0f;
-    pointLights[0].decay = 1.0f;
+    //pointLights[0].decay = 1.0f;
     
-    pointLights[1].color = float3(1, 1, 1);
+    //pointLights[1].color = float3(1, 1, 1);
     pointLights[1].position = float3(-25.0f, 15.0f, /*4.5*/0.0f);
     pointLights[1].distance = 100.0f;
-    pointLights[1].decay = 1.0f;
-    
-    //pointLights[2].color = float3(1, 1, 1);
-    //pointLights[2].position = float3(24.0f, 15.0f, -4.5f);
-    //pointLights[2].distance = 100.0f;
-    //pointLights[2].decay = 1.0f;
-    
-    //pointLights[3].color = float3(1, 1, 1);
-    //pointLights[3].position = float3(-24.0f, 15.0f, -4.5f);
-    //pointLights[3].distance = 100.0f;
-    //pointLights[3].decay = 1.0f;
-  
+    //pointLights[1].decay = 1.0f;
+   
   // point light
     for (int i = 0; i < LIGHT_MAX; ++i)
     {
-        if (i >= 2)
+        if (i >= LIGHT_MAX)
             break;
         getPointDirectLightIrradiance(pointLights[i], geometry, directLight);
-        //if (directLight.visible)
-        //{
-            RE_Direct(directLight, geometry, material, reflectedLight);
-        //}
+        RE_Direct(directLight, geometry, material, reflectedLight);
     }
-
-    DirectionalLight directionalLights[LIGHT_MAX];
-    directionalLights[0].color = float3(1,1,1);
-    directionalLights[0].direction = float3(-sunDIr.x, -sunDIr.y, sunDIr.z);
   
-    float3 outgoingLight = emissive + reflectedLight.directDiffuse + reflectedLight.directSpecular + reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular;
-  
-    result.col = float4(outgoingLight, opacity);
-    
        
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
@@ -278,7 +202,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         brightEmpha = 0.7f;
         nor += 2.1f;
         //brightMin = 0.35f;
-        //speclur = pow(speclur, 2);
+        speclur = float3(0, 0, 0);
         tangentWeight = 1.0f;
         biNormalWeight = 0.3;
         result.normal = float4(1, 1, 1, 1);
