@@ -59,19 +59,19 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     
     float3 scattering = float3(0, 0, 0);
     float3 sumSigmaT = float3(0, 0, 0);    
-    float cut = 1.0f;
+    //float cut = 1.0f;
     // レイマーチング
     for (int z = 0; z < depth; ++z)
     {
-        // 逆光対策　数値は現合
-        if (scattering.z >= 0.00005f)
-        {
-            scattering.x = 0.000015f;
-            scattering.y = 0.000027f;
-            scattering.z = 0.00005f;
-            AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
-            continue;
-        }
+        // 逆光対策　数値は現合 デモ用に調整したAir Parameterに対しては不要なのでコメントアウト
+        //if (scattering.z >= 0.00005f)
+        //{
+        //    scattering.x = 0.000015f;
+        //    scattering.y = 0.000027f;
+        //    scattering.z = 0.00005f;
+        //    AirTexture[int3(DTid.xy, z)] = float4(scattering * 10000, 1);
+        //    continue;
+        //}
         
         float dt = (endT - startT);
         float nextT = startT + dt;
@@ -97,9 +97,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         // 現在のレイが太陽から見て影でないならスキャッタリングの計算を行う
         if (!isShadow/* && scattering.z < 0.00004f*//*shadowZ < 0.999f*/)
-        {
-
-            
+        {            
             float h = length(rayPos) - groundRadius;
             float3 sigmaS = GetSigmaS(h);
             float3 sigmaT = GetSigmaT(h);
@@ -118,10 +116,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
            scattering += dt * sigmaS * transmittanceFromRayToEye * phaseFuncResult * sf /* * cut*/;
             sumSigmaT += deltaSigmaT;
         }
-        else
-        {
-            cut *= 0.8;
-        }
+        //else
+        //{
+        //    cut *= 0.8;
+        //}
         
         //float temp = scattering.x;
         //scattering.x = scattering.z;

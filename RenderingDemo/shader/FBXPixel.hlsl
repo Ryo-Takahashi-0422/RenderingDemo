@@ -9,7 +9,7 @@ float punctualLightIntensityToIrradianceFactor(const in float lightDistance, con
 {
     //if (decayExponent > 0.0)
     //{
-        return /*pow(*/saturate(-lightDistance / cutoffDistance + 1.0)/*, decayExponent)*/;
+    return /*pow(*/saturate(-lightDistance / cutoffDistance + 1.0)/*, decayExponent)*/;
     //}
   
     //return 1.0;

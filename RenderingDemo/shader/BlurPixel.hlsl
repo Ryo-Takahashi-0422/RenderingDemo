@@ -9,12 +9,14 @@ float4 SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, 
     float dx = 1.0f / w;
     float dy = 1.0f / h;
 
+    // highest,lowestを除くとvsmの処理速度がmain PC(LEVEL infinity)で約0.3ms(pix 800,000ns→500,000ns)早くなる。ただし影品質はジャギーが目立つので若干落ちる。
+    
     // highest
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, 2 * dy)) * 1;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, 2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, 2 * dy)) * 6;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, 2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, 2 * dy)) * 1;
+    //ret += _texture.Sample(smp, _uv + float2(-2 * dx, 2 * dy)) * 1;
+    //ret += _texture.Sample(smp, _uv + float2(-1 * dx, 2 * dy)) * 4;
+    //ret += _texture.Sample(smp, _uv + float2(0 * dx, 2 * dy)) * 6;
+    //ret += _texture.Sample(smp, _uv + float2(1 * dx, 2 * dy)) * 4;
+    //ret += _texture.Sample(smp, _uv + float2(2 * dx, 2 * dy)) * 1;
     // high
     ret += _texture.Sample(smp, _uv + float2(-2 * dx, 1 * dy)) * 4;
     ret += _texture.Sample(smp, _uv + float2(-1 * dx, 1 * dy)) * 16;
@@ -34,13 +36,13 @@ float4 SimpleGaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv /*, 
     ret += _texture.Sample(smp, _uv + float2(1 * dx, -1 * dy)) * 16;
     ret += _texture.Sample(smp, _uv + float2(2 * dx, -1 * dy)) * 4;
     // lowest
-    ret += _texture.Sample(smp, _uv + float2(-2 * dx, -2 * dy)) * 1;
-    ret += _texture.Sample(smp, _uv + float2(-1 * dx, -2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(0 * dx, -2 * dy)) * 6;
-    ret += _texture.Sample(smp, _uv + float2(1 * dx, -2 * dy)) * 4;
-    ret += _texture.Sample(smp, _uv + float2(2 * dx, -2 * dy)) * 1;
+    //ret += _texture.Sample(smp, _uv + float2(-2 * dx, -2 * dy)) * 1;
+    //ret += _texture.Sample(smp, _uv + float2(-1 * dx, -2 * dy)) * 4;
+    //ret += _texture.Sample(smp, _uv + float2(0 * dx, -2 * dy)) * 6;
+    //ret += _texture.Sample(smp, _uv + float2(1 * dx, -2 * dy)) * 4;
+    //ret += _texture.Sample(smp, _uv + float2(2 * dx, -2 * dy)) * 1;
  
-    return ret / 256;
+    return ret / 224/*256*/;
 }
 
 float4 Get5x5GaussianBlur(Texture2D _texture, SamplerState _smp, float2 _uv, float dx, float dy)
