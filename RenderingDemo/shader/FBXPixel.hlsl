@@ -237,7 +237,6 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     directionalLights[0].color = float3(1,1,1);
     directionalLights[0].direction = float3(-sunDIr.x, -sunDIr.y, sunDIr.z);
   
-
     float3 outgoingLight = emissive + reflectedLight.directDiffuse + reflectedLight.directSpecular + reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular;
   
     result.col = float4(outgoingLight, opacity);

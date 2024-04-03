@@ -14,6 +14,8 @@ PreFxaa::PreFxaa(ID3D12Device* _dev, int _width, int _height) :
 
 PreFxaa::~PreFxaa()
 {
+    infoResourse->Unmap(0, nullptr);
+    infoResourse = nullptr;
 }
 
 // ‰Šú‰»

@@ -1107,6 +1107,9 @@ void D3DX12Wrapper::CleanMemory()
 	delete calculateSSAO;
 	calculateSSAO = nullptr;
 
+	delete preFxaa;
+	preFxaa = nullptr;
+
 	for (auto& rm : resourceManager)
 	{
 		delete rm;
