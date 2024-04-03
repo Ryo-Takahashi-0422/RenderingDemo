@@ -115,6 +115,6 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         result = 1.0f - ao;
         result = pow(result, 2);
-        ssao[DTid.xy] = float4(result, result, result, 0.0f);
+        ssao[DTid.xy] = /*float4(result, result, result, 0.0f)*/result;
     }
 }
