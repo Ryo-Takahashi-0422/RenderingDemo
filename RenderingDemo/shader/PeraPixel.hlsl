@@ -23,7 +23,7 @@ float4 ps(Output input) : SV_TARGET
     ret = lerp(retColor[0], retColor[1], depthDiff);
     
     float4 imgui = imguiTex.Sample(smp, input.uv);
-    float4 ssao = ssaoTex.Sample(smp, input.uv);
+    float ssao = ssaoTex.Sample(smp, input.uv);
     
     float imguiTotal = 0.0f;
     imguiTotal = imgui.x + imgui.y + imgui.z;
@@ -33,6 +33,6 @@ float4 ps(Output input) : SV_TARGET
     }
     
     //ret += imgui;
-    ret = lerp(ret * 0.3f, ret, ssao.x);
+    ret = lerp(ret * 0.3f, ret, ssao);
     return ret;
 }

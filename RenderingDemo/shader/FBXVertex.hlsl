@@ -36,11 +36,10 @@ uint index : SV_VertexID)
     
     // 壁の法線値が-1になりssaoが計算出来くなる問題への対処
     float4 m_normal = norm;
-    
+    float4 oriNorm = norm;
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
         m_normal.x *= sign(m_normal.x);
-        //m_normal.y *= sign(m_normal.y);
         m_normal.z *= sign(m_normal.z);
         
         moveObj = false;
@@ -145,5 +144,25 @@ uint index : SV_VertexID)
     
     output.ray = normalize(pos.xyz - eyePos);
 
+    //float3 rotEyepos = mul(rotation, eyePos);
+    //float3 rotPos = mul(rotation, pos);
+    //output.viewPos = mul(mul(view, world), rotEyepos).xyz - mul(mul(view, world), rotPos).xyz;
+    //output.viewPos = mul(-rotation, mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz);
+    
+    float4 eye = float4(eyePos, 1);
+    float4 vEye = mul(view, eye);
+    
+    output.wPos = mul(world, pos);
+    
+    float4 rotPos = mul(rotation, pos);
+    float4 vPos = mul(mul(view, world), pos);
+    output.viewPos = /*-eye */eye - output.wPos;
+    
+    output.oriWorldNorm = normalize(mul(world, oriNorm).xyz);
+    //output.viewPos.z *= sign(output.viewPos.z);
+    //output.viewPos = mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz;
+    
+    //output.viewPos = mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz;
+    
     return output;
 }

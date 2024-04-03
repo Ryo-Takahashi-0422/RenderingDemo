@@ -175,7 +175,7 @@ HRESULT CalculateSSAO::CreateTextureResource()
     //Compute Shadero—Í—p
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    textureDesc.Format = /*DXGI_FORMAT_R32G32B32A32_FLOAT*/DXGI_FORMAT_R32_FLOAT;
     textureDesc.Width = width;
     textureDesc.Height = height;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -257,7 +257,7 @@ void CalculateSSAO::CreateView()
 
     handle.ptr += inc;
 
-    srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    srvDesc.Format = /*DXGI_FORMAT_R32G32B32A32_FLOAT*/DXGI_FORMAT_R32_FLOAT;
     _dev->CreateShaderResourceView
     (
         copyTextureResource.Get(),
