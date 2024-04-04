@@ -15,7 +15,7 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - 左回転：←キー  
   
 # パラメータ調整機能
-## Imguiを介してプログラムのパラメータ調整が可能です。  
+### Imguiを介してプログラムのパラメータ調整が可能です。  
 ![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
 - Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定
 - Sky Resolution : Sky描画パスの解像度を設定
