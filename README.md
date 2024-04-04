@@ -15,9 +15,9 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - 左回転：←キー
   
 # パラメータ調整機能
-- Imguiを介してプログラムのパラメータ調整が可能です。
-![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
-![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)
+- Imguiを介してプログラムのパラメータ調整が可能です。  
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)  
+![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
   
 # 開発環境
 - OS : Windows 11 Home(ver.23H2)  
