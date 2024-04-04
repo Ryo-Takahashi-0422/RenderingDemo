@@ -1,10 +1,10 @@
 # 概要
 DirectX12を用いて3Dモデルを描画するプログラムです。  
-2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」  
-からDirextX12を学びました。  
-このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
-
-![Test Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png)
+![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png)
+  
+# 実行
+  ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
+  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい。  
   
 # 紹介動画
 https://www.youtube.com/watch?v=pzYBP06b1Pk
@@ -14,6 +14,11 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - 右回転：→キー  
 - 左回転：←キー
   
+# パラメータ調整機能
+- Imguiを介してプログラムのパラメータ調整が可能です。
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
+![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)
+  
 # 開発環境
 - OS : Windows 11 Home(ver.23H2)  
 - CPU : Intel® Core™ i9 プロセッサー  
@@ -22,6 +27,9 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
   
 # 開発期間
 - 2023/8/23 ～ 2024/4/4
+- 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」  
+からDirextX12を学びました。  
+このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
   
 # 使用ソフトウェア
 - Visual Studio Community 2019  
