@@ -21,10 +21,11 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - Sky Resolution : Sky描画パスの解像度を設定
 - Sky LUT Resolution : SkyLUT描画パスの解像度を設定
 - Shadow Resolution : シャドウ描画パスの解像度を設定
-- Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、SSAO(スクリーンスペースアンビエントオクルージョン)
-DOF(被写界深度)
-- Max FPS : 最大FPS値の設定
-- Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off
+- Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、  
+SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)  
+- Max FPS : 最大FPS値の設定  
+- Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
+  
   
 ![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
   
