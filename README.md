@@ -25,6 +25,8 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)  
 - Max FPS : 最大FPS値の設定  
 - Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
+
+
   
 ![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
 - Air Parameter, SkyLUT Parameter : シングルスキャッタリング計算過程で用いる変数の値を設定  
