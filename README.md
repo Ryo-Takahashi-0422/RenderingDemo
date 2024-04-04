@@ -5,6 +5,7 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
 このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
   
 # 紹介動画
+https://www.youtube.com/watch?v=pzYBP06b1Pk
   
 # 操作方法
 - 前進：wキー  
