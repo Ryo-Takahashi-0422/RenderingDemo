@@ -14,7 +14,7 @@ https://www.borndigital.co.jp/book/15291/
 https://sebh.github.io/publications/egsr2020.pdf  
   
 * 実装  
--MicroSoft project 「DirectX-Graphics-Samples」  
+-MicroSoft's project 「DirectX-Graphics-Samples」  
 https://github.com/microsoft/DirectX-Graphics-Samples  
 -AirGuanZ's project 「AtmosphereRenderer」  
 https://github.com/AirGuanZ/AtmosphereRenderer  
