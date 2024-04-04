@@ -1,7 +1,7 @@
 # RenderingDemo
 
 
-#　利用したリソース
+# 利用したリソース
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
