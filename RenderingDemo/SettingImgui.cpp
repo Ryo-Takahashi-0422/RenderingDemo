@@ -83,8 +83,8 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	//ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
 	if (ImGui::TreeNode("Sun Angle"))
 	{
-		ImGui::SliderFloat("Sun Angle X", &sunAngleX, 0, 360);
-		ImGui::SliderFloat("Sun Angle Y", &sunAngleY, 0, 90);
+		ImGui::SliderFloat("X", &sunAngleX, 0, 360);
+		ImGui::SliderFloat("Y", &sunAngleY, 0, 90);
 
 		ImGui::TreePop();
 	}
@@ -131,8 +131,8 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isSkyResChanged = false;
 
-		isSkyResChanged |= ImGui::SliderInt("Sky Resolution X", &skyResX, 1, 1024);
-		isSkyResChanged |= ImGui::SliderInt("Sky Resolution Y", &skyResY, 1, 1024);
+		isSkyResChanged |= ImGui::SliderInt("X", &skyResX, 1, 1024);
+		isSkyResChanged |= ImGui::SliderInt("Y", &skyResY, 1, 1024);
 		
 		ImGui::TreePop();
 	}
@@ -141,8 +141,8 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 	{
 		isSkyLUTResChanged = false;
 
-		isSkyLUTResChanged |= ImGui::SliderInt("SkyLUT Resolution X", &skyLUTResX, 1, 1024);
-		isSkyLUTResChanged |= ImGui::SliderInt("SkyLUT Resolution Y", &skyLUTResY, 1, 1024);
+		isSkyLUTResChanged |= ImGui::SliderInt("X", &skyLUTResX, 1, 1024);
+		isSkyLUTResChanged |= ImGui::SliderInt("Y", &skyLUTResY, 1, 1024);
 
 		ImGui::TreePop();
 	}
