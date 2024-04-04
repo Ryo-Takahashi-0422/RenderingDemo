@@ -16,7 +16,16 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
   
 # パラメータ調整機能
 - Imguiを介してプログラムのパラメータ調整が可能です。  
-![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)  
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
+- Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定
+- Sky Resolution : Sky描画パスの解像度を設定
+- Sky LUT Resolution : SkyLUT描画パスの解像度を設定
+- Shadow Resolution : シャドウ描画パスの解像度を設定
+- Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、SSAO(スクリーンスペースアンビエントオクルージョン)
+DOF(被写界深度)
+- Max FPS : 最大FPS値の設定
+- Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off
+  
 ![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
   
 # 開発環境
