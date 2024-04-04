@@ -2,8 +2,10 @@
 
 # 参考
 * 図書、論文  
-・DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで  https://www.shoeisha.co.jp/book/detail/9784798161938  
-・HLSLシェーダーの魔導書  https://www.shoeisha.co.jp/book/detail/9784798164281  
+・DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで
+https://www.shoeisha.co.jp/book/detail/9784798161938  
+・HLSLシェーダーの魔導書
+https://www.shoeisha.co.jp/book/detail/9784798164281  
 ・ゲームエンジンアーキテクチャ第3版  https://www.borndigital.co.jp/book/19115/  
 ・リアルタイムレンダリング第4版　https://www.borndigital.co.jp/book/15291/  
 ・A Scalable and Production Ready Sky and Atmosphere Rendering Technique  https://sebh.github.io/publications/egsr2020.pdf
