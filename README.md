@@ -2,7 +2,7 @@
 DirectX12を用いて3Dモデルを描画するプログラムです。  
 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」から  
 DirextX12を学びました。  
-本プログラムはその際に作成したプログラム「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
+このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
   
 # 紹介動画
   
