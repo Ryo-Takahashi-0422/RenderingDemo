@@ -3,7 +3,8 @@
 # 参考
 * 図書、論文  
 DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで  
-https://www.shoeisha.co.jp/book/detail/9784798161938  
+https://www.shoeisha.co.jp/book/detail/9784798161938
+
 HLSLシェーダーの魔導書  
 https://www.shoeisha.co.jp/book/detail/9784798164281  
 ゲームエンジンアーキテクチャ第3版  
