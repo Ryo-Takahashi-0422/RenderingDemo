@@ -1,6 +1,14 @@
 # RenderingDemo
 
-
+# 開発環境
+- OS : Windows 11 Home(ver.23H2)
+- CPU : Intel® Core™ i9 プロセッサー
+- GPU : NVIDIA GeForce RTX 4070 Ti
+- RAM : 64GB
+  
+# 開発期間
+- 2023/3/1 ～ 2024/4/4
+  
 # 利用したリソース
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
