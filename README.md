@@ -7,11 +7,32 @@ https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-rese
 - Conan  
 https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
   
-# 処理概要
-1. 3Dモデル設定。BlenderでSponzaのテクスチャ設定・コライダー追加を行う。Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
-2. FbxConverterで各モデルをfbx形式からbin形式に変換する。(変換には開発環境で約7秒ほどかかるため、事前に変換する処理を準備した)
-https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
-3.   
+# 事前処理
+1. 事前に3Dモデルを設定する。BlenderでSponzaのテクスチャ設定・コライダー追加等を行う。Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
+2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換する。(変換処理ではマテリアルや頂点といった情報を抽出するため開発環境で約7秒ほどかかる。そのため事前に変換する処理を準備した)
+https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
+  
+# 処理フロー
+1. Directxの各リソース設定  
+2. 3Dデータファイル読み込み  
+3. ShadowFactor描画パス実行(SkyLUT描画パスで利用)  
+4. ゲームループ開始  
+5. Imgui描画パス実行  
+6. Sun描画パス実行  
+7. シャドウマップ(VSM)描画パス実行  
+8. Air描画パス実行(コンピュートシェーダー)  
+9. SkyLUT描画パス実行(Sky描画パスで利用)  
+10. Sky描画パス実行  
+11. シャドウマップのガウシアンブラー描画パス実行  
+12. ワーカースレッド1,2がSponzaとConanの描画パス実行。マルチレンダリングでカラー、法線、デプスを出力する。  
+13. 各スレッドが出力した描画結果(カラー、法線)を統合する描画パス実行  
+14. 統合したカラー情報のガウシアンブラー描画パス実行(Depth Of Field処理で利用)  
+15. 各スレッドが出力した描画結果(デプス)を統合する描画パス実行  
+16. SSAO描画パス実行  
+17. SSAOのガウシアンブラー描画パス実行  
+18. 各出力結果の結合描画パス実行(カラー、imgui、SSAO、DOFをデプス値により処理)  
+19. FXAA描画パス実行  
+20. ダブルバッファリングで描画結果を交互に表示  
   
 # 参考(一部のみ記載)
 ## 図書、論文  
