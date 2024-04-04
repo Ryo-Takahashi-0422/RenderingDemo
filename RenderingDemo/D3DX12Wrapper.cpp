@@ -897,7 +897,7 @@ void D3DX12Wrapper::Run() {
 
 		// ‰æ‘œ“‡ˆ—¨SSAO¶¬
 		integration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
-		colorIntegraredBlur->ChangeSwitch(settingImgui->GetFOVBoxChanged());
+		colorIntegraredBlur->ChangeSwitch(settingImgui->GetDOFBoxChanged());
 		colorIntegraredBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 		depthMapIntegration->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		//comBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());

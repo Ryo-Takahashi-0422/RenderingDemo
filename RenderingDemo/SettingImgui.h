@@ -82,8 +82,8 @@ private:
 	bool ssaoBox = true;
 	bool ssaoDraw = true;
 
-	bool fovBox = true;
-	bool fovDraw = true;
+	bool dofBox = true;
+	bool dofDraw = true;
 
 	// fps
 	bool isFpsChanged = false;
@@ -155,7 +155,7 @@ public:
 	bool GetCollisionBoxChanged() { return colliderDraw; };
 	bool GetAirBoxChanged() { return airDraw; };
 	bool GetSSAOBoxChanged() { return ssaoDraw; };
-	bool GetFOVBoxChanged() { return fovDraw; };
+	bool GetDOFBoxChanged() { return dofDraw; };
 
 	// fps
 	bool GetIsFpsChanged() { return isFpsChanged; };
