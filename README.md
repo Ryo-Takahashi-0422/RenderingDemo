@@ -1,15 +1,23 @@
-# RenderingDemo
-
+# 概要
+DirectX12を用いて3Dモデルを描画するプログラムです。  
+  
+# 紹介動画
+  
 # 開発環境
-- OS : Windows 11 Home(ver.23H2)
-- CPU : Intel® Core™ i9 プロセッサー
-- GPU : NVIDIA GeForce RTX 4070 Ti
-- RAM : 64GB
+- OS : Windows 11 Home(ver.23H2)  
+- CPU : Intel® Core™ i9 プロセッサー  
+- GPU : NVIDIA GeForce RTX 4070 Ti  
+- RAM : 64GB  
   
 # 開発期間
 - 2023/3/1 ～ 2024/4/4
   
-# 利用したリソース
+# 使用ソフトウェア
+- Visual Studio Community 2019  
+- Blender 2.81  
+- PIX 2305.10  
+  
+# デジタルアセット
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
@@ -21,7 +29,7 @@ https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
 https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
   
 # 処理フロー
-1. Directxの各リソース設定  
+1. DirectX12の各リソース設定  
 2. 3Dデータファイル読み込み  
 3. ShadowFactor描画パス実行(SkyLUT描画パスで利用)  
 4. ゲームループ開始(12. 以外はメインスレッドが実行)  
