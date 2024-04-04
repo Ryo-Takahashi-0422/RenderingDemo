@@ -15,7 +15,7 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - 左回転：←キー  
   
 # パラメータ調整機能
-- Imguiを介してプログラムのパラメータ調整が可能です。  
+## Imguiを介してプログラムのパラメータ調整が可能です。  
 ![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
 - Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定
 - Sky Resolution : Sky描画パスの解像度を設定
@@ -57,7 +57,7 @@ https://www.mixamo.com/#/
   
 # 事前処理
 1. 事前に3Dモデルを設定しています。BlenderでSponzaのテクスチャ設定・コライダー追加等を行い、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行います。  
-2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換します。変換処理ではマテリアルや頂点といった情報を抽出するため開発環境で約7秒ほどかかるため、事前に変換する処理を準備しました。  
+2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換します。マテリアルや頂点といった情報を抽出するのに開発環境で約5秒ほどかかるため、事前に変換する処理を準備しました。  
 https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
   
 # 処理フロー
