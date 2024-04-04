@@ -6,13 +6,13 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
   ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい。  
   
-# 紹介動画
-https://www.youtube.com/watch?v=pzYBP06b1Pk
+# デモ動画(音声無し)
+https://www.youtube.com/watch?v=pzYBP06b1Pk  
   
 # 操作方法
 - 前進：wキー  
 - 右回転：→キー  
-- 左回転：←キー
+- 左回転：←キー  
   
 # パラメータ調整機能
 - Imguiを介してプログラムのパラメータ調整が可能です。  
@@ -25,6 +25,7 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)  
 - Max FPS : 最大FPS値の設定  
 - Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
+  
   
   
 ![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
