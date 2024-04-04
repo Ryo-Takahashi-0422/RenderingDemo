@@ -24,7 +24,9 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
-https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019  
+https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
+- Mixamo(アニメーションデータ)  
+https://www.mixamo.com/#/  
   
 # 事前処理
 1. 事前に3Dモデルを設定しています。BlenderでSponzaのテクスチャ設定・コライダー追加等を行い、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行います。  
