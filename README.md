@@ -16,7 +16,7 @@ https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
 1. Directxの各リソース設定  
 2. 3Dデータファイル読み込み  
 3. ShadowFactor描画パス実行(SkyLUT描画パスで利用)  
-4. ゲームループ開始  
+4. ゲームループ開始(12. 以外はメインスレッドが実行)  
 5. Imgui描画パス実行  
 6. Sun描画パス実行  
 7. シャドウマップ(VSM)描画パス実行  
