@@ -3,6 +3,8 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」  
 からDirextX12を学びました。  
 このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
+
+![Test Image 1]([https://github.com/hibara/TestRepository/blob/master/image/test.png](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png))
   
 # 紹介動画
 https://www.youtube.com/watch?v=pzYBP06b1Pk
