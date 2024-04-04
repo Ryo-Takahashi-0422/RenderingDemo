@@ -5,7 +5,13 @@
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
-https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019  
+https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
+  
+# 処理概要
+1. 3Dモデル設定。BlenderでSponzaのテクスチャ設定・コライダー追加を行う。Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
+2. FbxConverterで各モデルをfbx形式からbin形式に変換する。(変換には開発環境で約7秒ほどかかるため、事前に変換する処理を準備した)
+https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
+3.   
   
 # 参考(一部のみ記載)
 ## 図書、論文  
