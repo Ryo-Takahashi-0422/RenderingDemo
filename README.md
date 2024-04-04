@@ -5,11 +5,11 @@
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
-https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
+https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019  
   
 # 事前処理
-1. 事前に3Dモデルを設定する。BlenderでSponzaのテクスチャ設定・コライダー追加等を行う。Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
-2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換する。(変換処理ではマテリアルや頂点といった情報を抽出するため開発環境で約7秒ほどかかる。そのため事前に変換する処理を準備した)
+1. 事前に3Dモデルを設定しています。BlenderでSponzaのテクスチャ設定・コライダー追加等を行い、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行います。  
+2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換します。変換処理ではマテリアルや頂点といった情報を抽出するため開発環境で約7秒ほどかかるため、事前に変換する処理を準備しました。  
 https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
   
 # 処理フロー
@@ -24,7 +24,7 @@ https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
 9. SkyLUT描画パス実行(Sky描画パスで利用)  
 10. Sky描画パス実行  
 11. シャドウマップのガウシアンブラー描画パス実行  
-12. ワーカースレッド1,2がSponzaとConanの描画パス実行。マルチレンダリングでカラー、法線、デプスを出力する。  
+12. ワーカースレッド1,2がSponzaとConanの描画パス実行(マルチレンダリングでカラー、法線、デプスを出力)  
 13. 各スレッドが出力した描画結果(カラー、法線)を統合する描画パス実行  
 14. 統合したカラー情報のガウシアンブラー描画パス実行(Depth Of Field処理で利用)  
 15. 各スレッドが出力した描画結果(デプス)を統合する描画パス実行  
