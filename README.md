@@ -1,14 +1,14 @@
 # RenderingDemo
 
 
-#利用したリソース
+#　利用したリソース
 - Sponza  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
 https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019  
   
 # 参考(一部のみ記載)
-* 図書、論文  
+## 図書、論文  
 - DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで  
 https://www.shoeisha.co.jp/book/detail/9784798161938  
 - HLSLシェーダーの魔導書  
@@ -20,13 +20,13 @@ https://www.borndigital.co.jp/book/15291/
 - A Scalable and Production Ready Sky and Atmosphere Rendering Technique  
 https://sebh.github.io/publications/egsr2020.pdf  
   
-* 実装  
+## 実装  
 - MicroSoft's project 「DirectX-Graphics-Samples」  
 https://github.com/microsoft/DirectX-Graphics-Samples  
 - AirGuanZ's project 「AtmosphereRenderer」  
 https://github.com/AirGuanZ/AtmosphereRenderer  
   
-* 動画、ブログ  
+## 動画、ブログ  
 - コンピュータグラフィックスの空  
 https://www.youtube.com/watch?v=YrQ4ACuvM68  
 - A Minimal Ray-Tracer  
