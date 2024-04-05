@@ -5,7 +5,7 @@ SamplerState smp : register(s0); // No.0 sampler
 
 cbuffer Matrix4Cal : register(b0) // gaussian weight
 {
-    //matrix view;
+    matrix view;
     //matrix invView;
     matrix proj;
     matrix invProj;
@@ -30,7 +30,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
     float x = (DTid.x + 0.5f) / width;
     float y = (DTid.y + 0.5f) / height;
     float2 uv = float2(x, y);
-    float dp = depthmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f);
+    float dp = depthmap.SampleLevel(smp, uv, 0.0f);
     
     if (!isDraw)
     {
@@ -53,7 +53,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float4 rpos = (0, 0, 0, 0);
 
         float ao = 0.0f;
-        float3 oriNorm = normalmap.SampleLevel(smp, float2(uv.x, uv.y), 0.0f);
+        float3 oriNorm = normalmap.SampleLevel(smp, uv, 0.0f);
         // 床とキャラクターとのSSAOを計算しないための処理1
         // この処理のためにキャラクターの法線出力値は全て0としている
         if (oriNorm.x + oriNorm.y + oriNorm.z == 3.0f)
@@ -61,10 +61,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        //norm = mul(view, norm);
+        norm = mul(view, norm);
         const int trycnt = 48;
-        const float radius = 0.12f;
-    
+        float radius = 0.18f;
+        radius -= uv.y / 5.6f;
+        
         if (dp < 1.0f)
         {
             for (int i = 0; i < trycnt; ++i)
@@ -75,10 +76,17 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
                 // Create TBN matrix
-                //float3 tangent = normalize(omega - norm * dot(omega, norm));
-                //float3 bitangent = cross(tangent, norm);
-                //float3x3 TBN = float3x3(tangent, bitangent, norm);
+                float3 tangent = normalize(omega - norm * dot(omega, norm));
+                float3 biNormal = cross(norm, tangent);
+                float3x3 TBN = float3x3(tangent, biNormal, norm);
+                //float3x3 TBN = float3x3(float3(tangent.x, biNormal.x, norm.x), float3(tangent.y, biNormal.y, norm.y), float3(tangent.z, biNormal.z, norm.z));
+                omega = mul(TBN, omega);
+                
+                //float3 tangent = normalize(dot(norm, float3(0, 1, 0)));
+                //float3 biNormal = cross(norm, tangent);
+                //float3x3 TBN = float3x3(tangent, biNormal, norm);
                 //omega = mul(TBN, omega);
+                
                 
                 // 乱数の結果法線の反対側に向いていたら反転
                 float dt = dot(norm, omega);
@@ -93,7 +101,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 sOriNorm = normalmap.SampleLevel(smp, sPos, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
 
-                //sNorm = mul(view, sNorm);
+                sNorm = mul(view, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // 計算結果が現在の場所の深度より奥に入っているなら遮断されているので加算する

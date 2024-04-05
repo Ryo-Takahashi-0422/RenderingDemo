@@ -134,7 +134,16 @@ uint index : SV_VertexID)
 
     //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connan‚¢‚¢Š´‚¶
     float4 m_wPos = mul(world, pos);
-    float3 m_tangent = normalize(cross(t_normal, float3(0.0, 1.0, 0.0)));
+    float3 up = float3(0.0, 1.0, 0.0);
+    float3 right = float3(1.0, 0.0, 0.0);
+    float dt = dot(t_normal, right);
+    float3 m_tangent;
+    if (abs(abs(dt) - 1) > 0.0f)
+        m_tangent = normalize(cross(t_normal, up));
+    else
+        m_tangent = normalize(cross(t_normal, right));
+    
+    //float3 m_tangent = normalize(cross(t_normal, up));
     //output.tangent = normalize(mul(bmTan, output.tangent));
     float3 m_biNormal = cross(t_normal, m_tangent);
     //output.biNormal = normalize(mul(bmTan, output.biNormal));

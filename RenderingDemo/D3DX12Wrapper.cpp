@@ -1322,7 +1322,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
-						//calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 
 					// Left Key
@@ -1337,7 +1337,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
-						//calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 
 					// Right Key
@@ -1352,7 +1352,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
-						//calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
+						calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
 				}
 
