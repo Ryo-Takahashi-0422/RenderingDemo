@@ -79,7 +79,7 @@ uint index : SV_VertexID)
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
 
-        output.normal = normalize(mul(world, oriNorm));
+        output.normal = normalize(mul(world, m_normal));
     }
     else
     {
