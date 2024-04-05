@@ -26,11 +26,12 @@ uint index : SV_VertexID
         output.worldPos = pos;
         output.trueDepth = length(worldPos - lightPos) / output.adjust;
         
+        // 処理軽減のためコメントアウト
         // ポール影がキャラクター背面に貫通するのが目立つので、対策。キャラクターのレンダリング時にポールの落ち影かどうか判定するのに利用する。
-        if ((77496 <= index && index <= 91841))
-        {
-            output.specialObj = true;
-        }
+        //if ((77496 <= index && index <= 91841))
+        //{
+        //    output.specialObj = true;
+        //}
 
         output.depthAndLength.x = length(worldPos - lightPos) / output.adjust;
         output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;

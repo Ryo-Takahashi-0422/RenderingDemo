@@ -1320,7 +1320,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
 						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						//calculateSSAO->SetViewMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view);
 					}
@@ -1333,7 +1333,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
@@ -1348,7 +1348,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);
@@ -1393,7 +1393,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap (ptr num11)
 			++textureindex;
-			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像2個分の領域は使わないので飛ばす。マジックアンバー化していてややこしい...
+			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像3個分の領域は使わないので飛ばす。
 
 			auto itIndiceFirst = itIndiceFirsts[fbxIndex];
 			auto ofst = 0;

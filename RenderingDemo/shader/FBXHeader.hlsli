@@ -2,13 +2,13 @@ struct Output
 {
     float4 svpos : SV_POSITION; // システム用頂点座標
     float4 pos : POSITON; // 頂点座標
-    float4 norm : NORMAL0; // 法線ベクトル
+    //float4 norm : NORMAL0; // 法線ベクトル
     //float4 vnormal : NORMAL1; // ビュー変換後の法線ベクトル
     float2 uv : TEXCOORD; // uv値
-    float4 lightTangentDirection : LightTangentDirection;
-    float3 tangent : TANGENT;
-    float3 biNormal : BINORMAL;
-    float3 normal : NORMAL2;
+    //float4 lightTangentDirection : LightTangentDirection;
+    //float3 tangent : TANGENT;
+    //float3 biNormal : BINORMAL;
+    //float3 normal : NORMAL2;
     
     float4 screenPosition : SCREEN_POSITIO;
     float4 worldPosition : WORLD_POSITION;
@@ -16,17 +16,20 @@ struct Output
     float4 lvPos : LIGHTVIEW_POSITION;
     bool isEnhanceShadow : ENHANCESHADOW;
     bool isChara : chara;
-    float3 truePos : TRUE_POSITION;
+    //float3 truePos : TRUE_POSITION;
     float lvDepth : LIGHTVIEW_DEPTH;
     float trueDepth : TRUE_DEPTH;
     float3 light : LIGHT;
     float adjust : ADJUST;
-    float index : INDEX;
+    //float index : INDEX;
     float4 rotatedNorm : ROTATED_NORMAL;
-    float3 ray : RAY;
+    //float3 ray : RAY;
     float4 viewPos : VIEWPOSITION;
     float4 wPos : WPOS;
     float3 oriWorldNorm : ORI_WORLD_NORMAL;
+    
+    float3 vEyeDirection : VED;
+    float3 vLightDirection : VLD;
 };
 
 struct PixelOutput
