@@ -181,8 +181,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 0.0f;
-    float biNormalWeight = 0.0f; // 0でUVシームが多少目立たなくなる
+    float tangentWeight = 1.0f;
+    float biNormalWeight = 1.0f; // 0でUVシームが多少目立たなくなる
     float brightMin = 0.4f;
     float brightEmpha = 4.5f;
     
@@ -224,18 +224,18 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     adjustDir.z *= -1;
     float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
-    float3 normal = rotatedNormDot + input.tangent * tangentWeight * normVec + input.biNormal * normVec * biNormalWeight + input.normal * normVec;
-       
-    normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
-    // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
-    if (lz - 0.01f > shadowValue.x && input.isChara)
-    {
-        normal *= 0.2;
-    }
+    //float3 normal = /*rotatedNormDot + */input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
+    //normal = normalize(normal);
+    //normal *= -sunDIr.y; // 太陽高度が低いほど目立たなくする
+    //// 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
+    //if (lz - 0.01f > shadowValue.x && input.isChara)
+    //{
+    //    normal *= 0.2;
+    //}
 
-    float bright = dot(abs(input.lightTangentDirection.xyz), normal);
-    bright = max(brightMin, bright);
-    bright = saturate(bright * brightEmpha);
+    //float bright = dot(abs(input.lightTangentDirection.xyz), normal);
+    //bright = max(brightMin, bright);
+    //bright = saturate(bright * brightEmpha);
        
     float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
     scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
@@ -246,7 +246,22 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //float4 col = colormap.Sample(smp, input.uv);
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
-    result.col = float4(bright * col.x, bright * col.y, bright * col.z, 1);
+    result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
+    float3 lig = normalize(input.vLightDirection);
+    float diff = clamp(dot(normVec, lig), 0.1, 1.0);
+    result.col *= diff;
+    
+    float3 eye = normalize(input.vEyeDirection);
+    float3 halfLE = normalize(lig + eye);
+    float spec = pow(clamp(dot(halfLE, normVec), 0.0, 1.0), 10.0f);
+    float4 spec4 = float4(spec, spec, spec, 0);
+    
+    
+    
+    
+    
+    
+    
     
     // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
     // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
@@ -283,6 +298,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         //reflectedLight.directSpecular *= litFactor;
         speclur *= litFactor;
+        spec4 *= litFactor;
+
     }
         
     float depth = depthmap.Sample(smp, shadowUV);
@@ -294,7 +311,9 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     
     // 色情報をレンダーターゲット1に格納する
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + float4(speclur, 0) + result.col * float4(/*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
+
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * 0.05f + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
+    //result.col = spec4 * 0.1f;
     
     return result;
 }

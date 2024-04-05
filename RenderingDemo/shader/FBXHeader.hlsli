@@ -27,6 +27,9 @@ struct Output
     float4 viewPos : VIEWPOSITION;
     float4 wPos : WPOS;
     float3 oriWorldNorm : ORI_WORLD_NORMAL;
+    
+    float3 vEyeDirection : VED;
+    float3 vLightDirection : VLD;
 };
 
 struct PixelOutput

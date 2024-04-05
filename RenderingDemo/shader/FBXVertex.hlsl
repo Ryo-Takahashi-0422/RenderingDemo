@@ -123,9 +123,25 @@ uint index : SV_VertexID)
     bmTan[0] = bm[0];
     bmTan[1] = bm[1];
     bmTan[2] = bm[2];
-    output.tangent = normalize(mul(world, mul(bmTan, tangent)));
-    output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
-    output.normal = normalize(mul(world, mul(bmTan, m_normal)));
+    //output.tangent = normalize(mul(world, mul(bmTan, tangent)));
+    //output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
+    
+    //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connanいい感じ
+    output.normal = normalize(mul(world, mul(bmTan, m_normal.xyz)));
+    output.tangent = normalize(cross(output.normal, float3(0.0, 1.0, 0.0)));
+    //output.tangent = normalize(mul(bmTan, output.tangent));
+    output.biNormal = cross(output.normal, output.tangent);
+    //output.biNormal = normalize(mul(bmTan, output.biNormal));
+    float3 tEye = (float4(eyePos, 1) - mul(world, pos)).xyz;
+    float3 tLight = (float4(lightPos, 1) - mul(world, pos)).xyz;
+    output.vEyeDirection.x = abs(dot(output.tangent, tEye));
+    output.vEyeDirection.y = dot(output.biNormal, tEye);
+    output.vEyeDirection.z = abs(dot(output.normal, tEye));
+    normalize(output.vEyeDirection);
+    output.vLightDirection.x = dot(output.tangent, tLight);
+    output.vLightDirection.y = dot(output.biNormal, tLight);
+    output.vLightDirection.z = dot(output.normal, tLight);
+    normalize(output.vLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
