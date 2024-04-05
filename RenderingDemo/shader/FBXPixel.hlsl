@@ -191,8 +191,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //float brightMin = 0.4f;
     //float brightEmpha = 4.5f;
     
-    float Dot = dot(input.worldNormal, sunDIr);
-    float nor = saturate(abs(Dot) + 0.5f);
+    //float Dot = dot(input.worldNormal, sunDIr);
+    //float nor = saturate(abs(Dot) + 0.5f);
     
     float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
     float3 speclur = dot(reflection, -input.ray);
@@ -202,21 +202,21 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     speclur *= -sunDIr.y;
     
     input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
-    if (input.isChara)
-    {
-        //brightEmpha = 0.7f;
-        nor += 2.1f;
-        //brightMin = 0.35f;
-        speclur = float3(0, 0, 0);
-        //tangentWeight = 1.0f;
-        //biNormalWeight = 0.3;
-        result.normal = float4(1, 1, 1, 1);
-        reflectedLight.directSpecular = 0.0f;
-    }
-    else
-    {
-        result.normal = float4(input.worldNormal, 1);
-    }
+    //if (input.isChara)
+    //{
+    //    //brightEmpha = 0.7f;
+    //    //nor += 2.1f;
+    //    //brightMin = 0.35f;
+    //    speclur = float3(0, 0, 0);
+    //    //tangentWeight = 1.0f;
+    //    //biNormalWeight = 0.3;
+    //    result.normal = float4(1, 1, 1, 1);
+    //    reflectedLight.directSpecular = 0.0f;
+    //}
+    //else
+    //{
+    //    result.normal = float4(input.worldNormal, 1);
+    //}
 
         
     float3 normCol = normalmap.Sample(smp, input.uv);
@@ -252,7 +252,19 @@ PixelOutput FBXPS(Output input) : SV_TARGET
 
     result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
     float3 lig = normalize(input.vLightDirection);
-    float diff = clamp(dot(normVec, lig), 0.1, 1.0);
+    float diff/* = clamp(dot(normVec, lig), 0.1, 1.0)*/;
+    if(input.isChara)
+    {
+        diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
+        //speclur *= 0.8f/*float3(0, 0, 0)*/;
+        result.normal = float4(1, 1, 1, 1);
+        reflectedLight.directSpecular = 0.0f;
+    }
+    else
+    {
+        diff = clamp(dot(normVec, lig), 0.1f, 1.0f);
+        result.normal = float4(input.worldNormal, 1);
+    }
     result.col *= diff;
     
     float3 eye = normalize(input.vEyeDirection);
@@ -289,12 +301,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
-        float3 shadowColor = result.col.xyz * 0.3f * nor;
+        float3 shadowColor = result.col.xyz * 0.4f /** nor*/;
         
         // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
         if (input.isChara && isSpecial)
         {
-            shadowColor *= (1.9f /*+ rotatedNormDot * rotatedNormDot*/) * max(-sunDIr.y, 0.85f);
+            shadowColor *= (4.0f /*+ rotatedNormDot * rotatedNormDot*/) * max(-sunDIr.y, 0.85f);
             shadowColor.x = min(shadowColor.x, result.col.x);
             shadowColor.y = min(shadowColor.y, result.col.y);
             shadowColor.z = min(shadowColor.z, result.col.z);
@@ -317,7 +329,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // 色情報をレンダーターゲット1に格納する
 
     result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * 0.05f + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
-    //result.col = spec4 * 0.1f;
+    result.col = spec4;
     
     return result;
 }
