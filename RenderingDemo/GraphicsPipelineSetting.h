@@ -3,7 +3,7 @@
 class GraphicsPipelineSetting/* : public IGraphicsPipelineSetting*/
 {
 private:
-	D3D12_INPUT_ELEMENT_DESC inputLayouts[10];
+	D3D12_INPUT_ELEMENT_DESC inputLayouts[7/*10*/];
 	VertexInputLayout* vertexInputLayout = nullptr;
 	ComPtr<ID3D12PipelineState> _pipelineState = nullptr;
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeLine = {};

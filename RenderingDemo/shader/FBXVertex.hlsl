@@ -8,9 +8,9 @@ Output FBXVS
     uint3 boneno2 : BONE_NO_ThreeToFive,
     float3 boneweight1 : WEIGHT_ZeroToTwo,
     float3 boneweight2 : WEIGHT_ThreeToFive,
-    float3 tangent : TANGENT,
-    float3 binormal : BINORMAL,
-    float3 vnormal : NORMAL,
+    //float3 tangent : TANGENT,
+    //float3 binormal : BINORMAL,
+    //float3 vnormal : NORMAL,
 uint index : SV_VertexID)
 {
     Output output; // ピクセルシェーダーに渡す値
@@ -24,7 +24,7 @@ uint index : SV_VertexID)
     matrix bm6 = bones[boneno2[2]] * boneweight2[2];
     
     matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
-    bool moveObj = true;
+    //bool moveObj = true;
     
     output.adjust = 200.0f;
     float3 lightPos;
@@ -50,7 +50,7 @@ uint index : SV_VertexID)
         m_normal.x *= sign(m_normal.x);
         m_normal.z *= sign(m_normal.z);
         
-        moveObj = false;
+        //moveObj = false;
         //bm[0][0] = 1;
         //bm[1][1] = 1;
         //bm[2][2] = 1;
@@ -133,13 +133,13 @@ uint index : SV_VertexID)
     //output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
 
     //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connanいい感じ
-    
+    float4 m_wPos = mul(world, pos);
     float3 m_tangent = normalize(cross(t_normal, float3(0.0, 1.0, 0.0)));
     //output.tangent = normalize(mul(bmTan, output.tangent));
     float3 m_biNormal = cross(t_normal, m_tangent);
     //output.biNormal = normalize(mul(bmTan, output.biNormal));
-    float3 tEye = (float4(eyePos, 1) - mul(world, pos)).xyz;
-    float3 tLight = (float4(lightPos, 1) - mul(world, pos)).xyz;
+    float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
+    float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
     output.vEyeDirection.y = dot(m_biNormal, tEye);
     output.vEyeDirection.z = abs(dot(t_normal, tEye));
@@ -151,7 +151,7 @@ uint index : SV_VertexID)
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
-    output.norm = mul(world, m_normal);
+    //output.norm = mul(world, m_normal);
     
 
 
@@ -160,7 +160,7 @@ uint index : SV_VertexID)
     
     output.screenPosition = output.svpos;
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
-    output.worldNormal = normalize(mul(world, m_normal).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
+    output.worldNormal = t_normal /*normalize(mul(world, m_normal).xyz)*/ /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
     
     //output.ray = normalize(pos.xyz - eyePos);
 
@@ -172,7 +172,7 @@ uint index : SV_VertexID)
     float4 eye = float4(eyePos, 1);
     float4 vEye = mul(view, eye);
     
-    output.wPos = mul(world, pos);
+    output.wPos = m_wPos;
     
     float4 rotPos = mul(rotation, pos);
     float4 vPos = mul(mul(view, world), pos);
