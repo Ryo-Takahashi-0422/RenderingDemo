@@ -194,14 +194,14 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //float Dot = dot(input.worldNormal, sunDIr);
     //float nor = saturate(abs(Dot) + 0.5f);
     
-    float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
-    float3 speclur = dot(reflection, -input.ray);
-    speclur = saturate(speclur);
-    speclur *= speclurColor;
-    //speclur = pow(speclur, 2);
-    speclur *= -sunDIr.y;
+    //float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
+    //float3 speclur = dot(reflection, -input.ray);
+    //speclur = saturate(speclur);
+    //speclur *= speclurColor;
+    ////speclur = pow(speclur, 2);
+    //speclur *= -sunDIr.y;
     
-    input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
+    //input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     //if (input.isChara)
     //{
     //    //brightEmpha = 0.7f;
@@ -253,24 +253,37 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
     float3 lig = normalize(input.vLightDirection);
     float diff/* = clamp(dot(normVec, lig), 0.1, 1.0)*/;
+    float3 eye = normalize(input.vEyeDirection);
+    float3 halfLE = normalize(lig + eye);
+    //float spec = pow(clamp(dot(halfLE, normVec), 0.0, 1.0), 30.0f);
+    float spec = dot(halfLE, normVec);
+    if(spec < 0)
+    {
+        spec = 0;
+    }
+    //spec *= 0.2f;
+    spec = pow(spec, 20.0f);
+    float4 spec4 = float4(spec, spec, spec, 0);
+    
     if(input.isChara)
     {
         diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
         result.normal = float4(1, 1, 1, 1);
         reflectedLight.directSpecular = 0.0f;
+        spec4 *= 0.1f;
+
     }
     else
     {
         diff = clamp(dot(normVec, lig), 0.1f, 1.0f);
         result.normal = float4(input.worldNormal, 1);
+        spec4 *= 0.3f;
+
     }
     result.col *= diff;
     
-    float3 eye = normalize(input.vEyeDirection);
-    float3 halfLE = normalize(lig + eye);
-    float spec = pow(clamp(dot(halfLE, normVec), 0.0, 1.0), 10.0f);
-    float4 spec4 = float4(spec, spec, spec, 0);
+
     
     
     
@@ -313,7 +326,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         }
         result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         //reflectedLight.directSpecular *= litFactor;
-        speclur *= litFactor;
+        //speclur *= litFactor;
         spec4 *= litFactor;
 
     }
@@ -328,8 +341,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // 色情報をレンダーターゲット1に格納する
 
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * 0.05f + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
-    result.col = spec4;
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
+    //result.col = spec4;
     
     return result;
 }
