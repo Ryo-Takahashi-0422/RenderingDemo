@@ -37,16 +37,23 @@ uint index : SV_VertexID)
     // 壁の法線値が-1になりssaoが計算出来くなる問題への対処
     float4 m_normal = norm;
     float4 oriNorm = norm;
+    
+    m_normal = normalize(m_normal);
+ 
+    matrix rot = charaRot;
+    output.rotatedNorm = m_normal;
+    output.rotatedNorm = mul(rot, output.rotatedNorm);
+    
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
         m_normal.x *= sign(m_normal.x);
         m_normal.z *= sign(m_normal.z);
         
         moveObj = false;
-        bm[0][0] = 1;
-        bm[1][1] = 1;
-        bm[2][2] = 1;
-        bm[3][3] = 1;
+        //bm[0][0] = 1;
+        //bm[1][1] = 1;
+        //bm[2][2] = 1;
+        //bm[3][3] = 1;
         output.worldPosition = pos;
         
         output.lvPos = mul(mul(oProj, shadowView), output.worldPosition);
@@ -72,6 +79,7 @@ uint index : SV_VertexID)
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
 
+        output.normal = normalize(mul(world, oriNorm));
     }
     else
     {
@@ -98,6 +106,12 @@ uint index : SV_VertexID)
         //output.lvDepth *= 65 / (lightPos.y + 0.01f);
         output.isEnhanceShadow = true;
         output.isChara = true;
+        
+        float3x3 bmTan;
+        bmTan[0] = bm[0];
+        bmTan[1] = bm[1];
+        bmTan[2] = bm[2];
+        output.normal = normalize(float4(mul(bmTan, output.rotatedNorm.xyz), 1));
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);
@@ -108,26 +122,17 @@ uint index : SV_VertexID)
     //    m_normal.y = 0.0f;
 
     //}
-    m_normal = normalize(m_normal);
-    float4x4 mat;
-    mat[0] = float4(tangent, 0.0f);
-    mat[1] = float4(binormal, 0.0f);
-    mat[2] = float4(m_normal);
-    mat[3] = (0.0f, 0.0f, 0.0f, 1.0f);
-    mat = transpose(mat);
+
 
     float3 lightDirection = -sunDIr;
     output.lightTangentDirection = float4(normalize(lightDirection), 1);
      
-    float3x3 bmTan;
-    bmTan[0] = bm[0];
-    bmTan[1] = bm[1];
-    bmTan[2] = bm[2];
+
     //output.tangent = normalize(mul(world, mul(bmTan, tangent)));
     //output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
-    
+
     //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connanいい感じ
-    output.normal = normalize(mul(world, mul(bmTan, m_normal.xyz)));
+    
     output.tangent = normalize(cross(output.normal, float3(0.0, 1.0, 0.0)));
     //output.tangent = normalize(mul(bmTan, output.tangent));
     output.biNormal = cross(output.normal, output.tangent);
@@ -147,9 +152,7 @@ uint index : SV_VertexID)
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
     output.norm = mul(world, m_normal);
     
-    matrix rot = charaRot;
-    output.rotatedNorm = m_normal;
-    output.rotatedNorm = mul(rot, output.rotatedNorm);
+
 
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
     output.uv = uv;

@@ -114,6 +114,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
     
+    float4 col = colormap.Sample(smp, input.uv);
+    if (col.a == 0)
+        discard; // アルファ値が0なら透過させる
+    
     PixelOutput result;
     //float metallic;
     float roughness;
@@ -124,7 +128,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     geometry.normal = normalize(input.oriWorldNorm);
     geometry.viewDir = normalize(input.viewPos);
   
-    float4 col = colormap.Sample(smp, input.uv);
+
+    
     albedo = col.xyz;
     //metallic = 0.0f;
     float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
@@ -181,10 +186,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
-    float tangentWeight = 1.0f;
-    float biNormalWeight = 1.0f; // 0でUVシームが多少目立たなくなる
-    float brightMin = 0.4f;
-    float brightEmpha = 4.5f;
+    //float tangentWeight = 1.0f;
+    //float biNormalWeight = 1.0f; // 0でUVシームが多少目立たなくなる
+    //float brightMin = 0.4f;
+    //float brightEmpha = 4.5f;
     
     float Dot = dot(input.worldNormal, sunDIr);
     float nor = saturate(abs(Dot) + 0.5f);
@@ -199,12 +204,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     input.normal.x *= charaRot[0].z * sign(sunDIr.x); // 太陽のx座標符号によりセルフシャドウの向きを反転させる処理
     if (input.isChara)
     {
-        brightEmpha = 0.7f;
+        //brightEmpha = 0.7f;
         nor += 2.1f;
         //brightMin = 0.35f;
         speclur = float3(0, 0, 0);
-        tangentWeight = 1.0f;
-        biNormalWeight = 0.3;
+        //tangentWeight = 1.0f;
+        //biNormalWeight = 0.3;
         result.normal = float4(1, 1, 1, 1);
         reflectedLight.directSpecular = 0.0f;
     }
@@ -219,10 +224,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     normVec = normalize(normVec);
     
     // 回転した法線のz前方は-方向(直したい...)なので、太陽方向もz成分をマイナス掛けする。この処理がないと太陽のx軸回転に対するキャラクターの陰が回転方向と反対側に出てしまう
-    float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
-    float3 adjustDir = -sunDIr;
-    adjustDir.z *= -1;
-    float rotatedNormDot = dot(rotatedNorm, adjustDir);
+    //float3 rotatedNorm = normalize(input.rotatedNorm.xyz);
+    //float3 adjustDir = -sunDIr;
+    //adjustDir.z *= -1;
+    //float rotatedNormDot = dot(rotatedNorm, adjustDir);
     
     //float3 normal = /*rotatedNormDot + */input.tangent * tangentWeight * normVec.x + input.biNormal * normVec.y * biNormalWeight + input.normal * normVec.z;
     //normal = normalize(normal);
@@ -244,8 +249,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float3 inScatter = air.xyz;
 
     //float4 col = colormap.Sample(smp, input.uv);
-    if (col.a == 0)
-        discard; // アルファ値が0なら透過させる
+
     result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
     float3 lig = normalize(input.vLightDirection);
     float diff = clamp(dot(normVec, lig), 0.1, 1.0);
@@ -265,11 +269,11 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
     // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
-    if (rotatedNormDot > 0)
-    {
-        rotatedNormDot = 0;
-    }
-    rotatedNormDot *= -1;
+    //if (rotatedNormDot > 0)
+    //{
+    //    rotatedNormDot = 0;
+    //}
+    //rotatedNormDot *= -1;
     bool isSpecial = vsmSample.w;
     // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
     // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
@@ -290,7 +294,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
         if (input.isChara && isSpecial)
         {
-            shadowColor *= (1.9f + rotatedNormDot * rotatedNormDot) * max(-sunDIr.y, 0.85f);
+            shadowColor *= (1.9f /*+ rotatedNormDot * rotatedNormDot*/) * max(-sunDIr.y, 0.85f);
             shadowColor.x = min(shadowColor.x, result.col.x);
             shadowColor.y = min(shadowColor.y, result.col.y);
             shadowColor.z = min(shadowColor.z, result.col.z);
