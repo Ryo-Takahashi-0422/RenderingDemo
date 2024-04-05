@@ -44,6 +44,7 @@ uint index : SV_VertexID)
     output.rotatedNorm = m_normal;
     output.rotatedNorm = mul(rot, output.rotatedNorm);
     
+    float3 t_normal;
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
         m_normal.x *= sign(m_normal.x);
@@ -62,7 +63,7 @@ uint index : SV_VertexID)
         //float3 lightPos = -65 * sunDIr;
         //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
         //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
-        output.truePos = output.lvPos;
+        //output.truePos = output.lvPos;
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //float jj = output.worldPosition.y + 5.0f;
         //float k = output.worldPosition.y / jj;
@@ -79,7 +80,7 @@ uint index : SV_VertexID)
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
 
-        output.normal = normalize(mul(world, m_normal));
+        t_normal = normalize(mul(world, m_normal));
     }
     else
     {
@@ -95,7 +96,7 @@ uint index : SV_VertexID)
         //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
 
         // キャラクターのシャドウマップ上の描画は2通りある。通常のライト位置および高さを1/n倍したもので、後者はsponzaの影描画で利用する。前者はキャラクターの影描画で利用する。
-        output.truePos = output.lvPos;        
+        //output.truePos = output.lvPos;        
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
         
@@ -111,7 +112,7 @@ uint index : SV_VertexID)
         bmTan[0] = bm[0];
         bmTan[1] = bm[1];
         bmTan[2] = bm[2];
-        output.normal = normalize(float4(mul(bmTan, output.rotatedNorm.xyz), 1));
+        t_normal = normalize(float4(mul(bmTan, output.rotatedNorm.xyz), 1));
     }
     //pos = mul(bm, pos);
     //pos = mul(rotation, pos);
@@ -124,8 +125,8 @@ uint index : SV_VertexID)
     //}
 
 
-    float3 lightDirection = -sunDIr;
-    output.lightTangentDirection = float4(normalize(lightDirection), 1);
+    //float3 lightDirection = -sunDIr;
+    //output.lightTangentDirection = float4(normalize(lightDirection), 1);
      
 
     //output.tangent = normalize(mul(world, mul(bmTan, tangent)));
@@ -133,19 +134,19 @@ uint index : SV_VertexID)
 
     //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connanいい感じ
     
-    output.tangent = normalize(cross(output.normal, float3(0.0, 1.0, 0.0)));
+    float3 m_tangent = normalize(cross(t_normal, float3(0.0, 1.0, 0.0)));
     //output.tangent = normalize(mul(bmTan, output.tangent));
-    output.biNormal = cross(output.normal, output.tangent);
+    float3 m_biNormal = cross(t_normal, m_tangent);
     //output.biNormal = normalize(mul(bmTan, output.biNormal));
     float3 tEye = (float4(eyePos, 1) - mul(world, pos)).xyz;
     float3 tLight = (float4(lightPos, 1) - mul(world, pos)).xyz;
-    output.vEyeDirection.x = abs(dot(output.tangent, tEye));
-    output.vEyeDirection.y = dot(output.biNormal, tEye);
-    output.vEyeDirection.z = abs(dot(output.normal, tEye));
+    output.vEyeDirection.x = abs(dot(m_tangent, tEye));
+    output.vEyeDirection.y = dot(m_biNormal, tEye);
+    output.vEyeDirection.z = abs(dot(t_normal, tEye));
     normalize(output.vEyeDirection);
-    output.vLightDirection.x = dot(output.tangent, tLight);
-    output.vLightDirection.y = dot(output.biNormal, tLight);
-    output.vLightDirection.z = dot(output.normal, tLight);
+    output.vLightDirection.x = dot(m_tangent, tLight);
+    output.vLightDirection.y = dot(m_biNormal, tLight);
+    output.vLightDirection.z = dot(t_normal, tLight);
     normalize(output.vLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
@@ -161,7 +162,7 @@ uint index : SV_VertexID)
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
     output.worldNormal = normalize(mul(world, m_normal).xyz) /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
     
-    output.ray = normalize(pos.xyz - eyePos);
+    //output.ray = normalize(pos.xyz - eyePos);
 
     //float3 rotEyepos = mul(rotation, eyePos);
     //float3 rotPos = mul(rotation, pos);

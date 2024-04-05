@@ -262,16 +262,28 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         spec = 0;
     }
     //spec *= 0.2f;
-    spec = pow(spec, 20.0f);
+    spec = pow(spec, 40.0f);
     float4 spec4 = float4(spec, spec, spec, 0);
     
+    float bright = 1.0f;
     if(input.isChara)
     {
-        diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
+        //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
         result.normal = float4(1, 1, 1, 1);
         reflectedLight.directSpecular = 0.0f;
-        spec4 *= 0.1f;
+        spec4 *= 0.03f;
+        bright = 2.3f;
+        // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
+        if (lz - 0.01f > shadowValue.x)
+        {
+            diff = clamp(dot(normVec, lig), 0.3f, 1.0f);
+            diff *= 0.5f/* * max(0.3f, (-sunDIr.y))*/;
+        }
+        else
+        {
+            diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
+        }
 
     }
     else
@@ -281,6 +293,13 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         spec4 *= 0.3f;
 
     }
+    
+    //    // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
+    //if (lz - 0.01f > shadowValue.x && input.isChara)
+    //{
+    //    diff *= 0.2;
+    //}
+    
     result.col *= diff;
     
 
@@ -314,7 +333,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
         float litFactor = var / (var + md * md);
-        float3 shadowColor = result.col.xyz * 0.4f /** nor*/;
+        float3 shadowColor = result.col.xyz * 0.4f * bright;
         
         // sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
         if (input.isChara && isSpecial)
@@ -331,7 +350,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
 
     }
         
-    float depth = depthmap.Sample(smp, shadowUV);
+    //float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
     
     if (-sunDIr.y <= 0.7f)
