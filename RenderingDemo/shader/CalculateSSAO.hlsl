@@ -61,10 +61,25 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        norm = mul(view, norm);
+        //norm.x *= sign(norm.x);
+        //norm.y *= sign(norm.y);
+        norm.z *= sign(norm.z);
+        //norm = mul(view, norm);
         const int trycnt = 48;
-        float radius = 0.18f;
-        radius -= uv.y / 5.6f;
+        float radius = 0.25f;
+        radius -= uv.y / 4.0f;
+        
+        
+        float3 up = float3(0.0, 1.0, 0.0);
+        float3 right = float3(1.0, 0.0, 0.0);
+        float dt = dot(norm, right);
+        float3 tangent;
+        if (abs(abs(dt) - 1) > 0.0f)
+            tangent = normalize(cross(norm, up));
+        else
+            tangent = normalize(cross(norm, right));
+        float3 biNormal = cross(norm, tangent);
+        float3x3 TBN = float3x3(tangent, biNormal, norm);
         
         if (dp < 1.0f)
         {
@@ -76,16 +91,16 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
                 // Create TBN matrix
-                float3 tangent = normalize(omega - norm * dot(omega, norm));
-                float3 biNormal = cross(norm, tangent);
-                float3x3 TBN = float3x3(tangent, biNormal, norm);
+                //float3 tangent = normalize(omega - norm * dot(omega, norm));
+                //float3 biNormal = cross(norm, tangent);
+                //float3x3 TBN = float3x3(tangent, biNormal, norm);
                 //float3x3 TBN = float3x3(float3(tangent.x, biNormal.x, norm.x), float3(tangent.y, biNormal.y, norm.y), float3(tangent.z, biNormal.z, norm.z));
-                omega = mul(TBN, omega);
+                //omega = mul(TBN, omega);
                 
                 //float3 tangent = normalize(dot(norm, float3(0, 1, 0)));
                 //float3 biNormal = cross(norm, tangent);
                 //float3x3 TBN = float3x3(tangent, biNormal, norm);
-                //omega = mul(TBN, omega);
+                omega = mul(TBN, omega);
                 
                 
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
@@ -100,8 +115,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float2 sPos = (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f);
                 float3 sOriNorm = normalmap.SampleLevel(smp, sPos, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
-
-                sNorm = mul(view, sNorm);
+                //sNorm.x *= sign(sNorm.x);
+                //sNorm.y *= sign(sNorm.y);
+                sNorm.z *= sign(sNorm.z);
+                //sNorm = mul(view, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
@@ -122,7 +139,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         
         result = 1.0f - ao;
-        result = pow(result, 2);
+        result = pow(result, 5);
         ssao[DTid.xy] = /*float4(result, result, result, 0.0f)*/result;
     }
 }
