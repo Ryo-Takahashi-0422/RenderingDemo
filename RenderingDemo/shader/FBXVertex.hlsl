@@ -69,13 +69,13 @@ uint index : SV_VertexID)
         //float k = output.worldPosition.y / jj;
         //lightPos /= k;
         output.isEnhanceShadow = false;
-        if (index <= 25714 || (49897 <= index && index <= 77462) || (77496 <= index && index <= 91841) || (229613 <= index && index <= 233693))
-        {
-            float newY = output.worldPosition.y + 5.0f;
-            float div = lightPos.y / newY;
-            lightPos /= div;
-            output.isEnhanceShadow = true;
-        }
+        //if (index <= 25714 || (49897 <= index && index <= 77462) || (77496 <= index && index <= 91841) || (229613 <= index && index <= 233693))
+        //{
+        //    float newY = output.worldPosition.y + 5.0f;
+        //    float div = lightPos.y / newY;
+        //    lightPos /= div;
+        //    output.isEnhanceShadow = true;
+        //}
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
@@ -100,9 +100,9 @@ uint index : SV_VertexID)
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
         
-        float jj = output.worldPosition.y + 5.0f;
-        float k = output.worldPosition.y / jj;
-        lightPos /= k;
+        float fixY = output.worldPosition.y + 5.0f;
+        float enhance = output.worldPosition.y / fixY;
+        lightPos /= enhance;
         output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
         //output.lvDepth *= 65 / (lightPos.y + 0.01f);
         output.isEnhanceShadow = true;
@@ -143,11 +143,11 @@ uint index : SV_VertexID)
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
     output.vEyeDirection.y = dot(m_biNormal, tEye);
     output.vEyeDirection.z = abs(dot(t_normal, tEye));
-    normalize(output.vEyeDirection);
+    output.vEyeDirection = normalize(output.vEyeDirection);
     output.vLightDirection.x = dot(m_tangent, tLight);
     output.vLightDirection.y = dot(m_biNormal, tLight);
     output.vLightDirection.z = dot(t_normal, tLight);
-    normalize(output.vLightDirection);
+    output.vLightDirection = normalize(output.vLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
