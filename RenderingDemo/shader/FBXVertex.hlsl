@@ -114,39 +114,29 @@ uint index : SV_VertexID)
         bmTan[2] = bm[2];
         t_normal = normalize(float4(mul(bmTan, output.rotatedNorm.xyz), 1));
     }
-    //pos = mul(bm, pos);
-    //pos = mul(rotation, pos);
-    
-    // 床とキャラクターとのSSAOを無理矢理消す処理。弊害として、床にあらゆるSSAOが発生しなくなる。
-    //if (m_normal.y == 1.0f)
-    //{
-    //    m_normal.y = 0.0f;
 
-    //}
-
-
-    //float3 lightDirection = -sunDIr;
-    //output.lightTangentDirection = float4(normalize(lightDirection), 1);
-     
-
-    //output.tangent = normalize(mul(world, mul(bmTan, tangent)));
-    //output.biNormal = normalize(mul(world, mul(bmTan, binormal)));
-
-    //output.normal = normalize(mul(world, /*mul(bmTan, */m_normal.xyz)) /*)*/; connanいい感じ
     float4 m_wPos = mul(world, pos);
     float3 up = float3(0.0, 1.0, 0.0);
     float3 right = float3(1.0, 0.0, 0.0);
     float dt = dot(t_normal, right);
-    float3 m_tangent;
-    if (abs(abs(dt) - 1) > 0.0f)
+    float3 m_tangent, m_biNormal;
+    if (dt == 0.0f) // -y方向正面を向いている面はnormal・upの結果がnanになるため処理を分ける
+    {
+        m_tangent = normalize(cross(t_normal, normalize(float3(0.1f, 0.8f, 0.1f)))); // ベクトルは適当
+        m_biNormal = cross(t_normal, m_tangent);
+    }
+    else if (abs(abs(dt) - 1.0f) > 0.0f)
+    {
         m_tangent = normalize(cross(t_normal, up));
+        m_biNormal = cross(t_normal, m_tangent);
+    }
     else
+    {
         m_tangent = normalize(cross(t_normal, right));
-    
-    //float3 m_tangent = normalize(cross(t_normal, up));
-    //output.tangent = normalize(mul(bmTan, output.tangent));
-    float3 m_biNormal = cross(t_normal, m_tangent);
-    //output.biNormal = normalize(mul(bmTan, output.biNormal));
+        m_biNormal = cross(t_normal, m_tangent);
+    }
+
+    //float3 m_biNormal = cross(t_normal, m_tangent);
     float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
     float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
@@ -156,6 +146,16 @@ uint index : SV_VertexID)
     output.vLightDirection.x = dot(m_tangent, tLight);
     output.vLightDirection.y = dot(m_biNormal, tLight);
     output.vLightDirection.z = dot(t_normal, tLight);
+    
+    // 太陽位置が逆側になるとpixelshaderにおける太陽方向と法線マップの内積が負になり、全体が暗くなる現象の対策。
+    // 太陽位置が初期状態でのsponza反対側の壁とライオンの描画結果が暗くなるが、この処理で明るい色に統一出来る。
+    if (!output.isChara)
+    {
+        output.vLightDirection.x *= sign(output.vLightDirection.x);
+        output.vLightDirection.x *= -1;
+        output.vLightDirection.z *= sign(output.vLightDirection.z);
+    }
+
     output.vLightDirection = normalize(output.vLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
