@@ -272,11 +272,15 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     {
         //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
-        result.normal = float4(1, 1, 1, 1);
+        result.normal = float4(normVec, 1);
         reflectedLight.directSpecular = 0.0f;
-        spec4 *= 0.03f;
+        spec4 *= 0.1f;
         bright = 2.3f;
+        normVec.x *= sign(normVec.x);
+        normVec.y *= sign(normVec.y);
+        normVec = normalize(normVec);
         normVec *= max(0.3f, -sunDIr.y) * 0.8f;
+
         // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
         if (lz - 0.01f > shadowValue.x)
         {

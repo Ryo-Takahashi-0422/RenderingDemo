@@ -108,43 +108,46 @@ uint index : SV_VertexID)
         output.isEnhanceShadow = true;
         output.isChara = true;
         
-        float3x3 bmTan;
+        matrix bmTan;
         bmTan[0] = bm[0];
         bmTan[1] = bm[1];
         bmTan[2] = bm[2];
-        t_normal = normalize(float4(mul(bmTan, output.rotatedNorm.xyz), 1));
+        bmTan[3] = float4(0,0,0,1);
+        //bmTan = mul(rot, bmTan);
+        bmTan = transpose(bmTan);
+        t_normal = normalize(mul(bmTan, output.rotatedNorm));
     }
 
     float4 m_wPos = mul(world, pos);
     float3 up = float3(0.0, 1.0, 0.0);
     float3 right = float3(1.0, 0.0, 0.0);
     float dt = dot(t_normal, right);
-    float3 m_tangent, m_biNormal;
+    float3 m_tangent, m_biTangent;
     if (dt == 0.0f) // -y方向正面を向いている面はnormal・upの結果がnanになるため処理を分ける
     {
         m_tangent = normalize(cross(t_normal, normalize(float3(0.1f, 0.8f, 0.1f)))); // ベクトルは適当
-        m_biNormal = cross(t_normal, m_tangent);
+        m_biTangent = cross(t_normal, m_tangent);
     }
     else if (abs(abs(dt) - 1.0f) > 0.0f)
     {
         m_tangent = normalize(cross(t_normal, up));
-        m_biNormal = cross(t_normal, m_tangent);
+        m_biTangent = cross(t_normal, m_tangent);
     }
     else
     {
         m_tangent = normalize(cross(t_normal, right));
-        m_biNormal = cross(t_normal, m_tangent);
+        m_biTangent = cross(t_normal, m_tangent);
     }
 
     //float3 m_biNormal = cross(t_normal, m_tangent);
     float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
     float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
-    output.vEyeDirection.y = dot(m_biNormal, tEye);
+    output.vEyeDirection.y = dot(m_biTangent, tEye);
     output.vEyeDirection.z = abs(dot(t_normal, tEye));
     output.vEyeDirection = normalize(output.vEyeDirection);
     output.vLightDirection.x = dot(m_tangent, tLight);
-    output.vLightDirection.y = dot(m_biNormal, tLight);
+    output.vLightDirection.y = dot(m_biTangent, tLight);
     output.vLightDirection.z = dot(t_normal, tLight);
     
     // 太陽位置が逆側になるとpixelshaderにおける太陽方向と法線マップの内積が負になり、全体が暗くなる現象の対策。
