@@ -1333,7 +1333,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
@@ -1348,7 +1348,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);

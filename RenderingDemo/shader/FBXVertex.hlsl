@@ -19,11 +19,12 @@ uint index : SV_VertexID)
     matrix bm2 = bones[boneno1[1]] * boneweight1[1];
     matrix bm3 = bones[boneno1[2]] * boneweight1[2];
     
-    matrix bm4 = bones[boneno2[0]] * boneweight2[0];
-    matrix bm5 = bones[boneno2[1]] * boneweight2[1];
-    matrix bm6 = bones[boneno2[2]] * boneweight2[2];
+    // モデル不使用
+    //matrix bm4 = bones[boneno2[0]] * boneweight2[0];
+    //matrix bm5 = bones[boneno2[1]] * boneweight2[1];
+    //matrix bm6 = bones[boneno2[2]] * boneweight2[2];
     
-    matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;
+    matrix bm = bm1 + bm2 + bm3/* + bm4 + bm5 + bm6*/;
     //bool moveObj = true;
     
     output.adjust = 200.0f;
@@ -39,11 +40,7 @@ uint index : SV_VertexID)
     float4 oriNorm = norm;
     
     m_normal = normalize(m_normal);
- 
-    matrix rot = charaRot;
-    output.rotatedNorm = m_normal;
-    output.rotatedNorm = mul(rot, output.rotatedNorm);
-    
+
     float3 t_normal;
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
@@ -108,14 +105,14 @@ uint index : SV_VertexID)
         output.isEnhanceShadow = true;
         output.isChara = true;
         
-        matrix bmTan;
-        bmTan[0] = bm[0];
-        bmTan[1] = bm[1];
-        bmTan[2] = bm[2];
-        bmTan[3] = float4(0,0,0,1);
+        //bm = transpose(bm);
+        float4 rotatedNorm = mul(charaRot, m_normal);
+        
+        rotatedNorm = mul(bm, rotatedNorm);
         //bmTan = mul(rot, bmTan);
-        bmTan = transpose(bmTan);
-        t_normal = normalize(mul(bmTan, output.rotatedNorm));
+        //bmTan = transpose(bmTan);
+
+        t_normal = normalize(rotatedNorm).xyz;
     }
 
     float4 m_wPos = mul(world, pos);

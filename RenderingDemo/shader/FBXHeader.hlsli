@@ -22,7 +22,7 @@ struct Output
     float3 light : LIGHT;
     float adjust : ADJUST;
     //float index : INDEX;
-    float4 rotatedNorm : ROTATED_NORMAL;
+    //float4 rotatedNorm : ROTATED_NORMAL;
     //float3 ray : RAY;
     float4 viewPos : VIEWPOSITION;
     float4 wPos : WPOS;
