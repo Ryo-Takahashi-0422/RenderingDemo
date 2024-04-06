@@ -292,7 +292,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     else
     {
         diff = clamp(dot(normVec, lig), 0.1f, 1.0f);
-        result.normal = float4(input.worldNormal, 1);
+        result.normal = float4( /*float3(input.worldNormal + normVec)*/normVec, 1);
         spec4 *= 0.3f;
 
     }

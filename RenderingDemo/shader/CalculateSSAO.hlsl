@@ -3,6 +3,9 @@ Texture2D<float4> normalmap : register(t0);
 Texture2D<float> depthmap : register(t1);
 SamplerState smp : register(s0); // No.0 sampler
 
+#define PI 3.14
+#define RAY_EPSILON 0.001
+
 cbuffer Matrix4Cal : register(b0) // gaussian weight
 {
     matrix view;
@@ -16,6 +19,91 @@ cbuffer Matrix4Cal : register(b0) // gaussian weight
 float random(float2 uv)
 {
     return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+float3 getCosHemisphereSample(float randSeed1, float randSeed2, float randSeed3, float3 hitNorm)
+{
+// 2つのランダムな数値を取得
+    float2 randVal = float2(randSeed1, randSeed2);
+// 法線に垂直なベクトルを取る（最後に利用する）
+    //float3 bitangent = getPerpendicularVector(hitNorm);
+    //float3 tangent = cross(bitangent, hitNorm);
+    //hitNorm = mul(view, hitNorm);
+    float3 omega = normalize(float3(randSeed1, randSeed2, randSeed3));
+    float3 tangent = normalize(omega - hitNorm * dot(omega, hitNorm));
+    float3 bitangent = cross(tangent, hitNorm);
+// ディスク上に一様にサンプリング
+    randVal.x *= sign(randVal.x);
+    //randVal.y *= sign(randVal.y);
+    float r = sqrt(randVal.x);
+    float phi = 2.0f * PI * randVal.y;
+// 半球に射影する
+    float x = r * cos(phi);
+    float z = r * sin(phi);
+    float y = sqrt(1.0 - randVal.x); // 1- r2
+// 法線ベクトルの座標系に射影
+    return x * tangent + y * hitNorm.xyz + z * bitangent;
+}
+
+float shootShadowRay(float3 position, float3 sampleDir, float minT, float maxT, float distance, float depth, float3 normal)
+{
+    float visibility = 0.0f;
+    for (int i = 1; i < 5; ++i)
+    {
+        float4 samplePos = float4(float3(position + sampleDir * i * distance), 1.0f);
+        samplePos = mul(proj, samplePos);
+        samplePos.xyz /= samplePos.w;
+        
+        float sampleDepth = depthmap.SampleLevel(smp, (samplePos.xy + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f);
+        
+        float2 sPos = (float2(samplePos.x, samplePos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f);
+        float3 sOriNorm = normalmap.SampleLevel(smp, sPos, 0.0f).xyz;
+        float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
+        sNorm.x *= sign(sNorm.x);
+        sNorm.z *= sign(sNorm.z);
+        //sNorm = mul(view, sNorm);
+        float normDiff = (1.0f - abs(dot(normal, sNorm)));
+        
+        float depthDifference = abs(sampleDepth - /*rpos.z*/depth);
+        if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f)
+        {
+            depthDifference = 1.0f;
+        }
+        
+        if (sampleDepth - 0.001f > samplePos.z && depthDifference <= /*0.0028f*/0.005f)
+        {
+            /*return 1.0f*/
+            visibility += 1.0f / (4.0f * PI);
+        }
+    }
+
+    return visibility;
+}
+
+float evaluateAO(float3 position, float3 normal, float randSeed1, float randSeed2, float randSeed3, float depth)
+{
+//    uint2 pixIdx = DispatchRaysIndex().xy; // レイインデックス x=0～1920, y=0～1080
+//    uint2 numPix = DispatchRaysDimensions().xy; // ステージサイズ x=1920, y=1080
+//// ランダムなシードを計算
+    
+//    uint randSeed = initRand(pixIdx.x + pixIdx.y * numPix.x, 100);
+// 遮蔽度合い
+    float visibility = 0.0f;
+// 飛ばすレイの回数
+    const int aoRayCount = 4;
+    for (int i = 0; i < aoRayCount; ++i)
+    {
+// 法線を中心とした半球上のランダムなベクトルのサンプリング（コサイン重み付き分布）
+        float3 sampleDir = getCosHemisphereSample(randSeed1, randSeed2, randSeed3,normal);
+// シャドウレイを飛ばす
+        float sampleVisibility = shootShadowRay(position, sampleDir, RAY_EPSILON, 10.0, 0.05, depth, normal);
+//遮蔽度合い += サンプリングした値 × コサイン項 / 確率密度関数
+        float NoL = /*saturate(*/dot(normal, sampleDir)/*)*/;
+        float pdf = NoL / PI;
+        visibility += sampleVisibility * NoL / pdf;
+    }
+// 平均を取る
+    return (1 / PI) * (1 / float(aoRayCount)) * visibility;
 }
 
 [numthreads(16, 16, 1)]
@@ -61,46 +149,51 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
+        
+        
+        
         //norm.x *= sign(norm.x);
         //norm.y *= sign(norm.y);
         norm.z *= sign(norm.z);
-        //norm = mul(view, norm);
-        const int trycnt = 48;
-        float radius = 0.25f;
-        radius -= uv.y / 4.0f;
+        norm = mul(view, norm);
+        const int trycnt = 32;
+        float radius = 0.05f;
+        //radius -= uv.y / 4.0f;
         
         
-        float3 up = float3(0.0, 1.0, 0.0);
-        float3 right = float3(1.0, 0.0, 0.0);
-        float dt = dot(norm, right);
-        float3 tangent;
-        if (abs(abs(dt) - 1) > 0.0f)
-            tangent = normalize(cross(norm, up));
-        else
-            tangent = normalize(cross(norm, right));
-        float3 biNormal = cross(norm, tangent);
-        float3x3 TBN = float3x3(tangent, biNormal, norm);
-        
+        //float3 up = float3(0.0, 1.0, 0.0);
+        //float3 right = float3(1.0, 0.0, 0.0);
+        //float dt = dot(norm, right);
+        //float3 tangent;
+        //if (abs(abs(dt) - 1) > 0.0f)
+        //    tangent = normalize(cross(norm, up));
+        //else
+        //    tangent = normalize(cross(norm, right));
+        //float3 biNormal = cross(norm, tangent);
+        //float3x3 TBN = float3x3(tangent, biNormal, norm);
+        //TBN = transpose(TBN);
         if (dp < 1.0f)
         {
             for (int i = 0; i < trycnt; ++i)
             {
                 float rnd1 = random(float2(i * dx, i * dy)) * 2.0f - 1.0f;
                 float rnd2 = random(float2(i * rnd1, i * dy)) * 2.0f - 1.0f;
-                float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;               
+                float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
+                //ao += evaluateAO(respos.xyz, norm, rnd1, rnd2, rnd3, dp);
                 // Create TBN matrix
-                //float3 tangent = normalize(omega - norm * dot(omega, norm));
-                //float3 biNormal = cross(norm, tangent);
-                //float3x3 TBN = float3x3(tangent, biNormal, norm);
+                float3 tangent = normalize(omega - norm * dot(omega, norm));
+                float3 biNormal = cross(norm, tangent);
+                float3x3 TBN = float3x3(tangent, biNormal, norm);
+                TBN = transpose(TBN);
                 //float3x3 TBN = float3x3(float3(tangent.x, biNormal.x, norm.x), float3(tangent.y, biNormal.y, norm.y), float3(tangent.z, biNormal.z, norm.z));
-                //omega = mul(TBN, omega);
+                omega = mul(TBN, omega);
                 
                 //float3 tangent = normalize(dot(norm, float3(0, 1, 0)));
                 //float3 biNormal = cross(norm, tangent);
                 //float3x3 TBN = float3x3(tangent, biNormal, norm);
-                omega = mul(TBN, omega);
+                //omega = mul(TBN, omega);
                 
                 
                 // 乱数の結果法線の反対側に向いていたら反転
@@ -110,36 +203,44 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 dt *= sgn; // 正の値にしてcosθを得る            
             
                 float4 rpos = mul(proj, float4(respos.xyz + omega * radius, 1.0f));
-                rpos.xyz /= rpos.w;                
+                rpos.xy /= rpos.w;
             
-                float2 sPos = (float2(rpos.x, rpos.y) + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f);
-                float3 sOriNorm = normalmap.SampleLevel(smp, sPos, 0.0f).xyz;
+                rpos.xy = rpos.xy * 0.5f + 0.5f;
+                rpos.y = 1.0 - rpos.y;
+                float dp2 = depthmap.SampleLevel(smp, rpos.xy, 0.0f);
+                float4 tttPos = mul( /*mul(*/invProj /*, invView)*/, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
+                tttPos.xyz /= tttPos.w;
+                float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
                 //sNorm.x *= sign(sNorm.x);
                 //sNorm.y *= sign(sNorm.y);
                 sNorm.z *= sign(sNorm.z);
-                //sNorm = mul(view, sNorm);
+                //norm = mul(TBN, norm);
+                //sNorm = mul(TBN, sNorm);
+                sNorm = mul(view, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // 計算結果が現在の場所の深度より奥に入っているなら遮断されているので加算する
-                float sampleDepth = depthmap.SampleLevel(smp, (rpos.xy + float2(1.0f, -1.0f)) * float2(0.5f, -0.5f), 0.0f);
-                float depthDifference = abs(sampleDepth - /*rpos.z*/dp);
+                float sampleDepth = tttPos.z;
+                float depthDifference = abs(dp2 - /*rpos.z*/dp);
                 
                 // 床とキャラクターとのSSAOを計算しないための処理2
-                if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f)
+                if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f || sOriNorm.z > 0.96f)
                 {
                     depthDifference = 1.0f;
                 }
-                if (depthDifference <= /*0.0028f*/0.003f)
+                if (depthDifference <= /*0.0028f*/0.07f)
                 {
-                    ao += step(sampleDepth + 0.000001f, dp) * (1.0f - dt) * normDiff;
-                }           
+                    ao += step(respos.z + 0.1f, sampleDepth) * (1.0f - dt)/* * normDiff*/;
+                    //ao += (sampleDepth < rpos.z - 0.0001f ? 1.0f : 0.0f);
+
+                }
             }        
             ao /= (float) trycnt;
         }
         
         result = 1.0f - ao;
-        result = pow(result, 5);
+        //result = pow(result, 2);
         ssao[DTid.xy] = /*float4(result, result, result, 0.0f)*/result;
     }
 }
