@@ -149,29 +149,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        
-        
-        
-        //norm.x *= sign(norm.x);
-        //norm.y *= sign(norm.y);
+
         norm.z *= sign(norm.z);
         norm = mul(view, norm);
         const int trycnt = 32;
         float radius = 0.05f;
-        //radius -= uv.y / 4.0f;
-        
-        
-        //float3 up = float3(0.0, 1.0, 0.0);
-        //float3 right = float3(1.0, 0.0, 0.0);
-        //float dt = dot(norm, right);
-        //float3 tangent;
-        //if (abs(abs(dt) - 1) > 0.0f)
-        //    tangent = normalize(cross(norm, up));
-        //else
-        //    tangent = normalize(cross(norm, right));
-        //float3 biNormal = cross(norm, tangent);
-        //float3x3 TBN = float3x3(tangent, biNormal, norm);
-        //TBN = transpose(TBN);
+
         if (dp < 1.0f)
         {
             for (int i = 0; i < trycnt; ++i)
@@ -181,21 +164,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
+                // RTAOƒeƒXƒg
                 //ao += evaluateAO(respos.xyz, norm, rnd1, rnd2, rnd3, dp);
                 // Create TBN matrix
                 float3 tangent = normalize(omega - norm * dot(omega, norm));
-                float3 biNormal = cross(norm, tangent);
-                float3x3 TBN = float3x3(tangent, biNormal, norm);
+                float3 biTangent = cross(norm, tangent);
+                float3x3 TBN = float3x3(tangent, biTangent, norm);
                 TBN = transpose(TBN);
-                //float3x3 TBN = float3x3(float3(tangent.x, biNormal.x, norm.x), float3(tangent.y, biNormal.y, norm.y), float3(tangent.z, biNormal.z, norm.z));
                 omega = mul(TBN, omega);
-                
-                //float3 tangent = normalize(dot(norm, float3(0, 1, 0)));
-                //float3 biNormal = cross(norm, tangent);
-                //float3x3 TBN = float3x3(tangent, biNormal, norm);
-                //omega = mul(TBN, omega);
-                
-                
+             
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
@@ -203,13 +180,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 dt *= sgn; // ³‚Ì’l‚É‚µ‚ÄcosƒÆ‚ð“¾‚é            
             
                 float4 rpos = mul(proj, float4(respos.xyz + omega * radius, 1.0f));
-                rpos.xy /= rpos.w;
-            
+                rpos.xy /= rpos.w;            
                 rpos.xy = rpos.xy * 0.5f + 0.5f;
                 rpos.y = 1.0 - rpos.y;
                 float dp2 = depthmap.SampleLevel(smp, rpos.xy, 0.0f);
-                float4 tttPos = mul( /*mul(*/invProj /*, invView)*/, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
-                tttPos.xyz /= tttPos.w;
+                float4 samplePos = mul(invProj, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
+                samplePos.xyz /= samplePos.w;
                 float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
                 //sNorm.x *= sign(sNorm.x);
@@ -221,19 +197,17 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
-                float sampleDepth = tttPos.z;
-                float depthDifference = abs(dp2 - /*rpos.z*/dp);
+                float sampleDepth = samplePos.z;
+                float depthDifference = abs(dp2 - dp);
                 
                 // °‚ÆƒLƒƒƒ‰ƒNƒ^[‚Æ‚ÌSSAO‚ðŒvŽZ‚µ‚È‚¢‚½‚ß‚Ìˆ—2
                 if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f || sOriNorm.z > 0.96f)
                 {
                     depthDifference = 1.0f;
                 }
-                if (depthDifference <= /*0.0028f*/0.07f)
+                if (depthDifference <= /*0.0028f*/0.99f)
                 {
                     ao += step(respos.z + 0.1f, sampleDepth) * (1.0f - dt)/* * normDiff*/;
-                    //ao += (sampleDepth < rpos.z - 0.0001f ? 1.0f : 0.0f);
-
                 }
             }        
             ao /= (float) trycnt;
@@ -241,6 +215,6 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         result = 1.0f - ao;
         //result = pow(result, 2);
-        ssao[DTid.xy] = /*float4(result, result, result, 0.0f)*/result;
+        ssao[DTid.xy] = result;
     }
 }
