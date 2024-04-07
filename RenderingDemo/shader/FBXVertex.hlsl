@@ -155,6 +155,7 @@ uint index : SV_VertexID)
         output.vLightDirection.x *= sign(output.vLightDirection.x);
         output.vLightDirection.x *= -1;
         output.vLightDirection.z *= sign(output.vLightDirection.z);
+        output.vLightDirection = normalize(output.vLightDirection);
     }
 
     output.vLightDirection = normalize(output.vLightDirection);

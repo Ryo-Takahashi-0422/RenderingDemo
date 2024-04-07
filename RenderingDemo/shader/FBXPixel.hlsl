@@ -186,6 +186,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
     }
     
+    //float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
+    //float3 speclur = dot(reflection, -input.ray);
+    //speclur = saturate(speclur);
+    //speclur *= speclurColor;
+    ////speclur = pow(speclur, 2);
+    //speclur *= -sunDIr.y;
 
     // 大気のレンダリング
     float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
@@ -310,8 +316,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     
     // 色情報をレンダーターゲット1に格納する
-
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
+    float weaken = -sunDIr.y;
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * weaken;
     //result.col = spec4;
     //result.col = float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
     return result;

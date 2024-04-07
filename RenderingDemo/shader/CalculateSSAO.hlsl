@@ -9,7 +9,7 @@ SamplerState smp : register(s0); // No.0 sampler
 cbuffer Matrix4Cal : register(b0) // gaussian weight
 {
     matrix view;
-    //matrix invView;
+    matrix rotation;
     matrix proj;
     matrix invProj;
     bool isDraw;
@@ -132,7 +132,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
 
     else
     {    
-        float4 respos = mul( /*mul(*/invProj /*, invView)*/, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
+        float4 respos = mul( /*mul(*/invProj /*, rotation)*/, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
         respos.xyz /= respos.w;
     
         float dx = 1.0f / width;
@@ -149,9 +149,10 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-
+        norm.x *= sign(norm.x);
         norm.z *= sign(norm.z);
-        norm = mul(view, norm);
+        matrix v = mul(rotation, view);
+        norm = mul(v, norm);
         const int trycnt = 32;
         float radius = 0.05f;
 
@@ -188,12 +189,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 samplePos.xyz /= samplePos.w;
                 float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
-                //sNorm.x *= sign(sNorm.x);
+                sNorm.x *= sign(sNorm.x);
                 //sNorm.y *= sign(sNorm.y);
                 sNorm.z *= sign(sNorm.z);
                 //norm = mul(TBN, norm);
                 //sNorm = mul(TBN, sNorm);
-                sNorm = mul(view, sNorm);
+                sNorm = mul(v, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // åvéZåãâ Ç™åªç›ÇÃèÍèäÇÃê[ìxÇÊÇËâúÇ…ì¸Ç¡ÇƒÇ¢ÇÈÇ»ÇÁé’ífÇ≥ÇÍÇƒÇ¢ÇÈÇÃÇ≈â¡éZÇ∑ÇÈ
