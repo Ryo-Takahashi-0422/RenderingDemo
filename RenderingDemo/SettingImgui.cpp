@@ -204,7 +204,10 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			dofDraw = dofBox;
 		}
-
+		if (ImGui::Checkbox("BRDF Specular", &brdfBox))
+		{
+			brdfDraw = brdfBox;
+		}
 		ImGui::TreePop();
 	}
 

@@ -317,7 +317,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // 色情報をレンダーターゲット1に格納する
     float weaken = -sunDIr.y;
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * weaken;
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular * brdfDraw, 0) * weaken;
     //result.col = spec4;
     //result.col = float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
     return result;

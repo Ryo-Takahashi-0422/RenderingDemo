@@ -1278,6 +1278,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 
 		resourceManager[num]->GetMappedMatrix()->sponzaDraw = settingImgui->GetSponzaBoxChanged();
 		resourceManager[num]->GetMappedMatrix()->airDraw = settingImgui->GetAirBoxChanged();
+		resourceManager[num]->GetMappedMatrix()->brdfSpecularDraw = settingImgui->GetBRDFBoxChanged();
 
 		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
 		{
