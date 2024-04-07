@@ -58,7 +58,7 @@ HRESULT SettingImgui::Init
 	}
 
 	exp_Media = new ParticipatingMedia;
-	exp_Media->mieScattering = 4.7f;
+	exp_Media->mieScattering = 7.0f;
 	exp_Media->asymmetryParameter = 0.0f;
 	exp_Media->altitudeOfRayleigh = 0.0f;
 	exp_Media->altitudeOfMie = 3.5f;
@@ -204,7 +204,10 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			dofDraw = dofBox;
 		}
-
+		if (ImGui::Checkbox("BRDF Specular", &brdfBox))
+		{
+			brdfDraw = brdfBox;
+		}
 		ImGui::TreePop();
 	}
 

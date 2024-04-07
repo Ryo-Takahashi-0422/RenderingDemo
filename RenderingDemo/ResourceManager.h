@@ -24,6 +24,10 @@ struct FBXSceneMatrix
 	bool dummy1;
 	bool dummy2;
 	bool airDraw;
+	bool dummy3;
+	bool dummy4;
+	bool dummy5;
+	bool brdfSpecularDraw;
 };
 
 class ResourceManager
@@ -167,5 +171,6 @@ public:
 	void SetSceneInfo(XMMATRIX _shadowPosMatrix, XMMATRIX _shadowPosInvMatrix, XMMATRIX _shadowView, XMFLOAT3 _eyePos, XMFLOAT3 _sunDIr);
 
 	void SetAirDraw(bool _isDraw);
+	void SetBRDFSpecularDraw(bool _isDraw);
 };
 

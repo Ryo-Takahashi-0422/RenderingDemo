@@ -879,3 +879,8 @@ void ResourceManager::SetAirDraw(bool _isDraw)
 {
 	mappedMatrix->airDraw = _isDraw;
 }
+
+void ResourceManager::SetBRDFSpecularDraw(bool _isDraw)
+{
+	mappedMatrix->brdfSpecularDraw = _isDraw;
+}

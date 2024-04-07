@@ -304,10 +304,11 @@ void CalculateSSAO::SetInvVPMatrix(/*XMMATRIX _view, XMMATRIX _invView, */XMMATR
     matrix4Cal->invProj = _invProj;
 }
 
-//void CalculateSSAO::SetViewMatrix(XMMATRIX _view)
-//{
-//    matrix4Cal->view = _view;
-//}
+void CalculateSSAO::SetViewRotMatrix(XMMATRIX _view, XMMATRIX rot)
+{
+    matrix4Cal->view = _view;
+    matrix4Cal->rotation = rot;
+}
 
 void CalculateSSAO::SetDraw(bool _isDraw)
 {

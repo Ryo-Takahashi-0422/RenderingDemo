@@ -85,6 +85,9 @@ private:
 	bool dofBox = true;
 	bool dofDraw = true;
 
+	bool brdfBox = true;
+	bool brdfDraw = true;
+
 	// fps
 	bool isFpsChanged = false;
 	float fps = 120.0f;
@@ -156,6 +159,7 @@ public:
 	bool GetAirBoxChanged() { return airDraw; };
 	bool GetSSAOBoxChanged() { return ssaoDraw; };
 	bool GetDOFBoxChanged() { return dofDraw; };
+	bool GetBRDFBoxChanged() { return brdfDraw; };
 
 	// fps
 	bool GetIsFpsChanged() { return isFpsChanged; };
