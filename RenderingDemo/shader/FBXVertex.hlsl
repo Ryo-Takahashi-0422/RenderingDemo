@@ -106,9 +106,10 @@ uint index : SV_VertexID)
         output.isChara = true;
         
         //bm = transpose(bm);
-        float4 rotatedNorm = mul(charaRot, m_normal);
-        
-        rotatedNorm = mul(bm, rotatedNorm);
+        bm = mul(rotation, bm);
+        float4 rotatedNorm = mul(bm, m_normal);
+        rotatedNorm = normalize(rotatedNorm);
+        //rotatedNorm = mul(bm, rotatedNorm);
         //bmTan = mul(rot, bmTan);
         //bmTan = transpose(bmTan);
 
