@@ -39,7 +39,7 @@ uint index : SV_VertexID)
     float4 m_normal = norm;
     float4 oriNorm = norm;
     
-    m_normal = normalize(m_normal);
+    //m_normal = normalize(m_normal);
 
     float3 t_normal;
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
