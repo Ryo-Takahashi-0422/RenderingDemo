@@ -198,7 +198,9 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //speclur *= speclurColor;
     ////speclur = pow(speclur, 2);
     //speclur *= -sunDIr.y;
-
+    float bright = 1.0f;
+    result.col = float4(col.x, col.y, col.z, 1);
+    
     // 大気のレンダリング
     float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
     scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
@@ -211,28 +213,24 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     normVec = normalize(normVec);
     float3 specularNormal = normVec;
     specularNormal.x *= sign(specularNormal.x);
-    //normVec.y *= sign(normVec.y);
     specularNormal.z *= sign(specularNormal.z);
     specularNormal = normalize(specularNormal);
-    
-    float bright = 1.0f;
-    result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
-    
-    float3 lig = normalize(input.vLightDirection);
-    float diff/* = clamp(dot(normVec, lig), 0.1, 1.0)*/ = 0.0f;
+       
+    float3 sLightDir = normalize(input.sLightDirection);
+    float diff= 0.0f;
     float3 eye = normalize(input.vEyeDirection);
-    float3 ref = reflect(-lig, specularNormal);
+    float3 ref = reflect(-sLightDir, specularNormal);
     float3 halfLE = normalize(eye);
-    //float spec = pow(clamp(dot(halfLE, normVec), 0.0, 1.0), 30.0f);
+
     float spec = dot(halfLE, ref);
     if(spec < 0)
     {
         spec = 0;
     }
-    //spec *= 0.2f;
     spec = pow(spec, 40.0f);
     float4 spec4 = float4(spec, spec, spec, 0);
     
+    float3 nLightDir = normalize(input.vLightDirection);
     if(input.isChara)
     {
         reflectDirectLight.directSpecular = 0.0f;
@@ -243,20 +241,20 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         spec4 *= 0.1f;
         bright = 2.3f;
         //normVec.x *= sign(normVec.x);
-        //normVec.y *= sign(normVec.y);
+        normVec.y *= sign(normVec.y);
         normVec = normalize(normVec);
         normVec *= max(0.3f, -sunDIr.y) * 0.8f;
 
         // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
         if (lz - 0.01f > shadowValue.x)
         {
-            diff = clamp(dot(normVec, lig), 0.3f, 1.0f);
+            diff = clamp(dot(normVec, nLightDir), 0.3f, 1.0f);
             diff *= 0.5f/* * max(0.3f, (-sunDIr.y))*/;
         }
         else
         {
             //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
-            diff = clamp(dot(normVec, lig), 0.0f, 1.0f);
+            diff = clamp(dot(normVec, nLightDir), 0.0f, 1.0f);
             diff = pow(diff, 1.5f);
             diff += 0.15f;
             diff = saturate(diff);
@@ -266,7 +264,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     else
     {
-        diff = clamp(dot(normVec, lig), 0.0f, 1.0f);
+        diff = clamp(dot(normVec, nLightDir), 0.0f, 1.0f);
         diff = pow(diff, 2.0f); // 法線効果強調
         diff += 0.1f;
         diff = saturate(diff);
@@ -337,6 +335,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float weaken = -sunDIr.y;
     result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * weaken;
     result.col = spec4;
+    //result.col = float4(diff,diff,diff,0);
     //result.col = result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
     return result;
 }

@@ -137,18 +137,26 @@ uint index : SV_VertexID)
         m_biTangent = cross(t_normal, m_tangent);
     }
 
-    //float3 m_biNormal = cross(t_normal, m_tangent);
-    float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
-    lightPos.x *= -1;
-    lightPos.z *= -1;
-    float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;   
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
     output.vEyeDirection.y = dot(m_biTangent, tEye);
     output.vEyeDirection.z = abs(dot(t_normal, tEye));
     output.vEyeDirection = normalize(output.vEyeDirection);
+    
+    float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    
+    // 法線マップ計算用
     output.vLightDirection.x = dot(m_tangent, tLight);
     output.vLightDirection.y = dot(m_biTangent, tLight);
     output.vLightDirection.z = dot(t_normal, tLight);
+    
+    // スペキュラー計算用
+    lightPos.x *= -1;
+    lightPos.z *= -1;
+    tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    output.sLightDirection.x = dot(m_tangent, tLight);
+    output.sLightDirection.y = dot(m_biTangent, tLight);
+    output.sLightDirection.z = dot(t_normal, tLight);
     
     // 太陽位置が逆側になるとpixelshaderにおける太陽方向と法線マップの内積が負になり、全体が暗くなる現象の対策。
     // 太陽位置が初期状態でのsponza反対側の壁とライオンの描画結果が暗くなるが、この処理で明るい色に統一出来る。
@@ -158,9 +166,15 @@ uint index : SV_VertexID)
         output.vLightDirection.x *= -1;
         output.vLightDirection.z *= sign(output.vLightDirection.z);
         output.vLightDirection = normalize(output.vLightDirection);
+        
+        output.sLightDirection.x *= sign(output.sLightDirection.x);
+        output.sLightDirection.x *= -1;
+        output.sLightDirection.z *= sign(output.sLightDirection.z);
+        output.sLightDirection = normalize(output.sLightDirection);
     }
 
     output.vLightDirection = normalize(output.vLightDirection);
+    output.sLightDirection = normalize(output.sLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
