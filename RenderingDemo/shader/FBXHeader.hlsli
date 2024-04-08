@@ -123,8 +123,8 @@ struct PointLight
     //float decay;
 };
 
-//struct DirectionalLight
-//{
-//    float3 direction;
-//    float3 color;
-//};
+struct DirectionalLight
+{
+    float3 direction;
+    float3 color;
+};

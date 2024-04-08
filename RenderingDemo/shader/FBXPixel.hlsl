@@ -15,12 +15,12 @@ float punctualLightIntensityToIrradianceFactor(const in float lightDistance, con
     //return 1.0;
 }
 
-//void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
-//{
-//    directLight.color = directionalLight.color;
-//    directLight.direction = directionalLight.direction;
-//    directLight.visible = true;
-//}
+void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
+{
+    directLight.color = directionalLight.color;
+    directLight.direction = directionalLight.direction;
+    //directLight.visible = true;
+}
 
 void getPointDirectLightIrradiance(const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight)
 {
@@ -141,10 +141,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     material.specularRoughness = roughness;
   
   // Lighting  
-    ReflectedLight reflectedLight;
-    //reflectedLight.directDiffuse = float3(0, 0, 0);
-    reflectedLight.directSpecular = float3(0, 0, 0);
-
+    ReflectedLight reflectDirectLight;
+    reflectDirectLight.directSpecular = float3(0, 0, 0);
+    ReflectedLight reflectPointLight;
+    reflectPointLight.directSpecular = float3(0, 0, 0);
     //float3 emissive = float3(0,0,0);
     //float opacity = 1.0;
   
@@ -161,16 +161,22 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     pointLights[1].distance = 100.0f;
     //pointLights[1].decay = 1.0f;
    
-  // point light
+    DirectionalLight directionalLight;
+    directionalLight.color = float3(1, 1, 1);
+    directionalLight.direction = float3(sunDIr.x, -sunDIr.y, sunDIr.z);
+    
+    // directional light
+    getDirectionalDirectLightIrradiance(directionalLight, geometry, directLight);
+    RE_Direct(directLight, geometry, material, reflectDirectLight);
+    // point light
     for (int i = 0; i < LIGHT_MAX; ++i)
     {
-        if (i >= LIGHT_MAX)
-            break;
         getPointDirectLightIrradiance(pointLights[i], geometry, directLight);
-        RE_Direct(directLight, geometry, material, reflectedLight);
+        RE_Direct(directLight, geometry, material, reflectPointLight);
     }
-  
-       
+    
+    reflectPointLight.directSpecular /= 4.0f;
+          
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * (input.lvPos.xy / input.lvPos.w);
@@ -223,10 +229,11 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     if(input.isChara)
     {
+        reflectDirectLight.directSpecular = 0.0f;
+        reflectPointLight.directSpecular = 0.0f;
         //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
         result.normal = float4(1,1,1, 1);
-        reflectedLight.directSpecular = 0.0f;
         spec4 *= 0.1f;
         bright = 2.3f;
         normVec.x *= sign(normVec.x);
@@ -282,13 +289,16 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     //{
     //    isSpecial = false;
     //}
-   
+    
+
+    
+    float litFactor;
     if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
     {
         float depth_sq = shadowValue.y;
         float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float md = lz - shadowValue.x;
-        float litFactor = var / (var + md * md);
+        litFactor = var / (var + md * md);
         float3 shadowColor = result.col.xyz * 0.4f * bright;
         
         // 処理軽減のためコメントアウト
@@ -304,8 +314,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         //reflectedLight.directSpecular *= litFactor;
         //speclur *= litFactor;
         spec4 *= litFactor;
-
+        reflectDirectLight.directSpecular *= litFactor;
     }
+    
+
         
     //float depth = depthmap.Sample(smp, shadowUV);
     float shadowFactor = 1;
@@ -317,8 +329,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // 色情報をレンダーターゲット1に格納する
     float weaken = -sunDIr.y;
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular * brdfDraw, 0) * weaken;
-    //result.col = spec4;
-    //result.col = float4( /*reflectedLight.directDiffuse * 0.05f + */reflectedLight.directSpecular, 0) * -sunDIr.y;
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * weaken;
+    result.col = spec4;
+    //result.col = result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
     return result;
 }
