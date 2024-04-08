@@ -30,7 +30,7 @@ struct Output
     
     float3 vEyeDirection : NORMAL_ED;
     float3 vLightDirection : NORAMAL_LD;
-    float3 sLightDirection : SPECULAR_LD;
+    float3 sLightDirection : SPONZA_SPECULAR_LD;
 };
 
 struct PixelOutput

@@ -216,20 +216,11 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     specularNormal.z *= sign(specularNormal.z);
     specularNormal = normalize(specularNormal);
        
-    float3 sLightDir = normalize(input.sLightDirection);
-    float diff= 0.0f;
+    float diff, spec, spec4;
+    float3 sLightDir;
     float3 eye = normalize(input.vEyeDirection);
-    float3 ref = reflect(-sLightDir, specularNormal);
-    float3 halfLE = normalize(eye);
-
-    float spec = dot(halfLE, ref);
-    if(spec < 0)
-    {
-        spec = 0;
-    }
-    spec = pow(spec, 40.0f);
-    float4 spec4 = float4(spec, spec, spec, 0);
-    
+    float3 ref;
+    float3 halfLE = normalize(eye);    
     float3 nLightDir = normalize(input.vLightDirection);
     if(input.isChara)
     {
@@ -238,13 +229,14 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
         result.normal = float4(1,1,1, 1);
-        spec4 *= 0.1f;
+        
         bright = 2.3f;
         //normVec.x *= sign(normVec.x);
         normVec.y *= sign(normVec.y);
         normVec = normalize(normVec);
         normVec *= max(0.3f, -sunDIr.y) * 0.8f;
 
+        // 法線効果計算
         // 動き回るキャラクターについて、影の中では法線によるライティングを弱める。でないと影の中でもあたかも太陽光を受けているような見た目になる。
         if (lz - 0.01f > shadowValue.x)
         {
@@ -258,19 +250,40 @@ PixelOutput FBXPS(Output input) : SV_TARGET
             diff = pow(diff, 1.5f);
             diff += 0.15f;
             diff = saturate(diff);
-
         }
         
+        // スペキュラー計算
+        sLightDir = normalize(input.vLightDirection);
+        ref = reflect(-sLightDir, specularNormal);
+        spec = dot(halfLE, ref);
+        if (spec < 0)
+        {
+            spec = 0;
+        }
+        spec = pow(spec, 40.0f);
+        spec4 = float4(spec, spec, spec, 0);
+        spec4 *= 0.1f;
     }
     else
     {
+        // 法線効果計算
         diff = clamp(dot(normVec, nLightDir), 0.0f, 1.0f);
         diff = pow(diff, 2.0f); // 法線効果強調
         diff += 0.1f;
         diff = saturate(diff);
         result.normal = float4( /*float3(input.worldNormal + normVec)*/normVec, 1);
+        
+        // スペキュラー計算
+        sLightDir = normalize(input.sLightDirection);
+        ref = reflect(-sLightDir, specularNormal);
+        spec = dot(halfLE, ref);
+        if (spec < 0)
+        {
+            spec = 0;
+        }
+        spec = pow(spec, 40.0f);
+        spec4 = float4(spec, spec, spec, 0);
         spec4 *= 0.1f;
-
     }
     
     result.col *= diff;
@@ -334,7 +347,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // 色情報をレンダーターゲット1に格納する
     float weaken = -sunDIr.y;
     result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * weaken;
-    result.col = spec4;
+    //result.col = spec4;
     //result.col = float4(diff,diff,diff,0);
     //result.col = result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
     return result;
