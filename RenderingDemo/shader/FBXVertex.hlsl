@@ -139,6 +139,8 @@ uint index : SV_VertexID)
 
     //float3 m_biNormal = cross(t_normal, m_tangent);
     float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
+    lightPos.x *= -1;
+    lightPos.z *= -1;
     float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
     output.vEyeDirection.y = dot(m_biTangent, tEye);

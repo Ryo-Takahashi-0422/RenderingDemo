@@ -209,6 +209,11 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float3 normCol = normalmap.Sample(smp, input.uv);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
+    float3 specularNormal = normVec;
+    specularNormal.x *= sign(specularNormal.x);
+    //normVec.y *= sign(normVec.y);
+    specularNormal.z *= sign(specularNormal.z);
+    specularNormal = normalize(specularNormal);
     
     float bright = 1.0f;
     result.col = float4(/*bright * */col.x, /*bright * */col.y, /*bright * */col.z, 1);
@@ -216,9 +221,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float3 lig = normalize(input.vLightDirection);
     float diff/* = clamp(dot(normVec, lig), 0.1, 1.0)*/ = 0.0f;
     float3 eye = normalize(input.vEyeDirection);
-    float3 halfLE = normalize(lig + eye);
+    float3 ref = reflect(-lig, specularNormal);
+    float3 halfLE = normalize(eye);
     //float spec = pow(clamp(dot(halfLE, normVec), 0.0, 1.0), 30.0f);
-    float spec = dot(halfLE, normVec);
+    float spec = dot(halfLE, ref);
     if(spec < 0)
     {
         spec = 0;
@@ -236,8 +242,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         result.normal = float4(1,1,1, 1);
         spec4 *= 0.1f;
         bright = 2.3f;
-        normVec.x *= sign(normVec.x);
-        normVec.y *= sign(normVec.y);
+        //normVec.x *= sign(normVec.x);
+        //normVec.y *= sign(normVec.y);
         normVec = normalize(normVec);
         normVec *= max(0.3f, -sunDIr.y) * 0.8f;
 
@@ -265,7 +271,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         diff += 0.1f;
         diff = saturate(diff);
         result.normal = float4( /*float3(input.worldNormal + normVec)*/normVec, 1);
-        spec4 *= 0.3f;
+        spec4 *= 0.1f;
 
     }
     
@@ -313,7 +319,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
         //reflectedLight.directSpecular *= litFactor;
         //speclur *= litFactor;
-        spec4 *= litFactor;
+        //spec4 *= litFactor;
         reflectDirectLight.directSpecular *= litFactor;
     }
     
