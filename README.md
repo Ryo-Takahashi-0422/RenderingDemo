@@ -1,6 +1,6 @@
 # 概要
 DirectX12を用いて3Dモデルを描画するプログラム
-![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png)
+![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro_.png)
   
 # 実行
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
