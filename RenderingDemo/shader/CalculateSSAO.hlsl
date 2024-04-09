@@ -159,7 +159,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         //norm = mul(v, norm);
         norm = normalize(norm);
         const int trycnt = 32;
-        float radius = 0.15f;
+        float radius = 0.1f;
 
         
         if (dp < 1.0f)
@@ -201,7 +201,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
                 omega *= sgn;
-                dt *= sgn; // 正の値にしてcosθを得る            
+                dt *= sgn; // 正の値にしてcosθを得る           
+                
+                if (respos.y <= -1.55f)
+                {
+                    radius = 0.15f;
+                }
             
                 float4 rpos = mul(proj, float4(respos.xyz + omega * radius, 1.0f));
                 rpos.xy /= rpos.w;            
@@ -231,6 +236,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                     depthDifference = 0.0f;
                 }
                 
+                // 床に対してサンプリングさせない処理
+                //if (samplePos.y <= -1.55f)
+                //{
+                //    depthDifference = 1.0f;
+                //}
+                
                 // 床とキャラクターとのSSAOを計算しないための処理2
                 if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f || sOriNorm.z > 0.96f)
                 {
@@ -247,6 +258,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         
         result = 1.0f - ao;
+        result = smoothstep(0.0f, 1.0f, result);
         //result = pow(result, 2);
         ssao[DTid.xy] = result;
     }
