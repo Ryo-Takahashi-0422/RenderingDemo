@@ -1,10 +1,10 @@
 # 概要
-DirectX12を用いて3Dモデルを描画するプログラムです。  
+DirectX12を用いて3Dモデルを描画するプログラム
 ![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png)
   
 # 実行
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
-  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい。  
+  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行 
   
 # デモ動画(音声無し)
 https://www.youtube.com/watch?v=pzYBP06b1Pk  
@@ -15,8 +15,8 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 - 左回転：←キー  
   
 # パラメータ調整機能
-### Imguiを介してプログラムのパラメータ調整が可能です。  
-![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui1.png)
+### Imguiを介してプログラムのパラメータ調整が可能
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui.png)
 - Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定
 - Sky Resolution : Sky描画パスの解像度を設定
 - Sky LUT Resolution : SkyLUT描画パスの解像度を設定
@@ -25,9 +25,6 @@ https://www.youtube.com/watch?v=pzYBP06b1Pk
 SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)  
 - Max FPS : 最大FPS値の設定  
 - Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
-<br>
-  
-![Imgui2](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui2.png)  
 - Air Parameter, SkyLUT Parameter : シングルスキャッタリング計算過程で用いる変数の値を設定  
   
 # 開発環境
@@ -38,8 +35,8 @@ SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(�
   
 # 開発期間
 - 2023/8/23 ～ 2024/4/4
-- 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」からDirextX12を学びました。  
-このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したものです。  
+- 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」からDirextX12を学習した
+このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したもの
   
 # 使用ソフトウェア
 - Visual Studio Community 2019  
@@ -55,8 +52,8 @@ https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
 https://www.mixamo.com/#/  
   
 # 事前処理
-1. 事前に3Dモデルを設定しています。BlenderでSponzaのテクスチャ設定・コライダー追加等を行い、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行います。  
-2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換します。マテリアルや頂点といった情報を抽出するのに開発環境で約5秒ほどかかるため、事前に変換する処理を準備しました。  
+1. 事前に3Dモデルを設定(BlenderでSponzaのテクスチャ設定・コライダー追加等)して、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
+2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換する。マテリアルや頂点といった情報を抽出するのに開発環境で約5秒ほどかかるため、事前に変換する処理を準備した。  
 https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
   
 # 処理フロー

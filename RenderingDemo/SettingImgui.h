@@ -96,6 +96,10 @@ private:
 	bool fps90 = false;
 	bool fps120 = true;
 
+	// point light position
+	XMFLOAT3 p1, p2;
+	bool isLightPosChanged = false;
+
 	// anti-aliasing
 	bool isAAChanged = false;
 	bool fxaaBox = true;
@@ -164,6 +168,12 @@ public:
 	// fps
 	bool GetIsFpsChanged() { return isFpsChanged; };
 	float GetFPS() { return fps; };
+
+	//  point light position
+	bool GetIsLightPosChanged() { return isLightPosChanged; };
+	void SetInitialLightPos(XMFLOAT3 pos1, XMFLOAT3 pos2);
+	XMFLOAT3 GetLightPos1() { return p1; };
+	XMFLOAT3 GetLightPos2() { return p2; };
 
 	// anti aliasing
 	bool GetIsFxaaChanged() { return isAAChanged; };

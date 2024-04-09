@@ -120,33 +120,53 @@ uint index : SV_VertexID)
     float3 up = float3(0.0, 1.0, 0.0);
     float3 right = float3(1.0, 0.0, 0.0);
     float dt = dot(t_normal, right);
-    float3 m_tangent, m_biTangent;
+    float3 m_tangent, m_biTangent, s_Tangent, s_BiTangent; // s_...はスペキュラー用。m_...を使うと壁に三角形のアーティファクトが発生するため分岐した。効果としてはアーティファクトが目立たなくなっただけで、発生はしている。
+    // TODO:アーティファクト解消する
     if (dt == 0.0f) // -y方向正面を向いている面はnormal・upの結果がnanになるため処理を分ける
     {
         m_tangent = normalize(cross(t_normal, normalize(float3(0.1f, 0.8f, 0.1f)))); // ベクトルは適当
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, up));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
     else if (abs(abs(dt) - 1.0f) > 0.0f)
     {
         m_tangent = normalize(cross(t_normal, up));
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, up));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
     else
     {
         m_tangent = normalize(cross(t_normal, right));
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, right));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
 
-    //float3 m_biNormal = cross(t_normal, m_tangent);
-    float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;
-    float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;   
     output.vEyeDirection.x = abs(dot(m_tangent, tEye));
     output.vEyeDirection.y = dot(m_biTangent, tEye);
     output.vEyeDirection.z = abs(dot(t_normal, tEye));
     output.vEyeDirection = normalize(output.vEyeDirection);
+    
+    float3 tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    
+    // 法線マップ計算用
     output.vLightDirection.x = dot(m_tangent, tLight);
     output.vLightDirection.y = dot(m_biTangent, tLight);
     output.vLightDirection.z = dot(t_normal, tLight);
+    
+    // スペキュラー計算用
+    lightPos.x *= -1;
+    lightPos.z *= -1;
+    tLight = (float4(lightPos, 1) - m_wPos).xyz;
+    output.sLightDirection.x = dot(s_Tangent, tLight);
+    output.sLightDirection.y = dot(s_BiTangent, tLight);
+    output.sLightDirection.z = dot(t_normal, tLight);
     
     // 太陽位置が逆側になるとpixelshaderにおける太陽方向と法線マップの内積が負になり、全体が暗くなる現象の対策。
     // 太陽位置が初期状態でのsponza反対側の壁とライオンの描画結果が暗くなるが、この処理で明るい色に統一出来る。
@@ -156,9 +176,15 @@ uint index : SV_VertexID)
         output.vLightDirection.x *= -1;
         output.vLightDirection.z *= sign(output.vLightDirection.z);
         output.vLightDirection = normalize(output.vLightDirection);
+        
+        output.sLightDirection.x *= sign(output.sLightDirection.x);
+        output.sLightDirection.x *= -1;
+        output.sLightDirection.z *= sign(output.sLightDirection.z);
+        output.sLightDirection = normalize(output.sLightDirection);
     }
 
     output.vLightDirection = normalize(output.vLightDirection);
+    output.sLightDirection = normalize(output.sLightDirection);
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)

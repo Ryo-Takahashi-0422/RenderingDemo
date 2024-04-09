@@ -449,6 +449,14 @@ bool D3DX12Wrapper::ResourceInit() {
 		return false;
 	}	
 
+	XMFLOAT3 p1 = XMFLOAT3(25.0f, 15.0f, 0.0f);
+	XMFLOAT3 p2 = XMFLOAT3(-25.0f, 15.0f, 0.0f);
+	settingImgui->SetInitialLightPos(p1, p2);
+	resourceManager[0]->SetLightPos1(p1);
+	resourceManager[1]->SetLightPos1(p1);
+	resourceManager[0]->SetLightPos2(p2);
+	resourceManager[1]->SetLightPos2(p2);
+
 //// DirectXTK独自の初期設定
 //	DirectXTKInit();
 //	
@@ -800,8 +808,8 @@ void D3DX12Wrapper::Run() {
 			break;
 		}
 
-		bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
 		// ウィンドウサイズ変更があった場合の処理
+		bool isWindowSizeChanged = prepareRenderingWindow->GetWindowSizeChanged();
 		if (isWindowSizeChanged)
 		{
 			UINT clientWidth = prepareRenderingWindow->GetWindowWidth();
@@ -811,6 +819,19 @@ void D3DX12Wrapper::Run() {
 			resourceManager[0]->SetImGuiResourceAndCreateView(settingImgui->GetImguiRenderingResource());
 		}
 		settingImgui->DrawImGUI(_dev, _cmdList);
+
+		// ポイントライトの位置に変更がある場合
+		bool isPointLightPosChanged = settingImgui->GetIsLightPosChanged();
+		if (isPointLightPosChanged)
+		{
+			auto p1 = settingImgui->GetLightPos1();
+			auto p2 = settingImgui->GetLightPos2();
+			resourceManager[0]->SetLightPos1(p1);
+			resourceManager[1]->SetLightPos1(p1);
+			resourceManager[0]->SetLightPos2(p2);
+			resourceManager[1]->SetLightPos2(p2);
+		}
+
 
 		// 太陽の位置を更新
 		sunDir = sun->CalculateDirectionFromDegrees(settingImgui->GetSunAngleX(), settingImgui->GetSunAngleY());

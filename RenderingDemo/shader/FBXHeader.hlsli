@@ -28,8 +28,9 @@ struct Output
     float4 wPos : WPOS;
     float3 oriWorldNorm : ORI_WORLD_NORMAL;
     
-    float3 vEyeDirection : VED;
-    float3 vLightDirection : VLD;
+    float3 vEyeDirection : NORMAL_ED;
+    float3 vLightDirection : NORAMAL_LD;
+    float3 sLightDirection : SPONZA_SPECULAR_LD;
 };
 
 struct PixelOutput
@@ -57,6 +58,8 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     bool sponza;
     bool airDraw;
     bool brdfDraw;
+    float3 plPos1;
+    float3 plPos2;
 };
 
 cbuffer Material : register(b1)
@@ -123,8 +126,8 @@ struct PointLight
     //float decay;
 };
 
-//struct DirectionalLight
-//{
-//    float3 direction;
-//    float3 color;
-//};
+struct DirectionalLight
+{
+    float3 direction;
+    float3 color;
+};

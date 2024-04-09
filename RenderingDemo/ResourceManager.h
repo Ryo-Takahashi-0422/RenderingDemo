@@ -28,6 +28,14 @@ struct FBXSceneMatrix
 	bool dummy4;
 	bool dummy5;
 	bool brdfSpecularDraw;
+	bool dummy6;
+	bool dummy7;
+	bool dummy8;
+	float pad2;
+	float pad3;
+	XMFLOAT3 plPos1;
+	float pad4;
+	XMFLOAT3 plPos2;
 };
 
 class ResourceManager
@@ -172,5 +180,7 @@ public:
 
 	void SetAirDraw(bool _isDraw);
 	void SetBRDFSpecularDraw(bool _isDraw);
+	void SetLightPos1(XMFLOAT3 pos);
+	void SetLightPos2(XMFLOAT3 pos);
 };
 
