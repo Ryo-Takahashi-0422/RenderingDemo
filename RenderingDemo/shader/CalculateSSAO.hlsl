@@ -139,7 +139,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         float dy = 1.0f / height;
     
         float4 rpos = (0, 0, 0, 0);
-
+        matrix v = view;
         float ao = 0.0f;
         float3 oriNorm = normalmap.SampleLevel(smp, uv, 0.0f);
         // °‚ÆƒLƒƒƒ‰ƒNƒ^[‚Æ‚ÌSSAO‚ğŒvZ‚µ‚È‚¢‚½‚ß‚Ìˆ—1
@@ -148,11 +148,16 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         {
             dp = 1.0f;
         }
+        //oriNorm = mul(v, oriNorm);
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        //norm.x *= sign(norm.x);
-        //norm.z *= sign(norm.z);
-        matrix v = mul(rotation, view);
         //norm = mul(v, norm);
+        //norm.x *= sign(norm.x);
+        norm.y *= sign(norm.y);
+        //norm.z *= sign(norm.z);
+        norm = normalize(norm);
+        
+        norm = mul(v, norm);
+        norm = normalize(norm);
         const int trycnt = 32;
         float radius = 0.15f;
 
@@ -172,7 +177,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
                 //TBN = transpose(TBN);
-                omega = mul(TBN, omega);
+                //omega = mul(TBN, omega);
+                
+                //omega.x = abs(mul(tangent, omega.x));
+                //omega.y = mul(biTangent, omega.y);
+                //omega.z = abs(mul(norm, omega.z));
+                
+                omega.x = mul(tangent, omega.x);
+                omega.y = mul(biTangent, omega.y);
+                omega.z = mul(norm, omega.z);
                 omega = normalize(omega);
                 
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
@@ -195,7 +208,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 //sNorm.z *= sign(sNorm.z);
                 //norm = mul(TBN, norm);
                 //sNorm = mul(TBN, sNorm);
-                //sNorm = mul(v, sNorm);
+                sNorm = mul(v, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // ŒvZŒ‹‰Ê‚ªŒ»İ‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁZ‚·‚é
