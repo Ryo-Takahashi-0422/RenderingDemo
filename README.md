@@ -7,7 +7,7 @@ DirectX12を用いて3Dモデルを描画するプログラム
   ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行 
   
 # デモ動画(音声無し)
-https://www.youtube.com/watch?v=pzYBP06b1Pk  
+[https://www.youtube.com/watch?v=pzYBP06b1Pk](https://www.youtube.com/watch?v=jvIl-Ih2M1Q)  
   
 # 操作方法
 - 前進：wキー  
