@@ -149,12 +149,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
             dp = 1.0f;
         }
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        norm.x *= sign(norm.x);
-        norm.z *= sign(norm.z);
+        //norm.x *= sign(norm.x);
+        //norm.z *= sign(norm.z);
         matrix v = mul(rotation, view);
-        norm = mul(v, norm);
+        //norm = mul(v, norm);
         const int trycnt = 32;
-        float radius = 0.05f;
+        float radius = 0.15f;
 
         if (dp < 1.0f)
         {
@@ -171,7 +171,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 tangent = normalize(omega - norm * dot(omega, norm));
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
-                TBN = transpose(TBN);
+                //TBN = transpose(TBN);
                 omega = mul(TBN, omega);
                 omega = normalize(omega);
                 
@@ -190,12 +190,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 samplePos.xyz /= samplePos.w;
                 float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
                 float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
-                sNorm.x *= sign(sNorm.x);
-                //sNorm.y *= sign(sNorm.y);
-                sNorm.z *= sign(sNorm.z);
+                //sNorm.x *= sign(sNorm.x);
+                ////sNorm.y *= sign(sNorm.y);
+                //sNorm.z *= sign(sNorm.z);
                 //norm = mul(TBN, norm);
                 //sNorm = mul(TBN, sNorm);
-                sNorm = mul(v, sNorm);
+                //sNorm = mul(v, sNorm);
                 float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
@@ -207,9 +207,9 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 {
                     depthDifference = 1.0f;
                 }
-                if (depthDifference <= /*0.0028f*/0.99f)
+                if (depthDifference <= /*0.0028f*/0.01f)
                 {
-                    ao += step(respos.z + 0.1f, sampleDepth) * (1.0f - dt)/* * normDiff*/;
+                    ao += step(sampleDepth + 0.1f, respos.z)/* * (1.0f - dt)*/ /* * normDiff*/;
                 }
             }        
             ao /= (float) trycnt;
