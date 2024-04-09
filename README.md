@@ -16,16 +16,17 @@ DirectX12を用いて3Dモデルを描画するプログラム
   
 # パラメータ調整機能
 ### Imguiを介してプログラムのパラメータ調整が可能
-![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui.png)
-- Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定
-- Sky Resolution : Sky描画パスの解像度を設定
-- Sky LUT Resolution : SkyLUT描画パスの解像度を設定
-- Shadow Resolution : シャドウ描画パスの解像度を設定
-- Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、  
-SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)  
-- Max FPS : 最大FPS値の設定  
-- Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui.png)  
+- Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定  
 - Air Parameter, SkyLUT Parameter : シングルスキャッタリング計算過程で用いる変数の値を設定  
+- Sky Resolution : Sky描画パスの解像度を設定  
+- Sky LUT Resolution : SkyLUT描画パスの解像度を設定  
+- Shadow Resolution : シャドウ描画パスの解像度を設定  
+- Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、  
+SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)、鏡面反射BRDF  
+- Max FPS : 最大FPS値の設定  
+- Point Light Position : 鏡面反射BRDFの計算に使用するポイントライト位置を設定  
+- Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
   
 # 開発環境
 - OS : Windows 11 Home(ver.23H2)  
