@@ -175,7 +175,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         RE_Direct(directLight, geometry, material, reflectPointLight);
     }
     
-    reflectPointLight.directSpecular /= 4.0f;
+    reflectPointLight.directSpecular /= 2.0f;
           
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
@@ -255,6 +255,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         // スペキュラー計算
         sLightDir = normalize(input.vLightDirection);
         ref = reflect(-sLightDir, specularNormal);
+        ref = normalize(ref);
         spec = dot(halfLE, ref);
         if (spec < 0)
         {
@@ -262,7 +263,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         }
         spec = pow(spec, 40.0f);
         spec4 = float4(spec, spec, spec, 0);
-        spec4 *= 0.1f;
+        //spec4 *= 0.1f;
     }
     else
     {
@@ -276,6 +277,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         // スペキュラー計算
         sLightDir = normalize(input.sLightDirection);
         ref = reflect(-sLightDir, specularNormal);
+        ref = normalize(ref);
         spec = dot(halfLE, ref);
         if (spec < 0)
         {
@@ -283,9 +285,9 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         }
         spec = pow(spec, 40.0f);
         spec4 = float4(spec, spec, spec, 0);
-        spec4 *= 0.1f;
+        //spec4 *= 0.05f;
     }
-    
+    spec4 *= 0.05f;
     result.col *= diff;
         
     // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
@@ -349,6 +351,6 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * weaken;
     //result.col = spec4;
     //result.col = float4(diff,diff,diff,0);
-    //result.col = result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
+    //result.col = /*result.col * */float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
     return result;
 }

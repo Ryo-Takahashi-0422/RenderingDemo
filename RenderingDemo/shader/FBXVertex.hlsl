@@ -120,21 +120,31 @@ uint index : SV_VertexID)
     float3 up = float3(0.0, 1.0, 0.0);
     float3 right = float3(1.0, 0.0, 0.0);
     float dt = dot(t_normal, right);
-    float3 m_tangent, m_biTangent;
+    float3 m_tangent, m_biTangent, s_Tangent, s_BiTangent; // s_...はスペキュラー用。m_...を使うと壁に三角形のアーティファクトが発生するため分岐した。効果としてはアーティファクトが目立たなくなっただけで、発生はしている。
+    // TODO:アーティファクト解消する
     if (dt == 0.0f) // -y方向正面を向いている面はnormal・upの結果がnanになるため処理を分ける
     {
         m_tangent = normalize(cross(t_normal, normalize(float3(0.1f, 0.8f, 0.1f)))); // ベクトルは適当
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, up));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
     else if (abs(abs(dt) - 1.0f) > 0.0f)
     {
         m_tangent = normalize(cross(t_normal, up));
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, up));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
     else
     {
         m_tangent = normalize(cross(t_normal, right));
         m_biTangent = cross(t_normal, m_tangent);
+        
+        s_Tangent = normalize(cross(t_normal, right));
+        s_BiTangent = cross(t_normal, s_Tangent);
     }
 
     float3 tEye = (float4(eyePos, 1) - m_wPos).xyz;   
@@ -154,8 +164,8 @@ uint index : SV_VertexID)
     lightPos.x *= -1;
     lightPos.z *= -1;
     tLight = (float4(lightPos, 1) - m_wPos).xyz;
-    output.sLightDirection.x = dot(m_tangent, tLight);
-    output.sLightDirection.y = dot(m_biTangent, tLight);
+    output.sLightDirection.x = dot(s_Tangent, tLight);
+    output.sLightDirection.y = dot(s_BiTangent, tLight);
     output.sLightDirection.z = dot(t_normal, tLight);
     
     // 太陽位置が逆側になるとpixelshaderにおける太陽方向と法線マップの内積が負になり、全体が暗くなる現象の対策。

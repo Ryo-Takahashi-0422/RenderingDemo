@@ -173,7 +173,8 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
                 TBN = transpose(TBN);
                 omega = mul(TBN, omega);
-             
+                omega = normalize(omega);
+                
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
