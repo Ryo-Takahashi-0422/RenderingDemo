@@ -45,7 +45,7 @@ SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(�
 - PIX 2305.10  
   
 # デジタルアセット
-- Sponza  
+- Sponza(オリジナルをアレンジしたデータ、テクスチャ1K)  
 https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html  
 - Conan  
 https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
