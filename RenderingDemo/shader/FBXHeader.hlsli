@@ -58,6 +58,8 @@ cbuffer SceneBuffer : register(b0) // •ÏŠ·s—ñ
     bool sponza;
     bool airDraw;
     bool brdfDraw;
+    float3 plPos1;
+    float3 plPos2;
 };
 
 cbuffer Material : register(b1)

@@ -884,3 +884,13 @@ void ResourceManager::SetBRDFSpecularDraw(bool _isDraw)
 {
 	mappedMatrix->brdfSpecularDraw = _isDraw;
 }
+
+void ResourceManager::SetLightPos1(XMFLOAT3 pos)
+{
+	mappedMatrix->plPos1 = pos;
+}
+
+void ResourceManager::SetLightPos2(XMFLOAT3 pos)
+{
+	mappedMatrix->plPos2 = pos;
+}

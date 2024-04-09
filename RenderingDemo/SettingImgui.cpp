@@ -258,6 +258,16 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Point Light Position"))
+	{
+		isLightPosChanged = false;
+
+		isLightPosChanged |= ImGui::SliderFloat3("light1", &p1.x, -100, 100);
+		isLightPosChanged |= ImGui::SliderFloat3("light2", &p2.x, -100, 100);
+
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNode("Anti Aliasing"))
 	{
 		isAAChanged = false;
@@ -368,6 +378,12 @@ void SettingImgui::CreateRTV(ComPtr<ID3D12Device> _dev)
 		&rtvViewDesc,
 		handle
 	);
+}
+
+void SettingImgui::SetInitialLightPos(XMFLOAT3 pos1, XMFLOAT3 pos2)
+{
+	p1 = pos1;
+	p2 = pos2;
 }
 
 void SettingImgui::ChangeResolution(ComPtr<ID3D12Device> _dev, PrepareRenderingWindow* pRWindow, UINT _width, UINT _height)

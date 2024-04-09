@@ -152,12 +152,12 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     PointLight pointLights[LIGHT_MAX];
     //pointLights[0].color = float3(1, 1, 1);
-    pointLights[0].position = float3(25.0f, 15.0f, /*4.5*/0.0f);
+    pointLights[0].position = /*float3(25.0f, 15.0f, 0.0f)*/plPos1;
     pointLights[0].distance = 100.0f;
     //pointLights[0].decay = 1.0f;
     
     //pointLights[1].color = float3(1, 1, 1);
-    pointLights[1].position = float3(-25.0f, 15.0f, /*4.5*/0.0f);
+    pointLights[1].position = /*float3(-25.0f, 15.0f, 0.0f)*/plPos2;
     pointLights[1].distance = 100.0f;
     //pointLights[1].decay = 1.0f;
    
