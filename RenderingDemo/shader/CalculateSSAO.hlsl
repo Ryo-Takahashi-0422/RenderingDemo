@@ -151,9 +151,9 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         //oriNorm = mul(v, oriNorm);
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         //norm = mul(v, norm);
-        norm.x *= sign(norm.x);
+        //norm.x *= sign(norm.x);
         norm.y *= sign(norm.y);
-        norm.z *= sign(norm.z);
+        //norm.z *= sign(norm.z);
         norm = normalize(norm);
         
         //norm = mul(v, norm);
@@ -178,7 +178,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
                 TBN = transpose(TBN);
-                omega = mul(TBN, omega);
+                //omega = mul(TBN, omega);
+                
+                //omega.x = abs(mul(TBN[0], omega.x));
+                //omega.y = abs(mul(TBN[1], omega.y));
+                //omega.z = abs(mul(TBN[2], omega.z));
+                
+                omega.x = mul(TBN[0], omega.x);
+                omega.y = mul(TBN[1], omega.y);
+                omega.z = mul(TBN[2], omega.z);
                 
                 //omega.x = abs(mul(tangent, omega.x));
                 //omega.y = abs(mul(biTangent, omega.y));
@@ -228,9 +236,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 {
                     depthDifference = 1.0f;
                 }
+                
+                float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(respos.z - sampleDepth));
                 if (depthDifference <= /*0.0028f*/0.007f)
                 {
-                    ao += step(sampleDepth + 0.1f, respos.z)/* * (1.0f - dt)*/ /* * normDiff*/;
+                    ao += step(sampleDepth + 0.1f, respos.z) /* * (1.0f - dt)*/ /* * normDiff*/;
                 }
             }        
             ao /= (float) trycnt;
