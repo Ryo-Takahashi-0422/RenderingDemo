@@ -151,16 +151,17 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         //oriNorm = mul(v, oriNorm);
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
         //norm = mul(v, norm);
-        //norm.x *= sign(norm.x);
+        norm.x *= sign(norm.x);
         norm.y *= sign(norm.y);
-        //norm.z *= sign(norm.z);
+        norm.z *= sign(norm.z);
         norm = normalize(norm);
         
-        norm = mul(v, norm);
+        //norm = mul(v, norm);
         norm = normalize(norm);
         const int trycnt = 32;
         float radius = 0.15f;
 
+        
         if (dp < 1.0f)
         {
             for (int i = 0; i < trycnt; ++i)
@@ -176,16 +177,16 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 tangent = normalize(omega - norm * dot(omega, norm));
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
-                //TBN = transpose(TBN);
-                //omega = mul(TBN, omega);
+                TBN = transpose(TBN);
+                omega = mul(TBN, omega);
                 
                 //omega.x = abs(mul(tangent, omega.x));
-                //omega.y = mul(biTangent, omega.y);
+                //omega.y = abs(mul(biTangent, omega.y));
                 //omega.z = abs(mul(norm, omega.z));
                 
-                omega.x = mul(tangent, omega.x);
-                omega.y = mul(biTangent, omega.y);
-                omega.z = mul(norm, omega.z);
+                //omega.x = mul(tangent, omega.x);
+                //omega.y = mul(biTangent, omega.y);
+                //omega.z = mul(norm, omega.z);
                 omega = normalize(omega);
                 
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
@@ -202,25 +203,32 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float4 samplePos = mul(invProj, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
                 samplePos.xyz /= samplePos.w;
                 float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
-                float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
+                //float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
                 //sNorm.x *= sign(sNorm.x);
-                ////sNorm.y *= sign(sNorm.y);
+                //sNorm.y *= sign(sNorm.y);
                 //sNorm.z *= sign(sNorm.z);
                 //norm = mul(TBN, norm);
                 //sNorm = mul(TBN, sNorm);
-                sNorm = mul(v, sNorm);
-                float normDiff = (1.0f - abs(dot(norm, sNorm)));
+                //sNorm = mul(v, sNorm);
+                //sNorm = normalize(sNorm);
+                //float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // ŒvŽZŒ‹‰Ê‚ªŒ»Ý‚ÌêŠ‚Ì[“x‚æ‚è‰œ‚É“ü‚Á‚Ä‚¢‚é‚È‚çŽÕ’f‚³‚ê‚Ä‚¢‚é‚Ì‚Å‰ÁŽZ‚·‚é
                 float sampleDepth = samplePos.z;
                 float depthDifference = abs(dp2 - dp);
+                
+                // ƒJ[ƒeƒ“‚Æ°‚ÉˆÀ’è‚µ‚ÄSSAO‚ð¶¬‚·‚é‚½‚ß‚Ìˆ—
+                if (respos.y <= -1.55f)
+                {
+                    depthDifference = 0.0f;
+                }
                 
                 // °‚ÆƒLƒƒƒ‰ƒNƒ^[‚Æ‚ÌSSAO‚ðŒvŽZ‚µ‚È‚¢‚½‚ß‚Ìˆ—2
                 if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f || sOriNorm.z > 0.96f)
                 {
                     depthDifference = 1.0f;
                 }
-                if (depthDifference <= /*0.0028f*/0.01f)
+                if (depthDifference <= /*0.0028f*/0.007f)
                 {
                     ao += step(sampleDepth + 0.1f, respos.z)/* * (1.0f - dt)*/ /* * normDiff*/;
                 }
