@@ -159,7 +159,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         //norm = mul(v, norm);
         norm = normalize(norm);
         const int trycnt = 32;
-        float radius = 0.1f;
+        float radius = 0.02f;
 
         
         if (dp < 1.0f)
@@ -201,8 +201,12 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
                 //omega *= sgn;
-                dt *= sgn; // 正の値にしてcosθを得る           
+                dt *= sgn; // 正の値にしてcosθを得る      
                 
+                // ピクセルのview zが大きい(遠く)ほどサンプリング半径を大きくする
+                radius += saturate(respos.z / 5000);
+                
+                // カーテンに対しては一律半径
                 if (respos.y <= -1.55f)
                 {
                     radius = 0.15f;
@@ -249,7 +253,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 }
                 
                 float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(respos.z - sampleDepth));
-                if (depthDifference <= /*0.0028f*/0.007f)
+                if (depthDifference <= /*0.0028f*/0.015f + saturate(1.0f / respos.z)) // saturate...加算によって近くのビュー空間においてカメラ近くほど閾値を大きくして制限を弱め、カメラに近づくほどSSAOの計算がされない現象を回避している
                 {
                     ao += step(sampleDepth + 0.1f, respos.z) /* * (1.0f - dt)*/ /* * normDiff*/;
                 }
