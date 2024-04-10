@@ -178,15 +178,15 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
                 TBN = transpose(TBN);
-                //omega = mul(TBN, omega);
+                omega = mul(TBN, omega);
                 
                 //omega.x = abs(mul(TBN[0], omega.x));
                 //omega.y = abs(mul(TBN[1], omega.y));
                 //omega.z = abs(mul(TBN[2], omega.z));
                 
-                omega.x = mul(TBN[0], omega.x);
-                omega.y = mul(TBN[1], omega.y);
-                omega.z = mul(TBN[2], omega.z);
+                //omega.x = mul(TBN[0], omega.x);
+                //omega.y = mul(TBN[1], omega.y);
+                //omega.z = mul(TBN[2], omega.z);
                 
                 //omega.x = abs(mul(tangent, omega.x));
                 //omega.y = abs(mul(biTangent, omega.y));
@@ -200,7 +200,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 // —”‚ÌŒ‹‰Ê–@ü‚Ì”½‘Î‘¤‚ÉŒü‚¢‚Ä‚¢‚½‚ç”½“]
                 float dt = dot(norm, omega);
                 float sgn = sign(dt);
-                omega *= sgn;
+                //omega *= sgn;
                 dt *= sgn; // ³‚Ì’l‚É‚µ‚ÄcosƒÆ‚ğ“¾‚é           
                 
                 if (respos.y <= -1.55f)
