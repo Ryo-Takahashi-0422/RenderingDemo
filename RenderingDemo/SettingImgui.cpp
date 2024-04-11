@@ -196,9 +196,9 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 		{
 			airDraw = airBox;
 		}
-		if (ImGui::Checkbox("SSAO", &ssaoBox))
+		if (ImGui::Checkbox("AO", &aoBox))
 		{
-			ssaoDraw = ssaoBox;
+			aoDraw = aoBox;
 		}
 		if (ImGui::Checkbox("DOF", &dofBox))
 		{
@@ -264,6 +264,30 @@ void SettingImgui::DrawImGUI(ComPtr<ID3D12Device> _dev, ComPtr<ID3D12GraphicsCom
 
 		isLightPosChanged |= ImGui::SliderFloat3("light1", &p1.x, -100, 100);
 		isLightPosChanged |= ImGui::SliderFloat3("light2", &p2.x, -100, 100);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("AO Type"))
+	{
+		isAOTypeChanged = false;
+
+		if (ImGui::Checkbox("SSAO", &ssaoBox))
+		{
+			ssaoBox = true;
+			ssaoDraw = ssaoBox;
+			rtaoBox = false;
+			rtaoDraw = false;
+			isAOTypeChanged = true;
+		}
+		if (ImGui::Checkbox("RTAO", &rtaoBox))
+		{
+			rtaoBox = true;
+			rtaoDraw = rtaoBox;
+			ssaoBox = false;
+			ssaoDraw = false;
+			isAOTypeChanged = true;
+		}
 
 		ImGui::TreePop();
 	}

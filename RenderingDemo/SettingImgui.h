@@ -79,8 +79,8 @@ private:
 	bool airBox = true;
 	bool airDraw = true;
 
-	bool ssaoBox = true;
-	bool ssaoDraw = true;
+	bool aoBox = true;
+	bool aoDraw = true;
 
 	bool dofBox = true;
 	bool dofDraw = true;
@@ -99,6 +99,13 @@ private:
 	// point light position
 	XMFLOAT3 p1, p2;
 	bool isLightPosChanged = false;
+
+	// AO Type
+	bool isAOTypeChanged = false;
+	bool ssaoBox = true;
+	bool ssaoDraw = true;
+	bool rtaoBox = false;
+	bool rtaoDraw = false;
 
 	// anti-aliasing
 	bool isAAChanged = false;
@@ -161,7 +168,7 @@ public:
 	bool GetSponzaBoxChanged() { return sponzaDraw; };
 	bool GetCollisionBoxChanged() { return colliderDraw; };
 	bool GetAirBoxChanged() { return airDraw; };
-	bool GetSSAOBoxChanged() { return ssaoDraw; };
+	bool GetSSAOBoxChanged() { return aoDraw; };
 	bool GetDOFBoxChanged() { return dofDraw; };
 	bool GetBRDFBoxChanged() { return brdfDraw; };
 
@@ -174,6 +181,11 @@ public:
 	void SetInitialLightPos(XMFLOAT3 pos1, XMFLOAT3 pos2);
 	XMFLOAT3 GetLightPos1() { return p1; };
 	XMFLOAT3 GetLightPos2() { return p2; };
+
+	// AO Type
+	bool GetAOTypeChanged() { return isAOTypeChanged; };
+	bool GetSSAOBoxCheck() { return ssaoDraw; };
+	bool GetRTAOBoxCheck() { return rtaoDraw; };
 
 	// anti aliasing
 	bool GetIsFxaaChanged() { return isAAChanged; };

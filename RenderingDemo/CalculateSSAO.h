@@ -61,7 +61,14 @@ private:
         XMMATRIX proj;
         XMMATRIX invProj;
         bool isDraw;
-
+        bool dummy0;
+        bool dummy1;
+        bool dummy2;
+        bool ssao;
+        bool dummy3;
+        bool dummy4;
+        bool dummy5;
+        bool rtao;
     };
     Matrix4Cal* matrix4Cal = nullptr;
 
@@ -75,5 +82,6 @@ public:
     void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList);
     void ChangeResolution(int _width, int _height);
     void SetDraw(bool _isDraw);
+    void SetType(bool _ssao, bool _rtao);
     std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
 };
