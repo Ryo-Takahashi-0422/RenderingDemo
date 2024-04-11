@@ -4,7 +4,6 @@ Texture2D<float> depthmap : register(t1);
 SamplerState smp : register(s0); // No.0 sampler
 
 #define PI 3.14
-#define RAY_EPSILON 0.001
 
 cbuffer Matrix4Cal : register(b0) // gaussian weight
 {
@@ -23,7 +22,7 @@ float random(float2 uv)
     return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
 }
 
-// RTAO理論、ベースコードは以下を参考とした
+// RTAOロジック、ベースコードは以下を参考とした
 // https://www.gamebusiness.jp/article/2019/11/01/16396.html
 float3 getCosHemisphereSample(float randSeed1, float randSeed2, float randSeed3, float3 hitNorm)
 {
@@ -320,147 +319,8 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         result = 1.0f - ao;
         result = smoothstep(0.0f, 1.0f, result);
-        result = pow(result, 2);
-        
+        result = pow(result, 2);        
     }
     
     ssao[DTid.xy] = result;
-    //else
-    //{    
-    //    float4 respos = mul( /*mul(*/invProj /*, rotation)*/, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
-    //    respos.xyz /= respos.w;
-    
-    //    float dx = 1.0f / width;
-    //    float dy = 1.0f / height;
-    
-    //    float4 rpos = (0, 0, 0, 0);
-    //    matrix v = view;
-    //    float ao = 0.0f;
-    //    float3 oriNorm = normalmap.SampleLevel(smp, uv, 0.0f);
-    //    // 床とキャラクターとのSSAOを計算しないための処理1
-    //    // この処理のためにキャラクターの法線出力値は全て0としている
-    //    if (oriNorm.x + oriNorm.y + oriNorm.z == 3.0f)
-    //    {
-    //        dp = 1.0f;
-    //    }
-    //    //oriNorm = mul(v, oriNorm);
-    //    float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-    //    //norm = mul(v, norm);
-    //    //norm.x *= sign(norm.x);
-    //    norm.y *= sign(norm.y);
-    //    //norm.z *= sign(norm.z);
-    //    norm = normalize(norm);
-        
-    //    //norm = mul(v, norm);
-    //    norm = normalize(norm);
-    //    const int trycnt = 32;
-    //    float radius = 0.02f;
-
-        
-    //    if (dp < 1.0f)
-    //    {
-    //        for (int i = 0; i < trycnt; ++i)
-    //        {
-    //            float rnd1 = random(float2(i * dx, i * dy)) * 2.0f - 1.0f;
-    //            float rnd2 = random(float2(i * rnd1, i * dy)) * 2.0f - 1.0f;
-    //            float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
-    //            float3 omega = normalize(float3(rnd1, rnd2, rnd3));
-
-    //            // RTAOテスト
-    //            //ao += evaluateAO(respos.xyz, norm, rnd1, rnd2, rnd3, dp);
-    //            // Create TBN matrix
-    //            float3 tangent = normalize(omega - norm * dot(omega, norm));
-    //            float3 biTangent = cross(norm, tangent);
-    //            float3x3 TBN = float3x3(tangent, biTangent, norm);
-    //            TBN = transpose(TBN);
-    //            omega = mul(TBN, omega);
-                
-    //            //omega.x = abs(mul(TBN[0], omega.x));
-    //            //omega.y = abs(mul(TBN[1], omega.y));
-    //            //omega.z = abs(mul(TBN[2], omega.z));
-                
-    //            //omega.x = mul(TBN[0], omega.x);
-    //            //omega.y = mul(TBN[1], omega.y);
-    //            //omega.z = mul(TBN[2], omega.z);
-                
-    //            //omega.x = abs(mul(tangent, omega.x));
-    //            //omega.y = abs(mul(biTangent, omega.y));
-    //            //omega.z = abs(mul(norm, omega.z));
-                
-    //            //omega.x = mul(tangent, omega.x);
-    //            //omega.y = mul(biTangent, omega.y);
-    //            //omega.z = mul(norm, omega.z);
-    //            omega = normalize(omega);
-                
-    //            // 乱数の結果法線の反対側に向いていたら反転
-    //            float dt = dot(norm, omega);
-    //            float sgn = sign(dt);
-    //            //omega *= sgn;
-    //            dt *= sgn; // 正の値にしてcosθを得る      
-                
-    //            // ピクセルのview zが大きい(遠く)ほどサンプリング半径を大きくする
-    //            radius += saturate(respos.z / 5000);
-                
-    //            // カーテンに対しては一律半径
-    //            if (respos.y <= -1.55f)
-    //            {
-    //                radius = 0.15f;
-    //            }
-            
-    //            float4 rpos = mul(proj, float4(respos.xyz + omega * radius, 1.0f));
-    //            rpos.xy /= rpos.w;
-    //            rpos.xy = rpos.xy * 0.5f + 0.5f;
-    //            rpos.y = 1.0 - rpos.y;
-    //            float dp2 = depthmap.SampleLevel(smp, rpos.xy, 0.0f);
-    //            float4 samplePos = mul(invProj, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
-    //            samplePos.xyz /= samplePos.w;
-    //            float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
-    //            //float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
-    //            //sNorm.x *= sign(sNorm.x);
-    //            //sNorm.y *= sign(sNorm.y);
-    //            //sNorm.z *= sign(sNorm.z);
-    //            //norm = mul(TBN, norm);
-    //            //sNorm = mul(TBN, sNorm);
-    //            //sNorm = mul(v, sNorm);
-    //            //sNorm = normalize(sNorm);
-    //            //float normDiff = (1.0f - abs(dot(norm, sNorm)));
-
-    //            // 計算結果が現在の場所の深度より奥に入っているなら遮断されているので加算する
-    //            float sampleDepth = samplePos.z;
-    //            float depthDifference = abs(dp2 - dp);
-                
-    //            // カーテンと床に安定してSSAOを生成するための処理
-    //            if (respos.y <= -1.55f)
-    //            {
-    //                depthDifference = 0.0f;
-    //            }
-                
-    //            // 床に対してサンプリングさせない処理
-    //            //if (samplePos.y <= -1.55f)
-    //            //{
-    //            //    depthDifference = 1.0f;
-    //            //}
-                
-    //            // 床とキャラクターとのSSAOを計算しないための処理2
-    //            if (sOriNorm.x + sOriNorm.y + sOriNorm.z == 3.0f || sOriNorm.z > 0.96f)
-    //            {
-    //                depthDifference = 1.0f;
-    //            }
-                
-    //            float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(respos.z - sampleDepth));
-    //            if (depthDifference <= /*0.0028f*/0.015f + saturate(1.0f / respos.z)) // saturate...加算によって近くのビュー空間においてカメラ近くほど閾値を大きくして制限を弱め、カメラに近づくほどSSAOの計算がされない現象を回避している
-    //            {
-    //                ao += step(sampleDepth + 0.1f, respos.z) /* * (1.0f - dt)*/ /* * normDiff*/;
-    //            }
-    //        }
-    //        ao /= (float) trycnt;
-    //    }
-        
-    //    result = 1.0f - ao;
-    //    result = smoothstep(0.0f, 1.0f, result);
-    //    //result = pow(result, 2);
-    //    ssao[DTid.xy] = result;
-    //}
-    
-    
 }
