@@ -1,6 +1,6 @@
 # 概要
 DirectX12を用いて3Dモデルを描画するプログラム
-![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro_.png)
+![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro.png)
   
 # 実行
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
@@ -16,7 +16,7 @@ DirectX12を用いて3Dモデルを描画するプログラム
   
 # パラメータ調整機能
 ### Imguiを介してプログラムのパラメータ調整が可能
-![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui.png)  
+![Imgui1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/imgui_.png)  
 - Sun Angle : 太陽の球面座標における位置計算に用いるradian(x:φ, y:Θ)を設定  
 - Air Parameter, SkyLUT Parameter : シングルスキャッタリング計算過程で用いる変数の値を設定  
 - Sky Resolution : Sky描画パスの解像度を設定  
