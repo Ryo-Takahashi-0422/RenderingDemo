@@ -23,9 +23,10 @@ DirectX12を用いて3Dモデルを描画するプログラム
 - Sky LUT Resolution : SkyLUT描画パスの解像度を設定  
 - Shadow Resolution : シャドウ描画パスの解像度を設定  
 - Draw : 各対象の描画on/off。Sponza(キャラクター以外の3Dモデル)、 Collider(OBB)、Air(大気レンダリング)、  
-SSAO(スクリーンスペースアンビエントオクルージョン)、DOF(被写界深度)、鏡面反射BRDF  
+AO(アンビエントオクルージョン)、DOF(被写界深度)、鏡面反射BRDF  
 - Max FPS : 最大FPS値の設定  
 - Point Light Position : 鏡面反射BRDFの計算に使用するポイントライト位置を設定  
+- AO Type : SSAO(スクリーンスペースAO)とRTAO(レイトレーシングAO)の切り替え  
 - Anti Aliasing : NVIDIA公開fxaa.hlslによるFXAA（Fast Approximate Anti-Aliasing）on/off  
   
 # 開発環境
