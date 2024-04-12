@@ -87,7 +87,7 @@ https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
 19. FXAA描画パス実行  
 20. ダブルバッファリングで描画結果を交互に表示  
   
-# 参考(一部のみ記載)
+# 参考(一部)
 ## 図書、論文  
 - DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで  
 https://www.shoeisha.co.jp/book/detail/9784798161938  
