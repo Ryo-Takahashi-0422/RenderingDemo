@@ -561,6 +561,7 @@ bool D3DX12Wrapper::ResourceInit() {
 	depthMapIntegration = new DepthMapIntegration(_dev.Get(), resourceManager[0]->GetDepthBuff(), resourceManager[0]->GetDepthBuff2(), initialWidth, initialHeight);
 	//comBlur = new ComputeBlur(_dev.Get(), depthMapIntegration->GetTextureResource());
 	calculateSSAO = new CalculateSSAO(_dev.Get(), integration->GetNormalResourse(), /*comBlur->GetBlurTextureResource()*/depthMapIntegration->GetTextureResource(), initialWidth, initialHeight); // ƒuƒ‰[‚©‚¯‚¸‚ÉSSAOŒvŽZ‚µ‚Ä‚à‚ ‚Ü‚è•Ï‚í‚ç‚È‚¢...
+	calculateSSAO->SetType(settingImgui->GetSSAOBoxCheck(), settingImgui->GetRTAOBoxCheck());
 	ssaoBlur = new Blur(_dev.Get());
 	ssaoBlur->Init(pair, calculateSSAO->GetResolution());
 	ssaoBlur->SetRenderingResourse(calculateSSAO->GetTextureResource());
@@ -925,6 +926,12 @@ void D3DX12Wrapper::Run() {
 		auto proj = camera->GetProj();
 		calculateSSAO->SetDraw(settingImgui->GetSSAOBoxChanged());
 		calculateSSAO->SetInvVPMatrix(/*camera->GetOrbitView(), camera->GetInvView(), */proj, XMMatrixInverse(nullptr, proj));
+
+		bool aoTypeChanged = settingImgui->GetAOTypeChanged();
+		if (aoTypeChanged)
+		{
+			calculateSSAO->SetType(settingImgui->GetSSAOBoxCheck(), settingImgui->GetRTAOBoxCheck());
+		}
 		calculateSSAO->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get());
 		ssaoBlur->Execution(_cmdQueue.Get(), _cmdAllocator.Get(), _cmdList3.Get(), _fenceVal, viewPort, rect);
 
@@ -1342,7 +1349,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						worldVec = XMVector4Transform(worldVec, moveMatrix); // •„†’ˆÓ
 						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->world);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->view);
 						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 						calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
 					}
@@ -1355,7 +1362,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->view);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(rightSpinMatrix);
 						sky->ChangeSceneMatrix(rightSpinMatrix);
@@ -1370,7 +1377,7 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 						shadow->SetRotationMatrix(connanDirection);
 						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, connanDirection);
+						resourceManager[fbxIndex]->GetMappedMatrix()->invView = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->view);
 						collisionManager->SetRotation(connanDirection);
 						sun->ChangeSceneMatrix(leftSpinMatrix);
 						sky->ChangeSceneMatrix(leftSpinMatrix);

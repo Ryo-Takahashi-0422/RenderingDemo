@@ -315,6 +315,12 @@ void CalculateSSAO::SetDraw(bool _isDraw)
     matrix4Cal->isDraw = _isDraw;
 }
 
+void CalculateSSAO::SetType(bool _ssao, bool _rtao)
+{
+    matrix4Cal->ssao = _ssao;
+    matrix4Cal->rtao = _rtao;
+}
+
 // é¿çs
 void CalculateSSAO::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList)
 {

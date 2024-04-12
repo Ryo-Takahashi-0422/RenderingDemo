@@ -228,7 +228,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         reflectPointLight.directSpecular = 0.0f;
         //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
         //speclur *= 0.8f/*float3(0, 0, 0)*/;
-        result.normal = float4(1,1,1, 1);
+        result.normal = float4(1.0f, 1.0f, 1.0f, 1.0f);
         
         bright = 2.3f;
         //normVec.x *= sign(normVec.x);
