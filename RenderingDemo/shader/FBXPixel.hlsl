@@ -108,16 +108,20 @@ void RE_Direct(const in IncidentLight directLight, const in GeometricContext geo
 
 PixelOutput FBXPS(Output input) : SV_TARGET
 {
+    
+    float2 dx = ddx(input.uv.x);
+    float2 dy = ddy(input.uv.y);
+    
     // タイリング対応
     int uvX = abs(input.uv.x);
     int uvY = abs(input.uv.y);
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
     
-    float4 col = colormap.Sample(smp, input.uv);
+    float4 col = colormap.SampleGrad(smp, input.uv, dx, dy);
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
-    
+
     PixelOutput result;
     //float metallic;
     float roughness;
@@ -132,7 +136,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     albedo = col.xyz;
     //metallic = 0.0f;
-    float3 speclurColor = specularmap.Sample(smp, input.uv).xyz;
+    float3 speclurColor = specularmap.SampleGrad(smp, input.uv, dx, dy).xyz;
     roughness = speclurColor.x;
     
     Material material;
@@ -180,8 +184,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * (input.lvPos.xy / input.lvPos.w);
-    float4 vsmSample = vsmmap.Sample(smp, shadowUV);
-    float2 shadowValue = vsmSample.xy;
+    float4 vsmSampleGrad = vsmmap.SampleGrad(smp, shadowUV, dx, dy);
+    float2 shadowValue = vsmSampleGrad.xy;
 
     float lz = input.lvDepth;
     lz = length(input.worldPosition - input.light) / input.adjust;
@@ -189,7 +193,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     if (input.isEnhanceShadow)
     {
         lz = input.trueDepth;
-        shadowValue = float2(vsmSample.z, vsmSample.z * vsmSample.z);
+        shadowValue = float2(vsmSampleGrad.z, vsmSampleGrad.z * vsmSampleGrad.z);
     }
     
     //float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
@@ -202,13 +206,15 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     result.col = float4(col.x, col.y, col.z, 1);
     
     // 大気のレンダリング
+    float3 dx3 = ddx(input.uv.x);
+    float3 dy3 = ddy(input.uv.y);
     float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
     scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
     float airZ = distance(input.worldPosition.xyz, eyePos) / 300; // areialの奥行は300
-    float4 air = airmap.Sample(smp, float3(scrPos, saturate(airZ)));
+    float4 air = airmap.SampleGrad(smp, float3(scrPos, saturate(airZ)), dx3, dy3);
     float3 inScatter = air.xyz;
         
-    float3 normCol = normalmap.Sample(smp, input.uv);
+    float3 normCol = normalmap.SampleGrad(smp, input.uv, dx, dy);
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
     float3 specularNormal = normVec;
@@ -302,7 +308,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
     // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
     // 特定の位置で調節してごまかすしかない。根本的に影が貫通しない処理を再設計する必要がある。
-    //bool isSpecial = vsmSample.w;
+    //bool isSpecial = vsmSampleGrad.w;
 
     //if (charaPos.z < -6.5f || charaPos.z > 6.4f)
     //{
@@ -338,7 +344,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
 
         
-    //float depth = depthmap.Sample(smp, shadowUV);
+    //float depth = depthmap.SampleGrad(smp, shadowUV);
     float shadowFactor = 1;
     
     if (-sunDIr.y <= 0.7f)

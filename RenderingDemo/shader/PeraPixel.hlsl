@@ -5,8 +5,6 @@ float4 ps(Output input) : SV_TARGET
     float4 ret = (0, 0, 0, 1);
     float w, h, levels;
     colorTex.GetDimensions(0, w, h, levels);
-    float dx = 1.0f / w;
-    float dy = 1.0f / h;
     
     float focus = 0.0f; // focus distance
     float dp = depthMap.Sample(smp, input.uv);
