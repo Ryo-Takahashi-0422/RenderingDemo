@@ -31,7 +31,7 @@ AO(アンビエントオクルージョン)、DOF(被写界深度)、鏡面反�
   
 # 開発環境
 - OS : Windows 11 Home(ver.23H2)  
-- CPU : Intel® Core™ i9 プロセッサー  
+- CPU : Intel® Core™ i9 13900K  
 - GPU : NVIDIA GeForce RTX 4070 Ti  
 - RAM : 64GB  
   
