@@ -73,6 +73,9 @@ void TextureTransporter::TransportPMDMaterialTexture(
 
 		{
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount], nullptr);
+			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 1], nullptr);
+			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 2], nullptr);
+			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 3], nullptr);
 
 			//バリア設定...せずとも、StateAfterを...Generic_Readなどにしても実行可能。公式記載見当たらず詳細不明。
 			texBarriierDesc[count].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

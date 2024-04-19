@@ -600,7 +600,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
 	textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D/*D3D12_SRV_DIMENSION_TEXTURE2DARRAY*/;
 	textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	textureSRVDesc.Texture2D.MipLevels = 4;
+	textureSRVDesc.Texture2D.MipLevels = 4; // pix上で確認したが、当然viewとしての登録情報なのでMipレベルが設定される
 	//textureSRVDesc.Texture2DArray.MipLevels = 4;
 	for (int i = 0; i < textureNum; ++i)
 	{
@@ -689,7 +689,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 1]->depth = 1;
 		textureMetaData[imgIndex + 1]->arraySize = 1;
 		textureMetaData[imgIndex + 1]->format = textureImg[imgIndex + 1]->format;
-		textureMetaData[imgIndex + 1]->mipLevels = 2;
+		textureMetaData[imgIndex + 1]->mipLevels = 1;
 		textureMetaData[imgIndex + 1]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 1] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 1]);
@@ -709,7 +709,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 2]->depth = 1;
 		textureMetaData[imgIndex + 2]->arraySize = 1;
 		textureMetaData[imgIndex + 2]->format = textureImg[imgIndex + 2]->format;
-		textureMetaData[imgIndex + 2]->mipLevels = 3;
+		textureMetaData[imgIndex + 2]->mipLevels = 2;
 		textureMetaData[imgIndex + 2]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 2] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 2]);
@@ -729,7 +729,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 3]->depth = 1;
 		textureMetaData[imgIndex + 3]->arraySize = 1;
 		textureMetaData[imgIndex + 3]->format = textureImg[imgIndex + 3]->format;
-		textureMetaData[imgIndex + 3]->mipLevels = 4;
+		textureMetaData[imgIndex + 3]->mipLevels = 3;
 		textureMetaData[imgIndex + 3]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 3] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 3]);
