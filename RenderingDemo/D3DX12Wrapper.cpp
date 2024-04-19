@@ -421,6 +421,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	//ファイル形式毎のテクスチャロード処理
 	//textureLoader->LoadTexture();
 
+	// ここにミップマップ作成処理を追加
+
+
 	// テクスチャアップロード
 	for (int i = 0; i < modelPath.size(); ++i)
 	{

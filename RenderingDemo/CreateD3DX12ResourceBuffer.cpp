@@ -2,14 +2,8 @@
 #include <CreateD3DX12ResourceBuffer.h>
 
 std::tuple<ComPtr<ID3D12Resource>, ComPtr<ID3D12Resource>> 
-CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMetadata* metaData, Image* img, std::string& texPath)
-{
-	std::map<std::string, std::tuple<ComPtr<ID3D12Resource>, ComPtr<ID3D12Resource>>> _resourceTable;
-	auto iterator = _resourceTable.find(texPath);
-	if (iterator != _resourceTable.end()) {
-		return iterator->second;
-	};
-	
+CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMetadata* metaData, Image* img)
+{	
 	//メソッド内でimg等動的メモリ確保のポインタを返すことは不可能と理解した
 	ComPtr<ID3D12Resource> texUploadBuff = nullptr;//テクスチャCPUアップロード用バッファー
 
@@ -68,18 +62,22 @@ CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMe
 	texReadResourceDesc.Width = metaData->width;
 	texReadResourceDesc.Height = metaData->height;
 	texReadResourceDesc.DepthOrArraySize = metaData->arraySize;
-	texReadResourceDesc.MipLevels = metaData->mipLevels;
+	texReadResourceDesc.MipLevels = /*metaData->mipLevels*/4;
 	texReadResourceDesc.Format = metaData->format;
 	texReadResourceDesc.SampleDesc.Count = 1;
 	texReadResourceDesc.SampleDesc.Quality = 0;
 	texReadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	texReadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
+	//UINT64 textureUploadBufferSize;
+	//_dev->GetCopyableFootprints(&texReadResourceDesc, 0, texReadResourceDesc.MipLevels, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	//auto desc = CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize);
+
 	//GPUからの読み取り用テクスチャバッファーを作成
 	result = _dev->CreateCommittedResource
 	(&texReadHeapProp,
 		D3D12_HEAP_FLAG_NONE,
-		&texReadResourceDesc,
+		&texReadResourceDesc/*&desc*/,
 		D3D12_RESOURCE_STATE_COPY_DEST, // バッファーがCPUからのリソースコピー先であることを示す
 		nullptr,
 		IID_PPV_ARGS(texReadBuff.ReleaseAndGetAddressOf())
@@ -87,12 +85,60 @@ CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMe
 
 	if (FAILED(result))
 	{
-		return std::forward_as_tuple(nullptr, nullptr);
+		return std::forward_as_tuple(texUploadBuff.Get(), nullptr);
 	}
 
-	_resourceTable[texPath] = std::forward_as_tuple(texUploadBuff.Get(), texReadBuff.Get());
 	return std::forward_as_tuple(texUploadBuff.Get(), texReadBuff.Get());
 }
+
+
+
+ComPtr<ID3D12Resource> CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(ComPtr<ID3D12Device> _dev, Image* img)
+{
+	//メソッド内でimg等動的メモリ確保のポインタを返すことは不可能と理解した
+	ComPtr<ID3D12Resource> texUploadBuff = nullptr;//テクスチャCPUアップロード用バッファー
+
+	//テクスチャバッファー用のCPU特化型(ｱｯﾌﾟﾛｰﾄﾞﾀｲﾌﾟ)ヒーププロパティ設定
+	D3D12_HEAP_PROPERTIES texUploadHeapProp;
+	texUploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	texUploadHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	texUploadHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	texUploadHeapProp.CreationNodeMask = 0; // 単一アダプターのため
+	texUploadHeapProp.VisibleNodeMask = 0; // 単一アダプターのため
+
+	//アップロード用
+	D3D12_RESOURCE_DESC texUploadResourceDesc = {};
+	texUploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	texUploadResourceDesc.Alignment = 0;
+	texUploadResourceDesc.Width = Utility::AlignmentSize(img->rowPitch/*slicePitch*/, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * img->height;// *5;
+	texUploadResourceDesc.Height = 1;
+	texUploadResourceDesc.DepthOrArraySize = 1;
+	texUploadResourceDesc.MipLevels = 1;
+	texUploadResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	texUploadResourceDesc.SampleDesc.Count = 1;
+	texUploadResourceDesc.SampleDesc.Quality = 0;
+	texUploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	texUploadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	//CPUからのアップロード用テクスチャバッファーを作成
+	HRESULT result = _dev->CreateCommittedResource
+	(&texUploadHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&texUploadResourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, // Uploadタイプのヒープにおける推奨設定。CPUのみが書き込みを行っているからとの公式情報。
+		nullptr,
+		IID_PPV_ARGS(texUploadBuff.ReleaseAndGetAddressOf())
+	);
+
+	if (FAILED(result))
+	{
+		return nullptr;
+	}
+
+	return texUploadBuff.Get();
+}
+
+
 
 ComPtr<ID3D12Resource> CreateD3DX12ResourceBuffer::CreateMappedSphSpaTexResource(ComPtr<ID3D12Device> _dev, TexMetadata* metaData, Image* img, std::string texPath)
 {

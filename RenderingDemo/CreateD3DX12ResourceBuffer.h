@@ -17,8 +17,13 @@ public:
 	(
 		ComPtr<ID3D12Device> _dev,
 		TexMetadata* metaData,
-		Image* img,
-		std::string& texPath
+		Image* img
+	);
+
+	static ComPtr<ID3D12Resource> LoadTextureFromFile4UploadFile
+	(
+		ComPtr<ID3D12Device> _dev,
+		Image* img
 	);
 
 	static ComPtr<ID3D12Resource> CreateMappedSphSpaTexResource
