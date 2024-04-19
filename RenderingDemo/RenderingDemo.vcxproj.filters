@@ -158,6 +158,9 @@
     <FxCompile Include="shader\FXAAOutputPixel.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="shader\GenerateMipsCS.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FBXInfoManager.cpp">
@@ -293,6 +296,9 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="PreFxaa.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="GenerateMips.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -433,6 +439,9 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="PreFxaa.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="GenerateMips.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>
