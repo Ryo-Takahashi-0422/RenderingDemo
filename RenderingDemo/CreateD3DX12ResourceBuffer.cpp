@@ -62,18 +62,22 @@ CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMe
 	texReadResourceDesc.Width = metaData->width;
 	texReadResourceDesc.Height = metaData->height;
 	texReadResourceDesc.DepthOrArraySize = metaData->arraySize;
-	texReadResourceDesc.MipLevels = metaData->mipLevels;
+	texReadResourceDesc.MipLevels = /*metaData->mipLevels*/4;
 	texReadResourceDesc.Format = metaData->format;
 	texReadResourceDesc.SampleDesc.Count = 1;
 	texReadResourceDesc.SampleDesc.Quality = 0;
 	texReadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	texReadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
+	//UINT64 textureUploadBufferSize;
+	//_dev->GetCopyableFootprints(&texReadResourceDesc, 0, texReadResourceDesc.MipLevels, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	//auto desc = CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize);
+
 	//GPUからの読み取り用テクスチャバッファーを作成
 	result = _dev->CreateCommittedResource
 	(&texReadHeapProp,
 		D3D12_HEAP_FLAG_NONE,
-		&texReadResourceDesc,
+		&texReadResourceDesc/*&desc*/,
 		D3D12_RESOURCE_STATE_COPY_DEST, // バッファーがCPUからのリソースコピー先であることを示す
 		nullptr,
 		IID_PPV_ARGS(texReadBuff.ReleaseAndGetAddressOf())
