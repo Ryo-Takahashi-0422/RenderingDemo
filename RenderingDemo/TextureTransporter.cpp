@@ -73,8 +73,11 @@ void TextureTransporter::TransportPMDMaterialTexture(
 
 		{
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount], nullptr);
+			dest[count].SubresourceIndex = 1;
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 1], nullptr);
+			dest[count].SubresourceIndex = 2;
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 2], nullptr);
+			dest[count].SubresourceIndex = 3;
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 3], nullptr);
 
 			//バリア設定...せずとも、StateAfterを...Generic_Readなどにしても実行可能。公式記載見当たらず詳細不明。
