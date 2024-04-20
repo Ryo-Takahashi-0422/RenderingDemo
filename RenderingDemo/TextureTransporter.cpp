@@ -46,7 +46,7 @@ void TextureTransporter::TransportPMDMaterialTexture(
 			Utility::AlignmentSize(img[sourceCount + 1]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 		source[sourceCount + 1].PlacedFootprint.Footprint.Format = img[sourceCount + 1]->format;
 
-		source[sourceCount + 2].pResource = uploadBuff[sourceCount + 1].Get();
+		source[sourceCount + 2].pResource = uploadBuff[sourceCount + 2].Get();
 		source[sourceCount + 2].Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 		source[sourceCount + 2].PlacedFootprint.Offset = 0;
 		source[sourceCount + 2].PlacedFootprint.Footprint.Width = metaData[sourceCount + 2]->width;

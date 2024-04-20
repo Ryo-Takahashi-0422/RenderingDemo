@@ -118,7 +118,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
     
-    float4 col = colormap.SampleGrad(smp, input.uv, dx, dy);
+    float4 col = colormap.SampleLevel(smp, input.uv, 2);
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
 

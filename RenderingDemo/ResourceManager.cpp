@@ -709,7 +709,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 2]->depth = 1;
 		textureMetaData[imgIndex + 2]->arraySize = 1;
 		textureMetaData[imgIndex + 2]->format = textureImg[imgIndex + 2]->format;
-		textureMetaData[imgIndex + 2]->mipLevels = 2;
+		textureMetaData[imgIndex + 2]->mipLevels = 1;
 		textureMetaData[imgIndex + 2]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 2] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 2]);
@@ -729,12 +729,10 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 3]->depth = 1;
 		textureMetaData[imgIndex + 3]->arraySize = 1;
 		textureMetaData[imgIndex + 3]->format = textureImg[imgIndex + 3]->format;
-		textureMetaData[imgIndex + 3]->mipLevels = 3;
+		textureMetaData[imgIndex + 3]->mipLevels = 1;
 		textureMetaData[imgIndex + 3]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 3] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 3]);
-		//textureUploadBuff[iterationNum].Get().
-
 	}
 
 	else
@@ -747,7 +745,6 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 
 	// mapping
 	if (textureUploadBuff[imgIndex] == nullptr) return;
-
 
 	for (int index = 0; index < 4; ++index)
 	{
