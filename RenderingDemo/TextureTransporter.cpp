@@ -16,14 +16,14 @@ void TextureTransporter::TransportPMDMaterialTexture(
 {
 	// テクスチャ用転送オブジェクトのリサイズ
 	auto size = _resourceManager->GetMaterialAndTexturePath().size();
-	size_t sourceSize = size * 4;
+	size_t sourceSize = size * 5;
 	source.resize(sourceSize);
 	dest.resize(size);
 	texBarriierDesc.resize(size);
 
 	for (int count = 0; count < size; count++)
 	{
-		int sourceCount = count * 4;
+		int sourceCount = count * 5;
 		if (uploadBuff[sourceCount] == nullptr || readBuff[count] == nullptr) continue;
 
 		source[sourceCount].pResource = uploadBuff[sourceCount].Get();
@@ -66,6 +66,16 @@ void TextureTransporter::TransportPMDMaterialTexture(
 			Utility::AlignmentSize(img[sourceCount + 3]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 		source[sourceCount + 3].PlacedFootprint.Footprint.Format = img[sourceCount + 3]->format;
 
+		source[sourceCount + 4].pResource = uploadBuff[sourceCount + 4].Get();
+		source[sourceCount + 4].Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		source[sourceCount + 4].PlacedFootprint.Offset = 0;
+		source[sourceCount + 4].PlacedFootprint.Footprint.Width = metaData[sourceCount + 4]->width;
+		source[sourceCount + 4].PlacedFootprint.Footprint.Height = metaData[sourceCount + 4]->height;
+		source[sourceCount + 4].PlacedFootprint.Footprint.Depth = metaData[sourceCount + 4]->depth;
+		source[sourceCount + 4].PlacedFootprint.Footprint.RowPitch =
+			Utility::AlignmentSize(img[sourceCount + 4]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		source[sourceCount + 4].PlacedFootprint.Footprint.Format = img[sourceCount + 4]->format;
+
 		//コピー先設定
 		dest[count].pResource = readBuff[count].Get();
 		dest[count].Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
@@ -79,6 +89,8 @@ void TextureTransporter::TransportPMDMaterialTexture(
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 2], nullptr);
 			dest[count].SubresourceIndex = 3;
 			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 3], nullptr);
+			dest[count].SubresourceIndex = 4;
+			_cmdList->CopyTextureRegion(&dest[count], 0, 0, 0, &source[sourceCount + 4], nullptr);
 
 			//バリア設定...せずとも、StateAfterを...Generic_Readなどにしても実行可能。公式記載見当たらず詳細不明。
 			texBarriierDesc[count].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

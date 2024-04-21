@@ -275,10 +275,10 @@ HRESULT ResourceManager::Init(Camera* _camera)
 	auto textureNum = materialAndTexturePath.size();
 	auto iter = materialAndTexturePath.begin();
 	int texNum = materialAndTexturePath.size();
-	textureUploadBuff.resize(texNum * 4);
+	textureUploadBuff.resize(texNum * 5);
 	textureReadBuff.resize(texNum);
-	textureMetaData.resize(texNum * 4);
-	textureImg.resize(texNum * 4);
+	textureMetaData.resize(texNum * 5);
+	textureImg.resize(texNum * 5);
 	textureImgPixelValue.resize(texNum);
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
@@ -292,7 +292,7 @@ HRESULT ResourceManager::Init(Camera* _camera)
 		path.second = texturePath + path.second;
 	}
 
-	mappedImgContainer.resize(texNum * 4);
+	mappedImgContainer.resize(texNum * 5);
 	for (int i = 0; i < materialAndTexturePath.size(); ++i)
 	{
 		CreateUploadAndReadBuff4Texture(iter->second, i);
@@ -600,7 +600,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	D3D12_SHADER_RESOURCE_VIEW_DESC textureSRVDesc = {};
 	textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D/*D3D12_SRV_DIMENSION_TEXTURE2DARRAY*/;
 	textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	textureSRVDesc.Texture2D.MipLevels = 4; // pix上で確認したが、当然viewとしての登録情報なのでMipレベルが設定される
+	textureSRVDesc.Texture2D.MipLevels = 5; // pix上で確認したが、当然viewとしての登録情報なのでMipレベルが設定される
 	//textureSRVDesc.Texture2DArray.MipLevels = 4;
 	for (int i = 0; i < textureNum; ++i)
 	{
@@ -645,14 +645,14 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	}
 
 
-	auto imgIndex = iterationNum * 4;
+	auto imgIndex = iterationNum * 5;
 	textureMetaData[imgIndex] = new TexMetadata;
 	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[imgIndex], scratchImg/*scratchImageContainer[iterationNum]*/);
 
 	if (scratchImg.GetImage(0, 0, 0) == nullptr) return;
 	ScratchImage mipChain;
 	GenerateMipMaps(scratchImg.GetImages(), scratchImg.GetImageCount(),
-		scratchImg.GetMetadata(), TEX_FILTER_DEFAULT, 4, mipChain);
+		scratchImg.GetMetadata(), TEX_FILTER_DEFAULT, 5, mipChain);
 	//result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], mipChain/*scratchImageContainer[iterationNum]*/);
 	
 	
@@ -733,6 +733,26 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 3]->dimension = TEX_DIMENSION_TEXTURE2D;
 
 		textureUploadBuff[imgIndex + 3] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 3]);
+
+		textureImg[imgIndex + 4] = nullptr;
+		textureImg[imgIndex + 4] = new Image;
+		textureImg[imgIndex + 4]->pixels = mipChain.GetImage(4, 0, 0)->pixels;
+		textureImg[imgIndex + 4]->rowPitch = mipChain.GetImage(4, 0, 0)->rowPitch;
+		textureImg[imgIndex + 4]->format = mipChain.GetImage(4, 0, 0)->format;
+		textureImg[imgIndex + 4]->width = mipChain.GetImage(4, 0, 0)->width;
+		textureImg[imgIndex + 4]->height = mipChain.GetImage(4, 0, 0)->height;
+		textureImg[imgIndex + 4]->slicePitch = mipChain.GetImage(4, 0, 0)->slicePitch;
+
+		textureMetaData[imgIndex + 4] = new TexMetadata;
+		textureMetaData[imgIndex + 4]->width = textureImg[imgIndex + 4]->width;
+		textureMetaData[imgIndex + 4]->height = textureImg[imgIndex + 4]->height;
+		textureMetaData[imgIndex + 4]->depth = 1;
+		textureMetaData[imgIndex + 4]->arraySize = 1;
+		textureMetaData[imgIndex + 4]->format = textureImg[imgIndex + 4]->format;
+		textureMetaData[imgIndex + 4]->mipLevels = 1;
+		textureMetaData[imgIndex + 4]->dimension = TEX_DIMENSION_TEXTURE2D;
+
+		textureUploadBuff[imgIndex + 4] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 4]);
 	}
 
 	else
@@ -741,12 +761,13 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureUploadBuff[imgIndex + 1] = nullptr;
 		textureUploadBuff[imgIndex + 2] = nullptr;
 		textureUploadBuff[imgIndex + 3] = nullptr;
+		textureUploadBuff[imgIndex + 4] = nullptr;
 	}
 
 	// mapping
 	if (textureUploadBuff[imgIndex] == nullptr) return;
 
-	for (int index = 0; index < 4; ++index)
+	for (int index = 0; index < 5; ++index)
 	{
 		auto srcAddress = textureImg[imgIndex + index]->pixels;
 		auto rowPitch = Utility::AlignmentSize(textureImg[imgIndex + index]->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);

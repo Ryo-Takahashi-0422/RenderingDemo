@@ -9,7 +9,7 @@ struct FBXSceneMatrix
 	XMMATRIX proj; // projection matri
 	XMMATRIX oProj;
 	XMMATRIX bones[256]; // pmd bone matrix // index number is equal with bones index number
-	XMMATRIX invView;
+	XMMATRIX invProj;
 	XMMATRIX rotation;
 	XMMATRIX shadowPosMatrix;
 	XMMATRIX shadowPosInvMatrix;

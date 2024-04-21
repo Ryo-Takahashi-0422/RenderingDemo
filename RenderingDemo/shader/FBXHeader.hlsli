@@ -25,6 +25,7 @@ struct Output
     //float4 rotatedNorm : ROTATED_NORMAL;
     //float3 ray : RAY;
     float4 viewPos : VIEWPOSITION;
+    float4 viewSpacePos : VIEWSPACEPOS;
     float4 wPos : WPOS;
     float3 oriWorldNorm : ORI_WORLD_NORMAL;
     
@@ -47,7 +48,7 @@ cbuffer SceneBuffer : register(b0) // ïœä∑çsóÒ
     matrix proj; // projection matrix
     matrix oProj;
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
-    matrix invView;
+    matrix invProj;
     matrix rotation;
     matrix shadowPosMatrix;
     matrix shadowPosInvMatrix;
