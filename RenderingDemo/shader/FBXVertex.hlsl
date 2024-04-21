@@ -117,6 +117,7 @@ uint index : SV_VertexID)
     }
 
     float4 m_wPos = mul(world, pos);
+    output.viewSpacePos = mul(mul(view, world), pos);
     float3 up = float3(0.0, 1.0, 0.0);
     float3 right = float3(1.0, 0.0, 0.0);
     float dt = dot(t_normal, right);

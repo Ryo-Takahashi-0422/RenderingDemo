@@ -118,7 +118,22 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
     
-    float4 col = colormap.SampleGrad(smp, input.uv, dx, dy);
+    float4 viewSpacePos = input.viewSpacePos;
+    float lod = viewSpacePos.z / 8.0f;
+    lod = clamp(lod, 0.0f, 6.0f);
+    lod = trunc(lod);
+    
+    float4 col;
+    float lodLevel = 3.0f;
+    if (lod < lodLevel)
+    {
+        col = colormap.SampleGrad(smp, input.uv, dx, dy);
+    }
+    else
+    {
+        col = colormap.SampleLevel(smp, input.uv, lod);
+    }
+    
     if (col.a == 0)
         discard; // アルファ値が0なら透過させる
 
@@ -136,7 +151,15 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     albedo = col.xyz;
     //metallic = 0.0f;
-    float3 speclurColor = specularmap.SampleGrad(smp, input.uv, dx, dy).xyz;
+    float3 speclurColor;
+    if (lod < lodLevel)
+    {
+        speclurColor = specularmap.SampleGrad(smp, input.uv, dx, dy).xyz;
+    }
+    else
+    {
+        speclurColor = specularmap.SampleLevel(smp, input.uv, lod).xyz;
+    }
     roughness = speclurColor.x;
     
     Material material;
@@ -184,7 +207,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
     shadowPos.xyz /= shadowPos.w;
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * (input.lvPos.xy / input.lvPos.w);
-    float4 vsmSampleGrad = vsmmap.SampleGrad(smp, shadowUV, dx, dy);
+    float4 vsmSampleGrad = vsmmap. SampleGrad(smp, shadowUV, dx, dy);
     float2 shadowValue = vsmSampleGrad.xy;
 
     float lz = input.lvDepth;
@@ -214,7 +237,17 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     float4 air = airmap.SampleGrad(smp, float3(scrPos, saturate(airZ)), dx3, dy3);
     float3 inScatter = air.xyz;
         
-    float3 normCol = normalmap.SampleGrad(smp, input.uv, dx, dy);
+    float3 normCol;
+    if (lod < lodLevel)
+    {
+        normCol = normalmap.SampleGrad(smp, input.uv, dx, dy).xyz;
+    }
+    else
+    {
+        normCol = normalmap.SampleLevel(smp, input.uv, lod);
+    }
+    
+    
     float3 normVec = normCol * 2.0f - 1.0f;
     normVec = normalize(normVec);
     float3 specularNormal = normVec;

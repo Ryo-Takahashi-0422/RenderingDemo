@@ -62,7 +62,7 @@ CreateD3DX12ResourceBuffer::LoadTextureFromFile(ComPtr<ID3D12Device> _dev, TexMe
 	texReadResourceDesc.Width = metaData->width;
 	texReadResourceDesc.Height = metaData->height;
 	texReadResourceDesc.DepthOrArraySize = metaData->arraySize;
-	texReadResourceDesc.MipLevels = /*metaData->mipLevels*/4;
+	texReadResourceDesc.MipLevels = /*metaData->mipLevels*/5;
 	texReadResourceDesc.Format = metaData->format;
 	texReadResourceDesc.SampleDesc.Count = 1;
 	texReadResourceDesc.SampleDesc.Quality = 0;
