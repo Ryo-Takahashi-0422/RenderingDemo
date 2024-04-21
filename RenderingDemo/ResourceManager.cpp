@@ -601,6 +601,7 @@ HRESULT ResourceManager::CreateAndMapResources(size_t textureNum)
 	textureSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D/*D3D12_SRV_DIMENSION_TEXTURE2DARRAY*/;
 	textureSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	textureSRVDesc.Texture2D.MipLevels = 5; // pix上で確認したが、当然viewとしての登録情報なのでMipレベルが設定される
+
 	//textureSRVDesc.Texture2DArray.MipLevels = 4;
 	for (int i = 0; i < textureNum; ++i)
 	{
@@ -644,7 +645,6 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		return;
 	}
 
-
 	auto imgIndex = iterationNum * 5;
 	textureMetaData[imgIndex] = new TexMetadata;
 	auto result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[imgIndex], scratchImg/*scratchImageContainer[iterationNum]*/);
@@ -653,18 +653,19 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	ScratchImage mipChain;
 	GenerateMipMaps(scratchImg.GetImages(), scratchImg.GetImageCount(),
 		scratchImg.GetMetadata(), TEX_FILTER_DEFAULT, 5, mipChain);
+
 	//result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], mipChain/*scratchImageContainer[iterationNum]*/);
 	
 	
 	textureMetaData[imgIndex]->mipLevels = 1;
 	textureImg[imgIndex] = nullptr;
 	textureImg[imgIndex] = new Image;
-	textureImg[imgIndex]->pixels = mipChain.GetImage(0, 0, 0)->pixels;
-	textureImg[imgIndex]->rowPitch = mipChain.GetImage(0, 0, 0)->rowPitch;
-	textureImg[imgIndex]->format = mipChain.GetImage(0, 0, 0)->format;
-	textureImg[imgIndex]->width = mipChain.GetImage(0, 0, 0)->width;
-	textureImg[imgIndex]->height = mipChain.GetImage(0, 0, 0)->height;
-	textureImg[imgIndex]->slicePitch = mipChain.GetImage(0,0,0)->slicePitch;
+	textureImg[imgIndex]->pixels = scratchImg.GetImage(0, 0, 0)->pixels;
+	textureImg[imgIndex]->rowPitch = scratchImg.GetImage(0, 0, 0)->rowPitch;
+	textureImg[imgIndex]->format = scratchImg.GetImage(0, 0, 0)->format;
+	textureImg[imgIndex]->width = scratchImg.GetImage(0, 0, 0)->width;
+	textureImg[imgIndex]->height = scratchImg.GetImage(0, 0, 0)->height;
+	textureImg[imgIndex]->slicePitch = scratchImg.GetImage(0,0,0)->slicePitch;
 
 	//auto k = mipChain.GetImage(3,0,0); // miplevelが4、元サイズ1kなら、0:1k、1:0.5k、2:0.25k、3:0.125kがそれぞれ生成されmipchain変数内に格納されている。
 	auto k = mipChain.GetImages();
@@ -691,6 +692,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		textureMetaData[imgIndex + 1]->format = textureImg[imgIndex + 1]->format;
 		textureMetaData[imgIndex + 1]->mipLevels = 1;
 		textureMetaData[imgIndex + 1]->dimension = TEX_DIMENSION_TEXTURE2D;
+
 
 		textureUploadBuff[imgIndex + 1] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 1]);
 
@@ -734,6 +736,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 
 		textureUploadBuff[imgIndex + 3] = CreateD3DX12ResourceBuffer::LoadTextureFromFile4UploadFile(_dev, textureImg[imgIndex + 3]);
 
+
 		textureImg[imgIndex + 4] = nullptr;
 		textureImg[imgIndex + 4] = new Image;
 		textureImg[imgIndex + 4]->pixels = mipChain.GetImage(4, 0, 0)->pixels;
@@ -758,6 +761,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	else
 	{
 		std::tie(textureUploadBuff[imgIndex], textureReadBuff[iterationNum]) = std::forward_as_tuple(nullptr, nullptr);
+
 		textureUploadBuff[imgIndex + 1] = nullptr;
 		textureUploadBuff[imgIndex + 2] = nullptr;
 		textureUploadBuff[imgIndex + 3] = nullptr;

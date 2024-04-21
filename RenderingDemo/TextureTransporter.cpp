@@ -17,12 +17,14 @@ void TextureTransporter::TransportPMDMaterialTexture(
 	// テクスチャ用転送オブジェクトのリサイズ
 	auto size = _resourceManager->GetMaterialAndTexturePath().size();
 	size_t sourceSize = size * 5;
+
 	source.resize(sourceSize);
 	dest.resize(size);
 	texBarriierDesc.resize(size);
 
 	for (int count = 0; count < size; count++)
 	{
+
 		int sourceCount = count * 5;
 		if (uploadBuff[sourceCount] == nullptr || readBuff[count] == nullptr) continue;
 
