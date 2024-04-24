@@ -183,9 +183,11 @@ uint index : SV_VertexID)
         output.sLightDirection.z *= sign(output.sLightDirection.z);
         output.sLightDirection = normalize(output.sLightDirection);
     }
-
-    output.vLightDirection = normalize(output.vLightDirection);
-    output.sLightDirection = normalize(output.sLightDirection);
+    else
+    {
+        output.vLightDirection = normalize(output.vLightDirection);
+        output.sLightDirection = normalize(output.sLightDirection);
+    }
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
     //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
@@ -198,7 +200,6 @@ uint index : SV_VertexID)
     
     output.screenPosition = output.svpos;
     //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
-    output.worldNormal = t_normal /*normalize(mul(world, m_normal).xyz)*/ /*normalize(mul(mul(mul(proj, view), world), norm).xyz)*/;
     
     //output.ray = normalize(pos.xyz - eyePos);
 
