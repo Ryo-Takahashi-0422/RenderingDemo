@@ -138,7 +138,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
 
     if (ssaoChack)
     {
-        float4 respos = mul( /*mul(*/invProj /*, rotation)*/, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
+        float4 respos = mul(invProj, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
         respos.xyz /= respos.w;
     
         float dx = 1.0f / width;
@@ -156,17 +156,9 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         }
         //oriNorm = mul(v, oriNorm);
         float3 norm = normalize(oriNorm.xyz * 2.0f - 1.0f);
-        //norm = mul(v, norm);
-        //norm.x *= sign(norm.x);
         norm.y *= sign(norm.y);
-        //norm.z *= sign(norm.z);
-        norm = normalize(norm);
-        
-        //norm = mul(v, norm);
-        norm = normalize(norm);
         const int trycnt = 32;
         float radius = 0.02f;
-
         
         if (dp < 1.0f)
         {
@@ -177,40 +169,16 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
-                // RTAOテスト
-                //ao += evaluateAO(respos.xyz, norm, rnd1, rnd2, rnd3, dp);
                 // Create TBN matrix
                 float3 tangent = normalize(omega - norm * dot(omega, norm));
                 float3 biTangent = cross(norm, tangent);
                 float3x3 TBN = float3x3(tangent, biTangent, norm);
                 TBN = transpose(TBN);
                 omega = mul(TBN, omega);
-                
-                //omega.x = abs(mul(TBN[0], omega.x));
-                //omega.y = abs(mul(TBN[1], omega.y));
-                //omega.z = abs(mul(TBN[2], omega.z));
-                
-                //omega.x = mul(TBN[0], omega.x);
-                //omega.y = mul(TBN[1], omega.y);
-                //omega.z = mul(TBN[2], omega.z);
-                
-                //omega.x = abs(mul(tangent, omega.x));
-                //omega.y = abs(mul(biTangent, omega.y));
-                //omega.z = abs(mul(norm, omega.z));
-                
-                //omega.x = mul(tangent, omega.x);
-                //omega.y = mul(biTangent, omega.y);
-                //omega.z = mul(norm, omega.z);
                 omega = normalize(omega);
-                
-                // 乱数の結果法線の反対側に向いていたら反転
-                float dt = dot(norm, omega);
-                float sgn = sign(dt);
-                //omega *= sgn;
-                dt *= sgn; // 正の値にしてcosθを得る      
-                
+                             
                 // ピクセルのview zが大きい(遠く)ほどサンプリング半径を大きくする
-                radius += saturate(respos.z / 5000);
+                //radius += saturate(respos.z / 5000);
                 
                 // カーテンに対しては一律半径
                 if (respos.y <= -1.55f)
@@ -226,15 +194,6 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float4 samplePos = mul(invProj, float4(rpos.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp2, 1.0f));
                 samplePos.xyz /= samplePos.w;
                 float3 sOriNorm = normalmap.SampleLevel(smp, rpos.xy, 0.0f).xyz;
-                //float3 sNorm = normalize(sOriNorm * 2.0f - 1.0f);
-                //sNorm.x *= sign(sNorm.x);
-                //sNorm.y *= sign(sNorm.y);
-                //sNorm.z *= sign(sNorm.z);
-                //norm = mul(TBN, norm);
-                //sNorm = mul(TBN, sNorm);
-                //sNorm = mul(v, sNorm);
-                //sNorm = normalize(sNorm);
-                //float normDiff = (1.0f - abs(dot(norm, sNorm)));
 
                 // 計算結果が現在の場所の深度より奥に入っているなら遮断されているので加算する
                 float sampleDepth = samplePos.z;
@@ -261,7 +220,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(respos.z - sampleDepth));
                 if (depthDifference <= /*0.0028f*/0.015f + saturate(1.0f / respos.z)) // saturate...加算によって近くのビュー空間においてカメラ近くほど閾値を大きくして制限を弱め、カメラに近づくほどSSAOの計算がされない現象を回避している
                 {
-                    ao += step(sampleDepth + 0.1f, respos.z) /* * (1.0f - dt)*/ /* * normDiff*/;
+                    ao += step(sampleDepth + 0.1f, respos.z);
                 }
             }
             ao /= (float) trycnt;
@@ -269,13 +228,11 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
         
         result = 1.0f - ao;
         result = smoothstep(0.0f, 1.0f, result);
-        //result = pow(result, 2);
-        //ssao[DTid.xy] = result;
     }
     
     else if (rtaoChack)
     {
-        float4 respos = mul( /*mul(*/invProj /*, rotation)*/, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
+        float4 respos = mul(invProj, float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), dp, 1.0f));
         respos.xyz /= respos.w;
     
         float dx = 1.0f / width;
@@ -311,7 +268,6 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float rnd3 = random(float2(rnd2, rnd1)) * 2.0f - 1.0f;
                 float3 omega = normalize(float3(rnd1, rnd2, rnd3));
 
-                // RTAOテスト
                 ao += evaluateAO(respos.xyz, norm, rnd1, rnd2, rnd3, dp);
             }
             ao /= (float) trycnt;
