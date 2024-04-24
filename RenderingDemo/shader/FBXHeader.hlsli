@@ -12,7 +12,6 @@ struct Output
     
     float4 screenPosition : SCREEN_POSITIO;
     float4 worldPosition : WORLD_POSITION;
-    float3 worldNormal : WORLD_NORMAL;
     float4 lvPos : LIGHTVIEW_POSITION;
     bool isEnhanceShadow : ENHANCESHADOW;
     bool isChara : chara;

@@ -226,15 +226,15 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     ////speclur = pow(speclur, 2);
     //speclur *= -sunDIr.y;
     float bright = 1.0f;
-    result.col = float4(col.x, col.y, col.z, 1);
+    result.col = col;
     
     // 大気のレンダリング
-    float3 dx3 = ddx(input.uv.x);
-    float3 dy3 = ddy(input.uv.y);
+    float3 dx3 = float3(dx, dx.x);
+    float3 dy3 = float3(dy, dy.x);
     float2 scrPos = input.screenPosition.xy / input.screenPosition.w; // 処理対象頂点のスクリーン上の座標。視錐台空間内の座標に対してwで除算して、スクリーンに投影するための立方体の領域（-1≦x≦1、-1≦y≦1そして0≦z≦1）に納める。
     scrPos = 0.5 + float2(0.5, -0.5) * scrPos;
-    float airZ = distance(input.worldPosition.xyz, eyePos) / 300; // areialの奥行は300
-    float4 air = airmap.SampleGrad(smp, float3(scrPos, saturate(airZ)), dx3, dy3);
+    float airZ = distance(input.worldPosition.xyz, eyePos) / 256.0f; // areialの奥行は256
+    float4 air = airmap.SampleGrad(smp, float3(scrPos, airZ), dx3, dy3);
     float3 inScatter = air.xyz;
         
     float3 normCol;
@@ -283,7 +283,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         else
         {
             diff = clamp(dot(normVec, nLightDir), 0.0f, 1.0f);
-            diff = pow(diff, 1.5f);
+            diff = pow(diff, 2.0f);
             diff += 0.15f;
             diff = saturate(diff);
         }
@@ -344,10 +344,11 @@ PixelOutput FBXPS(Output input) : SV_TARGET
 
     
     float litFactor;
-    if (lz /*- 0.01f*/ > shadowValue.x/* && lz <= 1.0f*/)
+    if (lz  > shadowValue.x)
     {
-        float depth_sq = shadowValue.y;
-        float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
+        //float depth_sq = shadowValue.y;
+        //float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
+        float var = 0.0001f;
         float md = lz - shadowValue.x;
         litFactor = var / (var + md * md);
         float3 shadowColor = result.col.xyz * 0.4f * bright;
