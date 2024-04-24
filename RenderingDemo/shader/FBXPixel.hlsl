@@ -256,21 +256,19 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     specularNormal = normalize(specularNormal);
        
     float diff, spec, spec4;
-    float3 sLightDir;
     float3 eye = normalize(input.vEyeDirection);
     float3 ref;
-    float3 halfLE = normalize(eye);    
+    //float3 halfLE = normalize(eye);    
     float3 nLightDir = normalize(input.vLightDirection);
     if(input.isChara)
     {
         reflectDirectLight.directSpecular = 0.0f;
         reflectPointLight.directSpecular = 0.0f;
-        //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
-        //speclur *= 0.8f/*float3(0, 0, 0)*/;
+
         result.normal = float4(1.0f, 1.0f, 1.0f, 1.0f);
         
         bright = 2.3f;
-        //normVec.x *= sign(normVec.x);
+
         normVec.y *= sign(normVec.y);
         normVec = normalize(normVec);
         normVec *= max(0.3f, -sunDIr.y) * 0.8f;
@@ -280,11 +278,10 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         if (lz - 0.01f > shadowValue.x)
         {
             diff = clamp(dot(normVec, nLightDir), 0.3f, 1.0f);
-            diff *= 0.5f/* * max(0.3f, (-sunDIr.y))*/;
+            diff *= 0.5f;
         }
         else
         {
-            //diff = clamp(dot(normVec, lig), 0.15f, 1.0f);
             diff = clamp(dot(normVec, nLightDir), 0.0f, 1.0f);
             diff = pow(diff, 1.5f);
             diff += 0.15f;
@@ -292,17 +289,15 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         }
         
         // スペキュラー計算
-        sLightDir = normalize(input.vLightDirection);
-        ref = reflect(-sLightDir, specularNormal);
+        ref = reflect(-nLightDir, specularNormal);
         ref = normalize(ref);
-        spec = dot(halfLE, ref);
+        spec = dot(eye, ref);
         if (spec < 0)
         {
             spec = 0;
         }
         spec = pow(spec, 40.0f);
         spec4 = float4(spec, spec, spec, 0);
-        //spec4 *= 0.1f;
     }
     else
     {
@@ -311,20 +306,18 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         diff = pow(diff, 2.0f); // 法線効果強調
         diff += 0.1f;
         diff = saturate(diff);
-        result.normal = float4( /*float3(input.worldNormal + normVec)*/normVec, 1);
+        result.normal = float4(normVec, 1);
         
         // スペキュラー計算
-        sLightDir = normalize(input.sLightDirection);
-        ref = reflect(-sLightDir, specularNormal);
+        ref = reflect(-nLightDir, specularNormal);
         ref = normalize(ref);
-        spec = dot(halfLE, ref);
+        spec = dot(eye, ref);
         if (spec < 0)
         {
             spec = 0;
         }
         spec = pow(spec, 40.0f);
         spec4 = float4(spec, spec, spec, 0);
-        //spec4 *= 0.05f;
     }
     spec4 *= 0.05f;
     result.col *= diff;

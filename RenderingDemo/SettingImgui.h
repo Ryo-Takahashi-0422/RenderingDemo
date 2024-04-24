@@ -90,11 +90,11 @@ private:
 
 	// fps
 	bool isFpsChanged = false;
-	float fps = 120.0f;
+	float fps = 60.0f;
 	bool fps30 = false;
-	bool fps60 = false;
+	bool fps60 = true;
 	bool fps90 = false;
-	bool fps120 = true;
+	bool fps120 = false;
 
 	// point light position
 	XMFLOAT3 p1, p2;
