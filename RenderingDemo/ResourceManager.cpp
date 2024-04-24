@@ -655,8 +655,8 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 		scratchImg.GetMetadata(), TEX_FILTER_DEFAULT, 5, mipChain);
 
 	//result = textureLoader->GetTable()[extention](wTexPath, textureMetaData[iterationNum], mipChain/*scratchImageContainer[iterationNum]*/);
-	
-	
+
+
 	textureMetaData[imgIndex]->mipLevels = 1;
 	textureImg[imgIndex] = nullptr;
 	textureImg[imgIndex] = new Image;
@@ -665,7 +665,7 @@ void ResourceManager::CreateUploadAndReadBuff4Texture(std::string texturePath, i
 	textureImg[imgIndex]->format = scratchImg.GetImage(0, 0, 0)->format;
 	textureImg[imgIndex]->width = scratchImg.GetImage(0, 0, 0)->width;
 	textureImg[imgIndex]->height = scratchImg.GetImage(0, 0, 0)->height;
-	textureImg[imgIndex]->slicePitch = scratchImg.GetImage(0,0,0)->slicePitch;
+	textureImg[imgIndex]->slicePitch = scratchImg.GetImage(0, 0, 0)->slicePitch;
 
 	//auto k = mipChain.GetImage(3,0,0); // miplevelが4、元サイズ1kなら、0:1k、1:0.5k、2:0.25k、3:0.125kがそれぞれ生成されmipchain変数内に格納されている。
 	auto k = mipChain.GetImages();
