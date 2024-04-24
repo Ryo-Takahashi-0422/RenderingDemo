@@ -213,8 +213,6 @@ uint index : SV_VertexID)
     
     output.wPos = m_wPos;
     
-    float4 rotPos = mul(rotation, pos);
-    float4 vPos = mul(mul(view, world), pos);
     output.viewPos = /*-eye */eye - output.wPos;
     
     output.oriWorldNorm = normalize(mul(world, oriNorm).xyz);
