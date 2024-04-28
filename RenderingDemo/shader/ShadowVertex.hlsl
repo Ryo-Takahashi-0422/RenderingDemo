@@ -3,7 +3,7 @@
 vsOutput vs_main
 (
     float4 pos : POSITION,
-    float4 norm : NORMAL/*_Vertex*/,
+    float4 norm : NORMAL,
     float2 uv : TEXCOORD,
     uint3 boneno1 : BONE_NO_ZeroToTwo,
     uint3 boneno2 : BONE_NO_ThreeToFive,
@@ -15,7 +15,7 @@ uint index : SV_VertexID
     vsOutput output;
     output.adjust = 200.0f;
     output.specialObj = false;
-    if (boneweight1[0] == 0 && boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 && boneweight2[2] == 0)
+    if (boneweight1[0] == 0 /*&& boneweight1[1] == 0 && boneweight1[2] == 0 && boneweight2[0] == 0 && boneweight2[1] == 0 */&& boneweight2[2] == 0)
     {
         output.position = mul(mul(proj, view), pos);
         
@@ -33,11 +33,8 @@ uint index : SV_VertexID
         //    output.specialObj = true;
         //}
 
-        output.depthAndLength.x = length(worldPos - lightPos) / output.adjust;
-        output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
         output.index = index;
         
-        output.isChara = false;
         return output;
     }
     
@@ -45,11 +42,7 @@ uint index : SV_VertexID
     matrix bm2 = bones[boneno1[1]] * boneweight1[1];
     matrix bm3 = bones[boneno1[2]] * boneweight1[2];
     
-    matrix bm4 = bones[boneno2[0]] * boneweight2[0];
-    matrix bm5 = bones[boneno2[1]] * boneweight2[1];
-    matrix bm6 = bones[boneno2[2]] * boneweight2[2];
-    
-    matrix bm = bm1 + bm2 + bm3 + bm4 + bm5 + bm6;   
+    matrix bm = bm1 + bm2 + bm3/* + bm4 + bm5 + bm6*/;   
     
     pos = mul(bm, pos);
     pos = mul(rotation, pos);
@@ -60,12 +53,7 @@ uint index : SV_VertexID
     
     float3 worldPos = mul(world, pos);
     output.worldPos = worldPos;
-    output.trueDepth = /*0.98f * */length(worldPos - oLightPos) / output.adjust;
-    //float jj = worldPos.y + 5.0f;
-    //float k = oLightPos.y / jj;
-    //oLightPos /= k;
-    output.depthAndLength.x = length(worldPos - oLightPos) / output.adjust;
-    output.depthAndLength.y = output.depthAndLength.x * output.depthAndLength.x;
-    output.isChara = true;
+    output.trueDepth = length(worldPos - oLightPos) / output.adjust;
+
     return output;
 }

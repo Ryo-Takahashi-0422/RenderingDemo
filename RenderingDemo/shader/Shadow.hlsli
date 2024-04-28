@@ -15,9 +15,7 @@ struct vsOutput
 {
     float4 position : SV_POSITION;
     float3 worldPos : WORLD_POS;
-    float2 depthAndLength : DEPTH_LENGTH;
     float trueDepth : TRUE_DEPTH;
-    bool isChara : IS_CHARACTER;
     float adjust : ADJUST;
     float index : INDEX;
     bool specialObj : SPECIALOBJ;

@@ -200,7 +200,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 float depthDifference = abs(dp2 - dp);
                 
                 // カーテンと床に安定してSSAOを生成するための処理
-                if (respos.y <= -1.55f)
+                if (respos.y <= -1.55f && depthDifference <= 0.001f)
                 {
                     depthDifference = 0.0f;
                 }
@@ -218,7 +218,7 @@ void cs_main(uint3 DTid : SV_DispatchThreadID)
                 }
                 
                 float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(respos.z - sampleDepth));
-                if (depthDifference <= /*0.0028f*/0.015f + saturate(1.0f / respos.z)) // saturate...加算によって近くのビュー空間においてカメラ近くほど閾値を大きくして制限を弱め、カメラに近づくほどSSAOの計算がされない現象を回避している
+                if (depthDifference <= /*0.0028f*/0.015f + saturate(0.2f / respos.z)) // saturate...加算によって近くのビュー空間においてカメラ近くほど閾値を大きくして制限を弱め、カメラに近づくほどSSAOの計算がされない現象を回避している
                 {
                     ao += step(sampleDepth + 0.1f, respos.z);
                 }
