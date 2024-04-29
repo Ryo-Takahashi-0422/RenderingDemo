@@ -80,6 +80,7 @@ private:
 	std::vector<ResourceManager*> resourceManager;
 	CollisionManager* collisionManager = nullptr;
 	OBBManager* oBBManager = nullptr;
+	OcclusionCullingManager* occManager = nullptr;
 	XMMATRIX connanDirection = XMMatrixIdentity(); // キャラクターの回転も含めた方向の監視変数
 	Camera* camera = nullptr;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;

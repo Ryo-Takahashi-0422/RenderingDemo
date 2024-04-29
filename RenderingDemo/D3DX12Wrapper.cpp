@@ -342,11 +342,16 @@ bool D3DX12Wrapper::ResourceInit() {
 		// FBXInfoManager Instance
 		fbxInfoManager = FBXInfoManager::Instance();
 		fbxInfoManager.Init(modelPath[i]);
+
+		if (i == 0)
+		{
+			occManager = new OcclusionCullingManager(_dev, &fbxInfoManager, 1024, 1024);
+		}
 		
 		// FBX resource creation
 		resourceManager[i] = new ResourceManager(_dev, &fbxInfoManager, prepareRenderingWindow);		
 		resourceManager[i]->Init(camera);		
-	}
+	}	
 	
 	// TextureTransporterクラスのインスタンス化
 	textureTransporter = new TextureTransporter;
