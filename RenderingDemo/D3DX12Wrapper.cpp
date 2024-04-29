@@ -919,6 +919,10 @@ void D3DX12Wrapper::Run() {
 
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
+
+		occManager->SetVPMatrix(resourceManager[0]->GetMappedMatrix()->view, resourceManager[0]->GetMappedMatrix()->proj);
+		occManager->Execution(_cmdList.Get(), _fenceVal, viewPort, rect);
+
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);			

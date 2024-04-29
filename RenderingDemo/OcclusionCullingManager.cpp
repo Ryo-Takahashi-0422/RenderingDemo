@@ -36,9 +36,9 @@ void OcclusionCullingManager::Init()
 HRESULT OcclusionCullingManager::ResourceInit()
 {
     // 各メッシュの回転・平行移動行列を作る
-    auto localPosAndRotOfMesh = _fbxInfoManager->GetLocalPosAndRotOfOCC();
-    localMatrix.resize(localPosAndRotOfMesh.size());
-    auto itlPosRot = localPosAndRotOfMesh.begin();
+    auto localPosAndRotOfOCC = _fbxInfoManager->GetLocalPosAndRotOfOCC();
+    localMatrix.resize(localPosAndRotOfOCC.size());
+    auto itlPosRot = localPosAndRotOfOCC.begin();
     for (int i = 0; i < localMatrix.size(); ++i)
     {
         // 回転成分の抽出・反映 ※Y軸(UP)回転のみ対応
@@ -83,13 +83,13 @@ HRESULT OcclusionCullingManager::ResourceInit()
     // create pos container
     for (int i = 0; i < vertMap.size(); ++i)
     {
-        meshVertexInfos.push_back(vertMap[i]); // OBB処理用に用意する
         for (int j = 0; j < itFirst->second.vertices.size(); ++j)
         {
             verticesPosContainer.push_back(itFirst->second.vertices[j]);
         }
         ++itFirst;
     }
+
     // デバッグ用。コライダーのみ読み込んだ際の回避処理。
     if (verticesPosContainer.size() == 0)
     {
@@ -549,11 +549,11 @@ HRESULT OcclusionCullingManager::MappingWVPMatrix()
     return result;
 }
 
-void OcclusionCullingManager::SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj)
+void OcclusionCullingManager::SetVPMatrix(XMMATRIX _view, XMMATRIX _proj)
 {
     mappedMatrix->world = XMMatrixIdentity();
-    mappedMatrix->view = _sunView;
-    mappedMatrix->proj = _sunProj;
+    mappedMatrix->view = _view;
+    mappedMatrix->proj = _proj;
 }
 
 void OcclusionCullingManager::SetSunPos(XMFLOAT3 _sunPos)
@@ -566,15 +566,15 @@ void OcclusionCullingManager::SetMoveMatrix(XMMATRIX charaWorldMatrix)
     m_moveMatrix = charaWorldMatrix;
 }
 
-void OcclusionCullingManager::UpdateWorldMatrix()
-{
-    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
-}
+//void OcclusionCullingManager::UpdateWorldMatrix()
+//{
+//    mappedMatrix->world = XMMatrixMultiply(mappedMatrix->world, m_moveMatrix);
+//}
 
 // 実行
-void OcclusionCullingManager::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
+void OcclusionCullingManager::Execution(ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect)
 {
-    UpdateWorldMatrix();// キャラクターの移動用行列を更新する
+    //UpdateWorldMatrix();// キャラクターの移動用行列を更新する
 
     auto barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -612,24 +612,21 @@ void OcclusionCullingManager::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12Com
 
     _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    int ofst = 0;
+    int indiceSize = 0;
+    auto itIndiceFirst = vertMap.begin();
+    int indiceContainerSize = vertMap.size();
+    _cmdList->IASetVertexBuffers(0, 1, &vbView);
+    _cmdList->IASetIndexBuffer(&ibView);
 
-    for (int i = 0; i < 1; ++i)
+    for (int j = 0; j < indiceContainerSize; ++j)
     {
-        int ofst = 0;
-        int indiceSize = 0;
-        auto itIndiceFirst = itIndiceFirsts[i];
-        int indiceContainerSize = indiceContainer[i].size();
-        _cmdList->IASetVertexBuffers(0, 1, vbViews[i]);
-        _cmdList->IASetIndexBuffer(ibViews[i]);
-
-        for (int j = 0; j < indiceContainerSize; ++j)
-        {
-            indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
-            _cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
-            ofst += indiceSize;
-            ++itIndiceFirst;
-        }
+        indiceSize = itIndiceFirst->second.indices.size(); // ★サイズのみのarrayを用意してみる
+        _cmdList->DrawIndexedInstanced(indiceSize, 1, ofst, 0, 0);
+        ofst += indiceSize;
+        ++itIndiceFirst;
     }
+    
 
     barrierDesc = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -640,11 +637,11 @@ void OcclusionCullingManager::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12Com
     _cmdList->ResourceBarrier(1, &barrierDesc);
 
     // デブスマップを読み込み可能状態に変更する
-    D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-        depthBuff.Get(),
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-    );
-    _cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
+    //D3D12_RESOURCE_BARRIER barrierDesc4DepthMap = CD3DX12_RESOURCE_BARRIER::Transition
+    //(
+    //    depthBuff.Get(),
+    //    D3D12_RESOURCE_STATE_DEPTH_WRITE,
+    //    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    //);
+    //_cmdList->ResourceBarrier(1, &barrierDesc4DepthMap);
 }

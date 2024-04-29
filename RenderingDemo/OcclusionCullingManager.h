@@ -78,12 +78,11 @@ private:
 	float width;
 	float height;
 
-	void UpdateWorldMatrix();
+	//void UpdateWorldMatrix();
 	FBXInfoManager* _fbxInfoManager = nullptr;
 	HRESULT ResourceInit();
 	std::vector<XMMATRIX> localMatrix; // メッシュ毎のローカル座標・回転
 	std::vector<std::pair<std::string, VertexInfo>> vertMap;
-	std::vector<std::pair<std::string, VertexInfo>> meshVertexInfos;
 	std::vector<FBXVertex> verticesPosContainer;
 	std::vector<unsigned int> indexContainer;
 	FBXVertex* mappedVertPos = nullptr;
@@ -95,7 +94,7 @@ public:
 	OcclusionCullingManager(ComPtr<ID3D12Device> dev, FBXInfoManager* fbxInfoManager, int _width, int _height);
 	~OcclusionCullingManager();
 	
-	void SetVPMatrix(XMMATRIX _sunView, XMMATRIX _sunProj);
+	void SetVPMatrix(XMMATRIX _view, XMMATRIX _proj);
 	void SetSunPos(XMFLOAT3 _sunPos);
 	void SetMoveMatrix(XMMATRIX charaWorldMatrix);
 
@@ -106,5 +105,5 @@ public:
 	XMMATRIX GetShadowView() { return mappedMatrix->view; };
 	std::pair<float, float> GetResolution() { return std::pair<float, float>(width, height); };
 	//void ChangeSceneResolution(int _width, int _height);
-	void Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocator* _cmdAllocator, ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
+	void Execution(ID3D12GraphicsCommandList* _cmdList, UINT64 _fenceVal, const D3D12_VIEWPORT* _viewPort, const D3D12_RECT* _rect);
 };
