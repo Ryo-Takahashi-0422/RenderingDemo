@@ -923,9 +923,11 @@ void D3DX12Wrapper::Run() {
 		// キー入力有無を確認してSponza、キャラ、OBBのアフィン変換行列を更新する
 		UpdateMatrix();
 
+		// オクルージョンカリング用モデルの描画により深度バッファ先出し
 		occManager->SetVPMatrix(resourceManager[0]->GetMappedMatrix()->view, resourceManager[0]->GetMappedMatrix()->proj);
 		occManager->Execution(_cmdList.Get(), _fenceVal, viewPort, rect);
 
+		// マルチスレッドで色情報などの描画を行う
 		for (int i = 0; i < threadNum; i++)
 		{
 			SetEvent(m_workerBeginRenderFrame[i]);			
