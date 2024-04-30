@@ -175,6 +175,8 @@ private:
 	CalculateSSAO* calculateSSAO = nullptr;
 	PreFxaa* preFxaa = nullptr;
 
+	void UpdateMatrix();
+
 public:
 
 	D3DX12Wrapper();

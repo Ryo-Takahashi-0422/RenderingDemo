@@ -923,115 +923,8 @@ void D3DX12Wrapper::Run() {
 		occManager->SetVPMatrix(resourceManager[0]->GetMappedMatrix()->view, resourceManager[0]->GetMappedMatrix()->proj);
 		occManager->Execution(_cmdList.Get(), _fenceVal, viewPort, rect);
 
-
-
-
-
-
-		for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
-		{
-
-			// アフィン変換の操作は単一スレッドのみ実行する。複数スレッドで処理すると、その分挙動速度が倍増する・太陽がぶれるなど悪影響が出るため。
-			if (num == 0)
-			{
-				// キー入力処理。当たり判定処理も含める。
-				if (input->CheckKey(DIK_W)) inputW = true;
-				if (input->CheckKey(DIK_LEFT)) inputLeft = true;
-				if (input->CheckKey(DIK_RIGHT)) inputRight = true;
-				if (input->CheckKey(DIK_UP)) inputUp = true;
-
-				if (resourceManager[fbxIndex]->GetIsAnimationModel()) // 20240315時点の処理ではresourceManager[1]に限定される。
-				{
-					// start character with idle animation
-					resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
-					charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-					charaPos.y = 1.5;
-					charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
-
-					// W Key
-					if (inputW)
-					{
-						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-						XMVECTOR worldVec;
-						worldVec.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-						worldVec.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
-						worldVec.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
-						worldVec.m128_f32[3] = 1;
-
-						// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
-						auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, forwardSpeed), connanDirection);
-						moveMatrix.r[0].m128_f32[0] = 1;
-						moveMatrix.r[0].m128_f32[2] = 0;
-						moveMatrix.r[2].m128_f32[0] = 0;
-						moveMatrix.r[2].m128_f32[2] = 1;
-						worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
-						charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
-						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-						shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
-						calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-					}
-
-					// Left Key
-					if (inputLeft)
-					{
-						connanDirection *= leftSpinMatrix;
-						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-						shadow->SetRotationMatrix(connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-						collisionManager->SetRotation(connanDirection);
-						sun->ChangeSceneMatrix(rightSpinMatrix);
-						sky->ChangeSceneMatrix(rightSpinMatrix);
-						calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-					}
-
-					// Right Key
-					if (inputRight)
-					{
-						connanDirection *= rightSpinMatrix;
-						resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-						resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-						shadow->SetRotationMatrix(connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-						resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-						collisionManager->SetRotation(connanDirection);
-						sun->ChangeSceneMatrix(leftSpinMatrix);
-						sky->ChangeSceneMatrix(leftSpinMatrix);
-						calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-					}
-				}
-
-				// W Key
-				if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
-				{
-					resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-				}
-			}
-		}
-
-		// ★キャラクターの回転行列を転置したものをGPUへ渡す。DirectXではCPUから受け取った行列は転置してGPUへ転送される。(or GPUで転置される? 詳しくは不明) CPU側で利用している回転行列とGPUで利用する回転行列を合わせることでGPU側での法線回転計算が上手くいっている認識だが...
-		resourceManager[0]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
-		resourceManager[1]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
-
-		if (inputLeft)
-		{
-			resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-		}
-		if (inputRight)
-		{
-			resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-		}
-
-		auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
-		collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-		collisionManager->SetCharaPos(charaPos);
-		oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-
-
-
+		// キー入力有無を確認してSponza、キャラ、OBBのアフィン変換行列を更新する
+		UpdateMatrix();
 
 		for (int i = 0; i < threadNum; i++)
 		{
@@ -1175,6 +1068,110 @@ void D3DX12Wrapper::Run() {
 		}
 		//_gmemory->Commit(_cmdQueue.Get());
 	}
+}
+
+void D3DX12Wrapper::UpdateMatrix()
+{
+	for (int fbxIndex = 0; fbxIndex < modelPath.size(); ++fbxIndex)
+	{
+
+		// アフィン変換の操作は単一スレッドのみ実行する。複数スレッドで処理すると、その分挙動速度が倍増する・太陽がぶれるなど悪影響が出るため。
+
+		// キー入力処理。当たり判定処理も含める。
+		if (input->CheckKey(DIK_W)) inputW = true;
+		if (input->CheckKey(DIK_LEFT)) inputLeft = true;
+		if (input->CheckKey(DIK_RIGHT)) inputRight = true;
+		if (input->CheckKey(DIK_UP)) inputUp = true;
+
+		if (resourceManager[fbxIndex]->GetIsAnimationModel()) // 20240315時点の処理ではresourceManager[1]に限定される。
+		{
+			// start character with idle animation
+			resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);
+			charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+			charaPos.y = 1.5;
+			charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+
+			// W Key
+			if (inputW)
+			{
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				XMVECTOR worldVec;
+				worldVec.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
+				worldVec.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
+				worldVec.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
+				worldVec.m128_f32[3] = 1;
+
+				// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
+				auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, forwardSpeed), connanDirection);
+				moveMatrix.r[0].m128_f32[0] = 1;
+				moveMatrix.r[0].m128_f32[2] = 0;
+				moveMatrix.r[2].m128_f32[0] = 0;
+				moveMatrix.r[2].m128_f32[2] = 1;
+				worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
+				charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
+				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
+				calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
+			}
+
+			// Left Key
+			if (inputLeft)
+			{
+				connanDirection *= leftSpinMatrix;
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+				shadow->SetRotationMatrix(connanDirection);
+				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				collisionManager->SetRotation(connanDirection);
+				sun->ChangeSceneMatrix(rightSpinMatrix);
+				sky->ChangeSceneMatrix(rightSpinMatrix);
+				calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
+			}
+
+			// Right Key
+			if (inputRight)
+			{
+				connanDirection *= rightSpinMatrix;
+				resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
+				resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
+				shadow->SetRotationMatrix(connanDirection);
+				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
+				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				collisionManager->SetRotation(connanDirection);
+				sun->ChangeSceneMatrix(leftSpinMatrix);
+				sky->ChangeSceneMatrix(leftSpinMatrix);
+				calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
+			}
+		}
+
+		// W Key
+		if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
+		{
+			resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+		}
+		
+	}
+
+	// ★キャラクターの回転行列を転置したものをGPUへ渡す。DirectXではCPUから受け取った行列は転置してGPUへ転送される。(or GPUで転置される? 詳しくは不明) CPU側で利用している回転行列とGPUで利用する回転行列を合わせることでGPU側での法線回転計算が上手くいっている認識だが...
+	resourceManager[0]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
+	resourceManager[1]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
+
+	if (inputLeft)
+	{
+		resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+
+	}
+	if (inputRight)
+	{
+		resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
+	}
+
+	auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
+	collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
+	collisionManager->SetCharaPos(charaPos);
+	oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 }
 
 void D3DX12Wrapper::CleanMemory()
