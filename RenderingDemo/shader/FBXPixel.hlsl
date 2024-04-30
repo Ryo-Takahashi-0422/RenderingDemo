@@ -106,8 +106,7 @@ void RE_Direct(const in IncidentLight directLight, const in GeometricContext geo
 }
 
 PixelOutput FBXPS(Output input) : SV_TARGET
-{
-    
+{    
     float2 dx = ddx(input.uv.x);
     float2 dy = ddy(input.uv.y);
     
@@ -116,6 +115,17 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     int uvY = abs(input.uv.y);
     input.uv.x = abs(input.uv.x) - uvX;
     input.uv.y = abs(input.uv.y) - uvY;
+    
+    // svPos.zはdepth値。 スクリーンスペースuv
+    float w, h, d;
+    depthmap.GetDimensions(0,w,h,d);
+    float2 occuv = float2(input.svpos.x / w, input.svpos.y / h);
+    float occDepth = depthmap.Sample(smp, occuv);
+    float vPos = input.svpos.z;
+    if (vPos - 0.008f >= occDepth)
+    {
+        discard;
+    }
     
     float4 viewSpacePos = input.viewSpacePos;
     float lod = viewSpacePos.z / 8.0f;

@@ -36,7 +36,7 @@ AO(アンビエントオクルージョン)、DOF(被写界深度)、鏡面反�
 - RAM : 64GB  
   
 # 開発期間
-- 2023/8/23 ～
+- 2023/8/23 ～ 2024/04/30  
 - 2023/3/1～2023/8/22の期間に書籍「DirectX12の魔導書 3Dレンダリングの基礎からMMDモデルを踊らせるまで」からDirextX12を学習、
 このリポジトリはその際に作成したリポジトリ「tutorial-GrimoireOfTheDirectX12」から派生したもの
   
@@ -61,7 +61,7 @@ https://www.turbosquid.com/3d-models/conan-rig-character-3d-model-1182019
 https://www.mixamo.com/#/  
   
 # 事前処理
-1. 事前に3Dモデルを設定(BlenderでSponzaのテクスチャ設定・コライダー追加等)して、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
+1. 事前に3Dモデルを設定(BlenderでSponzaのテクスチャ設定・コライダー追加・オクルージョンカリング用モデル追加等)して、Conanにはmixamoよりダウンロードしたアニメーション設定およびテクスチャ設定を行う。
 2. FbxConverterToBinaryで各モデルをfbx形式からbin形式に変換する。マテリアルや頂点といった情報を抽出するのに開発環境で約5秒ほどかかるため、事前に変換する処理を準備した。  
 https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary  
   
@@ -78,15 +78,16 @@ https://github.com/Ryo-Takahashi-0422/FBXConvertToBinary
 10. SkyLUT描画パス実行(Sky描画パスで利用)  
 11. Sky描画パス実行  
 12. シャドウマップのガウシアンブラー描画パス実行  
-13. ワーカースレッド1,2がSponzaとConan、コライダーの描画パス実行(マルチレンダリングでカラー、法線、デプスを出力)  
-14. 各スレッドが出力した描画結果(カラー、法線)を統合する描画パス実行  
-15. 統合したカラー情報のガウシアンブラー描画パス実行(Depth Of Field処理で利用)  
-16. 各スレッドが出力した描画結果(デプス)を統合する描画パス実行  
-17. AO描画パス実行  
-18. AOのガウシアンブラー描画パス実行  
-19. 各出力結果の結合描画パス実行(カラー、imgui、SSAO、DOFをデプス値により処理)  
-20. FXAA描画パス実行  
-21. ダブルバッファリングで描画結果を交互に表示  
+13. オクルージョンカリング用モデルによる深度マップを描画  
+14. ワーカースレッド1,2がSponzaとConan、コライダーの描画パス実行(マルチレンダリングでカラー、法線、デプスを出力)  
+15. 各スレッドが出力した描画結果(カラー、法線)を統合する描画パス実行  
+16. 統合したカラー情報のガウシアンブラー描画パス実行(Depth Of Field処理で利用)  
+17. 各スレッドが出力した描画結果(デプス)を統合する描画パス実行  
+18. AO描画パス実行  
+19. AOのガウシアンブラー描画パス実行  
+20. 各出力結果の結合描画パス実行(カラー、imgui、SSAO、DOFをデプス値により処理)  
+21. FXAA描画パス実行  
+22. ダブルバッファリングで描画結果を交互に表示  
   
 # 参考(一部)
 ## 図書、論文  
@@ -114,3 +115,6 @@ https://www.youtube.com/watch?v=YrQ4ACuvM68
 https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html  
 - 下町のナポレオン(Hatena Blog)  
 https://hikita12312.hatenablog.com/  
+  
+## メモ  
+- 2024/04/30 オクルージョンカリング実装により最大で0.9msの描画コスト削減とした。  

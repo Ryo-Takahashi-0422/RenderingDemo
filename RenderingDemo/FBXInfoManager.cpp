@@ -172,6 +172,7 @@ int FBXInfoManager::Init(std::string _modelPath)
         bonesInitialPostureMatrix[boneNum] = matrix;
     }
 
+    // OBB
     // vertexListOfOBBì«Ç›çûÇ›èàóù
     int vertexListOfOBBSize = 0;
     unsigned int oBBNameSize = 0;
@@ -234,6 +235,71 @@ int FBXInfoManager::Init(std::string _modelPath)
 
         localPosAndRotOfOBB[tempName].first = tempPos;
         localPosAndRotOfOBB[tempName].second = tempRot;
+    }
+
+    // OCC
+    // vertexListOfOCCì«Ç›çûÇ›èàóù
+    int vertexListOfOCCSize = 0;
+    unsigned int OCCNameSize = 0;
+    //std::vector<meshName> OCCNames;
+    int OCCVerticesNum;
+    int OCCIndiceNum;
+    fread(&vertexListOfOCCSize, sizeof(vertexListOfOCCSize), 1, fp);
+    //OCCNames.resize(vertexListOfOCCSize);
+    vertexListOfOCC.resize(vertexListOfOCCSize);
+    for (int i = 0; i < vertexListOfOCCSize; ++i)
+    {
+        fread(&OCCNameSize, sizeof(OCCNameSize), 1, fp);
+        char* tempName = (char*)calloc(32, sizeof(char));
+        fread(tempName, OCCNameSize, 1, fp);
+        //OCCNames[i].name = tempName;
+        //finalVertexDrawOrder[i].first = tempName;
+
+        fread(&OCCVerticesNum, sizeof(OCCVerticesNum), 1, fp);
+        fread(&OCCIndiceNum, sizeof(OCCIndiceNum), 1, fp);
+
+        std::vector<VertexInfo> tempVertexInfo;
+        FBXVertex tempVertex = {};
+        unsigned int tempIndex = 0;
+        tempVertexInfo.resize(1);
+
+        // vertexì«Ç›çûÇ›
+        for (int j = 0; j < OCCVerticesNum; ++j)
+        {
+            fread(&tempVertex, sizeof(tempVertex), 1, fp);
+            tempVertexInfo[0].vertices.push_back(tempVertex);
+        }
+
+        // indicesì«Ç›çûÇ›
+        for (int j = 0; j < OCCIndiceNum; ++j)
+        {
+            fread(&tempIndex, sizeof(tempIndex), 1, fp);
+            tempVertexInfo[0].indices.push_back(tempIndex);
+        }
+
+        vertexListOfOCC[i].first = tempName;
+        vertexListOfOCC[i].second.vertices = tempVertexInfo[0].vertices;
+        vertexListOfOCC[i].second.indices = tempVertexInfo[0].indices;
+    }
+
+    // localPosAndRotOfOCCì«Ç›çûÇ›
+    int localPosAndRotOfOCCSize = 0;
+    fread(&localPosAndRotOfOCCSize, sizeof(localPosAndRotOfOCCSize), 1, fp);
+    meshNames.clear();
+    meshNames.resize(localPosAndRotOfOCCSize);
+    for (int i = 0; i < meshNames.size(); ++i)
+    {
+        fread(&meshNameSize, sizeof(meshNameSize), 1, fp);
+        char* tempName = (char*)calloc(32, sizeof(char));
+        fread(tempName, meshNameSize, 1, fp);
+        meshNames[i].name = tempName;
+
+        XMFLOAT3 tempPos, tempRot;
+        fread(&tempPos, sizeof(tempPos), 1, fp);
+        fread(&tempRot, sizeof(tempRot), 1, fp);
+
+        localPosAndRotOfOCC[tempName].first = tempPos;
+        localPosAndRotOfOCC[tempName].second = tempRot;
     }
     
     fclose(fp);

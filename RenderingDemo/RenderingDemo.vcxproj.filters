@@ -84,6 +84,9 @@
     <None Include="shader\FXAA.hlsl">
       <Filter>Shader</Filter>
     </None>
+    <None Include="shader\OcclusionCulling.hlsli">
+      <Filter>Shader\Rebuild</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\SunPixel.hlsl">
@@ -157,6 +160,12 @@
     </FxCompile>
     <FxCompile Include="shader\FXAAOutputPixel.hlsl">
       <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\OcclusionCullingPixel.hlsl">
+      <Filter>Shader\Rebuild</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\OcclusionCullingVertex.hlsl">
+      <Filter>Shader\Rebuild</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -293,6 +302,9 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="PreFxaa.cpp">
+      <Filter>ソース ファイル\Rebuild</Filter>
+    </ClCompile>
+    <ClCompile Include="OcclusionCullingManager.cpp">
       <Filter>ソース ファイル\Rebuild</Filter>
     </ClCompile>
   </ItemGroup>
@@ -433,6 +445,9 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="PreFxaa.h">
+      <Filter>ヘッダー ファイル\Rebuild</Filter>
+    </ClInclude>
+    <ClInclude Include="OcclusionCullingManager.h">
       <Filter>ヘッダー ファイル\Rebuild</Filter>
     </ClInclude>
   </ItemGroup>

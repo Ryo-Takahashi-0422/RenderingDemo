@@ -77,7 +77,7 @@ SamplerState smp : register(s0); // No.0 sampler
 
 Texture3D<float4> airmap : register(t0);
 Texture2D<float4> vsmmap : register(t1);
-Texture2D<float4> depthmap : register(t2);
+Texture2D<float> depthmap : register(t2); // occ
 Texture2D<float4> colormap : register(t3);
 Texture2D<float4> normalmap : register(t4);
 Texture2D<float4> specularmap : register(t5);
