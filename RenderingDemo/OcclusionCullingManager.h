@@ -19,9 +19,6 @@ private:
 	// コンピュート用パイプライン
 	ComPtr<ID3D12PipelineState> pipelineState = nullptr;
 
-	std::vector<D3D12_VERTEX_BUFFER_VIEW*> vbViews;
-	std::vector<D3D12_INDEX_BUFFER_VIEW*> ibViews;
-	std::vector<std::vector<std::pair<std::string, VertexInfo>>::iterator> itIndiceFirsts;
 	std::vector<std::vector<std::pair<std::string, VertexInfo>>> indiceContainer;
 
 	// ルートシグネチャの生成

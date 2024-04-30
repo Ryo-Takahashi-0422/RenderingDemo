@@ -920,11 +920,11 @@ void D3DX12Wrapper::Run() {
 		resourceManager[0]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 		resourceManager[1]->SetSceneInfo(shadow->GetShadowPosMatrix(), shadow->GetShadowPosInvMatrix(), shadow->GetShadowView(), camera->GetDummyCameraPos(), sun->GetDirection());
 
-		occManager->SetVPMatrix(resourceManager[0]->GetMappedMatrix()->view, resourceManager[0]->GetMappedMatrix()->proj);
-		occManager->Execution(_cmdList.Get(), _fenceVal, viewPort, rect);
-
 		// キー入力有無を確認してSponza、キャラ、OBBのアフィン変換行列を更新する
 		UpdateMatrix();
+
+		occManager->SetVPMatrix(resourceManager[0]->GetMappedMatrix()->view, resourceManager[0]->GetMappedMatrix()->proj);
+		occManager->Execution(_cmdList.Get(), _fenceVal, viewPort, rect);
 
 		for (int i = 0; i < threadNum; i++)
 		{
@@ -1158,6 +1158,9 @@ void D3DX12Wrapper::UpdateMatrix()
 	resourceManager[0]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
 	resourceManager[1]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
 
+	// resourceManager[0]はsponzaモデルの情報を保持しており、[1]はキャラクターモデルの情報を保持している。
+	// 先に[0]のview行列が計算されるので、[0]にもその結果を反映させることでsponzaが回転操作に合わせてキャラクターと同様に(キャラクター回りをオービット)回転するようになる。
+	// num == 0 && fbxIndex == 1で処理が重複しないようにしている。なお重複しても特に問題はない。
 	if (inputLeft)
 	{
 		resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
@@ -1257,6 +1260,9 @@ void D3DX12Wrapper::CleanMemory()
 	delete preFxaa;
 	preFxaa = nullptr;
 
+	delete occManager;
+	occManager = nullptr;
+
 	for (auto& rm : resourceManager)
 	{
 		delete rm;
@@ -1349,7 +1355,7 @@ void D3DX12Wrapper::LoadContexts()
 	}
 }
 
-void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> cmList*/)
+void D3DX12Wrapper::threadWorkTest(int num)
 {
 	while (num >= 0 && num < threadNum)
 	{
@@ -1432,88 +1438,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			localCmdList->SetGraphicsRootSignature(fBXRootsignature);
 			localCmdList->SetPipelineState(fBXPipeline);
 
-			//// アフィン変換の操作は単一スレッドのみ実行する。複数スレッドで処理すると、その分挙動速度が倍増する・太陽がぶれるなど悪影響が出るため。
-			//if (num == 0)
-			//{
-			//	// キー入力処理。当たり判定処理も含める。
-			//	if (input->CheckKey(DIK_W)) inputW = true;
-			//	if (input->CheckKey(DIK_LEFT)) inputLeft = true;
-			//	if (input->CheckKey(DIK_RIGHT)) inputRight = true;
-			//	if (input->CheckKey(DIK_UP)) inputUp = true;
-
-			//	if (resourceManager[fbxIndex]->GetIsAnimationModel()) // 20240315時点の処理ではresourceManager[1]に限定される。
-			//	{
-			//		// start character with idle animation
-			//		resourceManager[fbxIndex]->MotionUpdate(idleMotionDataNameAndMaxFrame.first, idleMotionDataNameAndMaxFrame.second);					
-			//		charaPos.x = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-			//		charaPos.y = 1.5;
-			//		charaPos.z = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
-
-			//		// W Key
-			//		if (inputW)
-			//		{
-			//			resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			//			XMVECTOR worldVec;
-			//			worldVec.m128_f32[0] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[0];
-			//			worldVec.m128_f32[1] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[1];
-			//			worldVec.m128_f32[2] = resourceManager[fbxIndex]->GetMappedMatrix()->world.r[3].m128_f32[2];
-			//			worldVec.m128_f32[3] = 1;
-
-			//			// 平行移動成分にキャラクターの向きから回転成分を乗算して方向変え。これによる回転移動成分は不要なので、1と0にする。Y軸回転のみ対応している。
-			//			auto moveMatrix = XMMatrixMultiply(XMMatrixTranslation(0, 0, forwardSpeed), connanDirection);
-			//			moveMatrix.r[0].m128_f32[0] = 1;
-			//			moveMatrix.r[0].m128_f32[2] = 0;
-			//			moveMatrix.r[2].m128_f32[0] = 0;
-			//			moveMatrix.r[2].m128_f32[2] = 1;
-			//			worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
-			//			charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-			//			shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
-			//			calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-			//		}
-
-			//		// Left Key
-			//		if (inputLeft)
-			//		{
-			//			connanDirection *= leftSpinMatrix;
-			//			resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-			//			shadow->SetRotationMatrix(connanDirection);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-			//			collisionManager->SetRotation(connanDirection);
-			//			sun->ChangeSceneMatrix(rightSpinMatrix);
-			//			sky->ChangeSceneMatrix(rightSpinMatrix);
-			//			calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-			//		}
-
-			//		// Right Key
-			//		if (inputRight)
-			//		{
-			//			connanDirection *= rightSpinMatrix;
-			//			resourceManager[fbxIndex]->MotionUpdate(walkingMotionDataNameAndMaxFrame.first, walkingMotionDataNameAndMaxFrame.second);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
-			//			shadow->SetRotationMatrix(connanDirection);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-			//			resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
-			//			collisionManager->SetRotation(connanDirection);
-			//			sun->ChangeSceneMatrix(leftSpinMatrix);
-			//			sky->ChangeSceneMatrix(leftSpinMatrix);
-			//			calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
-			//		}
-			//	}
-
-			//	// W Key
-			//	if (inputW && !resourceManager[fbxIndex]->GetIsAnimationModel())
-			//	{
-			//		resourceManager[fbxIndex]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-			//	}
-			//}
-
-			//// ★キャラクターの回転行列を転置したものをGPUへ渡す。DirectXではCPUから受け取った行列は転置してGPUへ転送される。(or GPUで転置される? 詳しくは不明) CPU側で利用している回転行列とGPUで利用する回転行列を合わせることでGPU側での法線回転計算が上手くいっている認識だが...
-			//resourceManager[fbxIndex]->GetMappedMatrix()->charaRot = XMMatrixTranspose(connanDirection);
-
 			//プリミティブ型に関する情報と、入力アセンブラーステージの入力データを記述するデータ順序をバインド
 			localCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST/*D3D_PRIMITIVE_TOPOLOGY_POINTLIST*/);
 
@@ -1567,27 +1491,6 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 			itMATCnt += textureIndexes[fbxIndex][0] * num;
 			for (int i = num; i < indiceContainerSize; i += threadNum)
 			{
-				//localCmdList->SetGraphicsRootDescriptorTable(1, dHandle); // Phong Material Parameters(Numdescriptor : 3)
-				//mappedPhong[i]->diffuse[0] = itPhonsInfo->second.diffuse[0];
-				//mappedPhong[i]->diffuse[1] = itPhonsInfo->second.diffuse[1];
-				//mappedPhong[i]->diffuse[2] = itPhonsInfo->second.diffuse[2];
-				//mappedPhong[i]->ambient[0] = itPhonsInfo->second.ambient[0];
-				//mappedPhong[i]->ambient[1] = itPhonsInfo->second.ambient[1];
-				//mappedPhong[i]->ambient[2] = itPhonsInfo->second.ambient[2];
-				//mappedPhong[i]->emissive[0] = itPhonsInfo->second.emissive[0];
-				//mappedPhong[i]->emissive[1] = itPhonsInfo->second.emissive[1];
-				//mappedPhong[i]->emissive[2] = itPhonsInfo->second.emissive[2];
-				//mappedPhong[i]->bump[0] = itPhonsInfo->second.bump[0];
-				//mappedPhong[i]->bump[1] = itPhonsInfo->second.bump[1];
-				//mappedPhong[i]->bump[2] = itPhonsInfo->second.bump[2];
-				//mappedPhong[i]->specular[0] = itPhonsInfo->second.specular[0];
-				//mappedPhong[i]->specular[1] = itPhonsInfo->second.specular[1];
-				//mappedPhong[i]->specular[2] = itPhonsInfo->second.specular[2];
-				//mappedPhong[i]->reflection[0] = itPhonsInfo->second.reflection[0];
-				//mappedPhong[i]->reflection[1] = itPhonsInfo->second.reflection[1];
-				//mappedPhong[i]->reflection[2] = itPhonsInfo->second.reflection[2];
-				//mappedPhong[i]->transparency = itPhonsInfo->second.transparency;
-
 				if (matTexSize > 0) {
 					//std::string currentMeshName = itMaterialAndTextureName->first;
 					// ★パスは既に転送時に使用済。マテリアル名もcharで1byteに書き換えて比較すればいいのでは？
@@ -1630,34 +1533,16 @@ void D3DX12Wrapper::threadWorkTest(int num/*, ComPtr<ID3D12GraphicsCommandList> 
 				itMATCnt += textureIndexes[fbxIndex][i + 1];
 				textureTableStartIndex = texStartIndex; // init
 			}
-
-			// resourceManager[0]はsponzaモデルの情報を保持しており、[1]はキャラクターモデルの情報を保持している。
-			// 先に[0]のview行列が計算されるので、[0]にもその結果を反映させることでsponzaが回転操作に合わせてキャラクターと同様に(キャラクター回りをオービット)回転するようになる。
-			// num == 0 && fbxIndex == 1で処理が重複しないようにしている。なお重複しても特に問題はない。
-			//if (inputLeft)
-			//{
-			//	resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-
-			//}
-			//if (inputRight)
-			//{
-			//	resourceManager[0]->GetMappedMatrix()->view = resourceManager[1]->GetMappedMatrix()->view;
-			//}
 		}
 
 		bool colliderDraw = settingImgui->GetCollisionBoxChanged();
 		// コライダー描画 thread1(num=0)でキャラクタースフィア、thread2でOBBを描画する
 		if (num == 0)
 		{
-			//auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
-			//collisionManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
-			//collisionManager->SetCharaPos(charaPos);
 			collisionManager->SetDraw(colliderDraw, localCmdList.Get());
 		}
 		else
 		{
-			//auto mappedMatrix = resourceManager[0]->GetMappedMatrix();
-			//oBBManager->SetMatrix(mappedMatrix->world, mappedMatrix->view, mappedMatrix->proj);
 			oBBManager->SetDraw(colliderDraw, localCmdList.Get());
 		}
 

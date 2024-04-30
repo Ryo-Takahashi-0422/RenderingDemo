@@ -16,8 +16,8 @@ OcclusionCullingManager::~OcclusionCullingManager()
     matrixResource->Unmap(0, nullptr);
     mappedMatrix = nullptr;
 
-    vbViews.clear();
-    ibViews.clear();
+    mappedVertPos = nullptr;
+    mappedIdx = nullptr;
 }
 
 void OcclusionCullingManager::Init()
