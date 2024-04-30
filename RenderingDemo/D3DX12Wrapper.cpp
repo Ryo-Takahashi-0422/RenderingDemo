@@ -324,6 +324,9 @@ bool D3DX12Wrapper::PipelineInit(){
 bool D3DX12Wrapper::ResourceInit() {
 	//●リソース初期化
 
+	auto initialWidth = prepareRenderingWindow->GetWindowWidth();
+	auto initialHeight = prepareRenderingWindow->GetWindowHeight();
+
 	// 端末毎のモデルパスを取得して格納する
 	auto path = Utility::GetModelFilepath();
 	auto path_Sponza = path + "\\Sponza.bin";
@@ -345,7 +348,7 @@ bool D3DX12Wrapper::ResourceInit() {
 
 		if (i == 0)
 		{
-			occManager = new OcclusionCullingManager(_dev, &fbxInfoManager, 1024, 1024);
+			occManager = new OcclusionCullingManager(_dev, &fbxInfoManager, initialWidth, initialHeight);
 		}
 		
 		// FBX resource creation
@@ -469,8 +472,7 @@ bool D3DX12Wrapper::ResourceInit() {
 //	DirectXTKInit();
 //	
 
-	auto initialWidth = prepareRenderingWindow->GetWindowWidth();
-	auto initialHeight = prepareRenderingWindow->GetWindowHeight();
+
 
 	for (auto& reManager : resourceManager)
 	{
@@ -553,9 +555,9 @@ bool D3DX12Wrapper::ResourceInit() {
 	// airのブラー結果をセット
 	//resourceManager[0]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
 	//resourceManager[1]->SetVSMResourceAndCreateView(airBlur->GetBlurResource());
-	// ブラーしたシャドウマップをセット
-	//resourceManager[0]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
-	//resourceManager[1]->SetShadowResourceAndCreateView(/*shadow->GetShadowMapResource()*/comBlur->GetBlurTextureResource());
+	// オクルージョンカリング用のデプスマップをセット
+	resourceManager[0]->SetShadowResourceAndCreateView(occManager->GetDepthMapResource());
+	resourceManager[1]->SetShadowResourceAndCreateView(occManager->GetDepthMapResource());
 	// 平行投影ビューを利用したvsmで影を描画する場合に利用する行列をsunより取得する
 	resourceManager[0]->SetProjMatrix(sun->GetProjMatrix());
 	resourceManager[1]->SetProjMatrix(sun->GetProjMatrix());
@@ -1112,7 +1114,8 @@ void D3DX12Wrapper::UpdateMatrix()
 				worldVec = XMVector4Transform(worldVec, moveMatrix); // 符号注意
 				charaPos = collisionManager->OBBCollisionCheckAndTransration(forwardSpeed, connanDirection, fbxIndex, worldVec, charaPos);
 				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				resourceManager[0]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
+				resourceManager[1]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
 				shadow->SetMoveMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->world);
 				calculateSSAO->SetViewRotMatrix(resourceManager[fbxIndex]->GetMappedMatrix()->view, XMMatrixInverse(nullptr, connanDirection));
 			}
@@ -1125,7 +1128,8 @@ void D3DX12Wrapper::UpdateMatrix()
 				resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 				shadow->SetRotationMatrix(connanDirection);
 				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				resourceManager[0]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
+				resourceManager[1]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
 				collisionManager->SetRotation(connanDirection);
 				sun->ChangeSceneMatrix(rightSpinMatrix);
 				sky->ChangeSceneMatrix(rightSpinMatrix);
@@ -1140,7 +1144,8 @@ void D3DX12Wrapper::UpdateMatrix()
 				resourceManager[fbxIndex]->GetMappedMatrix()->rotation = connanDirection;
 				shadow->SetRotationMatrix(connanDirection);
 				resourceManager[fbxIndex]->GetMappedMatrix()->view = camera->CalculateOribitView(charaPos, connanDirection);
-				resourceManager[fbxIndex]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj));
+				resourceManager[0]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
+				resourceManager[1]->GetMappedMatrix()->invProj = XMMatrixInverse(nullptr, resourceManager[fbxIndex]->GetMappedMatrix()->proj);
 				collisionManager->SetRotation(connanDirection);
 				sun->ChangeSceneMatrix(leftSpinMatrix);
 				sky->ChangeSceneMatrix(leftSpinMatrix);
@@ -1465,7 +1470,7 @@ void D3DX12Wrapper::threadWorkTest(int num)
 			++textureindex;
 			dHandle.ptr += cbv_srv_Size;
 
-			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // depthmap (ptr num11)
+			localCmdList->SetGraphicsRootDescriptorTable(textureindex, dHandle); // occ depth map (ptr num11)
 			++textureindex;
 			dHandle.ptr += cbv_srv_Size * 3; // シャドウマップおよび法線画像3個分の領域は使わないので飛ばす。
 

@@ -95,7 +95,7 @@ public:
 	void SetSunPos(XMFLOAT3 _sunPos);
 	void SetMoveMatrix(XMMATRIX charaWorldMatrix);
 
-	ComPtr<ID3D12Resource> GetShadowMapResource() { return depthBuff; };
+	ComPtr<ID3D12Resource> GetDepthMapResource() { return depthBuff; };
 	ComPtr<ID3D12Resource> GetShadowRenderingResource() { return renderingResource; };
 	XMMATRIX GetShadowPosMatrix() { return mappedMatrix->world; };
 	XMMATRIX GetShadowPosInvMatrix() { return XMMatrixInverse(nullptr, mappedMatrix->world); };
