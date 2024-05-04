@@ -5,17 +5,6 @@ bool testLightInRange(const in float lightDistance, const in float cutoffDistanc
     return any(float2(cutoffDistance == 0.0, lightDistance < cutoffDistance));
 }
 
-float punctualLightIntensityToIrradianceFactor(const in float lightDistance, const in float cutoffDistance)
-{
-    return saturate(-lightDistance / cutoffDistance + 1.0);
-}
-
-void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
-{
-    directLight.color = directionalLight.color;
-    directLight.direction = directionalLight.direction;
-}
-
 void getPointDirectLightIrradiance(const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight)
 {
     float3 L = pointLight.position - geometry.position;
@@ -25,7 +14,7 @@ void getPointDirectLightIrradiance(const in PointLight pointLight, const in Geom
     if (testLightInRange(lightDistance, pointLight.distance))
     {
         directLight.color = float3(1, 1, 1);
-        directLight.color *= punctualLightIntensityToIrradianceFactor(lightDistance, pointLight.distance);
+        directLight.color *= saturate(-lightDistance / pointLight.distance + 1.0);
     }
     else
     {
@@ -33,17 +22,17 @@ void getPointDirectLightIrradiance(const in PointLight pointLight, const in Geom
     }
 }
 
-float D_GGX(float a, float dotNH)
+float D_GGX(float a2, float dotNH)
 {
-    float a2 = a * a;
+    //float a2 = a * a;
     float dotNH2 = dotNH * dotNH;
     float d = dotNH2 * (a2 - 1.0) + 1.0;
     return a2 / (PI * d * d);
 }
 
-float G_Smith_Schlick_GGX(float a, float dotNV, float dotNL)
+float G_Smith_Schlick_GGX(float a2, float dotNV, float dotNL)
 {
-    float k = a * a * 0.5 + EPSILON;
+    float k = a2 * 0.5 + EPSILON;
     float gl = dotNL / (dotNL * (1.0 - k) + k);
     float gv = dotNV / (dotNV * (1.0 - k) + k);
     return gl * gv;
@@ -63,9 +52,10 @@ float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContex
     float dotNH = saturate(dot(N, H));
 
     float a = roughnessFactor * roughnessFactor;
+    float a2 = a * a;
 
-    float D = D_GGX(a, dotNH);
-    float G = G_Smith_Schlick_GGX(a, dotNV, dotNL);
+    float D = D_GGX(a2, dotNH);
+    float G = G_Smith_Schlick_GGX(a2, dotNV, dotNL);
     return (0.5f * (G * D)) / (4.0 * dotNL * dotNV + EPSILON);
 }
 
@@ -93,20 +83,24 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     input.uv.y = abs(input.uv.y) - uvY;
     
     // svPos.zはdepth値。 スクリーンスペースuv
-    //float w, h, d;
-    //depthmap.GetDimensions(0,w,h,d);
-    //float2 occuv = float2(input.svpos.x / w, input.svpos.y / h);
-    //float occDepth = depthmap.Sample(smp, occuv);
-    //float vPos = input.svpos.z;
+    float w, h, d;
+    depthmap.GetDimensions(0, w, h, d);
+    float2 occuv = float2(input.svpos.x / w, input.svpos.y / h);
+    float occDepth = depthmap.Sample(smp, occuv);
+    float vPos = input.svpos.z;
 
-    //if (vPos - OCC_BIAS >= occDepth)
-    //{
-    //    discard;
-    //}
+    if (vPos - OCC_BIAS >= occDepth)
+    {
+        discard;
+    }
     
     float4 viewSpacePos = input.viewSpacePos;
     float lod = viewSpacePos.z / 8.0f;
-    lod = clamp(lod, 0.0f, 6.0f);
+    //lod = clamp(lod, 0.0f, 6.0f);
+    if(lod > 6.0f)
+    {
+        lod = 6.0f;
+    }
     lod = trunc(lod);
     
     float4 col;
@@ -129,7 +123,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     GeometricContext geometry;
     geometry.position = input.wPos;
-    geometry.normal = normalize(input.oriWorldNorm);
+    geometry.normal = input.oriWorldNorm;
     geometry.viewDir = normalize(input.viewPos);
     
     albedo = col.xyz;
@@ -158,7 +152,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     IncidentLight directLight;
        
     // directional light
-    getDirectionalDirectLightIrradiance(input.directionalLight, geometry, directLight);
+    directLight.color = input.directionalLight.color;
+    directLight.direction = input.directionalLight.direction;
     RE_Direct(directLight, geometry, material, reflectDirectLight);
     
     // point light
@@ -213,9 +208,9 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     specularNormal = normalize(specularNormal);
        
     float diff, spec, spec4;
-    float3 eye = normalize(input.vEyeDirection);
+    float3 eye = input.vEyeDirection;
     float3 ref;
-    float3 nLightDir = normalize(input.vLightDirection);
+    float3 nLightDir = input.vLightDirection;
     if(input.isChara)
     {
         reflectDirectLight.directSpecular = 0.0f;
