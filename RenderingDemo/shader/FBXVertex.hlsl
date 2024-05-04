@@ -8,10 +8,8 @@ Output FBXVS
     uint3 boneno2 : BONE_NO_ThreeToFive,
     float3 boneweight1 : WEIGHT_ZeroToTwo,
     float3 boneweight2 : WEIGHT_ThreeToFive,
-    //float3 tangent : TANGENT,
-    //float3 binormal : BINORMAL,
-    //float3 vnormal : NORMAL,
-uint index : SV_VertexID)
+    uint index : SV_VertexID
+)
 {
     Output output; // ピクセルシェーダーに渡す値
     
@@ -19,13 +17,7 @@ uint index : SV_VertexID)
     matrix bm2 = bones[boneno1[1]] * boneweight1[1];
     matrix bm3 = bones[boneno1[2]] * boneweight1[2];
     
-    // モデル不使用
-    //matrix bm4 = bones[boneno2[0]] * boneweight2[0];
-    //matrix bm5 = bones[boneno2[1]] * boneweight2[1];
-    //matrix bm6 = bones[boneno2[2]] * boneweight2[2];
-    
-    matrix bm = bm1 + bm2 + bm3/* + bm4 + bm5 + bm6*/;
-    //bool moveObj = true;
+    matrix bm = bm1 + bm2 + bm3;
     
     output.adjust = 200.0f;
     float3 lightPos;
@@ -37,45 +29,20 @@ uint index : SV_VertexID)
     
     // 壁の法線値が-1になりssaoが計算出来くなる問題への対処
     float4 m_normal = norm;
-    float4 oriNorm = norm;
-    
-    //m_normal = normalize(m_normal);
-
+ 
     float3 t_normal;
     if (boneweight1[0] == 0 && boneweight2[2] == 0 && sponza)
     {
         m_normal.x *= sign(m_normal.x);
         m_normal.z *= sign(m_normal.z);
-        
-        //moveObj = false;
-        //bm[0][0] = 1;
-        //bm[1][1] = 1;
-        //bm[2][2] = 1;
-        //bm[3][3] = 1;
+
         output.worldPosition = pos;
         
         output.lvPos = mul(mul(oProj, shadowView), output.worldPosition);
         
-        // 平行投影に合わせてライトの位置を頂点の位置の真上に移動した状態で、ライト→頂点への距離を算出している。
-        //float3 lightPos = -65 * sunDIr;
-        //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
-        //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
-        //output.truePos = output.lvPos;
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
-        //float jj = output.worldPosition.y + 5.0f;
-        //float k = output.worldPosition.y / jj;
-        //lightPos /= k;
-        output.isEnhanceShadow = false;
-        //if (index <= 25714 || (49897 <= index && index <= 77462) || (77496 <= index && index <= 91841) || (229613 <= index && index <= 233693))
-        //{
-        //    float newY = output.worldPosition.y + 5.0f;
-        //    float div = lightPos.y / newY;
-        //    lightPos /= div;
-        //    output.isEnhanceShadow = true;
-        //}
-        output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
-        //output.lvDepth *= 65.01f / (lightPos.y + 0.01f);
         output.isChara = false;
+        output.isEnhanceShadow = false;
 
         t_normal = normalize(mul(world, m_normal));
     }
@@ -83,36 +50,20 @@ uint index : SV_VertexID)
     {
         pos = mul(bm, pos);
         pos = mul(rotation, pos);
-        output.worldPosition = mul(shadowPosMatrix, pos);
-        
-        output.lvPos = mul(mul(mul(oProj, shadowView), shadowPosMatrix), pos);
-        
-        // 平行投影に合わせてライトの位置を頂点の位置の真上に移動した状態で、ライト→頂点への距離を算出している。
-        //float3 lightPos = -65 * sunDIr;
-        //lightPos.x += pos.x/* * lightPos.y / 65.0f*/;
-        //lightPos.z += pos.z/* * lightPos.y / 65.0f*/;
-
-        // キャラクターのシャドウマップ上の描画は2通りある。通常のライト位置および高さを1/n倍したもので、後者はsponzaの影描画で利用する。前者はキャラクターの影描画で利用する。
-        //output.truePos = output.lvPos;        
+        output.worldPosition = mul(shadowPosMatrix, pos);        
+        output.lvPos = mul(mul(mul(oProj, shadowView), shadowPosMatrix), pos);        
         output.trueDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
-        //output.trueDepth *= 65.01f / (lightPos.y + 0.01f);
-        
+     
         float fixY = output.worldPosition.y + 5.0f;
         float enhance = output.worldPosition.y / fixY;
         lightPos /= enhance;
-        output.lvDepth = length(output.worldPosition.xyz - lightPos) / output.adjust;
-        //output.lvDepth *= 65 / (lightPos.y + 0.01f);
-        output.isEnhanceShadow = true;
+
         output.isChara = true;
-        
-        //bm = transpose(bm);
+        output.isEnhanceShadow = true;
+
         bm = mul(rotation, bm);
         float4 rotatedNorm = mul(bm, m_normal);
         rotatedNorm = normalize(rotatedNorm);
-        //rotatedNorm = mul(bm, rotatedNorm);
-        //bmTan = mul(rot, bmTan);
-        //bmTan = transpose(bmTan);
-
         t_normal = normalize(rotatedNorm).xyz;
     }
 
@@ -190,36 +141,31 @@ uint index : SV_VertexID)
     }
     
     output.svpos = mul(mul(mul(proj, view), world), pos)/*mul(lightCamera, pos)*/;
-    //norm.w = 0; // worldに平行移動成分が含まれている場合、法線が並行移動する。(この時モデルは暗くなる。なぜ？？)
-    //output.norm = mul(world, m_normal);
-    
-
-
+  
     // タイリング対応しているuvについての処理は避ける。例えば負を正に変換する処理をすることで、テクスチャが斜めにゆがむ
     output.uv = uv;
     
     output.screenPosition = output.svpos;
-    //output.worldPosition = pos; //mul(shadowPosMatrix, pos); // worldは単位行列なので乗算しない
-    
-    //output.ray = normalize(pos.xyz - eyePos);
-
-    //float3 rotEyepos = mul(rotation, eyePos);
-    //float3 rotPos = mul(rotation, pos);
-    //output.viewPos = mul(mul(view, world), rotEyepos).xyz - mul(mul(view, world), rotPos).xyz;
-    //output.viewPos = mul(-rotation, mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz);
     
     float4 eye = float4(eyePos, 1);
     float4 vEye = mul(view, eye);
     
     output.wPos = m_wPos;
     
-    output.viewPos = /*-eye */eye - output.wPos;
+    output.viewPos = eye - output.wPos;
     
-    output.oriWorldNorm = normalize(mul(world, oriNorm).xyz);
-    //output.viewPos.z *= sign(output.viewPos.z);
-    //output.viewPos = mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz;
+    output.oriWorldNorm = normalize(mul(world, norm).xyz);
     
-    //output.viewPos = mul(mul(view, world), eyePos).xyz - mul(mul(view, world), pos).xyz;
+    output.directionalLight.color = float3(1, 1, 1);
+    output.directionalLight.direction = float3(sunDIr.x, -sunDIr.y, sunDIr.z);
+    
+    output.pointLights[0].position = plPos1;
+    output.pointLights[0].distance = 100.0f;
+
+    output.pointLights[1].position = plPos2;
+    output.pointLights[1].distance = 100.0f;
+    
+    output.weaken = -sunDIr.y;
     
     return output;
 }

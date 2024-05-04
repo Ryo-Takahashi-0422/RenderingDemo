@@ -1,38 +1,3 @@
-struct Output
-{
-    float4 svpos : SV_POSITION; // システム用頂点座標
-    float4 pos : POSITON; // 頂点座標
-    //float4 norm : NORMAL0; // 法線ベクトル
-    //float4 vnormal : NORMAL1; // ビュー変換後の法線ベクトル
-    float2 uv : TEXCOORD; // uv値
-    //float4 lightTangentDirection : LightTangentDirection;
-    //float3 tangent : TANGENT;
-    //float3 biNormal : BINORMAL;
-    //float3 normal : NORMAL2;
-    
-    float4 screenPosition : SCREEN_POSITIO;
-    float4 worldPosition : WORLD_POSITION;
-    float4 lvPos : LIGHTVIEW_POSITION;
-    bool isEnhanceShadow : ENHANCESHADOW;
-    bool isChara : chara;
-    //float3 truePos : TRUE_POSITION;
-    float lvDepth : LIGHTVIEW_DEPTH;
-    float trueDepth : TRUE_DEPTH;
-    float3 light : LIGHT;
-    float adjust : ADJUST;
-    //float index : INDEX;
-    //float4 rotatedNorm : ROTATED_NORMAL;
-    //float3 ray : RAY;
-    float4 viewPos : VIEWPOSITION;
-    float4 viewSpacePos : VIEWSPACEPOS;
-    float4 wPos : WPOS;
-    float3 oriWorldNorm : ORI_WORLD_NORMAL;
-    
-    float3 vEyeDirection : NORMAL_ED;
-    float3 vLightDirection : NORAMAL_LD;
-    float3 sLightDirection : SPONZA_SPECULAR_LD;
-};
-
 struct PixelOutput
 {
     float4 col : SV_TARGET0; // model color rendering
@@ -47,7 +12,7 @@ cbuffer SceneBuffer : register(b0) // 変換行列
     matrix proj; // projection matrix
     matrix oProj;
     matrix bones[256]; // pmd bone matrix // index number is equal with bones index number
-    matrix invProj;
+    //matrix invProj;
     matrix rotation;
     matrix shadowPosMatrix;
     matrix shadowPosInvMatrix;
@@ -90,6 +55,7 @@ Texture2D<float> transparentmap : register(t7);
 #define PI2 6.28/*318530718*/
 #define EPSILON 1e-3/*6*/
 #define LIGHT_MAX 2
+#define OCC_BIAS 0.008
 
 struct IncidentLight
 {
@@ -130,4 +96,37 @@ struct DirectionalLight
 {
     float3 direction;
     float3 color;
+};
+
+struct Output
+{
+    float4 svpos : SV_POSITION; // システム用頂点座標
+    float4 pos : POSITON; // 頂点座標
+
+    float2 uv : TEXCOORD; // uv値
+    
+    float4 screenPosition : SCREEN_POSITION;
+    float4 worldPosition : WORLD_POSITION;
+    float4 lvPos : LIGHTVIEW_POSITION;
+
+    bool isChara : chara;
+
+    float trueDepth : TRUE_DEPTH;
+    float3 light : LIGHT;
+    float adjust : ADJUST;
+
+    float4 viewPos : VIEWPOSITION;
+    float4 viewSpacePos : VIEWSPACEPOS;
+    float4 wPos : WPOS;
+    float3 oriWorldNorm : ORI_WORLD_NORMAL;
+    
+    float3 vEyeDirection : NORMAL_ED;
+    float3 vLightDirection : NORAMAL_LD;
+    float3 sLightDirection : SPONZA_SPECULAR_LD;
+    
+    DirectionalLight directionalLight : D_LIGHT;
+    PointLight pointLights[LIGHT_MAX] : P_LIGHT;
+    float weaken : WEAK_PARAM;
+    
+    bool isEnhanceShadow : ENHANCESHADOW;
 };
