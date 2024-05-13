@@ -5,23 +5,6 @@ bool testLightInRange(const in float lightDistance, const in float cutoffDistanc
     return any(float2(cutoffDistance == 0.0, lightDistance < cutoffDistance));
 }
 
-float punctualLightIntensityToIrradianceFactor(const in float lightDistance, const in float cutoffDistance/*, const in float decayExponent*/)
-{
-    //if (decayExponent > 0.0)
-    //{
-    return /*pow(*/saturate(-lightDistance / cutoffDistance + 1.0)/*, decayExponent)*/;
-    //}
-  
-    //return 1.0;
-}
-
-void getDirectionalDirectLightIrradiance(const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight)
-{
-    directLight.color = directionalLight.color;
-    directLight.direction = directionalLight.direction;
-    //directLight.visible = true;
-}
-
 void getPointDirectLightIrradiance(const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight)
 {
     float3 L = pointLight.position - geometry.position;
@@ -31,64 +14,49 @@ void getPointDirectLightIrradiance(const in PointLight pointLight, const in Geom
     if (testLightInRange(lightDistance, pointLight.distance))
     {
         directLight.color = float3(1, 1, 1);
-        directLight.color *= punctualLightIntensityToIrradianceFactor(lightDistance, pointLight.distance/*, pointLight.decay*/);
-        //directLight.visible = true;
+        directLight.color *= saturate(-lightDistance / pointLight.distance + 1.0);
     }
     else
     {
         directLight.color = float3(0,0,0);
-        //directLight.visible = false;
     }
 }
 
-// BRDFs
-// Normalized Lambert
-//float3 DiffuseBRDF(float3 diffuseColor)
-//{
-//    return diffuseColor / PI;
-//}
-
-//float3 F_Schlick(float3 specularColor, float3 H, float3 V)
-//{
-//    return specularColor + (1.0 - specularColor) * (1.0 - saturate(dot(V, H))) /*pow(1.0 - saturate(dot(V, H)), 5.0))*/;
-//}
-
-float D_GGX(float a, float dotNH)
+float D_GGX(float a2, float dotNH)
 {
-    float a2 = a * a;
+    //float a2 = a * a;
     float dotNH2 = dotNH * dotNH;
     float d = dotNH2 * (a2 - 1.0) + 1.0;
     return a2 / (PI * d * d);
 }
 
-float G_Smith_Schlick_GGX(float a, float dotNV, float dotNL)
+float G_Smith_Schlick_GGX(float a2, float dotNV, float dotNL)
 {
-    float k = a * a * 0.5 + EPSILON;
+    float k = a2 * 0.5 + EPSILON;
     float gl = dotNL / (dotNL * (1.0 - k) + k);
     float gv = dotNV / (dotNV * (1.0 - k) + k);
     return gl * gv;
 }
 
 // Cook-Torrance
-float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, /*float3 specularColor, */float roughnessFactor)
+float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, /*float3 specularColor, */float roughnessFactor, float _dotNL)
 {  
     float3 N = geometry.normal;
     float3 V = geometry.viewDir;
     float3 L = directLight.direction;
   
-    float dotNL = saturate(dot(N, L));
+    float dotNL = _dotNL;
     float dotNV = saturate(dot(N, V));
     float3 H = normalize(L + V);
 
     float dotNH = saturate(dot(N, H));
-    //float dotVH = saturate(dot(V, H));
-    //float dotLV = saturate(dot(L, V));
-    float a = roughnessFactor * roughnessFactor;
 
-    float D = D_GGX(a, dotNH);
-    float G = G_Smith_Schlick_GGX(a, dotNV, dotNL);
-    //float3 F = F_Schlick(specularColor, V, H);
-    return (/*F*/0.5f * (G * D)) / (4.0 * dotNL * dotNV + EPSILON);
+    float a = roughnessFactor * roughnessFactor;
+    float a2 = a * a;
+
+    float D = D_GGX(a2, dotNH);
+    float G = G_Smith_Schlick_GGX(a2, dotNV, dotNL);
+    return (0.5f * (G * D)) / (4.0 * dotNL * dotNV + EPSILON);
 }
 
 // RenderEquations(RE)
@@ -100,9 +68,7 @@ void RE_Direct(const in IncidentLight directLight, const in GeometricContext geo
   
   // punctual light
     irradiance *= PI;
-  
-    //reflectedLight.directDiffuse += irradiance * DiffuseBRDF(material.diffuseColor);
-    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, /*material.specularColor, */material.specularRoughness);
+    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, material.specularRoughness, dotNL);
 }
 
 PixelOutput FBXPS(Output input) : SV_TARGET
@@ -118,18 +84,23 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     
     // svPos.zはdepth値。 スクリーンスペースuv
     float w, h, d;
-    depthmap.GetDimensions(0,w,h,d);
+    depthmap.GetDimensions(0, w, h, d);
     float2 occuv = float2(input.svpos.x / w, input.svpos.y / h);
     float occDepth = depthmap.Sample(smp, occuv);
     float vPos = input.svpos.z;
-    if (vPos - 0.008f >= occDepth)
+
+    if (vPos - OCC_BIAS >= occDepth)
     {
         discard;
     }
     
     float4 viewSpacePos = input.viewSpacePos;
     float lod = viewSpacePos.z / 8.0f;
-    lod = clamp(lod, 0.0f, 6.0f);
+    //lod = clamp(lod, 0.0f, 6.0f);
+    if(lod > 6.0f)
+    {
+        lod = 6.0f;
+    }
     lod = trunc(lod);
     
     float4 col;
@@ -147,19 +118,16 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         discard; // アルファ値が0なら透過させる
 
     PixelOutput result;
-    //float metallic;
     float roughness;
     float3 albedo;
     
     GeometricContext geometry;
     geometry.position = input.wPos;
-    geometry.normal = normalize(input.oriWorldNorm);
+    geometry.normal = input.oriWorldNorm;
     geometry.viewDir = normalize(input.viewPos);
-  
-
     
     albedo = col.xyz;
-    //metallic = 0.0f;
+
     float3 speclurColor;
     if (lod < lodLevel)
     {
@@ -172,8 +140,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     roughness = speclurColor.x;
     
     Material material;
-    //material.diffuseColor = lerp(albedo, float3(0,0,0), metallic);
-    //material.specularColor = /*lerp(*/float3(0.04f, 0.04f, 0.04f)/*, albedo, metallic)*/;
+
     material.specularRoughness = roughness;
   
   // Lighting  
@@ -181,46 +148,27 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     reflectDirectLight.directSpecular = float3(0, 0, 0);
     ReflectedLight reflectPointLight;
     reflectPointLight.directSpecular = float3(0, 0, 0);
-    //float3 emissive = float3(0,0,0);
-    //float opacity = 1.0;
   
     IncidentLight directLight;
-    
-    PointLight pointLights[LIGHT_MAX];
-    //pointLights[0].color = float3(1, 1, 1);
-    pointLights[0].position = /*float3(25.0f, 15.0f, 0.0f)*/plPos1;
-    pointLights[0].distance = 100.0f;
-    //pointLights[0].decay = 1.0f;
-    
-    //pointLights[1].color = float3(1, 1, 1);
-    pointLights[1].position = /*float3(-25.0f, 15.0f, 0.0f)*/plPos2;
-    pointLights[1].distance = 100.0f;
-    //pointLights[1].decay = 1.0f;
-   
-    DirectionalLight directionalLight;
-    directionalLight.color = float3(1, 1, 1);
-    directionalLight.direction = float3(sunDIr.x, -sunDIr.y, sunDIr.z);
-    
+       
     // directional light
-    getDirectionalDirectLightIrradiance(directionalLight, geometry, directLight);
+    directLight.color = input.directionalLight.color;
+    directLight.direction = input.directionalLight.direction;
     RE_Direct(directLight, geometry, material, reflectDirectLight);
+    
     // point light
     for (int i = 0; i < LIGHT_MAX; ++i)
     {
-        getPointDirectLightIrradiance(pointLights[i], geometry, directLight);
+        getPointDirectLightIrradiance(input.pointLights[i], geometry, directLight);
         RE_Direct(directLight, geometry, material, reflectPointLight);
     }
     
     reflectPointLight.directSpecular /= 2.0f;
-          
-    float4 shadowPos = mul(mul(proj, shadowView), input.worldPosition);
-    shadowPos.xyz /= shadowPos.w;
+
     float2 shadowUV = 0.5 + float2(0.5, -0.5) * (input.lvPos.xy / input.lvPos.w);
     float4 vsmSampleGrad = vsmmap. SampleGrad(smp, shadowUV, dx, dy);
-    float2 shadowValue = vsmSampleGrad.xy;
-
-    float lz = input.lvDepth;
-    lz = length(input.worldPosition - input.light) / input.adjust;
+    float2 shadowValue = vsmSampleGrad.xy;  
+    float lz = length(input.worldPosition.xyz - input.light) / input.adjust;
     
     if (input.isEnhanceShadow)
     {
@@ -228,12 +176,7 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         shadowValue = float2(vsmSampleGrad.z, vsmSampleGrad.z * vsmSampleGrad.z);
     }
     
-    //float3 reflection = normalize(reflect(input.rotatedNorm.xyz, sunDIr));
-    //float3 speclur = dot(reflection, -input.ray);
-    //speclur = saturate(speclur);
-    //speclur *= speclurColor;
-    ////speclur = pow(speclur, 2);
-    //speclur *= -sunDIr.y;
+
     float bright = 1.0f;
     result.col = col;
     
@@ -265,10 +208,9 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     specularNormal = normalize(specularNormal);
        
     float diff, spec, spec4;
-    float3 eye = normalize(input.vEyeDirection);
+    float3 eye = input.vEyeDirection;
     float3 ref;
-    //float3 halfLE = normalize(eye);    
-    float3 nLightDir = normalize(input.vLightDirection);
+    float3 nLightDir = input.vLightDirection;
     if(input.isChara)
     {
         reflectDirectLight.directSpecular = 0.0f;
@@ -330,57 +272,19 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     spec4 *= 0.05f;
     result.col *= diff;
-        
-    // sponza壁のポール落ち影がキャラクターを貫通するのが目立つ問題への対策。キャラクターの法線と太陽ベクトルとの内積からキャラクター背面がポールからの落ち影を受けるかどうかを判定する。
-    // シャドウマップがポールの値かどうかはvsmのアルファ値に格納したbooleanで判定している。
-    //if (rotatedNormDot > 0)
-    //{
-    //    rotatedNormDot = 0;
-    //}
-    //rotatedNormDot *= -1;
-    
-    // 処理軽減のためコメントアウト
-    // キャラクターのz座標が範囲以上、以下の場合かつ太陽のx位置によりキャラクターがポールから受けるシャドウマップの参照先がポールの場合、sponzaの建物内にいるキャラクターに影色より明るい帯が発生する
-    // これは後のポール参照時のshadowcolorを明るくする処理の結果がsponza屋内にキャラクターがいるときの影色より明るくなるからで、ポールをisSpeciaで特別扱いして処理を分ける設計ではキャラクターのz座標を
-    // 特定の位置で調節してごまかすしかない。根本的に影が貫通しない処理を再設計する必要がある。
-    //bool isSpecial = vsmSampleGrad.w;
-
-    //if (charaPos.z < -6.5f || charaPos.z > 6.4f)
-    //{
-    //    isSpecial = false;
-    //}
-    
-
-    
+            
     float litFactor;
     if (lz  > shadowValue.x)
     {
-        //float depth_sq = shadowValue.y;
-        //float var = min(max(depth_sq - shadowValue.y, 0.0001f), 1.0f);
         float var = 0.0001f;
         float md = lz - shadowValue.x;
         litFactor = var / (var + md * md);
         float3 shadowColor = result.col.xyz * 0.4f * bright;
-        
-        // 処理軽減のためコメントアウト
-        //// sponza壁のポール落ち影がキャラクターの背面に貫通する場合、影色を本来の色に近づける。本来の色より明るくならないようにminで調整している。
-        //if (input.isChara && isSpecial)
-        //{
-        //    shadowColor *= (4.0f /*+ rotatedNormDot * rotatedNormDot*/) * max(-sunDIr.y, 0.85f);
-        //    shadowColor.x = min(shadowColor.x, result.col.x);
-        //    shadowColor.y = min(shadowColor.y, result.col.y);
-        //    shadowColor.z = min(shadowColor.z, result.col.z);
-        //}
+
         result.col.xyz = lerp(shadowColor, result.col.xyz, litFactor);
-        //reflectedLight.directSpecular *= litFactor;
-        //speclur *= litFactor;
-        //spec4 *= litFactor;
         reflectDirectLight.directSpecular *= litFactor;
     }
-    
 
-        
-    //float depth = depthmap.SampleGrad(smp, shadowUV);
     float shadowFactor = 1;
     
     if (-sunDIr.y <= 0.7f)
@@ -389,10 +293,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
     }
     
     // 色情報をレンダーターゲット1に格納する
-    float weaken = -sunDIr.y;
-    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + /*float4(speclur, 0)*/spec4 * weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * weaken;
+    //float weaken = -sunDIr.y;
+    result.col = result.col * shadowFactor + float4(inScatter, 0) * airDraw + spec4 * input.weaken + result.col * float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0) * input.weaken;
     //result.col = spec4;
-    //result.col = float4(diff,diff,diff,0);
-    //result.col = /*result.col * */float4((reflectDirectLight.directSpecular + reflectPointLight.directSpecular) * brdfDraw, 0);
     return result;
 }
