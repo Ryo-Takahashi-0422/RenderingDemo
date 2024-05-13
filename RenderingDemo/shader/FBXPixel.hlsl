@@ -39,13 +39,13 @@ float G_Smith_Schlick_GGX(float a2, float dotNV, float dotNL)
 }
 
 // Cook-Torrance
-float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, /*float3 specularColor, */float roughnessFactor)
+float3 SpecularBRDF(const in IncidentLight directLight, const in GeometricContext geometry, /*float3 specularColor, */float roughnessFactor, float _dotNL)
 {  
     float3 N = geometry.normal;
     float3 V = geometry.viewDir;
     float3 L = directLight.direction;
   
-    float dotNL = saturate(dot(N, L));
+    float dotNL = _dotNL;
     float dotNV = saturate(dot(N, V));
     float3 H = normalize(L + V);
 
@@ -68,7 +68,7 @@ void RE_Direct(const in IncidentLight directLight, const in GeometricContext geo
   
   // punctual light
     irradiance *= PI;
-    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, material.specularRoughness);
+    reflectedLight.directSpecular += irradiance * SpecularBRDF(directLight, geometry, material.specularRoughness, dotNL);
 }
 
 PixelOutput FBXPS(Output input) : SV_TARGET
