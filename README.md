@@ -8,6 +8,7 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
 ・アンビエントオクルージョン(SSAO、RTAO)の実装  
 ・オクルージョンカリングの実装  
 ・BRDFベースのライティング実装  
+  
 ![Image 1](https://github.com/Ryo-Takahashi-0422/RenderingDemo/blob/main/examples/intro_.png)
   
 # 実行
