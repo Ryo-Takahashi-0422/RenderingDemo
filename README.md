@@ -15,6 +15,10 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
   ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行 
   
+# 実行確認済GPU
+  NVIDIA GeForce RTX 4070 Ti
+  NVIDIA RTX A2000
+  
 # デモ動画(音声無し)
 https://www.youtube.com/watch?v=J42AyHKEepc  
   
