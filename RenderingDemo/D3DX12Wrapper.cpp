@@ -64,13 +64,16 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 	//アダプターの列挙用
 	std::vector <IDXGIAdapter*> adapters;
 	//特定の名前を持つアダプターオブジェクトが入る
-	ComPtr<IDXGIAdapter> tmpAdapter = nullptr;
+		ComPtr<IDXGIAdapter> tmpAdapter = nullptr;
 
-	for (int i = 0;
-		_dxgiFactory->EnumAdapters(i, tmpAdapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND;
-		i++)
+	for (int i = 0; _dxgiFactory->EnumAdapters(i, tmpAdapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND; i++)
 	{
 		adapters.push_back(tmpAdapter.Get());
+	}
+
+	if (adapters.size() != 0)
+	{
+		tmpAdapter = adapters[0]; //アダプターの説明オブジェクト取得
 	}
 
 	for (auto adpt : adapters)
@@ -80,9 +83,6 @@ HRESULT D3DX12Wrapper::D3DX12DeviceInit()
 
 		//探したいアダプターの名前を確認
 		std::wstring strDesc = adesc.Description;
-		//printf("%ls\n", strDesc.c_str());
-		//printf("%x\n", adesc.DeviceId);
-
 		if (strDesc.find(L"NVIDIA") != std::string::npos)
 		{
 			tmpAdapter = adpt;
