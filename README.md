@@ -13,7 +13,7 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
   
 # 実行方法
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
-  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい 
+  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい。 
   
 # 苦労した点
   ・DirectXに触れたことが無い状態から、DirectX12ライブラリの利用方法を独学で学んだこと  
@@ -31,6 +31,7 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
   ・pixでのデバッグ方法。Youtube動画などを見て見よう見まねで、根気よく触っているうちにピクセル毎のデバッグを理解しました。  
   
 # 工夫した点
+  ・FBXモデルの解析を別の自作プログラムにより事前に行うことで、解析にかかる時間を本プログラムの起動時間から取り除きました。  
   ・キャラクターのピーターパニング現象を出来るだけ抑えました(隠しきれておりませんが...)  
   ・太陽が建物の影から出てくるタイミングと、大気のボリュームレンダリングが自然に見えるように調整  
   ・立体感を増すためにAOを実装しました。  
