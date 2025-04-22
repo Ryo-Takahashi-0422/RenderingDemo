@@ -263,8 +263,8 @@ PixelOutput FBXPS(Output input) : SV_TARGET
         ref = reflect(-nLightDir, specularNormal);
         ref = normalize(ref);
         spec = dot(eye, ref);
-        if (spec < 0)
         {
+        if (spec < 0)
             spec = 0;
         }
         spec = pow(spec, 40.0f);

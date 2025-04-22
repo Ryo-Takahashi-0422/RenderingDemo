@@ -47,7 +47,7 @@ public:
 	Camera();
 	~Camera();
 	void Init(PrepareRenderingWindow* _prepareRenderingWindow);
-	void Transform(XMMATRIX transform);
+	//void Transform(XMMATRIX transform);
 	void MoveCamera(double speed, XMMATRIX charaDirection);
 	
 	static Camera* GetInstance() { return instance; };

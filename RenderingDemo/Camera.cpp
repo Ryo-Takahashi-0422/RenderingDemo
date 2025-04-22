@@ -69,63 +69,63 @@ void Camera::Init(PrepareRenderingWindow* _prepareRenderingWindow)
 	
 }
 
-void Camera::Transform(XMMATRIX transform)
-{
-	//auto tempEye = XMVector4Transform(XMLoadFloat3(&dummyEyePos), transform);
-	////XMStoreFloat3(&eye, tempEye);
-	//XMFLOAT3 localEyePos;
-	//XMStoreFloat3(&localEyePos, tempEye);
-
-	//auto tempTarget = XMVector4Transform(XMLoadFloat3(&dummyTargetPos), transform);
-	////XMStoreFloat3(&target, tempTarget);
-	//XMFLOAT3 localTarget;
-	//XMStoreFloat3(&localTarget, tempTarget);
-
-	//XMFLOAT3 up(0, 1, 0);
-
-	//dummyView = XMMatrixLookAtLH
-	//(
-	//	XMLoadFloat3(&localEyePos),
-	//	XMLoadFloat3(&localTarget),
-	//	XMLoadFloat3(&up)
-	//);
-
-	dummyView = XMMatrixMultiply(dummyView, transform);
-
-	auto vp = XMMatrixMultiply(dummyView, proj);
-	auto invVP = XMMatrixInverse(nullptr, vp);/*XMMatrixMultiply(invView, invProj)*/;
-
-	auto topLeftN = XMVector4Transform(topLeftNear, invVP);
-	topLeftN /= topLeftN.m128_f32[3];
-	auto topLeftF = XMVector4Transform(topLeftFar, invVP);
-	topLeftF /= topLeftF.m128_f32[3];
-
-	dummyFrustum.topLeft = XMVector4Normalize(XMVectorSubtract(topLeftF, topLeftN));
-
-
-	auto topRightN = XMVector4Transform(topRightNear, invVP);
-	topRightN /= topRightN.m128_f32[3];
-	auto topRightF = XMVector4Transform(topRightFar, invVP);
-	topRightF /= topRightF.m128_f32[3];
-
-	dummyFrustum.topRight = XMVector4Normalize(XMVectorSubtract(topRightF, topRightN));
-
-
-	auto bottomLeftN = XMVector4Transform(BottomLeftNear, invVP);
-	bottomLeftN /= bottomLeftN.m128_f32[3];
-	auto bottomLeftF = XMVector4Transform(BottomLeftFar, invVP);
-	bottomLeftF /= bottomLeftF.m128_f32[3];
-
-	dummyFrustum.bottomLeft = XMVector4Normalize(XMVectorSubtract(bottomLeftF, bottomLeftN));
-
-
-	auto bottomRightN = XMVector4Transform(BottomRightNear, invVP);
-	bottomRightN /= bottomRightN.m128_f32[3];
-	auto bottomRightF = XMVector4Transform(BottomRightFar, invVP);
-	bottomRightF /= bottomRightF.m128_f32[3];
-
-	dummyFrustum.bottomRight = XMVector4Normalize(XMVectorSubtract(bottomRightF, bottomRightN));
-}
+//void Camera::Transform(XMMATRIX transform)
+//{
+//	//auto tempEye = XMVector4Transform(XMLoadFloat3(&dummyEyePos), transform);
+//	////XMStoreFloat3(&eye, tempEye);
+//	//XMFLOAT3 localEyePos;
+//	//XMStoreFloat3(&localEyePos, tempEye);
+//
+//	//auto tempTarget = XMVector4Transform(XMLoadFloat3(&dummyTargetPos), transform);
+//	////XMStoreFloat3(&target, tempTarget);
+//	//XMFLOAT3 localTarget;
+//	//XMStoreFloat3(&localTarget, tempTarget);
+//
+//	//XMFLOAT3 up(0, 1, 0);
+//
+//	//dummyView = XMMatrixLookAtLH
+//	//(
+//	//	XMLoadFloat3(&localEyePos),
+//	//	XMLoadFloat3(&localTarget),
+//	//	XMLoadFloat3(&up)
+//	//);
+//
+//	dummyView = XMMatrixMultiply(dummyView, transform);
+//
+//	auto vp = XMMatrixMultiply(dummyView, proj);
+//	auto invVP = XMMatrixInverse(nullptr, vp);/*XMMatrixMultiply(invView, invProj)*/;
+//
+//	auto topLeftN = XMVector4Transform(topLeftNear, invVP);
+//	topLeftN /= topLeftN.m128_f32[3];
+//	auto topLeftF = XMVector4Transform(topLeftFar, invVP);
+//	topLeftF /= topLeftF.m128_f32[3];
+//
+//	dummyFrustum.topLeft = XMVector4Normalize(XMVectorSubtract(topLeftF, topLeftN));
+//
+//
+//	auto topRightN = XMVector4Transform(topRightNear, invVP);
+//	topRightN /= topRightN.m128_f32[3];
+//	auto topRightF = XMVector4Transform(topRightFar, invVP);
+//	topRightF /= topRightF.m128_f32[3];
+//
+//	dummyFrustum.topRight = XMVector4Normalize(XMVectorSubtract(topRightF, topRightN));
+//
+//
+//	auto bottomLeftN = XMVector4Transform(BottomLeftNear, invVP);
+//	bottomLeftN /= bottomLeftN.m128_f32[3];
+//	auto bottomLeftF = XMVector4Transform(BottomLeftFar, invVP);
+//	bottomLeftF /= bottomLeftF.m128_f32[3];
+//
+//	dummyFrustum.bottomLeft = XMVector4Normalize(XMVectorSubtract(bottomLeftF, bottomLeftN));
+//
+//
+//	auto bottomRightN = XMVector4Transform(BottomRightNear, invVP);
+//	bottomRightN /= bottomRightN.m128_f32[3];
+//	auto bottomRightF = XMVector4Transform(BottomRightFar, invVP);
+//	bottomRightF /= bottomRightF.m128_f32[3];
+//
+//	dummyFrustum.bottomRight = XMVector4Normalize(XMVectorSubtract(bottomRightF, bottomRightN));
+//}
 
 void Camera::MoveCamera(double speed, XMMATRIX charaDirection)
 {
