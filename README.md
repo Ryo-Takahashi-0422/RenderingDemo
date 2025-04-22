@@ -13,7 +13,7 @@ DirectX12を用いて3Dモデルを描画するプログラムです。
   
 # 実行方法
   ...RenderingDemoRebuild\x64\Release\RenderingDemo.exeもしくは  
-  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行 
+  ...RenderingDemoRebuild\x64\Debug\RenderingDemo.exeを実行下さい 
   
 # 苦労した点
   ・DirectXに触れたことが無い状態から、DirectX12ライブラリの利用方法を独学で学んだこと  
