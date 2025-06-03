@@ -1406,20 +1406,24 @@ void D3DX12Wrapper::threadWorkTest(int num)
 		localCmdList->RSSetViewports(1, viewPort);
 		localCmdList->RSSetScissorRects(1, rect);
 
-		// resourceManager[0]のrtv,dsvに集約している。手法としてはイマイチか...
-		auto dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
-		dsvhFBX.ptr += num * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		auto handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-		auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		handleFBX.ptr += num * inc;
+		// TODO:resourceManager[0]のrtv,dsvに集約しているのを分散する
+		auto dsvInc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		auto rtvInc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvhFBX = resourceManager[0]->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+		dsvhFBX.ptr += num * dsvInc;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE handleFBX = resourceManager[0]->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
+		handleFBX.ptr += num * rtvInc; // ← 正しいインクリメントサイズを使用
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handles[2];
 		uint32_t offset = 0; // start from No.2 RTV
 		for (auto& handle : handles)
 		{
-			handle.InitOffsetted(handleFBX, inc * offset);
+			handle.InitOffsetted(handleFBX, rtvInc * offset);
 			offset += 2;
 		}
+
 		localCmdList->OMSetRenderTargets(2, handles, false, &dsvhFBX);
 		localCmdList->ClearDepthStencilView(dsvhFBX, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr); // 深度バッファーをクリア
 

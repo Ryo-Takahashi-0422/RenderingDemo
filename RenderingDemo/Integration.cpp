@@ -523,16 +523,30 @@ void Integration::Execution(ID3D12CommandQueue* _cmdQueue, ID3D12CommandAllocato
     _cmdList->RSSetViewports(1, &viewport);
     _cmdList->RSSetScissorRects(1, &rect);
 
+    //auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+    //auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    //CD3DX12_CPU_DESCRIPTOR_HANDLE handles[3];
+    //uint32_t offset = 0;
+    //for (auto& handle : handles)
+    //{
+    //    handle.InitOffsetted(heapHandle, inc * offset);
+    //    offset += 1;
+    //}
+    //_cmdList->OMSetRenderTargets(3, handles, false, nullptr);
+
     auto heapHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE handles[3];
     uint32_t offset = 0;
+
     for (auto& handle : handles)
     {
         handle.InitOffsetted(heapHandle, inc * offset);
         offset += 1;
     }
+
     _cmdList->OMSetRenderTargets(3, handles, false, nullptr);
 
     //_cmdList->OMSetRenderTargets(1, &heapHandle, false, nullptr);
